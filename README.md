@@ -1,9 +1,10 @@
 # Sashimi
 Sashimi provides a small platform to play with interactive fiction programming concepts. It is not yet a complete IF engine, and may never be. ( It's not an immediate goal, for instance, to provide proper English output. )
 
-Based on some ideas from [Infom7](http://inform7.com), Sashimi uses a "scripting language" embedded inside of [Go](http://golang.org). 
+Based on some ideas from [Infom7](http://inform7.com), Sashimi uses a "scripting language" embedded inside of [Go](http://golang.org).
 
-For example:
+In the example story:
+
 ```go
     s.The("container",
       Called("the cabinet"), In("the studio"),
@@ -17,10 +18,26 @@ For example:
         When("looking under").Always(func(g G.Play) {
           if !lookedUnderCabinet {
               lookedUnderCabinet = true
-              g.The("evil fish").Says(`"Dustbunnies," predicts the fish, with telling accuracy.`)
+              g.The("evil fish").Says(`"Dustbunnies," predicts the fish, with telling accuracy...`)
               g.StopHere()
           }
       }))
+```
+
+helps to produce the following output in game:
+
+```ShellSession
+>x cabinet
+Large, and with a bit of an Art Nouveau theme going on in the shape of the     doors.
+
+The evil fish is floating belly up! ...oh, curse. He was toying with you. As
+soon as he sees you looking, he goes back to swimming around.
+
+>look under cabinet
+evil fish: "Dustbunnies," predicts the fish, with telling accuracy...
+
+The evil fish darts to the bottom of the tank and moves the gravel around with
+his nose.
 ```
 
 ## Motivation
