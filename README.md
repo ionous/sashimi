@@ -24,21 +24,19 @@ In the example story:
       }))
 ```
 
-helps to produce the following output in game:
+helps to produce the following game:
 
-```ShellSession
->x cabinet
-Large, and with a bit of an Art Nouveau theme going on in the shape of the     doors.
-
-The evil fish is floating belly up! ...oh, curse. He was toying with you. As
-soon as he sees you looking, he goes back to swimming around.
-
->look under cabinet
-evil fish: "Dustbunnies," predicts the fish, with telling accuracy...
-
-The evil fish darts to the bottom of the tank and moves the gravel around with
-his nose.
-```
+> &gt;x cabinet
+>
+> Large, and with a bit of an Art Nouveau theme going on in the shape of the doors.
+> 
+> The evil fish is floating belly up! ...oh, curse. He was toying with you. As soon as he sees you looking, he goes back to swimming around.
+> 
+> &gt;look under cabinet
+>
+> evil fish: "Dustbunnies," predicts the fish, with telling accuracy...
+> 
+> The evil fish darts to the bottom of the tank and moves the gravel around with his nose.
 
 ## Motivation
 
@@ -46,7 +44,7 @@ his nose.
 Go hits a nice middle-ground between scripting and C-like programming.
 
 1. No semi-colons makes it slightly more English like than other options.
-2. Back-quotes ``(`)`` for strings makes embedding dialog much easier. (`` `"Much easier," she said.` ``)
+2. Back-quotes ``(`)`` for strings makes embedding dialog easier. (`` `"Actually, it's much easier," she said.` ``)
 3. Quick to compile.
 4. The AST package opens the possibility of extracting script callbacks and transforming them into other languages for other runtimes ( ex. lua with a custom C-runtime, javascript in a web-app, or C# for Unity. )
 
@@ -71,7 +69,7 @@ Possible future features, in no particular order:
 * Improved scripting: type injection for script callbacks, global variables, type inferencing, variants for object properties, prettier syntax, ...
 * Improved relationship support: especially relation-by-value; use sql(ite) to represent inter-object relationships in the runtime.
 * Improved support for testing stories: especially a way to test expected output.
-* Improved object modeling: for instance, [context state machines](https://github.com/ionous/hsm-statechart) to support concepts such as "lockable", "openable", "rideable" ( instead of classes. )
+* Improved object modeling: for instance, [context state machines](https://github.com/ionous/hsm-statechart) to support concepts such as "lockable", "openable", "rideable" ( instead of classes: "container", "door", "vehicle", etc. )
 * AST translation of script callbacks into other programming languages.
 * Some sort of web-based story editor.
 
@@ -86,6 +84,6 @@ go run fishy.go
 ```
 
 Command line options:
-&nbsp;&nbsp;&nbsp;--text: use the simplier text console ( default is the fancier "minicon" which has a status bar, colors, etc. )
-&nbsp;&nbsp;&nbsp;--verbose: prints full output of actions and events as they happen.
-&nbsp;&nbsp;&nbsp;--dump: print all script generated classes,instances,actions, etc. to stdout, then exit.
+* --text: use the simplier text console ( default is the fancier "minicon" which has a status bar, colors, etc. )
+* --verbose: prints full output of actions and events as they happen.
+* --dump: print all script generated classes,instances,actions, etc. to stdout, then exit.
