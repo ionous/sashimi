@@ -6,46 +6,66 @@ import (
 )
 
 //
-// creates a console consisting only of the passed strings
+// Creates a console whose input comes from the passed strings.
+// when the strings are exhausted the Readln() returns false.
+//
 func NewBufCon(strs []string) *BufCon {
-	return &BufCon{strs, 0, nil, nil}
+	return &BufCon{strs: strs}
 }
 
+//
 type BufCon struct {
 	strs  []string
 	index int
+	BufferedOutput
+}
+
+type BufferedOutput struct {
 	accum []string
 	line  []string
 }
 
 //
-func (this *BufCon) Print(args ...interface{}) {
+// Accumulate the passed args as text for Results().
+//
+func (this *BufferedOutput) Print(args ...interface{}) {
 	str := fmt.Sprint(args...)
 	this.line = append(this.line, str)
 }
 
 //
-func (this *BufCon) Println(args ...interface{}) {
+// Accumulate the passed args as text for Results().
+//
+func (this *BufferedOutput) Println(args ...interface{}) {
 	this.Print(args...)
 	this.flush()
 }
 
 //
-func (this *BufCon) flush() {
+func (this *BufferedOutput) flush() {
 	line := strings.Join(this.line, " ")
-	fmt.Println(line)
 	this.accum = append(this.accum, line)
 	this.line = nil
 }
 
 //
-func (this *BufCon) Results() []string {
+// Returns an array of all printed text; resets the buffer.
+//
+func (this *BufferedOutput) Flush() (lines []string) {
 	if len(this.line) > 0 {
 		this.flush()
 	}
-	return this.accum
+	if a := this.accum; a != nil {
+		lines = a
+	} else {
+		lines = []string{}
+	}
+	this.accum = nil
+	return lines
 }
 
+//
+// Returns the next input string, false when input has been exhausted.
 //
 func (this *BufCon) Readln() (ret string, okay bool) {
 	okay = this.index < len(this.strs)

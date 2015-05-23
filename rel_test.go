@@ -3,8 +3,7 @@ package sashimi
 import (
 	M "github.com/ionous/sashimi/model"
 	. "github.com/ionous/sashimi/script"
-	x "github.com/smartystreets/goconvey/convey"
-	"log"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
 )
@@ -12,69 +11,66 @@ import (
 //
 // create a single subclass called stories
 func TestSimpleRelation(t *testing.T) {
-	x.Convey("Test Simple Relation", t, func() {
-		s := Script{}
-		s.The("kinds",
-			Called("gremlins"),
-			Have("pets", "rocks").
-				Implying("rocks", Have("o beneficent one", "gremlin")),
-			// alternate, non-conflicting specification of the same relation
-			HaveMany("pets", "rocks").
-				// FIX? if the names don't match, this creates two views of the same relation.
-				// validate the hierarchy to verify no duplicate property usage?
-				Implying("rocks", HaveOne("o beneficent one", "gremlin")),
-		)
-		s.The("kinds", Called("rocks"), Exist())
-		log := log.New(os.Stdout, "game:", log.Lshortfile)
-		model, err := s.Compile(log)
-		x.So(err, x.ShouldBeNil)
+
+	s := Script{}
+	s.The("kinds",
+		Called("gremlins"),
+		Have("pets", "rocks").
+			Implying("rocks", Have("o beneficent one", "gremlin")),
+		// alternate, non-conflicting specification of the same relation
+		HaveMany("pets", "rocks").
+			// FIX? if the names don't match, this creates two views of the same relation.
+			// validate the hierarchy to verify no duplicate property usage?
+			Implying("rocks", HaveOne("o beneficent one", "gremlin")),
+	)
+	s.The("kinds", Called("rocks"), Exist())
+	model, err := s.Compile(os.Stderr)
+	if assert.NoError(t, err) {
 		model.PrintModel(t.Log)
-		x.So(len(model.Relations), x.ShouldEqual, 1)
+		assert.Equal(t, 1, len(model.Relations))
 		for _, v := range model.Relations {
-			x.So(v.Source(), x.ShouldEqual, "Gremlins")
-			x.So(v.Destination(), x.ShouldEqual, "Rocks")
-			x.So(v.Style(), x.ShouldEqual, M.OneToMany)
+			assert.EqualValues(t, "Gremlins", v.Source().String())
+			assert.EqualValues(t, "Rocks", v.Destination().String())
+			assert.EqualValues(t, M.OneToMany, v.Style())
 		}
-	})
+	}
 }
 
 //
 // create a single subclass called stories
 func TestSimpleRelates(t *testing.T) {
-	x.Convey("Test Simple Relates", t, func() {
-		s := Script{}
-		s.The("kinds",
-			Called("gremlins"),
-			Have("pets", "rocks").
-				Implying("rocks", Have("o beneficent one", "gremlin")),
-		)
-		s.The("kinds", Called("rocks"), Exist())
-		// FIX: for now the property names must match,
-		// i'd prefer the signular: Has("pet", "Loofah")
-		s.The("gremlin", Called("Claire"), Has("pets", "Loofah"))
-		s.The("rock", Called("Loofah"), Exists())
-		//
-		log := log.New(os.Stdout, "game:", log.Lshortfile)
-		model, err := s.Compile(log)
-		x.So(err, x.ShouldBeNil)
-		x.So(len(model.Instances), x.ShouldEqual, 2)
+	s := Script{}
+	s.The("kinds",
+		Called("gremlins"),
+		Have("pets", "rocks").
+			Implying("rocks", Have("o beneficent one", "gremlin")),
+	)
+	s.The("kinds", Called("rocks"), Exist())
+	// FIX: for now the property names must match,
+	// i'd prefer the signular: Has("pet", "Loofah")
+	s.The("gremlin", Called("Claire"), Has("pets", "Loofah"))
+	s.The("rock", Called("Loofah"), Exists())
+	//
+	model, err := s.Compile(os.Stderr)
+	if assert.NoError(t, err, "compile") {
+		assert.Equal(t, 2, len(model.Instances), "two instances")
 
 		claire, err := model.Instances.FindInstance("claire")
-		x.So(err, x.ShouldBeNil)
+		assert.NoError(t, err, "found claire")
 
 		pets, ok := claire.ValueByName("pets")
-		x.So(ok, x.ShouldBeTrue)
+		assert.True(t, ok)
 		petsrel := pets.(*M.RelativeValue)
-		x.So(petsrel.List(), x.ShouldResemble, []string{"Loofah"})
+		assert.Exactly(t, []string{"Loofah"}, petsrel.List())
 
 		loofah, err := model.Instances.FindInstance("loofah")
-		x.So(err, x.ShouldBeNil)
+		assert.NoError(t, err, "found loofah")
 
 		gremlins, ok := loofah.ValueByName("o beneficent one")
-		x.So(ok, x.ShouldBeTrue)
+		assert.True(t, ok, "value by name")
 		gremlinrel := gremlins.(*M.RelativeValue)
-		x.So(gremlinrel.List(), x.ShouldResemble, []string{"Claire"})
+		assert.Exactly(t, []string{"Claire"}, gremlinrel.List())
 
 		model.PrintModel(t.Log)
-	})
+	}
 }

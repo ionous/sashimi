@@ -49,7 +49,7 @@ func (this ObjectAdapter) Exists() bool {
 //
 //
 func (this ObjectAdapter) Class(class string) (okay bool) {
-	if cls, err := this.game.model.Classes.FindClassBySingular(class); err == nil {
+	if cls, err := this.game.Model.Classes.FindClassBySingular(class); err == nil {
 		okay = this.gobj.info.CompatibleWith(cls)
 	}
 	return okay
@@ -251,7 +251,7 @@ func (this ObjectAdapter) Says(s string) {
 // @see also: Game.ProcessEventQueue
 //
 func (this ObjectAdapter) Go(name string, objects ...G.IObject) {
-	if action, e := this.game.model.Actions.FindActionByName(name); e != nil {
+	if action, e := this.game.Model.Actions.FindActionByName(name); e != nil {
 		this.logError(e)
 	} else {
 		// ugly: we need the names, even tho we already have the objects...

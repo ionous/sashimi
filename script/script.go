@@ -5,7 +5,7 @@ import (
 	C "github.com/ionous/sashimi/compiler"
 	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
-	"log"
+	"io"
 )
 
 type Script struct {
@@ -16,11 +16,11 @@ type Script struct {
 //
 // Turn the current script into a model which can be used by the runtime.
 //
-func (this *Script) Compile(log *log.Logger) (res *M.Model, err error) {
+func (this *Script) Compile(writer io.Writer) (res *M.Model, err error) {
 	if this.err != nil {
 		err = this.err
 	} else {
-		res, err = C.Compile(log, this.blocks.GetBlocks())
+		res, err = C.Compile(writer, this.blocks.GetBlocks())
 	}
 	return res, err
 }

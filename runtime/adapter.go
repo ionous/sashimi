@@ -35,7 +35,7 @@ func (this *GameEventAdapter) A(name string) G.IObject {
 
 //
 func (this *GameEventAdapter) Any(name string) (obj G.IObject) {
-	cls, _ := this.model.Classes.FindClassBySingular(name)
+	cls, _ := this.Model.Classes.FindClassBySingular(name)
 	gobj := this.FindFirstOf(cls)
 	if gobj != nil {
 		obj = ObjectAdapter{this.Game, gobj}
@@ -124,7 +124,7 @@ func (this *GameEventAdapter) GetObject(name string) (obj G.IObject) {
 		// asking by class name, ex. The("story")
 		if obj == nil {
 			src := this.data.objs[0]
-			cls, _ := this.model.Classes.FindClassBySingular(name)
+			cls, _ := this.Model.Classes.FindClassBySingular(name)
 			if src.info.CompatibleWith(cls) {
 				obj = ObjectAdapter{this.Game, src}
 			}

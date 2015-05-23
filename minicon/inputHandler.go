@@ -72,7 +72,9 @@ func (this *InputHandler) HandleTermEvent(evt termbox.Event,
 			// got valid input
 			case termbox.KeyEnter:
 				userInput = prompt.Clear()
-				if userInput != "" {
+				if userInput == "" {
+					userInput = " " // to distinguish between no input at all.
+				} else {
 					this.marker = this.history.Add(userInput, this.marker)
 				}
 

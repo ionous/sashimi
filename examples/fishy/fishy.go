@@ -12,7 +12,7 @@ import (
 // Boilerplate to run the story.
 //
 func main() {
-	standard.RunGame()
+	standard.RunGame(standard.ParseCommandLine())
 }
 
 //

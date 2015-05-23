@@ -1,6 +1,8 @@
 package source
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // statement options
 type Options map[string]string

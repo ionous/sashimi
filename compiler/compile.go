@@ -6,6 +6,7 @@ import (
 	G "github.com/ionous/sashimi/game"
 	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
+	"io"
 	"log"
 	"strings"
 )
@@ -14,7 +15,7 @@ type ErrorLog struct {
 	*log.Logger
 }
 
-// before appending the error in the normal way, log.
+// before appending the error in the normal way, this.log.
 func (this ErrorLog) AppendError(err error, e error) error {
 	this.Output(2, e.Error())
 	return AppendError(err, e)
@@ -22,14 +23,14 @@ func (this ErrorLog) AppendError(err error, e error) error {
 
 //
 // create a new instance of script results
-func Compile(log *log.Logger, src S.Blocks) (*M.Model, error) {
+func Compile(out io.Writer, src S.Blocks) (*M.Model, error) {
 	names := NewNameSource()
 	ctx := &Context{
 		src, names.newScope(nil),
 		newClassFactory(names),
 		newInstanceFactory(names),
 		newRelativeFactory(names.newScope(nil)),
-		&ErrorLog{log},
+		&ErrorLog{log.New(out, "compling: ", log.Lshortfile)},
 	}
 	return ctx.compile()
 }
@@ -145,18 +146,18 @@ func (this *Context) resolveAction(classes M.ClassMap, fields S.ActionAssertionF
 ) (actionId M.StringId, owner, target, context *M.ClassInfo, err error) {
 	// find the primary class
 	if cls, ok := classes.FindClass(fields.Source); !ok {
-		e := fmt.Errorf("couldnt find class %r", fields)
+		e := fmt.Errorf("couldn't find class %r", fields)
 		err = this.log.AppendError(err, e)
 	} else {
 		// and the other two optional ones
 		target, ok = classes[this.classes.singleToPlural[fields.Target]]
 		if !ok && fields.Target != "" {
-			e := fmt.Errorf("couldnt find class for noun %s", fields.Target)
+			e := fmt.Errorf("couldn't find class for noun %s", fields.Target)
 			err = this.log.AppendError(err, e)
 		}
 		context, ok = classes[this.classes.singleToPlural[fields.Context]]
 		if !ok && fields.Context != "" {
-			e := fmt.Errorf("couldnt find class for noun %s", fields.Context)
+			e := fmt.Errorf("couldn't find class for noun %s", fields.Context)
 			err = this.log.AppendError(err, e)
 		}
 		if err == nil {

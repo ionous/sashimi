@@ -22,7 +22,7 @@ func (this *ModelParser) NormalizeInput(s string) string {
 func NewParser(game *Game,
 ) (ret *ModelParser, err error,
 ) {
-	model := game.model
+	model := game.Model
 	parser := P.NewParser()
 	// pre-compile the parser statements ( ex. to catch errors. )
 CreateActions:

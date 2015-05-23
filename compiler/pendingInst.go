@@ -46,7 +46,7 @@ func (this ClassReferences) resolveClass(classes M.ClassMap,
 	} else {
 		classref := this.classes[0]
 		if cls, ok := classes.FindClass(classref.class.name); !ok {
-			err = fmt.Errorf("couldnt find class %s", classref.class.name)
+			err = fmt.Errorf("couldn't find class %s", classref.class.name)
 		} else {
 			ret = cls
 		}

@@ -1,25 +1,28 @@
 package model
 
 import (
-	x "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestStringIds(t *testing.T) {
-	x.Convey("Given the script", t, func() {
-		x.So(MakeStringId("apples"), x.ShouldEqual, "Apples")
-		x.So(MakeStringId("Apples"), x.ShouldEqual, "Apples")
-		x.So(MakeStringId("apple turnover"), x.ShouldEqual, "AppleTurnover")
-		x.So(MakeStringId("Apple Turnover"), x.ShouldEqual, "AppleTurnover")
-		x.So(MakeStringId("Apple turnover"), x.ShouldEqual, "AppleTurnover")
-		x.So(MakeStringId("APPLE TURNOVER"), x.ShouldEqual, "AppleTurnover")
-		x.So(MakeStringId("PascalCase"), x.ShouldEqual, "PascalCase")
-		x.So(MakeStringId("camelCase"), x.ShouldEqual, "CamelCase")
-		x.So(MakeStringId("the article"), x.ShouldEqual, "Article")
-		x.So(MakeStringId("something-like-this"), x.ShouldEqual, "SomethingLikeThis")
-		x.So(MakeStringId("ALLCAPS"), x.ShouldEqual, "Allcaps")
-		x.So(MakeStringId("whaTAboutThis"), x.ShouldEqual, "WhaTaboutThis")
-		x.So(MakeStringId("AppleTurnover").Split(), x.ShouldResemble, []string{"apple", "turnover"})
-		x.So(MakeStringId("Title").Split(), x.ShouldResemble, []string{"title"})
-	})
+	assert.EqualValues(t, "Apples", MakeStringId("apples"))
+	assert.EqualValues(t, "Apples", MakeStringId("Apples"))
+
+	assert.EqualValues(t, "AppleTurnover", MakeStringId("apple turnover"))
+	assert.EqualValues(t, "AppleTurnover", MakeStringId("Apple Turnover"))
+	assert.EqualValues(t, "AppleTurnover", MakeStringId("Apple turnover"))
+	assert.EqualValues(t, "AppleTurnover", MakeStringId("APPLE TURNOVER"))
+
+	assert.EqualValues(t, "PascalCase", MakeStringId("PascalCase"))
+	assert.EqualValues(t, "CamelCase", MakeStringId("camelCase"))
+	assert.EqualValues(t, "Article", MakeStringId("the article"))
+
+	assert.EqualValues(t, "SomethingLikeThis", MakeStringId("something-like-this"))
+	assert.EqualValues(t, "Allcaps", MakeStringId("ALLCAPS"))
+
+	assert.EqualValues(t, "WhaTaboutThis", MakeStringId("whaTAboutThis"))
+
+	assert.Exactly(t, []string{"apple", "turnover"}, MakeStringId("AppleTurnover").Split())
+	assert.Exactly(t, []string{"title"}, MakeStringId("Title").Split())
 }

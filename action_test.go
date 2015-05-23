@@ -3,9 +3,7 @@ package sashimi
 import (
 	C "github.com/ionous/sashimi/console"
 	G "github.com/ionous/sashimi/game"
-	R "github.com/ionous/sashimi/runtime"
 	. "github.com/ionous/sashimi/script"
-	"log"
 	"os"
 	"testing"
 )
@@ -13,13 +11,11 @@ import (
 //
 func TestUnknownAction(t *testing.T) {
 	s := Script{}
-
 	s.The("kinds",
 		When("this does not exists").Always(func(g G.Play) {
 		}),
 	)
-	log := log.New(os.Stdout, "test:", log.Lshortfile)
-	model, err := s.Compile(log)
+	model, err := s.Compile(os.Stdout)
 	if err == nil {
 		model.PrintModel(t.Log)
 		t.Fatal("expected failure")
@@ -33,8 +29,7 @@ func TestKnownAction(t *testing.T) {
 	s.The("kinds",
 		When("this exists").Always(func(g G.Play) {}),
 		Can("exist").And("this exists").RequiresNothing())
-	log := log.New(os.Stdout, "test:", log.Lshortfile)
-	model, err := s.Compile(log)
+	model, err := s.Compile(os.Stdout)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,13 +63,8 @@ func TestClassCallback(t *testing.T) {
 		Called("other"),
 		Has("description", "it's an error!"),
 	)
-	log := C.NewLogger(true)
-	model, err := s.Compile(log)
-	if err != nil {
-		t.Fatal("error:", err)
-	}
-	con := C.NewBufCon(nil)
-	g, err := R.NewGame(model, con, log)
+	cons := C.NewBufCon(nil)
+	g, err := CompileGameWithConsole(&s, cons)
 	if err != nil {
 		t.Error("error:", err)
 	}
@@ -84,10 +74,10 @@ func TestClassCallback(t *testing.T) {
 	if err := g.SendEvent("testing", "obj"); err != nil {
 		t.Error("error:", err)
 	}
-	if err := g.ProcessEventQueue(); err != nil {
+	if err := g.ProcessEvents(); err != nil {
 		t.Error("error:", err)
 	}
-	out := con.Results()
+	out := cons.Flush()
 	if len(out) != 1 || out[0] != "it's a trap!" {
 		t.Fatal("mismatched output", out)
 	}
@@ -107,13 +97,8 @@ func TestCallbackBeforeAfter(t *testing.T) {
 	)
 	s.The("kind", Called("obj"), Exists())
 
-	log := C.NewLogger(true)
-	model, err := s.Compile(log)
-	if err != nil {
-		t.Fatal("error:", err)
-	}
 	con := C.NewBufCon(nil)
-	g, err := R.NewGame(model, con, log)
+	g, err := CompileGameWithConsole(&s, con)
 	if err != nil {
 		t.Error("error:", err)
 	}
@@ -123,10 +108,10 @@ func TestCallbackBeforeAfter(t *testing.T) {
 	if err := g.SendEvent("testing", "obj"); err != nil {
 		t.Error("error:", err)
 	}
-	if err := g.ProcessEventQueue(); err != nil {
+	if err := g.ProcessEvents(); err != nil {
 		t.Error("error:", err)
 	}
-	out := con.Results()
+	out := con.Flush()
 	if len(out) != 2 || out[0] != "Before" || out[1] != "After" {
 		t.Fatal("mismatched output", out)
 	}
@@ -159,28 +144,24 @@ func TestCallbackParsing(t *testing.T) {
 	s.Execute("test",
 		Matching("look|l at {{something}}"),
 	)
-	log := C.NewLogger(true)
-	model, err := s.Compile(log)
-	if err != nil {
-		t.Error(err)
-	}
-	numNames := len(model.NounNames)
-	if numNames != 2 {
-		t.Error(numNames, "should equal", 2)
-	}
-	t.Log(model.NounNames)
 	// should trigger "test", which should print the description
 	strs := []string{"look at lookee"}
 	con := C.NewBufCon(strs)
-	g, err := R.NewGame(model, con, log)
+	g, err := CompileGameWithConsole(&s, con)
 	if err != nil {
 		t.Error(err)
 	}
+	numNames := len(g.Model.NounNames)
+	if numNames != 2 {
+		t.Error(numNames, "should equal", 2)
+	}
+	t.Log(g.Model.NounNames)
+
 	g.PushParserSource(func(g G.Play) G.IObject {
 		return g.The("looker")
 	})
 	g.RunForever()
-	out := con.Results()
+	out := con.Flush()
 	expect := []string{"look it's a test!"}
 	if len(expect) != len(out) || expect[0] != out[0] {
 		t.Fatal("Expected:", expect, "Actual:", out)

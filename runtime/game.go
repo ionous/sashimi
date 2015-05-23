@@ -2,20 +2,24 @@ package runtime
 
 import (
 	"fmt"
-	C "github.com/ionous/sashimi/console"
 	E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game"
 	M "github.com/ionous/sashimi/model"
-	P "github.com/ionous/sashimi/parser"
 	"log"
 )
 
+type IOutput interface {
+	Print(...interface{})
+	Println(...interface{})
+	Write(p []byte) (n int, err error)
+}
+
 // FIX: standarize member exports by splitting game into smaller classes and interfaces
 type Game struct {
-	model          *M.Model
+	Model          *M.Model
 	Objects        GameObjects
 	Dispatchers    ClassDispatchers
-	console        C.IConsole
+	console        IOutput
 	parser         *ModelParser
 	queue          *E.Queue
 	nullobj        *NullObject
@@ -29,7 +33,8 @@ type Game struct {
 // each action can have a chain of default actions
 type DefaultActions map[*M.ActionInfo][]G.Callback
 
-func NewGame(model *M.Model, console C.IConsole, log *log.Logger) (game *Game, err error) {
+func NewGame(model *M.Model, output IOutput) (game *Game, err error) {
+	log := log.New(output, "game: ", log.Lshortfile)
 	dispatchers := NewDispatchers(log)
 	objects, e := CreateGameObjects(model.Instances)
 	if e != nil {
@@ -40,7 +45,7 @@ func NewGame(model *M.Model, console C.IConsole, log *log.Logger) (game *Game, e
 		model,
 		objects,
 		dispatchers,
-		console, nil,
+		output, nil,
 		E.NewQueue(),
 		&NullObject{log},
 		make(DefaultActions),
@@ -140,47 +145,21 @@ func (this *Game) PopParentLookup() {
 //
 // For testing:
 //
-func (this *Game) RunForever() {
-	for {
-		this.Update()
-		// read new input
-		if s, ok := this.console.Readln(); !ok {
-			break
-		} else {
-			in := P.NormalizeInput(s)
-			if in == "q" || in == "quit" {
-				break
-			}
-			// run some commands:
-			if _, res, e := this.parser.Parse(in); e != nil {
-				this.log.Println(e)
-				continue
-			} else if e := res.Run(); e != nil {
-				this.log.Println(e)
-				continue
-			}
-		}
+func (this *Game) RunCommand(in string) (err error) {
+	if _, res, e := this.parser.Parse(in); e != nil {
+		err = e
+	} else if e := res.Run(); e != nil {
+		err = e
 	}
+	return err
+
 }
 
 //
-// Run the event queue logging all errors
-//
-func (this *Game) Update() {
-	// process the queue first
-	// that allows game startup before input
-	for !this.queue.Empty() {
-		e := this.ProcessEventQueue()
-		if e != nil {
-			this.log.Println(e)
-		}
-	}
-}
-
 //
 // Run the event queue till there's an error
 //
-func (this *Game) ProcessEventQueue() (err error) {
+func (this *Game) ProcessEvents() (err error) {
 	for err == nil && !this.queue.Empty() {
 		tgt, msg := this.queue.Pop()
 		// see also: Go()
@@ -204,7 +183,7 @@ func (this *Game) ProcessEventQueue() (err error) {
 
 // FIX: TEMP(ish)
 func (this *Game) FindObject(name string) (ret *GameObject, okay bool) {
-	if info, err := this.model.Instances.FindInstance(name); err == nil {
+	if info, err := this.Model.Instances.FindInstance(name); err == nil {
 		ret = this.Objects[info.Id()]
 		okay = true
 	}
@@ -228,7 +207,7 @@ func (this *Game) FindFirstOf(cls *M.ClassInfo, _ ...bool) (ret *GameObject) {
 func (this *Game) SendEvent(event string, nouns ...string,
 ) (err error,
 ) {
-	if action, e := this.model.Events.FindEventByName(event); e != nil {
+	if action, e := this.Model.Events.FindEventByName(event); e != nil {
 		err = e
 	} else {
 		if act, e := this.newRuntimeAction(action, nouns...); e != nil {
@@ -260,7 +239,7 @@ func (this *Game) newRuntimeAction(action *M.ActionInfo, nouns ...string,
 
 		for i, class := range types {
 			noun, key := nouns[i], keys[i]
-			inst, e := this.model.Instances.FindInstanceWithClass(noun, class)
+			inst, e := this.Model.Instances.FindInstanceWithClass(noun, class)
 			if e != nil {
 				err = e
 				break
