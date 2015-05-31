@@ -20,6 +20,12 @@ func (this MiniConsole) Readln() (string, bool) {
 }
 
 // simplest interface:
+func Run(cb S.InitCallback) (err error) {
+	S.AddScript(cb)
+	return RunGame(ParseCommandLine())
+}
+
+// second simplest interface:
 func RunGame(opt Options) (err error) {
 	// tease out options settings:
 	cons, verbose, dump := opt.cons, opt.verbose, opt.dump
