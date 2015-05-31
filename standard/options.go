@@ -5,7 +5,9 @@ import (
 	C "github.com/ionous/sashimi/console"
 )
 
-// options and command line parseing
+//
+// options and command line parsing for terminal style playback.
+//
 type Options struct {
 	verbose, text, dump, hasConsole bool
 	cons                            C.IConsole

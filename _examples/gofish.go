@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/ionous/sashimi/_examples/stories"
 	"github.com/ionous/sashimi/standard"
-	"log"
 )
 
 //

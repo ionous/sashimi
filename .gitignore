@@ -23,7 +23,7 @@ _testmain.go
 *.test
 *.prof
 
-examples/fishy/fishy
-examples/contest/contest
-examples/webone/webone
-examples/webtwo/webtwo
+# Attempt to exclude go's extensionless binary files
+_examples/*
+!_examples/*.*
+_examples/.DS_Store

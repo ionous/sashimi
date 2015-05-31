@@ -4,21 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"github.com/ionous/sashimi/_examples/stories"
+	"github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/web"
+	"log"
 )
-
-var index = `
-<!DOCTYPE html>
-<html lang="en">
-<body>
-<h1>New Game</h1>
-    <div id="input">
-        <form action="/text/new" method="POST">
-            <button>Start</button>
-        </form>
-    </div>
-</body>
-</html>`
 
 func main() {
 	story := flag.String("story", "", "select the story to play.")
@@ -29,10 +18,14 @@ func main() {
 		for _, nick := range stories.Stories.List() {
 			fmt.Println(" ", nick)
 		}
+	} else if root := flag.Arg(0); root == "" {
+		fmt.Println("expected a directory of files to serve")
 	} else {
-		server := web.NewServer(":8080", "")
-		server.HandleText("/", index)
-		fmt.Println("serving", "http://localhost:8080/")
-		server.ListenAndServe()
+		server := web.NewServer(
+			":8080", root,
+			support.Dir("/app/"),
+			support.Dir("/bower_components/"),
+			support.Dir("/media/"))
+		log.Fatal(server.ListenAndServe())
 	}
 }

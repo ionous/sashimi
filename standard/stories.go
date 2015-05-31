@@ -11,7 +11,6 @@ import (
 // System actions
 func init() {
 	AddScript(func(s *Script) {
-
 		s.The("kinds",
 			Called("stories").WithSingularName("story"),
 			Have("author", "text"),

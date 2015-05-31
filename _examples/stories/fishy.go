@@ -514,3 +514,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 		Has("maximum score", 1),
 	)
 }
+
+func init() {
+	Stories.Register("sushi", A_Day_For_Fresh_Sushi)
+}
