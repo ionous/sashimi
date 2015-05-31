@@ -12,15 +12,15 @@ var index = `
 <body>
 <h1>New Game</h1>
     <div id="input">
-        <form action="/game/new" id="f" method="POST">
-            <input type="submit" id="q" name="q">
+        <form action="/text/new" method="POST">
+            <button>Start</button>
         </form>
     </div>
 </body>
 </html>`
 
 func main() {
-	//http://localhost:8080/game/new
+	//http://localhost:8080/text/new
 	AddScript(func(s *Script) {
 		s.The("story",
 			Called("testing"),
@@ -32,7 +32,7 @@ func main() {
 		)
 	})
 	server := web.NewServer(":8080", "")
-	server.HandleText("/index.html", index)
+	server.HandleText("/", index)
 	log.Println("serving", "http://localhost:8080/")
 	log.Fatal(server.ListenAndServe())
 }

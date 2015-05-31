@@ -52,7 +52,7 @@ func init() {
 				// FIX: Go() should handle both Name() and ref
 				story, room := g.The("story"), g.Any("room")
 				story.Go("set initial position", g.The("player"), room)
-				story.Go("print the banner")
+				story.Go("print the banner") // see: banner.go
 				room = g.The("player").Object("whereabouts")
 				story.Go("describe the first room", room)
 			}))
@@ -83,8 +83,6 @@ func init() {
 			}))
 
 		s.The("stories",
-			Can("print the banner").
-				And("printing the banner").RequiresNothing(),
 			Can("describe the first room").
 				And("describing the first room").RequiresOne("room"),
 			To("describe the first room", func(g G.Play) {

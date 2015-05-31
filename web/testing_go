@@ -1,0 +1,79 @@
+// okay: index.html shol
+
+//
+// copied from boilerplate :(
+//
+
+//
+func handleAction(w http.ResponseWriter, r *http.Request) {
+	s := r.FormValue("obj")
+	o := fmt.Sprintf("Hello, %s %s %q", r.Method, s, html.EscapeString(r.URL.Path))
+	fmt.Fprint(w, o)
+	fmt.Println(o)
+	switch r.Method {
+	case "GET":
+		// Serve the resource.
+	case "POST":
+		// Create a new record.
+	case "PUT":
+		// Update an existing record.
+	case "DELETE":
+		// Remove the record.
+	default:
+		// Give an error message.
+	}
+}
+
+type Object struct {
+	Id       string   `json:"id"`
+	States   []string `json:"states,omitempty"`
+	Contains []Object `json:"contains,omitempty"`
+}
+
+type Array []interface{}
+type Dict map[string]interface{}
+
+func handleData(w http.ResponseWriter, r *http.Request) {
+	studio := Array{
+		Dict{"present": []Object{
+			Object{
+				Id: "Studio",
+				Contains: []Object{
+					Object{
+						Id:     "Cabinet",
+						States: []string{"Closed"},
+					},
+					Object{
+						Id: "Easel",
+					},
+					Object{
+						Id: "Table",
+						Contains: []Object{
+							Object{
+								Id: "Vase",
+							},
+						},
+					},
+					Object{
+						Id: "Aquarium",
+						Contains: []Object{
+							Object{
+								Id: "Gravel",
+							},
+							Object{
+								Id: "Seaweed",
+							},
+							Object{
+								Id: "EvilFish",
+							},
+						},
+					},
+				},
+			},
+		}}}
+	//	encoder:Encoder writes JSON objects to an output stream.
+	// http://thenewstack.io/make-a-restful-json-api-go/
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(studio)
+}

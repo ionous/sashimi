@@ -8,33 +8,38 @@ import (
 	"log"
 )
 
-type IOutput interface {
-	Print(...interface{})
-	Println(...interface{})
-	Write(p []byte) (n int, err error)
-}
-
 // FIX: standarize member exports by splitting game into smaller classes and interfaces
 type Game struct {
 	Model          *M.Model
 	Objects        GameObjects
 	Dispatchers    ClassDispatchers
-	console        IOutput
+	output         IOutput
 	parser         *ModelParser
 	queue          *E.Queue
 	nullobj        *NullObject
 	defaultActions DefaultActions
+	SystemActions  SystemActions
 	log            *log.Logger
 	references     M.References
+	Properties     PropertyWatchers
 	parentLookup   ParentLookupStack
 	parserSource   ParserSourceStack
+}
+
+type logAdapter struct {
+	output IOutput
+}
+
+func (this logAdapter) Write(p []byte) (n int, err error) {
+	this.output.Log(string(p))
+	return len(p), nil
 }
 
 // each action can have a chain of default actions
 type DefaultActions map[*M.ActionInfo][]G.Callback
 
 func NewGame(model *M.Model, output IOutput) (game *Game, err error) {
-	log := log.New(output, "game: ", log.Lshortfile)
+	log := log.New(logAdapter{output}, "game: ", log.Lshortfile)
 	dispatchers := NewDispatchers(log)
 	objects, e := CreateGameObjects(model.Instances)
 	if e != nil {
@@ -49,8 +54,10 @@ func NewGame(model *M.Model, output IOutput) (game *Game, err error) {
 		E.NewQueue(),
 		&NullObject{log},
 		make(DefaultActions),
+		SystemActions{},
 		log,
 		M.NewReferences(model.Classes, model.Instances, model.Tables),
+		PropertyWatchers{},
 		ParentLookupStack{},
 		ParserSourceStack{},
 	}
@@ -174,6 +181,7 @@ func (this *Game) ProcessEvents() (err error) {
 					err = fmt.Errorf("unknown action data %T", msg.Data)
 				} else {
 					act.runDefaultActions()
+					this.SystemActions.Run(act.action.Event())
 				}
 			}
 		}
@@ -182,6 +190,8 @@ func (this *Game) ProcessEvents() (err error) {
 }
 
 // FIX: TEMP(ish)
+// it might be better to add a name search (interface) to the model
+// and then use the id in the runtime.
 func (this *Game) FindObject(name string) (ret *GameObject, okay bool) {
 	if info, err := this.Model.Instances.FindInstance(name); err == nil {
 		ret = this.Objects[info.Id()]
@@ -265,14 +275,13 @@ func (this *Game) runCommand(action *M.ActionInfo, instances []string) (err erro
 	if sourceObj == nil {
 		err = fmt.Errorf("couldnt find command source for %s", action.Name())
 	} else {
-		source := sourceObj.Info()
-		sourceClass := source.Class()
+		sourceClass := sourceObj.info.Class()
 		if action.Source() != sourceClass && !sourceClass.HasParent(action.Source()) {
 			err = fmt.Errorf("source class for %s doesnt match", action.Name())
 		} else {
 			// inject the source object along with the other nouns
 			types := action.NounSlice()
-			instances = append([]string{source.Id().String()}, instances...)
+			instances = append([]string{sourceObj.Id().String()}, instances...)
 			keys := []string{"Source", "Target", "Context"}
 			values := make(map[string]TemplateValues)
 			objs := make([]*GameObject, len(types))

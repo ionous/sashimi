@@ -1,7 +1,6 @@
 package runtime
 
 import (
-	"fmt"
 	E "github.com/ionous/sashimi/event"
 	M "github.com/ionous/sashimi/model"
 )
@@ -27,15 +26,16 @@ type GameObjects map[M.StringId]*GameObject
 //
 // Return the name of the object.
 //
-func (this *GameObject) String() string {
-	return this.info.Name()
+func (this *GameObject) Id() M.StringId {
+	return this.info.Id()
 }
 
 //
-// For debugging, return the model data this object was created from.
+// Return the name of the object.
 //
-func (this *GameObject) Info() *M.InstanceInfo {
-	return this.info
+func (this *GameObject) String() string {
+	// FIX: can this be id?
+	return this.info.Name()
 }
 
 //
@@ -50,57 +50,4 @@ func (this *GameObject) Listen(evt string, handler E.IListen, capture bool) {
 //
 func (this *GameObject) Silence(evt string, handler E.IListen, capture bool) {
 	this.dispatcher.Silence(evt, handler, capture)
-}
-
-//
-// Turn the passed instances into objects.
-//
-func CreateGameObjects(src M.InstanceMap,
-) (ret GameObjects, err error,
-) {
-	ret = make(GameObjects)
-	allProps := make(map[*M.ClassInfo]M.PropertySet)
-
-MakeObjects:
-	for _, info := range src {
-		// create property sets for this instance's class
-		class := info.Class()
-		props, had := allProps[class]
-		if !had {
-			props = class.AllProperties()
-			allProps[class] = props
-		}
-		// turn properties into tables:
-		values, temps := NewRuntimeValues(), make(TemplatePool)
-		values.set("Name", info.FullName())
-		for propId, prop := range props {
-			v, _ := info.ValueByName(prop.Name())
-			switch val := v.(type) {
-			case *M.EnumValue:
-				choice := val.Choice()
-				values.set(propId, choice)
-				values.set(choice, true)
-			case *M.NumValue:
-				num, _ := val.Num()
-				values.set(propId, num)
-			case *M.TextValue:
-				text, _ := val.Text()
-				values.set(propId, text)
-				// TBD: when to parse this? maybe options? here for early errors.
-				if e := temps.New(propId.String(), text); e != nil {
-					err = e
-					break MakeObjects
-				}
-			case *M.RelativeValue:
-				// no table enties
-			default:
-				err = fmt.Errorf("internal error: unknown property type %s:%T", propId, prop)
-				break MakeObjects
-			}
-		}
-		// creat the game obj
-		gameobj := &GameObject{info, values, temps, E.NewDispatcher()}
-		ret[info.Id()] = gameobj
-	}
-	return ret, err
 }

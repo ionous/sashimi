@@ -48,36 +48,6 @@ func (this *GameEventAdapter) Any(name string) (obj G.IObject) {
 
 //
 func (this *GameEventAdapter) Say(texts ...string) {
-	this._print(texts...)
-}
-
-//
-func (this *GameEventAdapter) Report(texts ...string) {
-	if len(texts) > 0 {
-		text := strings.Join(texts, " ")
-		this.console.Println(text)
-	}
-}
-
-//
-func (this *GameEventAdapter) Log(texts ...string) {
-	if len(texts) > 0 {
-		text := strings.Join(texts, " ")
-		this.console.Println(text)
-	}
-}
-
-//
-func (this *GameEventAdapter) StopHere() {
-	this.cancelled = true
-}
-
-//
-func (this *GameEventAdapter) Rules() G.IGameRules {
-	return this.Game
-}
-
-func (this *GameEventAdapter) _print(texts ...string) {
 	if len(texts) > 0 {
 		for i, text := range texts {
 			if strings.Contains(text, "{{") {
@@ -94,10 +64,34 @@ func (this *GameEventAdapter) _print(texts ...string) {
 		text := strings.Join(texts, " ")
 		// find the new lines
 		lines := strings.Split(text, "\n")
-		for _, line := range lines {
-			this.console.Println(line)
-		}
+		this.output.ScriptSays(lines)
 	}
+}
+
+//
+// func (this *GameEventAdapter) Report(texts ...string) {
+// 	if len(texts) > 0 {
+// 		text := strings.Join(texts, " ")
+// 		this.output.Println(text)
+// 	}
+// }
+
+//
+func (this *GameEventAdapter) Log(texts ...string) {
+	if len(texts) > 0 {
+		text := strings.Join(texts, " ")
+		this.output.Log(text)
+	}
+}
+
+//
+func (this *GameEventAdapter) StopHere() {
+	this.cancelled = true
+}
+
+//
+func (this *GameEventAdapter) Rules() G.IGameRules {
+	return this.Game
 }
 
 //
@@ -106,10 +100,8 @@ func (this *GameEventAdapter) _print(texts ...string) {
 // the point would be, what exactly?
 func (this *GameEventAdapter) GetObject(name string) (obj G.IObject) {
 	// asking by original name
-	if obj == nil {
-		if gobj, ok := this.FindObject(name); ok {
-			obj = ObjectAdapter{this.Game, gobj}
-		}
+	if gobj, ok := this.FindObject(name); ok {
+		obj = ObjectAdapter{this.Game, gobj}
 	}
 	// testing against data, because sometimes the adapter isnt invoked via an event
 	// use different interfaces perhaps? maybe after injection works?

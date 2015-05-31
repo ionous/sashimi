@@ -1,7 +1,6 @@
 package sashimi
 
 import (
-	C "github.com/ionous/sashimi/console"
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
 	"os"
@@ -63,8 +62,7 @@ func TestClassCallback(t *testing.T) {
 		Called("other"),
 		Has("description", "it's an error!"),
 	)
-	cons := C.NewBufCon(nil)
-	g, err := CompileGameWithConsole(&s, cons)
+	g, err := NewTestGame(&s, nil)
 	if err != nil {
 		t.Error("error:", err)
 	}
@@ -77,7 +75,7 @@ func TestClassCallback(t *testing.T) {
 	if err := g.ProcessEvents(); err != nil {
 		t.Error("error:", err)
 	}
-	out := cons.Flush()
+	out := g.FlushOutput()
 	if len(out) != 1 || out[0] != "it's a trap!" {
 		t.Fatal("mismatched output", out)
 	}
@@ -97,8 +95,7 @@ func TestCallbackBeforeAfter(t *testing.T) {
 	)
 	s.The("kind", Called("obj"), Exists())
 
-	con := C.NewBufCon(nil)
-	g, err := CompileGameWithConsole(&s, con)
+	g, err := NewTestGame(&s, nil)
 	if err != nil {
 		t.Error("error:", err)
 	}
@@ -111,7 +108,7 @@ func TestCallbackBeforeAfter(t *testing.T) {
 	if err := g.ProcessEvents(); err != nil {
 		t.Error("error:", err)
 	}
-	out := con.Flush()
+	out := g.FlushOutput()
 	if len(out) != 2 || out[0] != "Before" || out[1] != "After" {
 		t.Fatal("mismatched output", out)
 	}
@@ -146,8 +143,7 @@ func TestCallbackParsing(t *testing.T) {
 	)
 	// should trigger "test", which should print the description
 	strs := []string{"look at lookee"}
-	con := C.NewBufCon(strs)
-	g, err := CompileGameWithConsole(&s, con)
+	g, err := NewTestGame(&s, strs)
 	if err != nil {
 		t.Error(err)
 	}
@@ -160,8 +156,7 @@ func TestCallbackParsing(t *testing.T) {
 	g.PushParserSource(func(g G.Play) G.IObject {
 		return g.The("looker")
 	})
-	g.RunForever()
-	out := con.Flush()
+	out := g.RunTest()
 	expect := []string{"look it's a test!"}
 	if len(expect) != len(out) || expect[0] != out[0] {
 		t.Fatal("Expected:", expect, "Actual:", out)

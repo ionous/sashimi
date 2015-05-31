@@ -51,7 +51,8 @@ func (this *ClassInfo) Properties() PropertySet {
 }
 
 //
-// returns a new property set
+// Returns a new property set consisting of all properties in this class and all parents
+//
 func (this *ClassInfo) AllProperties() PropertySet {
 	props := make(PropertySet)
 	this._flatten(props)
@@ -152,9 +153,9 @@ func (this *ClassInfo) _propertyByChoice(choice StringId) (
 	return prop, index
 }
 
-// NOTE: does NOT check for conflicts
-// trying to be a little looser than normal,
-// and get to the point where the model is known to be safe at creation time.
+// NOTE: does NOT check for conflicts.
+// ( trying to be a little looser than normal,
+// and get to the point where the model is known to be safe at creation time. )
 func (this *ClassInfo) _flatten(props PropertySet) {
 	if this.parent != nil {
 		this.parent._flatten(props)

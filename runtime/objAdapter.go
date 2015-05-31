@@ -5,6 +5,7 @@ import (
 	E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game"
 	M "github.com/ionous/sashimi/model"
+	"strings"
 )
 
 //
@@ -58,12 +59,12 @@ func (this ObjectAdapter) Class(class string) (okay bool) {
 //
 //
 //
-func (this ObjectAdapter) Is(name string) (ret bool) {
-	if prop, index, ok := this.gobj.info.Class().PropertyByChoice(name); !ok {
-		this.logError(fmt.Errorf("is: no such choice '%s'.'%s'", this, name))
+func (this ObjectAdapter) Is(prop string) (ret bool) {
+	if prop, index, ok := this.gobj.info.Class().PropertyByChoice(prop); !ok {
+		this.logError(fmt.Errorf("is: no such choice '%s'.'%s'", this, prop))
 	} else {
 		testChoice, _ := prop.IndexToChoice(index)
-		currChoice, _ := this.gobj.values.getChoice(prop.Id())
+		currChoice, _ := this.gobj.values.Choice(prop.Id())
 		ret = currChoice == testChoice
 	}
 	return ret
@@ -72,20 +73,21 @@ func (this ObjectAdapter) Is(name string) (ret bool) {
 //
 //
 //
-func (this ObjectAdapter) SetIs(name string) {
-	if prop, index, ok := this.gobj.info.Class().PropertyByChoice(name); !ok {
-		this.logError(fmt.Errorf("SetIs: no such choice '%s'.'%s'", this, name))
+func (this ObjectAdapter) SetIs(prop string) {
+	if prop, index, ok := this.gobj.info.Class().PropertyByChoice(prop); !ok {
+		this.logError(fmt.Errorf("SetIs: no such choice '%s'.'%s'", this, prop))
 	} else {
 		// get the current choice from the implied property slot
-		if currChoice, existed := this.gobj.values.getChoice(prop.Id()); !existed {
-			err := fmt.Errorf("internal error: choice mismatch via %s for %s %v", name, prop.Id(), this.gobj.values)
+		if currChoice, existed := this.gobj.values.Choice(prop.Id()); !existed {
+			err := fmt.Errorf("internal error: choice mismatch via %s for %s %v", prop, prop.Id(), this.gobj.values)
 			this.logError(err)
 		} else {
 			newChoice, _ := prop.IndexToChoice(index)
 			if currChoice != newChoice {
-				this.gobj.values.remove(currChoice)        // delete the old choice's boolean,
-				this.gobj.values.set(newChoice, true)      // and set the new
-				this.gobj.values.set(prop.Id(), newChoice) // // set the property slot to the new choice
+				this.gobj.values.removeDirect(currChoice)        // delete the old choice's boolean,
+				this.gobj.values.setDirect(newChoice, true)      // and set the new
+				this.gobj.values.setDirect(prop.Id(), newChoice) // // set the property slot to the new choice
+				this.game.Properties.Notify(this.gobj.Id().String(), prop.Id().String(), currChoice.String(), newChoice.String())
 			}
 		}
 	}
@@ -94,12 +96,12 @@ func (this ObjectAdapter) SetIs(name string) {
 //
 //
 //
-func (this ObjectAdapter) Num(name string) (ret float32) {
-	id := M.MakeStringId(name)
-	if v, okay := this.gobj.values.getNum(id); okay {
+func (this ObjectAdapter) Num(prop string) (ret float32) {
+	id := M.MakeStringId(prop)
+	if v, ok := this.gobj.values.Num(id); ok {
 		ret = v
 	} else {
-		this.logError(TypeMismatch{name, "get num"})
+		this.logError(TypeMismatch{prop, "get num"})
 	}
 	return ret
 }
@@ -107,9 +109,11 @@ func (this ObjectAdapter) Num(name string) (ret float32) {
 //
 //
 //
-func (this ObjectAdapter) SetNum(name string, value float32) {
-	if !this.gobj.values.safeSet(name, value) {
-		this.logError(TypeMismatch{name, "set num"})
+func (this ObjectAdapter) SetNum(prop string, value float32) {
+	if old, ok := this.gobj.values.SetValue(prop, value); !ok {
+		this.logError(TypeMismatch{prop, "set num"})
+	} else {
+		this.game.Properties.Notify(this.gobj.Id().String(), prop, old, value)
 	}
 }
 
@@ -117,20 +121,20 @@ func (this ObjectAdapter) SetNum(name string, value float32) {
 // returns the evaluated template
 // ( note: inform seems to error when trying to store or manipulate templated text )
 //
-func (this ObjectAdapter) Text(name string) (ret string) {
-	id := M.MakeStringId(name)
+func (this ObjectAdapter) Text(prop string) (ret string) {
+	id := M.MakeStringId(prop)
 	// is this text stored as a template?
-	if temp, okay := this.gobj.temps[id.String()]; okay {
+	if temp, ok := this.gobj.temps[id.String()]; ok {
 		if s, e := runTemplate(temp, this.gobj.values.data); e != nil {
 			this.logError(e)
 		} else {
 			ret = s
 		}
 	} else {
-		if v, okay := this.gobj.values.getText(id); okay {
+		if v, ok := this.gobj.values.Text(id); ok {
 			ret = v
 		} else {
-			this.logError(TypeMismatch{name, fmt.Sprint(this.gobj.values.data)})
+			this.logError(TypeMismatch{prop, fmt.Sprint(this.gobj.values.data)})
 		}
 	}
 	return ret
@@ -139,28 +143,30 @@ func (this ObjectAdapter) Text(name string) (ret string) {
 //
 //
 //
-func (this ObjectAdapter) SetText(name string, text string) {
-	id := M.MakeStringId(name)
+func (this ObjectAdapter) SetText(prop string, text string) {
+	id := M.MakeStringId(prop)
 	if e := this.gobj.temps.New(id.String(), text); e != nil {
 		this.logError(e)
-	} else if !this.gobj.values.safeSet(name, text) {
-		this.logError(TypeMismatch{name, "set text"})
+	} else if old, ok := this.gobj.values.SetValue(prop, text); !ok {
+		this.logError(TypeMismatch{prop, "set text"})
+	} else {
+		this.game.Properties.Notify(this.gobj.Id().String(), prop, old, text)
 	}
 }
 
 //
 //
 //
-func (this ObjectAdapter) Object(name string) (ret G.IObject) {
+func (this ObjectAdapter) Object(prop string) (ret G.IObject) {
 	var res *ObjectAdapter
-	if val, ok := this.gobj.info.ValueByName(name); !ok {
+	if val, ok := this.gobj.info.ValueByName(prop); !ok {
 		// TBD: should this be logged? its sure nice to have be able to test objects generically for properties
-		// this.logError(fmt.Errorf("object requested, but no such property %s", name))
+		// this.logError(fmt.Errorf("object requested, but no such property %s", prop))
 	} else {
 		if rel, ok := val.(*M.RelativeValue); !ok {
 			this.logError(fmt.Errorf("object requested, but property is %T", val))
 		} else {
-			if rel.IsMany() {
+			if rel.RelativeProperty().ToMany() {
 				this.logError(fmt.Errorf("object requested, but relation is list"))
 			} else {
 				list := rel.List()
@@ -183,14 +189,14 @@ func (this ObjectAdapter) Object(name string) (ret G.IObject) {
 //
 //
 //
-func (this ObjectAdapter) ObjectList(name string) (ret []G.IObject) {
-	if val, ok := this.gobj.info.ValueByName(name); !ok {
+func (this ObjectAdapter) ObjectList(prop string) (ret []G.IObject) {
+	if val, ok := this.gobj.info.ValueByName(prop); !ok {
 		this.logError(fmt.Errorf("object list requested, but no such property"))
 	} else {
 		if rel, ok := val.(*M.RelativeValue); !ok {
 			this.logError(fmt.Errorf("object list requested, but property is %T", val))
 		} else {
-			if !rel.IsMany() {
+			if !rel.RelativeProperty().ToMany() {
 				this.logError(fmt.Errorf("object list requested, but relation is singular"))
 			} else {
 				list := rel.List()
@@ -211,26 +217,31 @@ func (this ObjectAdapter) ObjectList(name string) (ret []G.IObject) {
 //
 //
 //
-func (this ObjectAdapter) SetObject(name string, other G.IObject) {
-	if val, ok := this.gobj.info.ValueByName(name); !ok {
-		this.logError(fmt.Errorf("setobject: no such choice '%s'.'%s'", this, name))
+func (this ObjectAdapter) SetObject(prop string, other G.IObject) {
+	if val, ok := this.gobj.info.ValueByName(prop); !ok {
+		this.logError(fmt.Errorf("SetObject: no such relation '%s'.'%s'", this, prop))
 	} else {
 		if rel, ok := val.(*M.RelativeValue); !ok {
-			this.logError(TypeMismatch{name, "set object"})
+			this.logError(TypeMismatch{prop, "SetObject"})
 		} else {
-			if obj, ok := other.(ObjectAdapter); !ok {
-				this.game.log.Println("clearing", this.Name(), name)
-				if e := rel.ClearReference(); e != nil {
+			// if the object doesnt exist, we take it to mean they are clearing the reference.
+			if other, ok := other.(ObjectAdapter); !ok {
+				this.game.log.Println("clearing", this.Name(), prop)
+				if removed, e := rel.ClearReference(); e != nil {
 					this.logError(e)
+				} else {
+					this.game.Properties.Notify(this.gobj.Id().String(), prop, removed, "")
 				}
 			} else {
 				// FIX? the impedence b/t IObject and Reference is annoying.
-				if ref, e := this.game.references.FindByName(obj.Name()); e != nil {
+				other := other.gobj.Id().String()
+				if ref, e := this.game.references.FindByName(other); e != nil {
+					this.logError(e)
+				} else if removed, e := rel.SetReference(ref); e != nil {
 					this.logError(e)
 				} else {
-					if e := rel.SetReference(ref); e != nil {
-						this.logError(e)
-					}
+					// removed is probably a single object
+					this.game.Properties.Notify(this.gobj.Id().String(), prop, removed, other)
 				}
 			}
 		}
@@ -240,21 +251,22 @@ func (this ObjectAdapter) SetObject(name string, other G.IObject) {
 //
 //
 //
-func (this ObjectAdapter) Says(s string) {
-	this.game.console.Println(this.Name(), ": ", s)
-	this.game.console.Println()
+func (this ObjectAdapter) Says(text string) {
+	// FIX: share some template love with GameEventAdapter.Say()
+	lines := strings.Split(text, "\n")
+	this.game.output.ActorSays(this.Name(), lines)
 }
 
 //
-// send all the events associated with the named action; and,
+// send all the events associated with the propd action; and,
 // run the default action if appropriate
 // @see also: Game.ProcessEventQueue
 //
-func (this ObjectAdapter) Go(name string, objects ...G.IObject) {
-	if action, e := this.game.Model.Actions.FindActionByName(name); e != nil {
+func (this ObjectAdapter) Go(prop string, objects ...G.IObject) {
+	if action, e := this.game.Model.Actions.FindActionByName(prop); e != nil {
 		this.logError(e)
 	} else {
-		// ugly: we need the names, even tho we already have the objects...
+		// ugly: we need the props, even tho we already have the objects...
 		nouns := make([]string, len(objects)+1)
 		nouns[0] = this.Name()
 		for i, o := range objects {
@@ -267,7 +279,7 @@ func (this ObjectAdapter) Go(name string, objects ...G.IObject) {
 			msg := E.Message{Name: action.Event(), Data: act}
 			// see ProcessEventQueue()
 			path := E.NewPathTo(tgt)
-			this.game.log.Output(3, fmt.Sprintf("go %s %s", name, path))
+			this.game.log.Output(3, fmt.Sprintf("go %s %s", prop, path))
 			if runDefault, err := msg.Send(path); err != nil {
 				this.logError(err)
 			} else if runDefault {

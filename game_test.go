@@ -1,7 +1,6 @@
 package sashimi
 
 import (
-	"github.com/ionous/sashimi/console"
 	G "github.com/ionous/sashimi/game"
 	R "github.com/ionous/sashimi/runtime"
 	. "github.com/ionous/sashimi/script"
@@ -13,7 +12,7 @@ import (
 //
 func TestStandardRules(t *testing.T) {
 	s := InitScripts()
-	_, err := CompileGameWithConsole(s, console.NewConsole())
+	_, err := NewTestGame(s, nil)
 	assert.NoError(t, err)
 }
 
@@ -28,7 +27,7 @@ func TestObjectSet(t *testing.T) {
 		Called("test"),
 		Has("amSet", "original"))
 
-	g, err := CompileGameWithConsole(s, console.NewConsole())
+	g, err := NewTestGame(s, nil)
 	if assert.NoError(t, err) && assert.NotNil(t, g.Model) {
 
 		inst, err := g.Model.Instances.FindInstance("test")
@@ -53,7 +52,6 @@ func TestObjectSet(t *testing.T) {
 //
 func TestStartupText(t *testing.T) {
 	s := InitScripts()
-	c := console.NewBufCon(nil)
 
 	s.The("story",
 		Called("testing"),
@@ -68,7 +66,7 @@ func TestStartupText(t *testing.T) {
 		}),
 	)
 
-	game, err := CompileGameWithConsole(s, c)
+	game, err := NewTestGame(s, nil)
 	assert.NoError(t, err, "compile should work")
 
 	story := game.FindFirstOf(game.Model.Classes.FindClass("stories"))
@@ -80,7 +78,7 @@ func TestStartupText(t *testing.T) {
 	err = game.SendEvent("starting to play", story.String())
 	assert.NoError(t, err, "starting to play")
 
-	game.RunForever()
+	out := game.RunTest()
 	assert.Exactly(t, []string{
 		"", // FIX: this line shouldnt exist
 		"testing",
@@ -89,5 +87,5 @@ func TestStartupText(t *testing.T) {
 		"",
 		"somewhere",
 		"an empty room",
-	}, c.Flush())
+	}, out)
 }

@@ -5,17 +5,15 @@ import (
 )
 
 //
-// Script instances.
-// operates kind of like a prototype
-// the values have references to the class table
-// its properties fallback to the table when needed.
+// Script Instances operate kind of like a prototype:
+// its property values fall back to its associated class when needed.
 //
 type InstanceInfo struct {
 	id    StringId
 	class *ClassInfo
 	name  string
-	long  string // FIX: kill this, replace with article categorization
-	refs  *References
+	long  string      // FIX: kill this, replace with article categorization
+	refs  *References // pointer to shared references, tables.
 	enum  map[StringId]int
 	text  map[StringId]string
 	num   map[StringId]float32
@@ -40,7 +38,7 @@ func NewInstanceInfo(
 }
 
 //
-//
+// Every instance has a unique id based on its original name.
 //
 func (this *InstanceInfo) Id() StringId {
 	return this.id

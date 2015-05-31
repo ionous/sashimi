@@ -39,6 +39,8 @@ func (this *RuntimeAction) runCallback(cb G.Callback) bool {
 //
 func (this *RuntimeAction) runDefaultActions() {
 	// FIX: assign defaults at initialization?
+	// it'd be even better if this didn't need game --
+	// the main reason it does it to share code b/t Go() and the ProcessEventLoop
 	if actions, existed := this.game.defaultActions[this.action]; existed {
 		for _, cb := range actions {
 			this.runCallback(cb)

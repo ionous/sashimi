@@ -361,7 +361,6 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 		// interestingly, in Inform this completely hides the gravel and the seaweed even from the room description.
 		// I think that's got to be a bug ( maybe a change to inform since the story was written? )
 		// because there's no way to see the contents of the tank at all.
-		// also interestingly, the examining the table dos not
 		s.The("aquarium",
 			When("examining").Always(func(g G.Play) {
 				g.Say(g.The("aquarium").Text("description"))

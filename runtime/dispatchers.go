@@ -49,36 +49,3 @@ func (this ClassDispatchers) GetDispatcher(cls *M.ClassInfo) (ret ClassDispatche
 	}
 	return ret, okay
 }
-
-// type ClassDispatcher struct {
-// 	bubbles, captures E.EventMap
-// }
-// //
-// // Send the event to the class handleres for the passed cycle
-// //
-// func (this ClassDispatchers) DispatchClassEvent(evt E.IEvent, class *M.ClassInfo, captureCycle bool) (err error) {
-// 	for cls := classs; err == nil && cls != nil; cls = cls.Parent() {
-// 		if events, ok := dispatchers.getDispatcher(cls, captureCycle); ok {
-// 			if e = events.HandleEvents(evt); e != nil {
-// 				err = e
-// 				break
-// 			}
-// 		}
-// 	}
-// 	return err
-// }
-
-// //
-// // Retrieve the dispatcher for the passed key, only if it exists.
-// //
-// func (this ClassDispatchers) getDispatcher(cls *M.ClassInfo, captureCycle bool) (ret E.EventMap, okay bool) {
-// 	if dispatcher, ok := this.all[key]; ok {
-// 		if captureCycle {
-// 			ret = dispatcher.captures
-// 		} else {
-// 			ret = dispatcher.bubbles
-// 		}
-// 		okay = len(ret) > 0
-// 	}
-// 	return ret, okay
-// }

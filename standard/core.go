@@ -5,6 +5,10 @@ import (
 	. "github.com/ionous/sashimi/script"
 )
 
+func InitStandardLibrary() *Script {
+	return InitScripts()
+}
+
 // FIX: there's no error testing here and its definitely possible to screw things up.
 func Assign(dest G.IObject, rel string, prop G.IObject) {
 	_, parentRel := DirectParent(prop)
@@ -32,7 +36,7 @@ func init() {
 
 		// vs. descriptions in "kind"
 		// it seems to make sense for now to have two separate description fields.
-		// rooms like to say their description, while objects like to say their brief ( or name )
+		// rooms like to say their description, while objects like to say their brief initial appearence ( or name, if there's none. )
 		s.The("rooms",
 			Have("description", "text"))
 

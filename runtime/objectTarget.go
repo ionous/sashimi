@@ -25,7 +25,7 @@ func (this ObjectTarget) String() string {
 //
 func (this ObjectTarget) Parent() (ret E.ITarget, ok bool) {
 	game, obj := this.game, this.obj
-	cls, next := obj.Info().Class(), game.parentLookup.FindParent(obj)
+	cls, next := obj.info.Class(), game.parentLookup.FindParent(obj)
 	if cls != nil || next != nil {
 		ret, ok = ClassTarget{this, cls, next}, true
 	}
@@ -39,28 +39,3 @@ func (this ObjectTarget) Parent() (ret E.ITarget, ok bool) {
 func (this ObjectTarget) Dispatch(evt E.IEvent) error {
 	return this.obj.dispatcher.Dispatch(evt)
 }
-
-// func (this ObjectTarget) Dispatch(evt E.IEvent) (err error) {
-// 	// note: if something isnt firing; double check the name.
-// 	// make sure it's not an action name, but the event-ing name.
-// 	game, obj := this.game, this.obj
-// 	phase := evt.Phase()
-
-// 	// capturing or targeting? trigger class capture listeners
-// 	if phase != E.BubblingPhase {
-// 		err = game.Dispatchers.DispatchClassEvent(evt, obj.info.Class(), true)
-// 	}
-
-// 	if err == nil {
-// 		// instance listeners:
-// 		if e := this.dispatcher.Dispatch(evt); e != nil {
-// 			err = e
-// 		} else {
-// 			// bubbling or targeting? trigger class bubble listeners
-// 			if err == nil && phase != CapturingPhase {
-// 				err = game.Dispatchers.DispatchClassEvent(evt, obj.info.Class(), false)
-// 			}
-// 		}
-// 	}
-// 	return err
-// }

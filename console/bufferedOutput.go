@@ -5,21 +5,6 @@ import (
 	"strings"
 )
 
-//
-// Creates a console whose input comes from the passed strings.
-// when the strings are exhausted the Readln() returns false.
-//
-func NewBufCon(strs []string) *BufCon {
-	return &BufCon{strs: strs}
-}
-
-//
-type BufCon struct {
-	strs  []string
-	index int
-	BufferedOutput
-}
-
 type BufferedOutput struct {
 	accum []string
 	line  []string
@@ -62,16 +47,4 @@ func (this *BufferedOutput) Flush() (lines []string) {
 	}
 	this.accum = nil
 	return lines
-}
-
-//
-// Returns the next input string, false when input has been exhausted.
-//
-func (this *BufCon) Readln() (ret string, okay bool) {
-	okay = this.index < len(this.strs)
-	if okay {
-		ret = this.strs[this.index]
-		this.index++
-	}
-	return ret, okay
 }

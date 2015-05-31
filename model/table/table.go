@@ -63,7 +63,7 @@ func (this *Table) List(x string, rev bool) (ret []string) {
 
 type pairTest func(x, y string) bool
 
-func (this *Table) Remove(pairTest pairTest) (ret []string) {
+func (this *Table) Remove(pairTest pairTest) (removed int) {
 	t := this.table
 	for i := 0; i < len(t); i++ {
 		pair := &t[i]
@@ -71,8 +71,9 @@ func (this *Table) Remove(pairTest pairTest) (ret []string) {
 			end := len(t) - 1
 			*pair = t[end]
 			t = t[:end]
+			removed = removed + 1
 		}
 	}
 	this.table = t
-	return ret
+	return removed
 }

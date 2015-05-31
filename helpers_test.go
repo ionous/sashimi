@@ -5,43 +5,62 @@ import (
 	P "github.com/ionous/sashimi/parser"
 	R "github.com/ionous/sashimi/runtime"
 	. "github.com/ionous/sashimi/script"
-	"io"
 	"log"
 	"os"
 )
 
 //
-func NewLogger() *log.Logger {
-	return log.New(os.Stderr, "test:", log.Lshortfile)
+type TestOutput struct {
+	*C.BufCon
 }
 
 //
-func CompileGameWithConsole(s *Script, cons C.IConsole) (ret GameHelper, err error) {
+// Standard output.
+//
+func (this TestOutput) ScriptSays(lines []string) {
+	for _, l := range lines {
+		this.Println(l)
+	}
+}
+
+func (this TestOutput) ActorSays(name string, lines []string) {
+	for _, l := range lines {
+		this.Println(name, ":", l)
+	}
+}
+
+func (this TestOutput) Log(s string) {
+	os.Stderr.WriteString(s)
+}
+
+//
+func NewTestGame(s *Script, input []string) (ret TestGame, err error) {
 	if model, e := s.Compile(os.Stderr); e != nil {
 		err = e
 	} else {
-		type Output struct {
-			C.IConsole
-			io.Writer
-		}
-		if game, e := R.NewGame(model, Output{cons, os.Stderr}); e != nil {
+		cons := TestOutput{C.NewBufCon(input)}
+		if game, e := R.NewGame(model, cons); e != nil {
 			err = e
 		} else {
-			ret = GameHelper{cons, game}
+			ret = TestGame{cons, game}
 		}
 	}
 	return ret, err
 }
 
-type GameHelper struct {
-	console C.IConsole
+type TestGame struct {
+	console TestOutput
 	*R.Game
+}
+
+func (this TestGame) FlushOutput() []string {
+	return this.console.Flush()
 }
 
 //
 // For testing:
 //
-func (this GameHelper) RunForever() {
+func (this TestGame) RunTest() []string {
 	for {
 		// process queue
 		if e := this.ProcessEvents(); e != nil {
@@ -61,4 +80,5 @@ func (this GameHelper) RunForever() {
 			}
 		}
 	}
+	return this.FlushOutput()
 }

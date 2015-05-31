@@ -13,9 +13,8 @@ func (this *RelativeValue) Property() IProperty {
 	return this.prop
 }
 
-//
-func (this *RelativeValue) IsMany() bool {
-	return this.prop.ToMany()
+func (this *RelativeValue) RelativeProperty() *RelativeProperty {
+	return this.prop
 }
 
 //
@@ -33,7 +32,7 @@ func (this *RelativeValue) Table() (ret *TableRelation, ok bool) {
 	return this.inst.refs.tables.TableById(this.prop.relation)
 }
 
-//
+// return a list of referenced instances
 func (this *RelativeValue) List() (ret []string) {
 	// gee, so cache friendly.
 	if table, ok := this.Table(); ok {
@@ -86,25 +85,34 @@ func (this *RelativeValue) AddReference(other Reference) (err error) {
 
 //
 // FIX: where and how to validate table.style?
-func (this *RelativeValue) ClearReference() (err error) {
-	if this.IsMany() {
+// returns list of items cleared
+func (this *RelativeValue) ClearReference() (ret string, err error) {
+	if this.prop.ToMany() {
 		err = fmt.Errorf("setting an object, but relation is a list")
 	} else {
 		if table, ok := this.Table(); !ok {
 			err = fmt.Errorf("internal error? couldn't find table for relation %v", this.prop)
 		} else {
 			src := this.inst.id.String()
-			table.Remove(func(x, y string) bool {
-				return (!this.prop.isRev && src == x) || (this.prop.isRev && src == y)
+			// FIX: some sort of early return.
+			table.Remove(func(x, y string) (removed bool) {
+				if !this.prop.isRev && src == x {
+					ret = y
+					removed = true
+				} else if this.prop.isRev && src == y {
+					ret = x
+					removed = true
+				}
+				return removed
 			})
 		}
 	}
-	return err
+	return ret, err
 }
 
 //
 // FIX: table.style: where and how to validate style?
-func (this *RelativeValue) SetReference(other Reference) (err error) {
+func (this *RelativeValue) SetReference(other Reference) (removed string, err error) {
 	prop := this.prop
 	if !other.CompatibleWith(prop.relates) {
 		err = fmt.Errorf("%s not compatible with %s", other, prop)
@@ -113,7 +121,7 @@ func (this *RelativeValue) SetReference(other Reference) (err error) {
 			err = fmt.Errorf("internal error? couldn't find table for relation %v", this.prop)
 		} else {
 			if !prop.isMany {
-				err = this.ClearReference()
+				removed, err = this.ClearReference()
 			}
 			if err == nil {
 				src := this.inst.id.String()
@@ -125,5 +133,5 @@ func (this *RelativeValue) SetReference(other Reference) (err error) {
 			}
 		}
 	}
-	return err
+	return removed, err
 }

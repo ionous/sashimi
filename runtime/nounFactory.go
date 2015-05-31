@@ -45,10 +45,3 @@ func (this *NounFactory) MatchNoun(word string, _ string) (noun string, err erro
 	}
 	return noun, err
 }
-
-// type NoSuchThing struct {
-// }
-
-// func (this NoSuchThing) Error() string {
-// 	return "I don't see any such thing."
-// }

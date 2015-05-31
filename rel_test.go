@@ -11,7 +11,6 @@ import (
 //
 // create a single subclass called stories
 func TestSimpleRelation(t *testing.T) {
-
 	s := Script{}
 	s.The("kinds",
 		Called("gremlins"),

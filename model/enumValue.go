@@ -49,7 +49,8 @@ func (this *EnumValue) Any() (value interface{}, hasValue bool) {
 	return this.Index()
 }
 
-//
+// FIX: once this is re/moved from the model to the compiler level,
+// then change the values from pointers to concrete types
 func (this *EnumValue) SetAny(value interface{}) (err error) {
 	if choice, ok := value.(int); !ok {
 		err = fmt.Errorf(" %#v set any failed with %#v", this, value)

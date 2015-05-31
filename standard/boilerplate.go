@@ -45,11 +45,7 @@ func RunGame(opt Options) (err error) {
 			model.PrintModel(func(args ...interface{}) { fmt.Println(args...) })
 			return
 		}
-		type Output struct {
-			C.IConsole
-			io.Writer
-		}
-		if game, e := NewStandardGame(model, Output{cons, writer}); e != nil {
+		if game, e := NewStandardGame(model, StandardOutput{cons, writer}); e != nil {
 			err = e
 		} else {
 			left, right := game.story.Name(), fmt.Sprint("by ", game.story.Text("author"))
@@ -82,7 +78,7 @@ func RunGame(opt Options) (err error) {
 						}
 
 						if !game.Input(s) {
-							if useMini && !game.Quit() {
+							if useMini && !game.IsQuit() {
 								mini.Update()
 							}
 							break

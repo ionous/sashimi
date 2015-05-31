@@ -1,10 +1,14 @@
 package web
 
 import (
-	"encoding/json"
 	"fmt"
+	M "github.com/ionous/sashimi/model"
+	S "github.com/ionous/sashimi/script"
+	"github.com/ionous/sashimi/web/commands"
+	"github.com/ionous/sashimi/web/session"
+	"github.com/ionous/sashimi/web/simple"
 	"github.com/ionous/sashimi/web/support"
-	"html"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
@@ -12,162 +16,124 @@ import (
 )
 
 type Server struct {
+	sessions map[string]session.Sessions
 	*http.Server
-	sessions Sessions
+}
+
+// FIX: it's very silly to have to init and compile each time.
+func NewGameModel() (model *M.Model, err error) {
+	return S.InitScripts().Compile(ioutil.Discard /*os.Stderr*/)
 }
 
 func NewServer(addr string, root string, dirs ...support.FilePair) *Server {
 	handler := support.NewServeMux()
+	sessions := map[string]session.Sessions{
+		"text": session.NewSessions("text/html",
+			func() (ret session.ISession, err error) {
+				if model, e := NewGameModel(); e != nil {
+					return ret, e
+				} else {
+					return simple.NewSimpleSession(model)
+				}
+			}),
+		"game": session.NewSessions("application/json",
+			func() (ret session.ISession, err error) {
+				if model, e := NewGameModel(); e != nil {
+					return ret, e
+				} else {
+					return commands.NewGameSession(model)
+				}
+			}),
+	}
 
 	this := &Server{
+		sessions,
 		&http.Server{
 			Addr:           addr,
 			Handler:        handler,
 			ReadTimeout:    10 * time.Second,
 			WriteTimeout:   10 * time.Second,
 			MaxHeaderBytes: 1 << 20,
-		}, NewSessions(),
+		},
 	}
+
+	handler.HandleFunc("/text/", this.handleGame)
 	handler.HandleFunc("/game/", this.handleGame)
-	//handler.HandleFunc("/game/data.json", handleData)
-	//handler.HandleFunc("/action/", handleAction)
 	return this
 }
 
+//
+//
+//
 func (this *Server) HandleText(pattern, text string) {
 	handler := this.Handler.(support.ServeMux)
 	handler.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(text))
+		if r.URL.Path != pattern {
+			http.NotFound(w, r)
+		} else {
+			w.Write([]byte(text))
+		}
 	})
 }
 
+//
+//
+//
 func (this *Server) HandleFilePatterns(root string, dirs ...support.FilePair) {
 	handler := this.Handler.(support.ServeMux)
 	handler.HandleFilePatterns(root, dirs)
 }
 
-var simplest = `<html>
-<body><form action="input" id="f"><input id="q" name="q"></form></body>
-</html>`
-
+//
+//
+//
 func (this *Server) handleGame(w http.ResponseWriter, r *http.Request) {
 	//scheme://userinfo@host/path?query#fragment
 	// 1: to skip past first slash
 	log.Println("received", r.URL)
 	parts := strings.Split(r.URL.Path[1:], "/")
-	switch cnt := len(parts); cnt {
-	case 2:
-		if r.Method != "POST" {
-			http.Error(w, "unsupported get", http.StatusMethodNotAllowed)
-		} else {
-			if act := parts[1]; act != "new" {
-				http.NotFound(w, r)
-			} else {
-				log.Println("creating session...")
-				if sess, e := this.sessions.NewSession(); e != nil {
-					log.Println("session creation error", e)
-					http.Error(w, e.Error(), http.StatusInternalServerError)
-				} else {
-					dest := fmt.Sprintf("/game/%s/run?q=start", sess.id)
-					log.Println("redirecting to", dest)
-					http.Redirect(w, r, dest, http.StatusSeeOther)
-				}
-			}
-		}
-	case 3:
-		if sess, ok := this.sessions.Session(parts[1]); !ok {
+
+	if cnt := len(parts); cnt > 1 {
+		path := parts[0] // ex. game or simple
+
+		if sessions, ok := this.sessions[path]; !ok {
 			http.NotFound(w, r)
 		} else {
-			switch act := parts[2]; act {
-			case "run":
-				q := r.FormValue("q")
-				log.Println("running", q)
-				sess.Handle(w, q)
+			switch cnt {
+			case 2:
+				if r.Method != "POST" {
+					http.Error(w, "unsupported get", http.StatusMethodNotAllowed)
+				} else {
+					if act := parts[1]; act != "new" {
+						http.NotFound(w, r)
+					} else {
+						log.Println("creating session...")
+						if id, e := sessions.NewSession(); e != nil {
+							log.Println("session creation error", e)
+							http.Error(w, e.Error(), http.StatusInternalServerError)
+						} else {
+							dest := fmt.Sprintf("/%s/%s/run?q=start", path, id)
+							log.Println("redirecting to", dest)
+							http.Redirect(w, r, dest, http.StatusSeeOther)
+						}
+					}
+				}
+			case 3:
+				if sess, ok := sessions.Session(parts[1]); !ok {
+					http.NotFound(w, r)
+				} else {
+					switch act := parts[2]; act {
+					case "run":
+						q := r.FormValue("q")
+						log.Println("running", q)
+						sess.Handle(q, w)
+					default:
+						http.NotFound(w, r)
+					}
+				}
 			default:
 				http.NotFound(w, r)
 			}
 		}
-	default:
-		http.NotFound(w, r)
 	}
-}
-
-// okay: index.html shol
-
-//
-// copied from boilerplate :(
-//
-
-//
-func handleAction(w http.ResponseWriter, r *http.Request) {
-	s := r.FormValue("obj")
-	o := fmt.Sprintf("Hello, %s %s %q", r.Method, s, html.EscapeString(r.URL.Path))
-	fmt.Fprint(w, o)
-	fmt.Println(o)
-	switch r.Method {
-	case "GET":
-		// Serve the resource.
-	case "POST":
-		// Create a new record.
-	case "PUT":
-		// Update an existing record.
-	case "DELETE":
-		// Remove the record.
-	default:
-		// Give an error message.
-	}
-}
-
-type Object struct {
-	Id       string   `json:"id"`
-	States   []string `json:"states,omitempty"`
-	Contains []Object `json:"contains,omitempty"`
-}
-
-type Array []interface{}
-type Dict map[string]interface{}
-
-func handleData(w http.ResponseWriter, r *http.Request) {
-	studio := Array{
-		Dict{"present": []Object{
-			Object{
-				Id: "Studio",
-				Contains: []Object{
-					Object{
-						Id:     "Cabinet",
-						States: []string{"Closed"},
-					},
-					Object{
-						Id: "Easel",
-					},
-					Object{
-						Id: "Table",
-						Contains: []Object{
-							Object{
-								Id: "Vase",
-							},
-						},
-					},
-					Object{
-						Id: "Aquarium",
-						Contains: []Object{
-							Object{
-								Id: "Gravel",
-							},
-							Object{
-								Id: "Seaweed",
-							},
-							Object{
-								Id: "EvilFish",
-							},
-						},
-					},
-				},
-			},
-		}}}
-	//	encoder:Encoder writes JSON objects to an output stream.
-	// http://thenewstack.io/make-a-restful-json-api-go/
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(studio)
 }

@@ -23,7 +23,7 @@ type Play interface {
 	// friendly narrative print
 	Say(text ...string)
 	// system version of say
-	Report(text ...string)
+	//Report(text ...string)
 	// quieter version of report
 	Log(text ...string)
 	// find some object by class name

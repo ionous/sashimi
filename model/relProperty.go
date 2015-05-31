@@ -28,17 +28,18 @@ func (this *RelativeProperty) Relation(relations RelationMap) (Relation, bool) {
 }
 
 // in the case where a one to many relation involves a class and itself,
-// 	isMany distingushes which side of the relation propery is the many
+// distingushes which side of the relation propery is the primary.
 func (this *RelativeProperty) IsRev() bool {
 	return this.isRev
 }
 
 // in the case where a one to many relation involves a class and itself,
-// 	isMany distingushes which side of the relation propery is the many
+// distingushes which side of the relation propery is the many.
 func (this *RelativeProperty) ToMany() bool {
 	return this.isMany
 }
 
+// other class id
 func (this *RelativeProperty) Relates() StringId {
 	return this.relates
 }

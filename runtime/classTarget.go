@@ -9,7 +9,6 @@ import (
 // Implements E.ITarget for classes.
 // The objects and classes form a uniform chain of targets
 //
-
 type ClassTarget struct {
 	host     ObjectTarget
 	class    *M.ClassInfo

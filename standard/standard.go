@@ -4,13 +4,12 @@ import (
 	"fmt"
 	G "github.com/ionous/sashimi/game"
 	M "github.com/ionous/sashimi/model"
-	//P "github.com/ionous/sashimi/parser"
 	R "github.com/ionous/sashimi/runtime"
 	"log"
 )
 
 type StandardCore struct {
-	game          *R.Game
+	*R.Game
 	parser        *R.ModelParser
 	output        R.IOutput
 	story, status R.ObjectAdapter
@@ -56,15 +55,15 @@ func NewStandardGame(model *M.Model, output R.IOutput) (ret StandardStart, err e
 				}
 				return ret
 			})
-			story := game.FindFirstOf(model.Classes.FindClass("stories"))
-			if story == nil {
+			storyObject := game.FindFirstOf(model.Classes.FindClass("stories"))
+			if storyObject == nil {
 				err = fmt.Errorf("couldn't find story")
 			} else {
-				if obj, okay := game.FindObject("status bar"); !okay {
+				if statusObject, ok := game.FindObject("status bar"); !ok {
 					err = fmt.Errorf("couldn't find status bar")
 				} else {
-					story := R.NewObjectAdapter(game, story)
-					status := R.NewObjectAdapter(game, obj)
+					story := R.NewObjectAdapter(game, storyObject)
+					status := R.NewObjectAdapter(game, statusObject)
 					ret = StandardStart{StandardCore{game, parser, output, story, status}}
 				}
 			}
@@ -73,30 +72,36 @@ func NewStandardGame(model *M.Model, output R.IOutput) (ret StandardStart, err e
 	return ret, err
 }
 
+//
+// sends starting to play, and returns a new game.
+//
 func (this *StandardStart) Start() (ret StandardGame, err error) {
 	// FIX: shouldnt the interface be Go("commence")?
-	if e := this.game.SendEvent("starting to play", this.story.String()); e != nil {
+	if e := this.SendEvent("starting to play", this.story.String()); e != nil {
 		err = e
 	} else {
 		// process all existing messages in the queue first
-		if e := this.game.ProcessEvents(); e != nil {
+		if e := this.ProcessEvents(); e != nil {
 			err = e
 		}
 	}
 	return StandardGame{this.StandardCore, false, false}, err
 }
 
-func (this *StandardGame) Quit() bool {
+func (this *StandardGame) IsQuit() bool {
 	return this.quit
 }
 
-func (this *StandardGame) Finished() bool {
+func (this *StandardGame) IsFinished() bool {
 	return this.quit || this.completed
 }
 
+//
+// return false if the game has finished
+//
 func (this *StandardGame) Input(s string) bool {
-	if !this.Finished() {
-		game, out, parser := this.game, this.output, this.parser
+	if !this.IsFinished() {
+		game, out, parser := this.Game, this.output, this.parser
 		in := parser.NormalizeInput(s)
 		if in == "q" || in == "quit" {
 			this.quit = true
@@ -116,5 +121,5 @@ func (this *StandardGame) Input(s string) bool {
 			}
 		}
 	}
-	return !this.Finished()
+	return !this.IsFinished()
 }

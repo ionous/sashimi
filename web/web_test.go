@@ -6,17 +6,16 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
 	"regexp"
 	"testing"
 )
 
 //
 func TestNotFound(t *testing.T) {
-	server := NewServer(":8080", "")
+	server := NewServer(":8088", "")
 	go server.ListenAndServe()
 
-	resp, e := http.Get("http://localhost:8080/")
+	resp, e := http.Get("http://localhost:8088/")
 	if assert.Nil(t, e) {
 		defer resp.Body.Close()
 		body, e := ioutil.ReadAll(resp.Body)
@@ -24,16 +23,6 @@ func TestNotFound(t *testing.T) {
 			t.Logf("%s", body)
 			assert.Equal(t, resp.StatusCode, 404)
 		}
-	}
-}
-
-func TestWebTemplate(t *testing.T) {
-	type Lines struct {
-		Lines []string
-	}
-	lines := Lines{[]string{"heres a line"}}
-	if e := simple.ExecuteTemplate(os.Stdout, "simple.html", lines); e != nil {
-		t.Fatal(e)
 	}
 }
 
@@ -51,11 +40,11 @@ func TestWebGame(t *testing.T) {
 		)
 	})
 	//
-	server := NewServer(":8080", "")
-	match := regexp.MustCompile("game/([^/]+)/")
+	server := NewServer(":8088", "")
+	match := regexp.MustCompile("text/([^/]+)/")
 	go server.ListenAndServe()
 
-	resp, e := http.PostForm("http://localhost:8080/game/new", url.Values{"q": {""}})
+	resp, e := http.PostForm("http://localhost:8088/text/new", url.Values{"q": {""}})
 	if assert.NoError(t, e) {
 		defer resp.Body.Close()
 		if body, e := ioutil.ReadAll(resp.Body); assert.NoError(t, e) {
@@ -66,7 +55,7 @@ func TestWebGame(t *testing.T) {
 				if len(sess) < 16 {
 					t.Fatal(got)
 				}
-				t.Logf("Received %s %s", sess, string(body))
+				t.Logf("Received '%s':%s", sess, string(body))
 			}
 		}
 	}

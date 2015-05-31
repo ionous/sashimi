@@ -54,7 +54,7 @@ Inform is great, why not just experiment with it?
 1. Inform is easy to read, but I find it's often difficult to write stories correctly; it always takes me a fair bit of trial and error to get what I want.
 2. Not easily hackable, and I want to try new low-level features.
 3. I would like to more easily split a single story into multiple files (for instance: for multiple authors.)
-4. I would like more explicit support for 2D and 3D graphics.
+4. I would like to more readily incorporate 2D and 3D graphics.
 
 ## Status and Goals
 Sashimi is currently capable of handling short, one-room stories; but, it lacks many standard IF features, including save-load.
@@ -75,15 +75,21 @@ Possible future features, in no particular order:
 
 ## Examples
 
-A version of [A Day For Fresh Sushi](http://ifdb.tads.org/viewgame?id=7yiyxcnrlwejoffd) ported from Inform7 with permission.
+The examples directory includes a version of [A Day For Fresh Sushi](http://ifdb.tads.org/viewgame?id=7yiyxcnrlwejoffd) ported from Inform7 with permission.
 
 ```
 cd $GOPATH/src/github.com/ionous/sashimi/examples/fishy
 go run fishy.go
-(type "q" to quit.)
 ```
 
 Command line options:
-* --text: use the simplier text console ( default is the fancier "minicon" which has a status bar, colors, etc. )
+* --text: use the simpler text console ( default is the fancier "minicon" which has a status bar, colors, etc. )
 * --verbose: prints full output of actions and events as they happen.
 * --dump: print all script generated classes,instances,actions, etc. to stdout, then exit.
+
+Suppported comands include:
+* examine *something*, take *something*, open *something*, close *something*
+* look, jump, smell, attack, kiss
+* show *something* to *someone*, insert *something* into *something else*
+* ...
+* and, q (to quit)
