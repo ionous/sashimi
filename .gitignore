@@ -24,6 +24,9 @@ _testmain.go
 *.prof
 
 # Attempt to exclude go's extensionless binary files
-_examples/*
-!_examples/*.*
-_examples/.DS_Store
+_examples/angular
+_examples/contest
+_examples/gofish
+_examples/play
+_examples/webone
+_examples/webtwo
