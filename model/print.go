@@ -36,7 +36,7 @@ func (model *Model) PrintModel(printer printer) {
 					printer("\t\t\t ", inner.Values())
 
 				case *RelativeProperty:
-					rel, _ := inner.Relation(model.Relations)
+					rel, _ := inner.FindRelation(model.Relations)
 					many := map[bool]string{true: "Many", false: "One"}[inner.ToMany()]
 					printer("\t\t\t ", fmt.Sprintf("%s => '%s' ( '%s' )", many, inner.Relates(), rel.Name()))
 				}

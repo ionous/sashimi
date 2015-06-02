@@ -32,23 +32,10 @@ func (this ServeMux) HandleFilePatterns(root string, pairs []FilePair) {
 func (this ServeMux) HandleFilePattern(fs http.FileSystem, pair FilePair) {
 	if dir := pair.dir; dir == "" {
 		this.Handle(pair.pattern, http.FileServer(fs))
-		log.Println("serving", pair)
+		log.Println("serving", pair.pattern)
 	} else {
 		//	http.Handle(this.pattern,
 		//		http.StripPrefix(this.pattern, http.FileServer(http.Dir(path))))
 		panic("needs testing")
 	}
 }
-
-/*
-		s := &http.Server{
-			Addr:           ":8080",
-			Handler:        myHandler,
-			ReadTimeout:    10 * time.Second,
-			WriteTimeout:   10 * time.Second,
-			MaxHeaderBytes: 1 << 20,
-		}
-	// nil means DefaultServeMux
-
-
-*/

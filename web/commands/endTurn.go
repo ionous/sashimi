@@ -1,5 +1,5 @@
 package commands
 
 func endTurn(output *CommandOutput) {
-	output.Add("turn", Dict{})
+	output.NewCommand("turn", Dict{})
 }

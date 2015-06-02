@@ -26,16 +26,16 @@ func (this PropertyChangeHandler) PropertyChanged(
 		} else {
 			switch prop.(type) {
 			case *M.NumProperty, *M.TextProperty:
-				cmd := Dict{"obj": objectId, "id": propertyId, "now": value}
-				this.output.Add("set", cmd)
+				cmd := Dict{"obj": objectId, "prop": propertyId, "now": value}
+				this.output.NewCommand("set", cmd)
 
 			case *M.RelativeProperty:
 				cmd := Dict{"obj": objectId, "now": value.(string)}
-				this.output.Add("relate", cmd)
+				this.output.NewCommand("relate", cmd)
 
 			case *M.EnumProperty:
 				cmd := Dict{"obj": objectId, "was": prev.(string), "now": value.(string)}
-				this.output.Add("choose", cmd)
+				this.output.NewCommand("choose", cmd)
 			}
 		}
 	}

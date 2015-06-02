@@ -11,6 +11,7 @@ import (
 // Builds commands which get sent to the player/client.
 //
 type CommandOutput struct {
+	id               string
 	cmds             []Dict // every command is an json-like object
 	C.BufferedOutput        // TEMP: implements Print() and Println()
 }
@@ -18,17 +19,10 @@ type CommandOutput struct {
 //
 // Add the named command and its pased json-like data.
 //
-func (this *CommandOutput) Add(name string, data Dict) {
+func (this *CommandOutput) NewCommand(name string, data Dict) {
 	this.flushPending()
 	cmd := Dict{name: data}
 	this.cmds = append(this.cmds, cmd)
-}
-
-//
-// Log the passed message locally, doesn't generate a client command.
-//
-func (this *CommandOutput) Log(message string) {
-	os.Stderr.WriteString(message)
 }
 
 //
@@ -45,7 +39,14 @@ func (this *CommandOutput) ScriptSays(lines []string) {
 // Add a command for an actor's line of dialog.
 //
 func (this *CommandOutput) ActorSays(name string, lines []string) {
-	this.Add("speak", Dict{"actor": name, "lines": lines})
+	this.NewCommand("say", Dict{"actor": name, "lines": lines})
+}
+
+//
+// Log the passed message locally, doesn't generate a client command.
+//
+func (this *CommandOutput) Log(message string) {
+	os.Stderr.WriteString(message)
 }
 
 //
@@ -53,7 +54,8 @@ func (this *CommandOutput) ActorSays(name string, lines []string) {
 //
 func (this *CommandOutput) Write(w io.Writer) (err error) {
 	this.flushPending()
-	err = json.NewEncoder(w).Encode(this.cmds)
+	cmds := Dict{"id": this.id, "cmds": this.cmds}
+	err = json.NewEncoder(w).Encode(cmds)
 	this.cmds = nil
 	return err
 }
@@ -63,6 +65,6 @@ func (this *CommandOutput) Write(w io.Writer) (err error) {
 //
 func (this *CommandOutput) flushPending() {
 	if lines := this.Flush(); len(lines) > 0 {
-		this.Add("say", Dict{"lines": lines})
+		this.NewCommand("say", Dict{"lines": lines})
 	}
 }

@@ -13,6 +13,6 @@ func present(game *R.Game, player R.ObjectAdapter, output *CommandOutput) {
 		log.Println("unknown error finding location")
 	} else {
 		view := SerializeView(game.Model, obj.Id())
-		output.Add("present", view)
+		output.NewCommand("present", view)
 	}
 }

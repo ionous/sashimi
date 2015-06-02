@@ -1,4 +1,3 @@
-// locations.go
 package script
 
 import (

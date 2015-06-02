@@ -49,4 +49,5 @@ func (this *RuntimeAction) runDefaultActions() {
 	for _, after := range this.after {
 		this.runCallback(after)
 	}
+	this.game.SystemActions.Run(this.action.Event())
 }

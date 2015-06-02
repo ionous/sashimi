@@ -279,7 +279,7 @@ func (this ObjectAdapter) Go(prop string, objects ...G.IObject) {
 			msg := E.Message{Name: action.Event(), Data: act}
 			// see ProcessEventQueue()
 			path := E.NewPathTo(tgt)
-			this.game.log.Output(3, fmt.Sprintf("go %s %s", prop, path))
+			//this.game.log.Output(3, fmt.Sprintf("go %s %s", prop, path))
 			if runDefault, err := msg.Send(path); err != nil {
 				this.logError(err)
 			} else if runDefault {

@@ -7,19 +7,6 @@ import (
 	"github.com/ionous/sashimi/web"
 )
 
-var index = `
-<!DOCTYPE html>
-<html lang="en">
-<body>
-<h1>New Game</h1>
-    <div id="input">
-        <form action="/text/new" method="POST">
-            <button>Start</button>
-        </form>
-    </div>
-</body>
-</html>`
-
 func main() {
 	story := flag.String("story", "", "select the story to play.")
 	flag.Parse()
@@ -36,3 +23,17 @@ func main() {
 		server.ListenAndServe()
 	}
 }
+
+//
+var index = `
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<h1>New Game</h1>
+    <div id="input">
+        <form action="/text/new" method="POST">
+            <button>Start</button>
+        </form>
+    </div>
+</body>
+</html>`

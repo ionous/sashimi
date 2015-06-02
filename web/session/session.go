@@ -1,11 +1,7 @@
-/*
- Give each new game its own set of data.
- Includes some handling for (unexpected) concurrent requests to the same sessions.
-*/
 package session
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -18,6 +14,11 @@ type Session struct {
 	inOut          chan CallResponse
 	contentType    string
 	valid, started bool
+}
+
+// FIXIXIX remove
+func (this *Session) Session() ISession {
+	return this.session
 }
 
 //
@@ -60,15 +61,16 @@ func (this *Session) Serve(contentType string) *Session {
 				if e := this.handleInput(in, w); e != nil {
 					if _, closed := e.(SessionClosed); closed {
 						this.valid = false
-						fmt.Println("!!! Closed")
+						log.Println("!!! Closed")
 						break
 					} else {
+						log.Println("!!! Error", e)
 						http.Error(w, e.Error(), http.StatusInternalServerError)
 					}
 				}
 				done <- struct{}{}
 			}
-			fmt.Println("!!! Exiting")
+			log.Println("!!! Exiting")
 		}()
 	}
 	return this
@@ -82,13 +84,13 @@ func (this *Session) handleInput(in string, w http.ResponseWriter) (err error) {
 	if !this.started {
 		if start {
 			this.started = true
-			fmt.Println("starting", in, "for", this.id)
+			log.Println("starting", this.id)
 			err = this.session.Write(w)
 		}
 	} else if start {
-		fmt.Println("ignoring", in, "for", this.id)
+		log.Println("ignoring", in, "for", this.id)
 	} else {
-		fmt.Println("handling", in, "for", this.id)
+		log.Println("handling", in, "for", this.id)
 		if this.contentType != "" {
 			w.Header().Set("Content-Type", this.contentType)
 		}

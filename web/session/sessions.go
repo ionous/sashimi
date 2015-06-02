@@ -8,7 +8,7 @@ import (
 )
 
 //
-// wraps a factory to help handle concurrency.
+// Session manager.
 //
 type Sessions struct {
 	factory     SessionMaker
@@ -18,7 +18,7 @@ type Sessions struct {
 }
 
 //
-// create a new session manager
+// Create a new session manager.
 //
 func NewSessions(contentType string, factory SessionMaker) Sessions {
 	return Sessions{factory, contentType, make(map[string]*Session), &sync.Mutex{}}
@@ -27,26 +27,28 @@ func NewSessions(contentType string, factory SessionMaker) Sessions {
 //
 // Create a new game session, return its id.
 //
-func (this *Sessions) NewSession() (ret string, err error) {
+func (this *Sessions) NewSession() (newId string, err error) {
 	id := strings.TrimRight(base64.URLEncoding.EncodeToString(uuid.NewV4().Bytes()), "=")
-	if sess, e := this.factory(); e != nil {
+	if sess, e := this.factory(id); e != nil {
 		err = e
 	} else {
 		s := (&Session{id: id, session: sess}).Serve(this.contentType)
 		defer this.mutex.Unlock()
 		this.mutex.Lock()
 		this.sessions[id] = s
-		ret = id
+		newId = id
 	}
-	return ret, err
+	return newId, err
 }
 
 //
-// return an existing session
+// Return an existing session.
 //
-func (this *Sessions) Session(id string) (*Session, bool) {
-	defer this.mutex.Unlock()
-	this.mutex.Lock()
-	ret, ok := this.sessions[id]
-	return ret, ok
+func (this *Sessions) Session(id string) (ret *Session, okay bool) {
+	if id != "" {
+		defer this.mutex.Unlock()
+		this.mutex.Lock()
+		ret, okay = this.sessions[id]
+	}
+	return ret, okay
 }

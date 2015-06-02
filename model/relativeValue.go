@@ -29,7 +29,7 @@ func (this *RelativeValue) Any() (interface{}, bool) {
 //
 // FIX: can the existance of the table be ensured before creating the relative value?
 func (this *RelativeValue) Table() (ret *TableRelation, ok bool) {
-	return this.inst.refs.tables.TableById(this.prop.relation)
+	return this.inst.refs.tables.TableById(this.prop.Relation())
 }
 
 // return a list of referenced instances
@@ -37,7 +37,7 @@ func (this *RelativeValue) List() (ret []string) {
 	// gee, so cache friendly.
 	if table, ok := this.Table(); ok {
 		src := this.inst.id.String()
-		ret = table.List(src, this.prop.isRev)
+		ret = table.List(src, this.prop.IsRev())
 	}
 	return ret
 }
@@ -52,7 +52,7 @@ func (this *RelativeValue) String() string {
 // set the value of the variant
 func (this *RelativeValue) SetAny(value interface{}) (err error) {
 	if other, okay := value.(string); !okay {
-		err = fmt.Errorf("relative values require a string %s, %#v", this.prop.id, value)
+		err = fmt.Errorf("relative values require a string %s, %#v", this.prop.Id(), value)
 	} else if other, e := this.inst.refs.FindByName(other); e != nil {
 		err = e
 	} else {
@@ -66,14 +66,14 @@ func (this *RelativeValue) SetAny(value interface{}) (err error) {
 // maybe in the table iteself since its already searching for duplicate pairs...
 func (this *RelativeValue) AddReference(other Reference) (err error) {
 	prop := this.prop
-	if !other.CompatibleWith(this.prop.relates) {
+	if !other.CompatibleWith(this.prop.Relates()) {
 		err = fmt.Errorf("%s not compatible with %s", other, prop)
 	} else {
 		if table, ok := this.Table(); !ok {
 			err = fmt.Errorf("internal error? couldn't find table for relation %v", this.prop)
 		} else {
 			src, dst := this.inst.id, other.inst.id
-			if prop.isRev {
+			if prop.IsRev() {
 				dst, src = src, dst
 			}
 			table.Add(src.String(), dst.String())
@@ -96,10 +96,10 @@ func (this *RelativeValue) ClearReference() (ret string, err error) {
 			src := this.inst.id.String()
 			// FIX: some sort of early return.
 			table.Remove(func(x, y string) (removed bool) {
-				if !this.prop.isRev && src == x {
+				if !this.prop.IsRev() && src == x {
 					ret = y
 					removed = true
-				} else if this.prop.isRev && src == y {
+				} else if this.prop.IsRev() && src == y {
 					ret = x
 					removed = true
 				}
@@ -114,19 +114,19 @@ func (this *RelativeValue) ClearReference() (ret string, err error) {
 // FIX: table.style: where and how to validate style?
 func (this *RelativeValue) SetReference(other Reference) (removed string, err error) {
 	prop := this.prop
-	if !other.CompatibleWith(prop.relates) {
+	if !other.CompatibleWith(prop.Relates()) {
 		err = fmt.Errorf("%s not compatible with %s", other, prop)
 	} else {
 		if table, ok := this.Table(); !ok {
 			err = fmt.Errorf("internal error? couldn't find table for relation %v", this.prop)
 		} else {
-			if !prop.isMany {
+			if !prop.ToMany() {
 				removed, err = this.ClearReference()
 			}
 			if err == nil {
 				src := this.inst.id.String()
 				dst := other.inst.id.String()
-				if prop.isRev {
+				if prop.IsRev() {
 					dst, src = src, dst
 				}
 				table.Add(src, dst)

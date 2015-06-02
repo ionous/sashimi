@@ -25,11 +25,13 @@ func NewGameModel() (model *M.Model, err error) {
 	return S.InitScripts().Compile(ioutil.Discard /*os.Stderr*/)
 }
 
+// FIX: its not very useful to have this in the "server" code
+// might as well simplify and move directly into the examples.
 func NewServer(addr string, root string, dirs ...support.FilePair) *Server {
 	handler := support.NewServeMux()
 	sessions := map[string]session.Sessions{
 		"text": session.NewSessions("text/html",
-			func() (ret session.ISession, err error) {
+			func(id string) (ret session.ISession, err error) {
 				if model, e := NewGameModel(); e != nil {
 					return ret, e
 				} else {
@@ -37,14 +39,15 @@ func NewServer(addr string, root string, dirs ...support.FilePair) *Server {
 				}
 			}),
 		"game": session.NewSessions("application/json",
-			func() (ret session.ISession, err error) {
+			func(id string) (ret session.ISession, err error) {
 				if model, e := NewGameModel(); e != nil {
 					return ret, e
 				} else {
-					return commands.NewGameSession(model)
+					return commands.NewSession(id, model)
 				}
 			}),
 	}
+	handler.HandleFilePatterns(root, dirs)
 
 	this := &Server{
 		sessions,

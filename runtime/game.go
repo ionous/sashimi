@@ -54,7 +54,7 @@ func NewGame(model *M.Model, output IOutput) (game *Game, err error) {
 		E.NewQueue(),
 		&NullObject{log},
 		make(DefaultActions),
-		SystemActions{},
+		NewSystemActions(),
 		log,
 		M.NewReferences(model.Classes, model.Instances, model.Tables),
 		PropertyWatchers{},
@@ -87,7 +87,7 @@ func NewGame(model *M.Model, output IOutput) (game *Game, err error) {
 	for _, listener := range model.EventListeners {
 		act := listener.Action()
 		callback := GameCallback{game, listener}
-		log.Printf("creating listener %s", listener.String())
+		//log.Printf("creating listener %s", listener.String())
 
 		if inst := listener.Instance(); inst != nil {
 			obj := objects[inst.Id()]
@@ -181,7 +181,6 @@ func (this *Game) ProcessEvents() (err error) {
 					err = fmt.Errorf("unknown action data %T", msg.Data)
 				} else {
 					act.runDefaultActions()
-					this.SystemActions.Run(act.action.Event())
 				}
 			}
 		}

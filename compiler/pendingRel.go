@@ -47,7 +47,8 @@ func (this *RelativeFactory) makeRelative(propid M.StringId, pending *PendingCla
 				this.relations[relId] = rel
 
 				// finally, create the relative property pointing to the generated relation data
-				ret = M.NewRelative(propid, prop.name, relId, src.class.id, prop.isRev, prop.toMany)
+				fields := M.RelativeFields{propid, prop.name, relId, src.class.id, prop.isRev, prop.toMany}
+				ret = M.NewRelative(fields)
 			}
 		}
 	}

@@ -12,8 +12,8 @@ import (
 //
 // game session implementation
 //
-func NewGameSession(model *M.Model) (ret session.ISession, err error) {
-	out := &CommandOutput{}
+func NewSession(id string, model *M.Model) (ret session.ISession, err error) {
+	out := &CommandOutput{id: id}
 	// after creating the game, but vefore running it --
 	if game, e := standard.NewStandardGame(model, out); e != nil {
 		err = e
@@ -24,7 +24,11 @@ func NewGameSession(model *M.Model) (ret session.ISession, err error) {
 		player := R.NewObjectAdapter(game.Game, player)
 		// setup system event callbacks --
 		game.SystemActions.
-			Finish("setting initial position", func() { present(game.Game, player, out) }).
+			Finish("setting initial position", func() {
+			// view := SerializeView(game.Model, "StatusBar")
+			// out.NewCommand("present", view)
+			present(game.Game, player, out)
+		}).
 			Finish("ending the turn", func() { endTurn(out) }).
 			Finish("ending the story", func() { endStory(out) })
 		// add watchers for property changes --
@@ -33,7 +37,7 @@ func NewGameSession(model *M.Model) (ret session.ISession, err error) {
 		if game, e := game.Start(); e != nil {
 			err = e
 		} else {
-			ret = &CommandSession{game, out, nil}
+			ret = &CommandSession{game, id, out, nil}
 		}
 	}
 	return ret, err
@@ -41,15 +45,19 @@ func NewGameSession(model *M.Model) (ret session.ISession, err error) {
 
 type CommandSession struct {
 	game      standard.StandardGame
+	state     string
 	output    *CommandOutput
 	lastError error
+}
+
+func (this *CommandSession) Game() *standard.StandardGame {
+	return &this.game
 }
 
 //
 // ISession implementation
 //
 func (this *CommandSession) Read(in string) session.ISession {
-	//log.Println("cmd session", in)
 	if this.lastError == nil {
 		if this.game.IsQuit() {
 			this.lastError = session.SessionClosed{"player quit"}
@@ -62,11 +70,13 @@ func (this *CommandSession) Read(in string) session.ISession {
 	return this
 }
 
+//
+// ISession implementation which writes json via CommandOutput.
+//
 func (this *CommandSession) Write(w io.Writer) (err error) {
 	if e := this.lastError; e != nil {
 		err, this.lastError = e, nil
 	} else {
-		//log.Println("cmd session out:", this.output.cmds)
 		this.output.Write(w)
 	}
 	return err

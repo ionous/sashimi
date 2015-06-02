@@ -13,8 +13,9 @@ import (
 func SerializeView(model *Model, id StringId) (ret Dict) {
 	if inst, ok := model.Instances[id]; ok {
 		cls := inst.Class()
-		states := []string{}
-		values := make(Dict)
+		state := []string{}
+		content := []Dict{}
+		props := make(Dict)
 		// all properties is recursive through base classes
 		for propId, prop := range cls.AllProperties() {
 			// FIX: a faster value by id?
@@ -23,43 +24,34 @@ func SerializeView(model *Model, id StringId) (ret Dict) {
 			switch val := ivalue.(type) {
 			case *NumValue:
 				num, _ := val.Num()
-				values[propKey] = num
+				props[propKey] = num
 
 			case *EnumValue:
 				choice := val.Choice()
-				//values[propKey] = choice
-				// values[choice] = true
-				// states list, indexable values, both?
-				states = append(states, choice.String())
+				state = append(state, choice.String())
 
 			case *TextValue:
 				text, _ := val.Text()
-				values[propKey] = text
+				props[propKey] = text
 
 			case *RelativeValue:
 				recurse := map[string]bool{"Clothing": true, "Equipment": true, "Contents": true}
 				if recurse[propKey] {
-					ar := []Dict{}
 					for _, otherId := range val.List() {
 						other := SerializeView(model, MakeStringId(otherId))
-						ar = append(ar, other)
+						content = append(content, other)
 					}
-					values[propKey] = ar
-					// they all are...
-					/*if relation.ToMany() {
-						values[propKey] = ar
-					} else if len(ar) > 0 {
-						values[propKey] = ar[0]
-					} else {
-						values[propKey] = Dict{} // or null?
-					}
-					*/
 				}
 			}
 		}
-		values["_class"] = cls.Id() // note: plural
-		values["_states"] = states
-		ret = Dict{id.String(): values}
+		ret = Dict{
+			"id":      id.String(),
+			"name":    inst.Name(),
+			"cls":     cls.Id(),
+			"state":   state,
+			"props":   props,
+			"content": content,
+		}
 	}
 	return ret
 }
