@@ -1,9 +1,7 @@
 package commands
 
 import (
-	"encoding/json"
 	C "github.com/ionous/sashimi/console"
-	"io"
 	"os"
 )
 
@@ -52,12 +50,11 @@ func (this *CommandOutput) Log(message string) {
 //
 // Flush the commands to the passed output.
 //
-func (this *CommandOutput) Write(w io.Writer) (err error) {
+func (this *CommandOutput) Fetch() (data interface{}, err error) {
 	this.flushPending()
 	cmds := Dict{"id": this.id, "cmds": this.cmds}
-	err = json.NewEncoder(w).Encode(cmds)
 	this.cmds = nil
-	return err
+	return cmds, err
 }
 
 //

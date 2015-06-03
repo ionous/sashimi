@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/ionous/sashimi/_examples/stories"
-	"github.com/ionous/sashimi/web"
+	"github.com/ionous/sashimi/web/simple"
 )
 
 func main() {
@@ -17,23 +17,7 @@ func main() {
 			fmt.Println(" ", nick)
 		}
 	} else {
-		server := web.NewServer(":8080", "")
-		server.HandleText("/", index)
 		fmt.Println("serving", "http://localhost:8080/")
-		server.ListenAndServe()
+		simple.NewSimpleServer(":8080").ListenAndServe()
 	}
 }
-
-//
-var index = `
-<!DOCTYPE html>
-<html lang="en">
-<body>
-<h1>New Game</h1>
-    <div id="input">
-        <form action="/text/new" method="POST">
-            <button>Start</button>
-        </form>
-    </div>
-</body>
-</html>`

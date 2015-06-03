@@ -6,7 +6,6 @@ import (
 	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/standard"
 	"github.com/ionous/sashimi/web/session"
-	"io"
 )
 
 //
@@ -57,14 +56,23 @@ func (this *CommandSession) Game() *standard.StandardGame {
 //
 // ISession implementation
 //
-func (this *CommandSession) Read(in string) session.ISession {
+func (this *CommandSession) Write(in interface{}) session.ISession {
 	if this.lastError == nil {
 		if this.game.IsQuit() {
 			this.lastError = session.SessionClosed{"player quit"}
 		} else if this.game.IsFinished() {
 			this.lastError = session.SessionClosed{"game finished"}
+		} else if input, ok := in.(CommandInput); !ok {
+			this.lastError = fmt.Errorf("unknown input %v(%T); expected cmd.", in, in)
+		} else if input.Input != "" {
+			this.game.Input(input.Input)
+		} else if act, ok := this.game.Model.Actions[M.StringId(input.Action)]; !ok {
+			this.lastError = fmt.Errorf("unknown action %s", input.Action)
+			//FIX? RunActions injects the player, that works out well, but is a little strange.
+		} else if e := this.game.RunAction(act, input.Nouns()); e != nil {
+			this.lastError = e
 		} else {
-			this.game.Input(in)
+			this.game.EndTurn() // game.Input() does this automatically (dont ask)
 		}
 	}
 	return this
@@ -73,11 +81,11 @@ func (this *CommandSession) Read(in string) session.ISession {
 //
 // ISession implementation which writes json via CommandOutput.
 //
-func (this *CommandSession) Write(w io.Writer) (err error) {
+func (this *CommandSession) Read() (ret interface{}, err error) {
 	if e := this.lastError; e != nil {
 		err, this.lastError = e, nil
 	} else {
-		this.output.Write(w)
+		ret, err = this.output.Fetch()
 	}
-	return err
+	return ret, err
 }

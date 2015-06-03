@@ -21,10 +21,10 @@ const (
 )
 
 type ListenFields struct {
-	Owner     string
-	EventName string
-	Callback  G.Callback
-	Options   ListenOptions
+	Owner    string
+	Event    string
+	Callback G.Callback
+	Options  ListenOptions
 }
 
 func (this ListenStatement) Fields() ListenFields {

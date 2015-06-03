@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"github.com/ionous/sashimi/_examples/stories"
 	M "github.com/ionous/sashimi/model"
-	"github.com/ionous/sashimi/web"
+	S "github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/web/commands"
 	"github.com/ionous/sashimi/web/session"
 	"github.com/ionous/sashimi/web/support"
+	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 )
@@ -50,13 +50,15 @@ func main() {
 func NewServer(addr string, root string, dirs ...support.FilePair) *http.Server {
 	// FIX: probably need to implement the ISession here,
 	// so that we can have our own data associated with it.
-	sessions := session.NewSessions("application/json",
+	sessions := session.NewSessions(
 		func(id string) (ret session.ISession, err error) {
-			if m, e := web.NewGameModel(); e != nil {
-				return ret, e
+			// FIX: it's very silly to have to init and compile each time.
+			if m, e := S.InitScripts().Compile(ioutil.Discard); e != nil {
+				err = e
 			} else {
-				return commands.NewSession(id, m)
+				ret, err = commands.NewSession(id, m)
 			}
+			return
 		})
 	//
 	handler := support.NewServeMux()
@@ -67,14 +69,25 @@ func NewServer(addr string, root string, dirs ...support.FilePair) *http.Server 
 	// game session command:
 	handler.HandleFunc("/game/", func(w http.ResponseWriter, r *http.Request) {
 		log.Println("handling", r.URL.Path)
-		if res, e := ParseResourceUrl(r.URL); e != nil {
+		if req, e := ParseResourceUrl(r); e != nil {
 			http.NotFound(w, r)
 		} else {
 			// log.Printf("received request: gid:'%s', type:'%s', rid:'%s'",
 			// 	res.gameId, res.resourceType, res.resourceId)
-			if e := handle(w, r, res, sessions); e != nil {
+			if data, e := handle(req, sessions); e == nil {
+				w.Header().Set("Content-Type", "application/json")
+				prettyBytes, _ := json.Marshal(data)
+				log.Println("returning", string(prettyBytes))
+				if e := json.NewEncoder(w).Encode(data); e != nil {
+					log.Println(e)
+				}
+			} else {
 				log.Println(e)
-				http.Error(w, e.Error(), http.StatusNotImplemented)
+				if _, ok := e.(notFound); ok {
+					http.NotFound(w, r)
+				} else {
+					http.Error(w, e.Error(), http.StatusNotImplemented)
+				}
 			}
 		}
 	})
@@ -87,81 +100,113 @@ func NewServer(addr string, root string, dirs ...support.FilePair) *http.Server 
 	}
 }
 
-func handle(w http.ResponseWriter, r *http.Request, res Resource, sessions session.Sessions) (err error) {
-	if res.resourceType == "" && res.gameId == "new" {
+func handle(req Request, sessions session.Sessions) (ret interface{}, err error) {
+	if req.resourceType == "" && req.gameId == "new" {
 		if id, e := sessions.NewSession(); e != nil {
 			err = e
 		} else if sess, ok := sessions.Session(id); !ok {
 			err = fmt.Errorf("session not found after creation'%s'", id)
 		} else {
 			log.Println("created session", id)
-			sess.Handle("start", w)
+			//
+			ret, err = sess.WriteRead("start")
 		}
-	} else if ses, ok := res.Session(sessions); !ok {
-		err = fmt.Errorf("session not found %s", res.gameId)
+	} else if ses, ok := req.Session(sessions); !ok {
+		err = NotFound("session not found %s", req)
 	} else {
 		game := ses.Session().(*commands.CommandSession).Game()
-		switch res.resourceType {
+		switch req.resourceType {
+		// FIX: although this loop isnt a lot of work in and of itself
+		// i feel like it should be able to be generic, via database or Json markup of the class
+		// at the very least we probably need an IResource
 		case "class":
-			// FIX: although this loop isnt a lot of work in and of itself
-			// i feel like it should be able to be generic, via database or Json markup of the xlass
-			classes := []commands.Dict{}
-			for k, c := range game.Model.Classes {
-				//rel, _ := inner.FindRelation(model.Relations)
-				relations := []*M.RelativeProperty{}
-				for _, v := range c.Properties() {
-					if rel, ok := v.(*M.RelativeProperty); ok {
-						relations = append(relations, rel)
+			if req.resourceId == "" {
+				classes := []commands.Dict{}
+				for k, c := range game.Model.Classes {
+					d := commands.Dict{
+						"id":   k.String(),
+						"name": c.Name(),
 					}
+					classes = append(classes, d)
 				}
-				// slow:
-				actions := []string{}
-				for _, act := range game.Model.Actions {
-					if act.Source().Id() == "Actors" && act.Target() == c {
-						actions = append(actions, act.Name())
+				ret = classes
+			} else if cls, ok := game.Model.Classes[M.StringId(req.resourceId)]; !ok {
+				err = NotFound("class not found %s", req)
+			} else {
+				switch req.dataType {
+				case "":
+					// really we should return a list of urls for more restiness
+					ret = []string{}
+				case "relations":
+					relations := []*M.RelativeProperty{}
+					//rel, _ := inner.FindRelation(model.Relations)
+					for _, v := range cls.AllProperties() {
+						if rel, ok := v.(*M.RelativeProperty); ok {
+							relations = append(relations, rel)
+						}
 					}
+					ret = relations
+				case "actions":
+					// slow:
+					actions := []M.StringId{}
+					for _, act := range game.Model.Actions {
+						if act.Source().Id() == "Actors" && (act.Target() == cls || cls.HasParent(act.Target())) {
+							actions = append(actions, act.Id())
+						}
+					}
+					ret = actions
+				default:
+					err = NotFound("unknown data type %s", req)
 				}
-				d := commands.Dict{
-					"id":        k.String(),
-					"name":      c.Name(),
-					"relations": relations,
-					"actions":   actions,
-				}
-				classes = append(classes, d)
 			}
-			err = json.NewEncoder(w).Encode(classes)
-		case "action":
-			err = json.NewEncoder(w).Encode([]commands.Dict{})
-		case "relation":
-			err = json.NewEncoder(w).Encode([]commands.Dict{})
+		// case "action":
+		// 	ret = []commands.Dict{}
+		// case "relation":
+		// 	ret = []commands.Dict{}
 		case "":
-			type Input struct {
-				Input string `json:"input"`
-			}
-			v := Input{}
-			decoder := json.NewDecoder(r.Body)
-			if e := decoder.Decode(&v); e != nil {
+			decoder, in := json.NewDecoder(req.Body), commands.CommandInput{}
+			if e := decoder.Decode(&in); e != nil {
 				err = e
 			} else {
-				log.Println("running", v)
-				ses.Handle(v.Input, w)
+				log.Println("running", in)
+				ret, err = ses.WriteRead(in)
 			}
 		default:
-			err = fmt.Errorf("unknown resource %s", res.resourceType)
+			err = NotFound("unknown resource %s", req)
 		}
 	}
 
-	return err
+	return ret, err
 }
 
-// scheme://userinfo@host/path?query#fragment
-type Resource struct {
-	gameId, resourceType, resourceId string
+// FIX? better would be, allow the request to return a function
+// if that fails, it means the resource is not found, otherwise execute the function
+// and an error means internal server error.
+type notFound struct {
+	reason string
 }
 
-func ParseResourceUrl(url *url.URL) (ret Resource, err error) {
-	parts := strings.Split(url.Path[1:], "/")
+func NotFound(format string, args ...interface{}) notFound {
+	return notFound{fmt.Sprintf(format, args...)}
+}
+
+func (this notFound) Error() string {
+	return this.reason
+}
+
+// /game/:gameId/class/:clsId/dataType
+type Request struct {
+	*http.Request
+	gameId, resourceType, resourceId, dataType string
+}
+
+func ParseResourceUrl(r *http.Request) (ret Request, err error) {
+	// scheme://userinfo@host/path?query#fragment
+	parts := strings.Split(r.URL.Path[1:], "/")
 	switch len(parts) {
+	case 5:
+		ret.dataType = parts[4]
+		fallthrough
 	case 4:
 		ret.resourceId = parts[3]
 		fallthrough
@@ -173,9 +218,12 @@ func ParseResourceUrl(url *url.URL) (ret Resource, err error) {
 	default:
 		err = fmt.Errorf("error: too many parts %v", parts)
 	}
+	ret.Request = r
 	return
 }
-
-func (this *Resource) Session(sessions session.Sessions) (*session.Session, bool) {
+func (this *Request) String() string {
+	return fmt.Sprint("resource: %s,%s,%s,%s", this.gameId, this.resourceType, this.resourceId, this.dataType)
+}
+func (this *Request) Session(sessions session.Sessions) (*session.Session, bool) {
 	return sessions.Session(this.gameId)
 }

@@ -1,9 +1,5 @@
 package session
 
-import (
-	"io"
-)
-
 // Generate a new session object for the passed id.
 type SessionMaker func(id string) (ISession, error)
 
@@ -13,7 +9,7 @@ type SessionMaker func(id string) (ISession, error)
 // for example, print banner text, describe rooms, etc.
 type ISession interface {
 	// Handle a single command input from the user.
-	Read(string) ISession
+	Write(interface{}) ISession
 	// Read the results of that command.
-	Write(io.Writer) error
+	Read() (interface{}, error)
 }

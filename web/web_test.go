@@ -2,6 +2,7 @@ package web
 
 import (
 	. "github.com/ionous/sashimi/script"
+	"github.com/ionous/sashimi/web/simple"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
@@ -11,8 +12,8 @@ import (
 )
 
 //
-func TestNotFound(t *testing.T) {
-	server := NewServer(":8088", "")
+func TestWebStartup(t *testing.T) {
+	server := simple.NewSimpleServer(":8088")
 	go server.ListenAndServe()
 
 	resp, e := http.Get("http://localhost:8088/")
@@ -21,7 +22,7 @@ func TestNotFound(t *testing.T) {
 		body, e := ioutil.ReadAll(resp.Body)
 		if assert.Nil(t, e) {
 			t.Logf("%s", body)
-			assert.Equal(t, resp.StatusCode, 404)
+			assert.Equal(t, 200, resp.StatusCode)
 		}
 	}
 }
@@ -40,22 +41,25 @@ func TestWebGame(t *testing.T) {
 		)
 	})
 	//
-	server := NewServer(":8088", "")
-	match := regexp.MustCompile("text/([^/]+)/")
+	server := simple.NewSimpleServer(":8088")
+	match := regexp.MustCompile("^/game/([^/]+)$")
 	go server.ListenAndServe()
 
-	resp, e := http.PostForm("http://localhost:8088/text/new", url.Values{"q": {""}})
+	resp, e := http.PostForm("http://localhost:8088/game/new", url.Values{"q": {""}})
 	if assert.NoError(t, e) {
 		defer resp.Body.Close()
 		if body, e := ioutil.ReadAll(resp.Body); assert.NoError(t, e) {
-			if assert.Equal(t, resp.StatusCode, 200) {
+			if assert.Equal(t, 200, resp.StatusCode) {
 				// we expect that we've been redirected
 				got := match.FindStringSubmatch(resp.Request.URL.Path)
-				sess := got[1]
-				if len(sess) < 16 {
-					t.Fatal(got)
+				t.Log("Got", got, "from:", resp.Request.URL.Path)
+				if assert.Len(t, got, 2) {
+					sess := got[1]
+					if len(sess) < 16 {
+						t.Fatal(got)
+					}
+					t.Logf("Received '%s':%s", sess, string(body))
 				}
-				t.Logf("Received '%s':%s", sess, string(body))
 			}
 		}
 	}

@@ -11,17 +11,16 @@ import (
 // Session manager.
 //
 type Sessions struct {
-	factory     SessionMaker
-	contentType string
-	sessions    map[string]*Session
-	mutex       *sync.Mutex // for sessions
+	factory  SessionMaker
+	sessions map[string]*Session
+	mutex    *sync.Mutex // for sessions
 }
 
 //
 // Create a new session manager.
 //
-func NewSessions(contentType string, factory SessionMaker) Sessions {
-	return Sessions{factory, contentType, make(map[string]*Session), &sync.Mutex{}}
+func NewSessions(factory SessionMaker) Sessions {
+	return Sessions{factory, make(map[string]*Session), &sync.Mutex{}}
 }
 
 //
@@ -32,7 +31,7 @@ func (this *Sessions) NewSession() (newId string, err error) {
 	if sess, e := this.factory(id); e != nil {
 		err = e
 	} else {
-		s := (&Session{id: id, session: sess}).Serve(this.contentType)
+		s := (&Session{id: id, session: sess}).Serve()
 		defer this.mutex.Unlock()
 		this.mutex.Lock()
 		this.sessions[id] = s

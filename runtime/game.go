@@ -238,9 +238,9 @@ func (this *Game) newRuntimeAction(action *M.ActionInfo, nouns ...string,
 	types := action.NounSlice()
 	switch diff := len(nouns) - len(types); {
 	case diff < 0:
-		err = fmt.Errorf("too few nouns specified for '%s', %d", action.Name(), diff)
+		err = fmt.Errorf("too few nouns specified for '%s', %d", action, diff)
 	case diff > 0:
-		err = fmt.Errorf("too many nouns specified for '%s', +%d", action.Name(), diff)
+		err = fmt.Errorf("too many nouns specified for '%s', +%d", action, diff)
 	default:
 		objs := make([]*GameObject, len(types))
 		keys := []string{"Source", "Target", "Context"}
@@ -267,33 +267,42 @@ func (this *Game) newRuntimeAction(action *M.ActionInfo, nouns ...string,
 //
 // Called from the parser after it has succesfully found the command and nouns
 //
-func (this *Game) runCommand(action *M.ActionInfo, instances []string) (err error) {
+func (this *Game) RunAction(action *M.ActionInfo, instances []string) (err error) {
 	// make sure the source class matches
 	sourceObj := this.parserSource.FindSource()
-	//
 	if sourceObj == nil {
-		err = fmt.Errorf("couldnt find command source for %s", action.Name())
+		err = fmt.Errorf("couldnt find command source for %s", action)
 	} else {
 		sourceClass := sourceObj.info.Class()
 		if action.Source() != sourceClass && !sourceClass.HasParent(action.Source()) {
-			err = fmt.Errorf("source class for %s doesnt match", action.Name())
+			err = fmt.Errorf("source class for %s doesnt match", action)
 		} else {
 			// inject the source object along with the other nouns
 			types := action.NounSlice()
 			instances = append([]string{sourceObj.Id().String()}, instances...)
-			keys := []string{"Source", "Target", "Context"}
-			values := make(map[string]TemplateValues)
-			objs := make([]*GameObject, len(types))
+			if len(types) != len(instances) {
+				err = fmt.Errorf("mismatched nouns %d!=%d", len(types), len(instances))
+			} else {
+				keys := []string{"Source", "Target", "Context"}
+				if len(instances) > len(keys) {
+					err = fmt.Errorf("too many nouns", instances)
+				} else {
+					values := make(map[string]TemplateValues)
+					objs := make([]*GameObject, len(types))
 
-			for i, id := range instances {
-				obj, key := this.Objects[M.StringId(id)], keys[i]
-				values[key] = obj.values.data
-				objs[i] = obj
+					for i, id := range instances {
+						obj, key := this.Objects[M.StringId(id)], keys[i]
+						values[key] = obj.values.data
+						objs[i] = obj
+					}
+
+					tgt := ObjectTarget{this, objs[0]}
+					act := &RuntimeAction{this, action, objs, values, nil}
+					log.Println("!!!", tgt, action)
+
+					this.queue.QueueEvent(tgt, action.Event(), act)
+				}
 			}
-
-			tgt := ObjectTarget{this, objs[0]}
-			act := &RuntimeAction{this, action, objs, values, nil}
-			this.queue.QueueEvent(tgt, action.Event(), act)
 		}
 	}
 	return err

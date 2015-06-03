@@ -1,11 +1,10 @@
 package simple
 
 import (
+	"fmt"
 	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/standard"
 	"github.com/ionous/sashimi/web/session"
-	"io"
-	"log"
 )
 
 func NewSimpleSession(model *M.Model) (ret *SimpleSession, err error) {
@@ -32,28 +31,29 @@ type SimpleSession struct {
 //
 // ISession implementation
 //
-func (this *SimpleSession) Read(in string) session.ISession {
+func (this *SimpleSession) Write(in interface{}) session.ISession {
 	if this.lastError == nil {
 		if this.game.IsQuit() {
 			this.lastError = session.SessionClosed{"player quit"}
 		} else if this.game.IsFinished() {
 			this.lastError = session.SessionClosed{"game finished"}
+		} else if str, ok := in.(string); !ok {
+			this.lastError = fmt.Errorf("unknown input %v(%T); expected string.", in, in)
 		} else {
-			this.game.Input(in)
+			this.game.Input(str)
 		}
 	}
 	return this
 }
 
-func (this *SimpleSession) Write(w io.Writer) (err error) {
+//
+// ISession implemenation: sends lines of text to the response handler.
+//
+func (this *SimpleSession) Read() (ret interface{}, err error) {
 	if e := this.lastError; e != nil {
 		err, this.lastError = e, nil
 	} else {
-		lines := this.bufferedOutput.Flush()
-		log.Println("here", lines)
-		if e := page.ExecuteTemplate(w, "simple.html", lines); e != nil {
-			err = e
-		}
+		ret = this.bufferedOutput.Flush()
 	}
-	return err
+	return ret, err
 }

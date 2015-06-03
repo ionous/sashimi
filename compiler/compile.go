@@ -119,7 +119,7 @@ func (this *Context) compileActions(classes M.ClassMap,
 			err = this.log.AppendError(err, e)
 		} else {
 			// and the name of event...
-			eventId, e := this.names.addName(fields.EventName, actionId.String())
+			eventId, e := this.names.addName(fields.Event, actionId.String())
 			if e != nil {
 				err = this.log.AppendError(err, e)
 				continue
@@ -127,7 +127,7 @@ func (this *Context) compileActions(classes M.ClassMap,
 			// add the action; if it exists, the uniquifier should have excluded any difs, so just ignore....
 			act := actions[actionId]
 			if act == nil {
-				if act, e = M.NewAction(fields.ActionName, fields.EventName, source, target, context); e != nil {
+				if act, e = M.NewAction(actionId, fields.Action, fields.Event, source, target, context); e != nil {
 					err = this.log.AppendError(err, e)
 				} else {
 					actions[actionId] = act
@@ -164,7 +164,7 @@ func (this *Context) resolveAction(classes M.ClassMap, fields S.ActionAssertionF
 			// make sure these names are unique
 			owner = cls
 			uniquifer := strings.Join([]string{"action", fields.Source, fields.Target, fields.Context}, "+")
-			actionId, err = this.names.addName(fields.ActionName, uniquifer)
+			actionId, err = this.names.addName(fields.Action, uniquifer)
 		}
 	}
 	return actionId, owner, target, context, err
@@ -225,7 +225,7 @@ func (this *Context) makeEventListeners(events M.EventMap, classes M.ClassMap, i
 ) {
 	for _, l := range this.src.EventHandlers {
 		r := l.Fields()
-		action, e := events.FindEventByName(r.EventName)
+		action, e := events.FindEventByName(r.Event)
 		if e != nil {
 			err = this.log.AppendError(err, e)
 			continue

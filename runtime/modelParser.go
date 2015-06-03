@@ -30,7 +30,7 @@ CreateActions:
 		act := p.Action()
 		cmd := ParserCommand{act, model, game}
 		// we expect the game to supply the first noun of every action
-		comprehension, e := parser.AddCommand(act.Name(), cmd, act.NumNouns()-1)
+		comprehension, e := parser.AddCommand(act.Action(), cmd, act.NumNouns()-1)
 		if e != nil {
 			err = e
 			break CreateActions
@@ -64,5 +64,5 @@ func (this ParserCommand) NewMatcher() P.IMatch {
 
 // our matcher, the noun factory, yields nouns in the form of instance string ids
 func (this ParserCommand) RunCommand(nouns ...string) (err error) {
-	return this.game.runCommand(this.act, nouns)
+	return this.game.RunAction(this.act, nouns)
 }

@@ -22,6 +22,16 @@ func NewServeMux() ServeMux {
 	return ServeMux{http.NewServeMux()}
 }
 
+func (this ServeMux) HandleText(pattern, text string) {
+	this.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != pattern {
+			http.NotFound(w, r)
+		} else {
+			w.Write([]byte(text))
+		}
+	})
+}
+
 func (this ServeMux) HandleFilePatterns(root string, pairs []FilePair) {
 	fs := http.Dir(root)
 	for _, pair := range pairs {

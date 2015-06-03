@@ -1,8 +1,8 @@
 package session
 
 import (
+	"fmt"
 	"log"
-	"net/http"
 )
 
 //
@@ -12,7 +12,6 @@ type Session struct {
 	id             string
 	session        ISession
 	inOut          chan CallResponse
-	contentType    string
 	valid, started bool
 }
 
@@ -25,52 +24,60 @@ func (this *Session) Session() ISession {
 // helper to serialize concurrent requests.
 //
 type CallResponse struct {
-	input  string
-	output http.ResponseWriter
-	done   Signal
+	input  interface{}
+	output chan Output
 }
 
 //
-// helper to block during call/response processing.
 //
-type Signal chan struct{}
+//
+type Response func(data interface{}) error
+
+//
+//
+//
+type Error func(error) bool
+
+type Output struct {
+	data interface{}
+	err  error
+}
 
 //
 // Send new input to the game, blocks until output has been written.
+// The error handlers is called when a session returns an error.
+// If the error handler returns false, then the background routine will exit.
 //
-func (this *Session) Handle(in string, w http.ResponseWriter) {
-	inOut, valid := this.inOut, this.valid
-	if inOut != nil && valid {
-		done := make(Signal)
-		inOut <- CallResponse{in, w, done}
-		<-done // block until the go routine has finished
+func (this *Session) WriteRead(in interface{}) (ret interface{}, err error) {
+	if inOut := this.inOut; inOut == nil {
+		err = fmt.Errorf("session not started")
+	} else if valid := this.valid; !valid {
+		err = fmt.Errorf("session closed")
+	} else {
+		// FIX? if Write() returned the interface to Read() then session could transparently implement ISession
+		done := make(chan Output)
+		inOut <- CallResponse{in, done}
+		output := <-done // block until the go routine has finished
+		ret, err = output.data, output.err
 	}
+	return
 }
 
 //
-// start a background go routine to support potentially concurrent calls to Handle()
-//
-func (this *Session) Serve(contentType string) *Session {
+// Start a background go routine to support potentially concurrent calls to Handle().
+func (this *Session) Serve() *Session {
 	// FIX: some sort of timeout to evenually kill sessions?
 	if this.inOut == nil {
-		this.inOut, this.contentType, this.valid = make(chan CallResponse), contentType, true
+		this.inOut, this.valid = make(chan CallResponse), true
 		go func() {
-			for {
+			for this.valid {
 				cr := <-this.inOut
-				in, w, done := cr.input, cr.output, cr.done
-				if e := this.handleInput(in, w); e != nil {
-					if _, closed := e.(SessionClosed); closed {
-						this.valid = false
-						log.Println("!!! Closed")
-						break
-					} else {
-						log.Println("!!! Error", e)
-						http.Error(w, e.Error(), http.StatusInternalServerError)
-					}
+				data, err := this.handleInput(cr.input)
+				if _, closed := err.(SessionClosed); closed {
+					this.valid = false
 				}
-				done <- struct{}{}
+				cr.output <- Output{data, err}
 			}
-			log.Println("!!! Exiting")
 		}()
 	}
 	return this
@@ -79,22 +86,19 @@ func (this *Session) Serve(contentType string) *Session {
 // the dance around "started" isnt very nice
 // it has to do with the fact the initial post redirects to a get
 // so we want data on that first get, but there's been no input.
-func (this *Session) handleInput(in string, w http.ResponseWriter) (err error) {
+func (this *Session) handleInput(in interface{}) (ret interface{}, err error) {
 	start := in == "start"
 	if !this.started {
 		if start {
 			this.started = true
 			log.Println("starting", this.id)
-			err = this.session.Write(w)
+			ret, err = this.session.Read()
 		}
 	} else if start {
 		log.Println("ignoring", in, "for", this.id)
 	} else {
 		log.Println("handling", in, "for", this.id)
-		if this.contentType != "" {
-			w.Header().Set("Content-Type", this.contentType)
-		}
-		err = this.session.Read(in).Write(w)
+		ret, err = this.session.Write(in).Read()
 	}
-	return err
+	return ret, err
 }

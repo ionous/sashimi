@@ -102,10 +102,11 @@ func (this *StandardGame) IsFinished() bool {
 
 //
 // return false if the game has finished
+// (automatically ends the turn )
 //
 func (this *StandardGame) Input(s string) bool {
 	if !this.IsFinished() {
-		game, out, parser := this.Game, this.output, this.parser
+		out, parser := this.output, this.parser
 		in := parser.NormalizeInput(s)
 		if in == "q" || in == "quit" {
 			this.quit = true
@@ -115,15 +116,20 @@ func (this *StandardGame) Input(s string) bool {
 			} else if e := res.Run(); e != nil {
 				out.Println(e)
 			}
-			game.SendEvent("ending the turn", this.story.String())
-			if e := game.ProcessEvents(); e != nil {
-				log.Println(e)
-			} else {
-				if this.story.Is("completed") {
-					this.completed = true
-				}
-			}
+			this.EndTurn()
 		}
 	}
 	return !this.IsFinished()
+}
+
+func (this *StandardGame) EndTurn() {
+	game := this.Game
+	game.SendEvent("ending the turn", this.story.String())
+	if e := game.ProcessEvents(); e != nil {
+		log.Println(e)
+	} else {
+		if this.story.Is("completed") {
+			this.completed = true
+		}
+	}
 }

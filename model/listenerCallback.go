@@ -83,7 +83,7 @@ func (this *ListenerCallback) String() string {
 	} else {
 		name = this.class.name
 	}
-	return fmt.Sprintf("'%s' -> %s", name, this.action.Event())
+	return fmt.Sprintf("'%s' -> %s", name, this.action)
 }
 
 //

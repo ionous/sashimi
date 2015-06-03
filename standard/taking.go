@@ -46,7 +46,7 @@ func init() {
 						return
 					}
 					if prop.Is("fixed in place") {
-						g.Say("It's fixed in place.")
+						g.Say("It is fixed in place.")
 						//g.StopHere() // FIX: should be cancel
 						return
 					}

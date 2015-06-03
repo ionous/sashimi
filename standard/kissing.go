@@ -25,7 +25,7 @@ func init() {
 			Can("kiss").And("kissing").RequiresOne("actor"),
 			To("kiss", func(g G.Play) {
 				source := g.The("action.Source")
-				g.Say(source.Name(), "might not like that")
+				g.Say(source.Name(), "might not like that.")
 			}))
 
 		s.Execute("kiss it", Matching("kiss|hug|embrace {{something}}"))

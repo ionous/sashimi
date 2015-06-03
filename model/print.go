@@ -63,6 +63,6 @@ func (model *Model) PrintModel(printer printer) {
 	printer("*** Actions:")
 	for _, act := range model.Actions {
 		source, target, context := act.Source(), act.Target(), act.Context()
-		printer("\t", act.Name(), act.Event(), source, target, context)
+		printer("\t", act.Action(), act.Event(), source, target, context)
 	}
 }

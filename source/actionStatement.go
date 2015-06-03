@@ -14,9 +14,9 @@ func (this ActionStatement) Fields() ActionAssertionFields {
 }
 
 type ActionAssertionFields struct {
-	ActionName string
-	EventName  string
-	Source     string
-	Target     string
-	Context    string
+	Action  string
+	Event   string
+	Source  string
+	Target  string
+	Context string
 }

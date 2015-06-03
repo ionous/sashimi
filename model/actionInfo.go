@@ -3,12 +3,12 @@ package model
 import "fmt"
 
 type ActionInfo struct {
-	action,
-	event string
-	nounTypes []*ClassInfo
+	id            StringId
+	action, event string
+	nounTypes     []*ClassInfo
 }
 
-func NewAction(action, event string, classes ...*ClassInfo) (ret *ActionInfo, err error) {
+func NewAction(id StringId, action, event string, classes ...*ClassInfo) (ret *ActionInfo, err error) {
 	end, found := len(classes), false
 	for i := len(classes) - 1; i >= 0; i-- {
 		c := classes[i]
@@ -25,22 +25,27 @@ func NewAction(action, event string, classes ...*ClassInfo) (ret *ActionInfo, er
 	if end < 1 || end > 3 {
 		err = fmt.Errorf("bad nouns for %s,%s: %d, %s?", action, event, end, classes)
 	} else {
-		ret = &ActionInfo{action, event, classes[0:end]}
+		ret = &ActionInfo{id, action, event, classes[0:end]}
 	}
 	return ret, err
 }
 
-//
-func (this *ActionInfo) Name() string {
-	return this.action
+// based on the action name
+func (this *ActionInfo) Id() StringId {
+	return this.id
 }
 
-//
+// baed on id
 func (this *ActionInfo) String() string {
+	return this.id.String()
+}
+
+// action name
+func (this *ActionInfo) Action() string {
 	return this.action
 }
 
-//
+// event name
 func (this *ActionInfo) Event() string {
 	return this.event
 }
