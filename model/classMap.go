@@ -1,9 +1,5 @@
 package model
 
-import (
-	"fmt"
-)
-
 //
 type ClassMap map[StringId]*ClassInfo
 
@@ -14,16 +10,13 @@ func (this ClassMap) FindClass(name string) (ret *ClassInfo, okay bool) {
 	return ret, okay
 }
 
-// FIX could be made faster, also should return ok not error
-func (this ClassMap) FindClassBySingular(name string) (ret *ClassInfo, err error) {
-	for _, v := range this {
-		if v.singular == name {
-			ret = v
+// FIX could be made faster
+func (this ClassMap) FindClassBySingular(name string) (ret *ClassInfo, okay bool) {
+	for _, cls := range this {
+		if cls.singular == name {
+			ret, okay = cls, true
 			break
 		}
 	}
-	if ret == nil {
-		err = fmt.Errorf("class not found `%s`", name)
-	}
-	return ret, err
+	return ret, okay
 }

@@ -16,6 +16,9 @@ type ClassFactory struct {
 	singleToPlural SingleToPlural
 }
 
+//
+//
+//
 func newClassFactory(names NameSource) *ClassFactory {
 	res := &ClassFactory{names, make(PendingClasses), make(SingleToPlural)}
 	res.addClassRef(nil, "kinds", S.Options{"singular name": "kind"})
@@ -24,6 +27,7 @@ func newClassFactory(names NameSource) *ClassFactory {
 
 //
 // given the passed plural name, find the previously registered class
+//
 func (this *ClassFactory) findBySingularName(singular string,
 ) (class *PendingClass, err error) {
 	plural := this.singleToPlural[singular]
@@ -32,12 +36,15 @@ func (this *ClassFactory) findBySingularName(singular string,
 
 //
 // given the passed plural name, find the previously registered class
+//
 func (this *ClassFactory) findByPluralName(plural string,
 ) (class *PendingClass, err error) {
 	id := M.MakeStringId(plural)
 	return this.findById(id)
 }
 
+//
+//
 //
 func (this *ClassFactory) findByRelativeName(kind string, hint S.RelativeHint,
 ) (class *PendingClass, pluralized bool, err error) {
@@ -85,6 +92,8 @@ func (this *ClassFactory) makeClasses(relatives *RelativeFactory) (
 }
 
 //
+//
+//
 func (this *ClassFactory) addClassRef(parent *PendingClass, plural string, options S.Options,
 ) (class *PendingClass, err error,
 ) {
@@ -122,6 +131,7 @@ func (this *ClassFactory) addClassRef(parent *PendingClass, plural string, optio
 
 //
 // ex. name="rooms", value="room".
+//
 func (this *ClassFactory) _addOptions(plural string, options S.Options,
 ) (singular string, err error,
 ) {

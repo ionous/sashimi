@@ -18,15 +18,6 @@ type PendingClass struct {
 
 type PendingRelatives map[M.StringId]PendingRelative
 
-type PendingRelative struct {
-	id          M.StringId
-	name        string
-	relatesTo   *PendingClass
-	viaRelation string
-	toMany      bool
-	isRev       bool
-}
-
 //
 func (this *PendingClass) String() string {
 	return this.name

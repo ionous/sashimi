@@ -96,7 +96,7 @@ func NewGame(model *M.Model, output IOutput) (game *Game, err error) {
 			dispatch := dispatchers.CreateDispatcher(cls)
 			dispatch.Listen(act.Event(), callback, listener.UseCapture())
 		} else {
-			err = fmt.Errorf("couldnt find action class %r", cls)
+			err = fmt.Errorf("couldnt find action class %v", cls)
 			break
 		}
 	}
@@ -253,9 +253,9 @@ func (this *Game) newRuntimeAction(action *M.ActionInfo, nouns ...string,
 				err = e
 				break
 			}
-			obj := this.Objects[inst.Id()]
-			values[key] = obj.values.data
-			objs[i] = obj
+			gobj := this.Objects[inst.Id()]
+			values[key] = gobj.data
+			objs[i] = gobj
 		}
 		if err == nil {
 			ret = &RuntimeAction{this, action, objs, values, nil}
@@ -285,20 +285,20 @@ func (this *Game) RunAction(action *M.ActionInfo, instances []string) (err error
 			} else {
 				keys := []string{"Source", "Target", "Context"}
 				if len(instances) > len(keys) {
-					err = fmt.Errorf("too many nouns", instances)
+					err = fmt.Errorf("too many nouns %v", instances)
 				} else {
 					values := make(map[string]TemplateValues)
 					objs := make([]*GameObject, len(types))
 
 					for i, id := range instances {
-						obj, key := this.Objects[M.StringId(id)], keys[i]
-						values[key] = obj.values.data
-						objs[i] = obj
+						gobj, key := this.Objects[M.StringId(id)], keys[i]
+						values[key] = gobj.data
+						objs[i] = gobj
 					}
 
 					tgt := ObjectTarget{this, objs[0]}
 					act := &RuntimeAction{this, action, objs, values, nil}
-					log.Println("!!!", tgt, action)
+					//log.Println("!!!", tgt, action)
 
 					this.queue.QueueEvent(tgt, action.Event(), act)
 				}

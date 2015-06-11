@@ -516,5 +516,5 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 }
 
 func init() {
-	Stories.Register("sushi", A_Day_For_Fresh_Sushi)
+	stories.Register("sushi", A_Day_For_Fresh_Sushi)
 }

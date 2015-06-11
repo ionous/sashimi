@@ -14,10 +14,10 @@ func main() {
 	story := flag.String("story", "", "select the story to play.")
 	options := standard.ParseCommandLine()
 
-	if !stories.Stories.Select(*story) {
+	if !stories.Select(*story) {
 		flag.PrintDefaults()
 		fmt.Println("Please select one of the following stories:")
-		for _, nick := range stories.Stories.List() {
+		for _, nick := range stories.List() {
 			fmt.Println(" ", nick)
 		}
 	} else {

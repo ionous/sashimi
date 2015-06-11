@@ -86,6 +86,7 @@ func (this *InstanceInfo) CompatibleWith(cls *ClassInfo) bool {
 
 //
 // return a interface representing the contents of the passed property name
+// WARNING/FIX: this is default value for everything but relatives(!)
 //
 func (this *InstanceInfo) ValueByName(name string) (ret IValue, okay bool) {
 	if prop, ok := this.class.FindProperty(name); ok {
@@ -110,12 +111,12 @@ func (this *InstanceInfo) ValueByName(name string) (ret IValue, okay bool) {
 }
 
 //
+// FIX: see ValueByName()
 //
-//
-func (this *InstanceInfo) EnumValue(name string) (ret *EnumValue, okay bool) {
+func (this *InstanceInfo) RelativeValue(name string) (ret *RelativeValue, okay bool) {
 	if prop, ok := this.class.FindProperty(name); ok {
-		if prop, ok := prop.(*EnumProperty); ok {
-			ret = &EnumValue{this, prop, nil}
+		if prop, ok := prop.(*RelativeProperty); ok {
+			ret = &RelativeValue{this, prop}
 			okay = ok
 		}
 	}
@@ -123,27 +124,34 @@ func (this *InstanceInfo) EnumValue(name string) (ret *EnumValue, okay bool) {
 }
 
 //
+// these are basically useless, since  the values dont change at runtime.
 //
-//
-func (this *InstanceInfo) NumValue(name string) (ret *NumValue, okay bool) {
-	if prop, ok := this.class.FindProperty(name); ok {
-		if prop, ok := prop.(*NumProperty); ok {
-			ret = &NumValue{this, prop}
-			okay = ok
-		}
-	}
-	return ret, okay
-}
+// func (this *InstanceInfo) EnumValue(name string) (ret *EnumValue, okay bool) {
+// 	if prop, ok := this.class.FindProperty(name); ok {
+// 		if prop, ok := prop.(*EnumProperty); ok {
+// 			ret = &EnumValue{this, prop, nil}
+// 			okay = ok
+// 		}
+// 	}
+// 	return ret, okay
+// }
 
-//
-//
-//
-func (this *InstanceInfo) TextValue(name string) (ret *TextValue, okay bool) {
-	if prop, ok := this.class.FindProperty(name); ok {
-		if prop, ok := prop.(*TextProperty); ok {
-			ret = &TextValue{this, prop}
-			okay = ok
-		}
-	}
-	return ret, okay
-}
+// func (this *InstanceInfo) NumValue(name string) (ret *NumValue, okay bool) {
+// 	if prop, ok := this.class.FindProperty(name); ok {
+// 		if prop, ok := prop.(*NumProperty); ok {
+// 			ret = &NumValue{this, prop}
+// 			okay = ok
+// 		}
+// 	}
+// 	return ret, okay
+// }
+
+// func (this *InstanceInfo) TextValue(name string) (ret *TextValue, okay bool) {
+// 	if prop, ok := this.class.FindProperty(name); ok {
+// 		if prop, ok := prop.(*TextProperty); ok {
+// 			ret = &TextValue{this, prop}
+// 			okay = ok
+// 		}
+// 	}
+// 	return ret, okay
+// }

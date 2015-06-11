@@ -53,8 +53,7 @@ func (this RuntimeValues) Choice(id M.StringId) (M.StringId, bool) {
 //
 // set, but only if type of the current value at name matches the passed value
 //
-func (this RuntimeValues) SetValue(name string, val interface{}) (old interface{}, okay bool) {
-	id := M.MakeStringId(name)
+func (this RuntimeValues) SetValue(id M.StringId, val interface{}) (old interface{}, okay bool) {
 	if v, had := this.data[id.String()]; had &&
 		reflect.TypeOf(v) == reflect.TypeOf(val) {
 		this.setDirect(id, val)

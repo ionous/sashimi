@@ -10,29 +10,35 @@ func The_Lab(s *Script) {
 		Called("testing"),
 		Has("author", "me"),
 		Has("headline", "extra extra"))
+
 	s.The("room",
 		Called("the lab"),
 		Has("description", "an empty room"))
+
 	s.The("actor",
-		Called("player"),
-		Exists(),
+		Called("player"), Exists(),
 		In("the lab"),
 	)
+
+	s.The("supporter",
+		In("the lab"),
+		Called("the table"),
+		Is("fixed in place"),
+		Supports("the glass jar"))
+
 	s.The("container",
-		Called("cabinet"), In("the lab"),
-		Is("openable", "closed").And("fixed in place"),
-		Contains("glass beaker"))
-	s.The("container",
-		Called("the glass beaker"),
-		Is("transparent").And("unopenable"),
-		Has("brief", "beaker"),
+		Called("the glass jar"),
+		Is("transparent", "closed").And("openable"),
+		Has("brief", "beaker with a lid"),
 		Contains("the eye dropper"))
+
 	s.The("props",
 		Called("droppers"),
 		Have("drops", "num"))
+
 	s.The("dropper", Called("eye dropper"), Exists(), Has("drops", 5))
 }
 
 func init() {
-	Stories.Register("lab", The_Lab)
+	stories.Register("lab", The_Lab)
 }

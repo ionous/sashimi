@@ -111,7 +111,7 @@ func (this *PendingClass) addRelative(fields S.RelativeFields,
 		if id, e := this.names.addName(name, "relation"); e != nil {
 			err = e
 		} else {
-			rel := PendingRelative{id, name, cls, fields.Relation, isMany, fields.Hint.IsReverse()}
+			rel := PendingRelative{this, id, name, cls, fields.Relation, isMany, fields.Hint.IsReverse()}
 			if old, existed := this.relatives[id]; existed {
 				if old != rel {
 					err = fmt.Errorf("relation redefined. was %s, now %s", old, rel)

@@ -25,7 +25,7 @@ func (this ObjectTarget) String() string {
 //
 func (this ObjectTarget) Parent() (ret E.ITarget, ok bool) {
 	game, obj := this.game, this.obj
-	cls, next := obj.info.Class(), game.parentLookup.FindParent(obj)
+	cls, next := obj.Class(), game.parentLookup.FindParent(obj)
 	if cls != nil || next != nil {
 		ret, ok = ClassTarget{this, cls, next}, true
 	}

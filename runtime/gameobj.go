@@ -12,8 +12,8 @@ import (
 // note: for templates, this stores choices as the value of the choice ( rather than as their property names )
 //
 type GameObject struct {
-	info       *M.InstanceInfo
-	values     RuntimeValues
+	info *M.InstanceInfo
+	RuntimeValues
 	temps      TemplatePool // this isn' terrible here, but the templates could just go into the runtime values...
 	dispatcher E.Dispatcher
 }
@@ -28,6 +28,20 @@ type GameObjects map[M.StringId]*GameObject
 //
 func (this *GameObject) Id() M.StringId {
 	return this.info.Id()
+}
+
+//
+//
+//
+func (this *GameObject) Class() *M.ClassInfo {
+	return this.info.Class()
+}
+
+//
+// Return the name of the object.
+//
+func (this *GameObject) Name() string {
+	return this.info.Name()
 }
 
 //

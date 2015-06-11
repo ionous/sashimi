@@ -3,6 +3,7 @@ package standard
 import (
 	"fmt"
 	C "github.com/ionous/sashimi/console"
+	R "github.com/ionous/sashimi/runtime"
 	"io"
 )
 
@@ -23,8 +24,9 @@ func (this StandardOutput) ScriptSays(lines []string) {
 	//this.console.Println()
 }
 
-func (this StandardOutput) ActorSays(name string, lines []string) {
+func (this StandardOutput) ActorSays(whose *R.GameObject, lines []string) {
 	if len(lines) > 0 {
+		name := whose.Name()
 		this.console.Println(name, ": ", lines[0])
 		for _, l := range lines[1:] {
 			this.console.Println(l)

@@ -1,22 +1,25 @@
 package model
 
-import "encoding/json"
-
 type RelativeProperty struct {
 	fields RelativeFields
 }
 
 type RelativeFields struct {
+	Class    StringId `json:"id"`       // property id
 	Id       StringId `json:"id"`       // property id
 	Name     string   `json:"name"`     // property name
-	Relation StringId `json:"relation"` // relation id
 	Relates  StringId `json:"relates"`  // other class id
+	Relation StringId `json:"relation"` // relation id
 	IsRev    bool     `json:"rev"`
 	ToMany   bool     `json:"many"`
 }
 
 func NewRelative(fields RelativeFields) *RelativeProperty {
 	return &RelativeProperty{fields}
+}
+
+func (this *RelativeProperty) Class() StringId {
+	return this.fields.Class
 }
 
 func (this *RelativeProperty) Id() StringId {
@@ -27,17 +30,12 @@ func (this *RelativeProperty) Name() string {
 	return this.fields.Name
 }
 
+// id of the relation table
 func (this *RelativeProperty) Relation() StringId {
 	return this.fields.Relation
 }
 
-// returns the relation, and true if it exited in the map
-func (this *RelativeProperty) FindRelation(relations RelationMap) (Relation, bool) {
-	r, ok := relations[this.fields.Relation]
-	return r, ok
-}
-
-// other class id
+// id of the other class this property inolves
 func (this *RelativeProperty) Relates() StringId {
 	return this.fields.Relates
 }
@@ -52,8 +50,4 @@ func (this *RelativeProperty) IsRev() bool {
 // distingushes which side of the relation propery is the many.
 func (this *RelativeProperty) ToMany() bool {
 	return this.fields.ToMany
-}
-
-func (this *RelativeProperty) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&this.fields)
 }

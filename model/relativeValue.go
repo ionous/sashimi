@@ -13,7 +13,7 @@ func (this *RelativeValue) Property() IProperty {
 	return this.prop
 }
 
-func (this *RelativeValue) RelativeProperty() *RelativeProperty {
+func (this *RelativeValue) GetRelativeProperty() *RelativeProperty {
 	return this.prop
 }
 
@@ -65,15 +65,14 @@ func (this *RelativeValue) SetAny(value interface{}) (err error) {
 // FIX: where and how to validate table.style:
 // maybe in the table iteself since its already searching for duplicate pairs...
 func (this *RelativeValue) AddReference(other Reference) (err error) {
-	prop := this.prop
 	if !other.CompatibleWith(this.prop.Relates()) {
-		err = fmt.Errorf("%s not compatible with %s", other, prop)
+		err = fmt.Errorf("%s not compatible with %v", other, this.prop.fields)
 	} else {
 		if table, ok := this.Table(); !ok {
-			err = fmt.Errorf("internal error? couldn't find table for relation %v", this.prop)
+			err = fmt.Errorf("internal error? couldn't find table for relation %+v", this.prop.fields)
 		} else {
 			src, dst := this.inst.id, other.inst.id
-			if prop.IsRev() {
+			if this.prop.IsRev() {
 				dst, src = src, dst
 			}
 			table.Add(src.String(), dst.String())
@@ -91,7 +90,7 @@ func (this *RelativeValue) ClearReference() (ret string, err error) {
 		err = fmt.Errorf("setting an object, but relation is a list")
 	} else {
 		if table, ok := this.Table(); !ok {
-			err = fmt.Errorf("internal error? couldn't find table for relation %v", this.prop)
+			err = fmt.Errorf("internal error? couldn't find table for relation %+v", this.prop.fields)
 		} else {
 			src := this.inst.id.String()
 			// FIX: some sort of early return.
@@ -115,10 +114,10 @@ func (this *RelativeValue) ClearReference() (ret string, err error) {
 func (this *RelativeValue) SetReference(other Reference) (removed string, err error) {
 	prop := this.prop
 	if !other.CompatibleWith(prop.Relates()) {
-		err = fmt.Errorf("%s not compatible with %s", other, prop)
+		err = fmt.Errorf("%s not compatible with %+v", other, prop.fields)
 	} else {
 		if table, ok := this.Table(); !ok {
-			err = fmt.Errorf("internal error? couldn't find table for relation %v", this.prop)
+			err = fmt.Errorf("internal error? couldn't find table for relation %+v", this.prop.fields)
 		} else {
 			if !prop.ToMany() {
 				removed, err = this.ClearReference()

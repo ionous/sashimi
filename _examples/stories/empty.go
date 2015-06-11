@@ -16,5 +16,5 @@ func An_Empty_Room(s *Script) {
 	)
 }
 func init() {
-	Stories.Register("empty", An_Empty_Room)
+	stories.Register("empty", An_Empty_Room)
 }

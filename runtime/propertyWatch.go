@@ -1,12 +1,16 @@
 package runtime
 
+import (
+	M "github.com/ionous/sashimi/model"
+)
+
 //
 // Callback interface for hearing when an object's property has changed.
 // FIX? I think better would be a property proivder interface
 // and then the user/implementer code could implement the watch inside its own set.
 //
 type IPropertyChanged interface {
-	PropertyChanged(objectId, propertyId string, prev, value interface{})
+	PropertyChanged(object, property M.StringId, prev, value interface{})
 }
 
 //
@@ -20,8 +24,8 @@ type PropertyWatchers struct {
 // Sends a notification that an object property has changed.
 //
 func (this *PropertyWatchers) Notify(
-	object string,
-	property string,
+	object M.StringId,
+	property M.StringId,
 	prev interface{},
 	value interface{}) {
 	for _, el := range this.arr {

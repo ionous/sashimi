@@ -1,24 +1,30 @@
 package runtime
 
+import (
+	M "github.com/ionous/sashimi/model"
+)
+
 func NewSystemActions() SystemActions {
-	return SystemActions{make(map[string][]func())}
+	return SystemActions{make(map[string][]SystemCallback)}
 }
 
 type SystemActions struct {
-	actions map[string][]func()
+	actions map[string][]SystemCallback
 }
 
-func (this *SystemActions) Finish(name string, f func()) *SystemActions {
-	arr := this.actions[name]
-	arr = append(arr, f)
-	this.actions[name] = arr
+type SystemCallback func(action *M.ActionInfo, obj []*GameObject)
+
+func (this *SystemActions) Capture(event string, cb SystemCallback) *SystemActions {
+	arr := this.actions[event]
+	arr = append(arr, cb)
+	this.actions[event] = arr
 	return this
 }
 
-func (this *SystemActions) Run(name string) {
-	if arr, ok := this.actions[name]; ok {
+func (this *SystemActions) Run(action *M.ActionInfo, obj []*GameObject) {
+	if arr, ok := this.actions[action.Event()]; ok {
 		for _, cb := range arr {
-			cb()
+			cb(action, obj)
 		}
 	}
 }

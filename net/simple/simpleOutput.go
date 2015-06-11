@@ -3,6 +3,7 @@ package simple
 import (
 	"fmt"
 	C "github.com/ionous/sashimi/console"
+	R "github.com/ionous/sashimi/runtime"
 	"os"
 )
 
@@ -20,8 +21,9 @@ func (this *SimpleOutput) ScriptSays(lines []string) {
 }
 
 //
-func (this *SimpleOutput) ActorSays(name string, lines []string) {
+func (this *SimpleOutput) ActorSays(whose *R.GameObject, lines []string) {
 	fmt.Println("Script says", lines)
+	name := whose.Name()
 	for _, l := range lines {
 		this.Println(name, ":", l)
 	}

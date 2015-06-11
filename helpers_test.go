@@ -23,7 +23,8 @@ func (this TestOutput) ScriptSays(lines []string) {
 	}
 }
 
-func (this TestOutput) ActorSays(name string, lines []string) {
+func (this TestOutput) ActorSays(whose *R.GameObject, lines []string) {
+	name := whose.Name()
 	for _, l := range lines {
 		this.Println(name, ":", l)
 	}

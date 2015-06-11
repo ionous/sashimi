@@ -9,31 +9,29 @@ const (
 	ManyToMany               = "ManyToMany"
 )
 
+func NewRelation(id StringId, name string, src, dst HalfRelation, style RelationStyle) Relation {
+	return Relation{id, name, src, dst, style}
+}
+
 //
-// re: string ids.
-//
-// it seems be nice to have direct pointers in the model layer;
-// but, it's also nice to have classes "sealed" once they are created;
-// yet, relation properties can cause cycles, in some cases even pointing back to their own class.
-//
-// it's really not clear what's best, other than eventually, it needs to be consistent.
-// some options are:
-//
-// 1) move creation into this package via a model maker API;
-// classes, etc. are only partial during build --
-// the final Info api is only exposed externally once its all finished.
-//
-// 2) instead of pointers, the models could reference only by id -- typed or otherwise;
-// this would make them more closely match data on disk, db
-//
-// 3) some "core" class object -- +/- non-relation properties -- could be layered underneath C+R properties
+// A relation represents a property-pair.
+// Currently, each relation becomes one table.
+// This might always be the case, but it's also possible to imagine many property views of the same table.
 //
 type Relation struct {
-	id       StringId
-	name     string
-	src, dst StringId // classes
-	style    RelationStyle
+	id    StringId // unique id
+	name  string   // user specified name
+	src   HalfRelation
+	dst   HalfRelation
+	style RelationStyle
 }
+
+type HalfRelation struct {
+	Class    StringId
+	Property StringId
+}
+
+type RelationMap map[StringId]Relation
 
 func (this Relation) Id() StringId {
 	return this.id
@@ -43,29 +41,26 @@ func (this Relation) Name() string {
 	return this.name
 }
 
-func (this Relation) Source() StringId {
-	return this.src
-}
-
-func (this Relation) Destination() StringId {
-	return this.dst
-}
-
 func (this Relation) Style() RelationStyle {
 	return this.style
 }
 
-// func (this Relation) Other(test StringId) (ret StringId, many bool) {
-// 	if this.src == test {
-// 		ret = this.dst
-// 	} else {
-// 		ret = this.src
-// 	}
-// 	return
-// }
+func (this Relation) Source() HalfRelation {
+	return this.src
+}
 
-type RelationMap map[StringId]Relation
+func (this Relation) Destination() HalfRelation {
+	return this.dst
+}
 
-func NewRelation(id StringId, name string, src, dst StringId, style RelationStyle) Relation {
-	return Relation{id, name, src, dst, style}
+func (this Relation) Other(class StringId, property StringId) (other HalfRelation, okay bool) {
+	relative := HalfRelation{class, property}
+	if relative == this.src {
+		other = this.dst
+		okay = true
+	} else if relative == this.dst {
+		other = this.src
+		okay = true
+	}
+	return
 }

@@ -12,12 +12,15 @@ type ClassResult struct {
 }
 
 type ClassResultMap map[*PendingClass]*ClassResult
+
 type ClassResults struct {
 	pending   PendingClasses
 	results   ClassResultMap
 	relatives *RelativeFactory
 }
 
+//
+//
 //
 func newResults(classes PendingClasses, relatives *RelativeFactory) ClassResults {
 	results := make(ClassResultMap)
@@ -28,6 +31,7 @@ func newResults(classes PendingClasses, relatives *RelativeFactory) ClassResults
 
 //
 // exactly duplicated in makeInstances()
+//
 func (this ClassResults) finalizeClasses() (
 	classes M.ClassMap,
 	err error,
@@ -47,6 +51,7 @@ func (this ClassResults) finalizeClasses() (
 
 //
 // make a class and its parents
+//
 func (this ClassResults) makeClass(pending *PendingClass,
 ) (cls *M.ClassInfo, err error) {
 	cr := this.results[pending]
@@ -131,7 +136,7 @@ func (this ClassResults) _makeClass(pending *PendingClass,
 		// add relation properties
 		for id, relative := range pending.relatives {
 			// get-or-create the associated relationship:
-			if prop, e := this.relatives.makeRelative(id, pending, relative); e != nil {
+			if prop, e := this.relatives.makeRelative(relative); e != nil {
 				err = AppendError(err, e)
 			} else {
 				props[id] = prop

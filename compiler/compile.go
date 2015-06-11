@@ -146,7 +146,7 @@ func (this *Context) resolveAction(classes M.ClassMap, fields S.ActionAssertionF
 ) (actionId M.StringId, owner, target, context *M.ClassInfo, err error) {
 	// find the primary class
 	if cls, ok := classes.FindClass(fields.Source); !ok {
-		e := fmt.Errorf("couldn't find class %r", fields)
+		e := fmt.Errorf("couldn't find class %+v", fields)
 		err = this.log.AppendError(err, e)
 	} else {
 		// and the other two optional ones
@@ -231,16 +231,15 @@ func (this *Context) makeEventListeners(events M.EventMap, classes M.ClassMap, i
 			continue
 		}
 		var options M.ListenerOptions
-		if r.Capture() {
+		if r.Captures() {
 			options |= M.EventCapture
 		}
-		if r.TargetOnly() {
+		if r.OnlyTargets() {
 			options |= M.EventTargetOnly
 		}
-		if r.RunAfter() {
+		if r.RunsAfter() {
 			options |= M.EventQueueAfter
 		}
-
 		cb, e := this.newCallback(r.Owner, classes, instances, action, r.Callback, options)
 		if e != nil {
 			err = this.log.AppendError(err, e)

@@ -20,7 +20,7 @@ func (this *TestNounFactory) MatchNoun(name string, article string) (noun string
 	if this.pool[name] {
 		noun = name
 	} else {
-		err = fmt.Errorf("unknown noun %s,%s", name)
+		err = fmt.Errorf("unknown noun %s,%s", article, name)
 	}
 	return noun, err
 }
@@ -46,7 +46,7 @@ func testTokens(t *testing.T, s string, expectGroups, expectTags int) {
 	if numGroups != expectGroups || numTags != expectTags {
 		t.Errorf("expected %d,%d tokens in `%s` got %d,%d instead.",
 			expectGroups, expectTags, s, numGroups, numTags)
-		t.Logf("%r %r", groups, tags)
+		t.Logf("%v %v", groups, tags)
 	}
 }
 

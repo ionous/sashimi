@@ -35,14 +35,14 @@ func (this ListenStatement) Source() Code {
 	return this.source
 }
 
-func (this ListenFields) Capture() bool {
+func (this ListenFields) Captures() bool {
 	return this.Options&ListenCapture != 0
 }
 
-func (this ListenFields) TargetOnly() bool {
+func (this ListenFields) OnlyTargets() bool {
 	return this.Options&ListenTargetOnly != 0
 }
 
-func (this ListenFields) RunAfter() bool {
+func (this ListenFields) RunsAfter() bool {
 	return this.Options&ListenRunAfter != 0
 }

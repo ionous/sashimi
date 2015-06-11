@@ -37,7 +37,7 @@ func init() {
 				//
 				if actorCeiling != targetCeiling {
 					g.Say("That isn't available.")
-					g.Log(fmt.Sprintf("take ceiling mismatch (%r!=%r)", actorCeiling, targetCeiling))
+					g.Log(fmt.Sprintf("take ceiling mismatch (%v!=%v)", actorCeiling, targetCeiling))
 				} else {
 					if prop.Is("scenery") {
 						g.Say("That isn't available.")

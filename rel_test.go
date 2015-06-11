@@ -28,8 +28,8 @@ func TestSimpleRelation(t *testing.T) {
 		model.PrintModel(t.Log)
 		assert.Equal(t, 1, len(model.Relations))
 		for _, v := range model.Relations {
-			assert.EqualValues(t, "Gremlins", v.Source().String())
-			assert.EqualValues(t, "Rocks", v.Destination().String())
+			assert.EqualValues(t, "Gremlins", v.Source().Class)
+			assert.EqualValues(t, "Rocks", v.Destination().Class)
 			assert.EqualValues(t, M.OneToMany, v.Style())
 		}
 	}

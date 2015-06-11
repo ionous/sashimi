@@ -8,13 +8,21 @@ import (
 	"github.com/ionous/sashimi/script"
 )
 
+func Select(name string) bool {
+	return stories.Select(name)
+}
+
+func List() (ret []string) {
+	return stories.List()
+}
+
 //
 // The list of all known stories provided by the examples.
 //
-var Stories = Registry{make(map[string]script.InitCallback), ""}
+var stories = Registry{make(map[string]script.InitCallback), ""}
 
 //
-// see "Stories."
+// see "var stories."
 //
 type Registry struct {
 	reg      map[string]script.InitCallback
@@ -56,7 +64,7 @@ func (this *Registry) Select(name string) bool {
 // inject the script selected via the story registry.
 func init() {
 	script.AddScript(func(s *script.Script) {
-		if cb, ok := Stories.reg[Stories.selected]; ok {
+		if cb, ok := stories.reg[stories.selected]; ok {
 			cb(s)
 		}
 	})

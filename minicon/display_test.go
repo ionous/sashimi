@@ -44,7 +44,7 @@ func TestHistory(t *testing.T) {
 	}
 	h.Restore(rec)
 	if was, ok := h.Forward(); was != "" || ok {
-		t.Fatalf("`%s` != ``, %v", was, was != "", ok)
+		t.Fatalf("was:`%s` != ``, empty:%v, ok:%v", was, was != "", ok)
 	}
 	if was, ok := h.Back(); was != "new" || !ok {
 		t.Fatal(was, "!= new; we didnt advance fwd, so we should now be back to the start of the test")

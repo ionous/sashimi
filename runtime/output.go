@@ -11,7 +11,7 @@ type IOutput interface {
 	//
 	// The actor or object with the passed name has something to say.
 	//
-	ActorSays(name string, lines []string)
+	ActorSays(whose *GameObject, lines []string)
 	//
 	// Debugging output.
 	//

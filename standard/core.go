@@ -11,10 +11,9 @@ func InitStandardLibrary() *Script {
 
 // FIX: there's no error testing here and its definitely possible to screw things up.
 func Assign(dest G.IObject, rel string, prop G.IObject) {
-	_, parentRel := DirectParent(prop)
 	// sure hope there's no errors, would relation by value remove the need for transaction?
-	if parentRel != "" {
-		// note: an object like the fishFood isnt "in the world", and doesnt have an owner field to clear
+	if _, parentRel := DirectParent(prop); parentRel != "" {
+		// note: an object like the fishFood isnt "in the world", and doesnt have an owner field to clear.
 		prop.SetObject(parentRel, nil)
 	}
 	prop.SetObject(rel, dest)

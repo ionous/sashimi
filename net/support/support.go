@@ -32,7 +32,7 @@ func (this ServeMux) HandleText(pattern, text string) {
 	})
 }
 
-func (this ServeMux) HandleFilePatterns(root string, pairs []FilePair) {
+func (this ServeMux) HandleFilePatterns(root string, pairs ...FilePair) {
 	fs := http.Dir(root)
 	for _, pair := range pairs {
 		this.HandleFilePattern(fs, pair)
