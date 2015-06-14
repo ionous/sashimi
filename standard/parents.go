@@ -6,7 +6,7 @@ import (
 
 // touchable ceiling, visibility ceiling (visibility level count)
 func DirectParent(obj IObject) (parent IObject, where string) {
-	for _, wse := range []string{"wearer", "owner", "bearer", "whereabouts", "support", "enclosure"} {
+	for _, wse := range []string{"wearer", "owner", "whereabouts", "support", "enclosure"} {
 		if p := obj.Object(wse); p.Exists() {
 			parent, where = p, wse
 			break
@@ -17,7 +17,7 @@ func DirectParent(obj IObject) (parent IObject, where string) {
 
 //
 func CarriedNotWorn(obj IObject) (carrier IObject, okay bool) {
-	for _, wob := range []string{"owner", "bearer"} {
+	for _, wob := range []string{"owner"} {
 		if p := obj.Object(wob); p.Exists() {
 			carrier, okay = p, true
 			break
@@ -28,7 +28,7 @@ func CarriedNotWorn(obj IObject) (carrier IObject, okay bool) {
 
 //
 func Carrier(obj IObject) (carrier IObject, okay bool) {
-	for _, wob := range []string{"wearer", "owner", "bearer"} {
+	for _, wob := range []string{"wearer", "owner"} {
 		if p := obj.Object(wob); p.Exists() {
 			carrier, okay = p, true
 			break

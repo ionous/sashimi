@@ -32,8 +32,8 @@ func TestCommandGame(t *testing.T) {
 				assert.EqualValues(t, "game", d.Data.Class)
 				// check the room
 				if contents, err := g.getMany("rooms", "lab", "contents"); assert.NoError(t, err) {
-					assert.Len(t, contents.Data, 2, "the lab should have two objects")
-					assert.Len(t, contents.Included, 1, "the player should be previously known, the table newly known.")
+					assert.Len(t, contents.Data, 3, "the lab should have two objects")
+					assert.Len(t, contents.Included, 2, "the player should be previously known, the table newly known.")
 				}
 				checkTable(t, g, 1)
 
@@ -44,6 +44,13 @@ func TestCommandGame(t *testing.T) {
 				// take the beaker
 				if _, err := g.post("take the glass jar"); assert.NoError(t, err) {
 					checkTable(t, g, 0)
+				}
+				cmd := CommandInput{
+					Action:  "show-it-to",
+					Target:  "lab-assistant",
+					Context: "axe"}
+				if _, err := g.postCmd(cmd); assert.NoError(t, err) {
+
 				}
 
 				if cls, err := g.getOne("class", "droppers"); assert.NoError(t, err) {
@@ -94,6 +101,10 @@ func (this *Helper) getMany(parts ...string) (doc resource.MultiDocument, err er
 
 func (this *Helper) post(input string) (doc resource.ObjectDocument, err error) {
 	in := CommandInput{Input: input}
+	return this.postCmd(in)
+}
+
+func (this *Helper) postCmd(in CommandInput) (doc resource.ObjectDocument, err error) {
 	if b, e := json.Marshal(in); e != nil {
 		err = e
 	} else {

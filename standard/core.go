@@ -90,10 +90,12 @@ func init() {
 			Called("actors"),
 			Have("clothing", "objects").
 				Implying("objects", Have("wearer", "actor")),
-			Have("equipment", "objects").
-				Implying("objects", Have("bearer", "actor")),
 			Have("inventory", "objects").
 				Implying("objects", Have("owner", "actor")))
+
+		// changed: used to have "equipment" for held objects
+		// will either implement some sort of "relation with value"
+		// or will add a "held","holdable", state to objects.
 
 		s.The("objects",
 			Called("props"),
@@ -180,7 +182,7 @@ func init() {
 			Can("report inventory").And("reporting inventory").RequiresNothing(),
 			To("report inventory", func(g G.Play) {
 				this := g.The("actor")
-				source := []string{"clothing", "equipment", "inventory"}
+				source := []string{"clothing", "inventory"}
 				for _, s := range source {
 					contents := this.ObjectList(s)
 					if len(contents) > 0 {

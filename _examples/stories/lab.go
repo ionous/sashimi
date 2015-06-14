@@ -26,6 +26,18 @@ func The_Lab(s *Script) {
 		Is("fixed in place"),
 		Supports("the glass jar"))
 
+	s.The("prop",
+		Called("the axe"),
+		Has("brief", "a very nice guitar"))
+
+	s.The("player", Possesses("the axe"))
+
+	s.The("actor",
+		Called("lab assistant"),
+		Has("description", "That's Darcy. Your pretty, capable lab assistant. Although, there is a question of commas."),
+		Exists(),
+		In("the lab"))
+
 	s.The("container",
 		Called("the glass jar"),
 		Is("transparent", "closed").And("openable"),

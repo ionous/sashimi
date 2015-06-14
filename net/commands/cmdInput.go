@@ -11,7 +11,8 @@ func (this *CommandInput) Nouns() []string {
 	nouns := make([]string, 0, 3)
 	if n := this.Target; n != "" {
 		nouns = append(nouns, n)
-	} else if n := this.Context; n != "" {
+	}
+	if n := this.Context; n != "" {
 		nouns = append(nouns, n)
 	}
 	return nouns

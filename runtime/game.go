@@ -281,7 +281,7 @@ func (this *Game) RunAction(action *M.ActionInfo, instances []string) (err error
 			types := action.NounSlice()
 			instances = append([]string{sourceObj.Id().String()}, instances...)
 			if len(types) != len(instances) {
-				err = fmt.Errorf("mismatched nouns %d!=%d", len(types), len(instances))
+				err = fmt.Errorf("mismatched nouns %v!=%v", types, instances)
 			} else {
 				keys := []string{"Source", "Target", "Context"}
 				if len(instances) > len(keys) {
