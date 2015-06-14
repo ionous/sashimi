@@ -7,33 +7,6 @@ import (
 
 func ClassResource(model *M.Model) resource.IResource {
 	return resource.Wrapper{
-		// find the named class
-		Finds: func(id string) (ret resource.IResource, okay bool) {
-			if cls, ok := model.Classes.FindClass(id); ok {
-				okay, ret = true, resource.Wrapper{
-					// return information about the id'd class
-					Queries: func(doc resource.DocumentBuilder) {
-						addClass(doc, doc.NewIncludes(), cls)
-					},
-					// find a sub-resource of the id'd class
-					Finds: func(name string) (ret resource.IResource, okay bool) {
-						switch name {
-						case "actions":
-							okay, ret = true, resource.Wrapper{
-								Queries: func(doc resource.DocumentBuilder) {
-									objects := doc.NewObjects()
-									for _, act := range model.Actions {
-										if act.Target() == cls || cls.HasParent(act.Target()) {
-											objects.NewObject(jsonId(act.Id()), "action")
-										}
-									}
-								}}
-						}
-						return
-					}}
-			}
-			return
-		},
 		// list all classes
 		Queries: func(doc resource.DocumentBuilder) {
 			objects := doc.NewObjects()
@@ -41,20 +14,32 @@ func ClassResource(model *M.Model) resource.IResource {
 				objects.NewObject(jsonId(k), "class")
 			}
 		},
+		// find the named class
+		Finds: func(id string) (ret resource.IResource, okay bool) {
+			if cls, ok := model.Classes.FindClass(id); ok {
+				okay, ret = true, resource.Wrapper{
+					// return information about the id'd class
+					Queries: func(doc resource.DocumentBuilder) {
+						addClass(model, doc, doc.NewIncludes(), cls)
+					},
+				}
+			}
+			return
+		},
 	}
 }
 
-func classParents(ar []string, cls *M.ClassInfo) []string {
+func classParents(cls *M.ClassInfo, ar []string) []string {
 	if p := cls.Parent(); p != nil {
-		ar = append(classParents(ar, p), jsonId(p.Id()))
+		ar = append(classParents(p, ar), jsonId(p.Id()))
 	}
 	return ar
 }
 
-func addClass(doc, sub resource.IBuildObjects, cls *M.ClassInfo) {
+func addClass(model *M.Model, doc, sub resource.IBuildObjects, cls *M.ClassInfo) {
 	var parent *resource.Object
 	if p := cls.Parent(); p != nil {
-		//addClass(sub, sub, p)
+		//addClass(model, sub, sub, p)
 		// disabling recursion
 		parent = resource.NewObject(jsonId(p.Id()), "class")
 	}
@@ -63,7 +48,13 @@ func addClass(doc, sub resource.IBuildObjects, cls *M.ClassInfo) {
 	out.SetAttr("parent", parent)
 	out.SetAttr("name", cls.Name())
 	out.SetAttr("singular", cls.Singular())
-	out.SetMeta("classes", classParents([]string{id}, cls))
+	a := append(classParents(cls, nil), id)
+	// reverse
+	for i := len(a)/2 - 1; i >= 0; i-- {
+		opp := len(a) - 1 - i
+		a[i], a[opp] = a[opp], a[i]
+	}
+	out.SetMeta("classes", a)
 	props := resource.Dict{}
 	for pid, prop := range cls.Properties() {
 		typeName := "unknown"
@@ -79,5 +70,13 @@ func addClass(doc, sub resource.IBuildObjects, cls *M.ClassInfo) {
 		}
 		props[jsonId(pid)] = typeName
 	}
+	actionRefs := resource.NewObjectList()
+	for _, act := range model.Actions {
+		if act.Target() == cls || cls.HasParent(act.Target()) {
+			actionRefs.NewObject(jsonId(act.Id()), "action")
+			actionResource(sub, act)
+		}
+	}
 	out.SetAttr("props", props)
+	out.SetAttr("actions", actionRefs.Objects())
 }

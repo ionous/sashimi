@@ -47,8 +47,11 @@ func TestCommandGame(t *testing.T) {
 				}
 
 				if cls, err := g.getOne("class", "droppers"); assert.NoError(t, err) {
-					parents := cls.Data.Meta["parents"].([]interface{})
-					assert.EqualValues(t, []interface{}{"kinds", "objects", "props"}, parents)
+					if parents, ok := cls.Data.Meta["classes"]; assert.True(t, ok, "has classes") {
+						if parents, ok := parents.([]interface{}); assert.True(t, ok, "classes is list") {
+							assert.EqualValues(t, []interface{}{"droppers", "props", "objects", "kinds"}, parents)
+						}
+					}
 				}
 			}
 		}

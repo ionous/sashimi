@@ -138,10 +138,7 @@ func (this *CommandOutput) propertyChanged(game *R.Game, gobj *R.GameObject, pro
 	// property changes dont cause an object to be serialized
 	// some other event or request is required
 	//
-
-	if !this.serial.IsKnown(gobj) {
-		fmt.Println("!!!!!!!!!", gobj)
-	} else {
+	if this.serial.IsKnown(gobj) {
 		this.flushPending()
 		obj := this.serial.NewObjectRef(gobj)
 
