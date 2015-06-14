@@ -50,17 +50,17 @@ func (this *Events) Flush() []resource.Dict {
 //
 type SerialOut struct {
 	*ObjectSerializer
-	included Included
+	includes Included
 }
 
 func (this *SerialOut) NewObjectRef(gobj *R.GameObject) *resource.Object {
-	this.included.Include(gobj)
+	this.includes.Include(gobj)
 	return this.NewObject(resource.ObjectList{}, gobj)
 }
 
 func (this *SerialOut) Flush() Included {
-	ret := this.included
-	this.included = make(Included)
+	ret := this.includes
+	this.includes = make(Included)
 	return ret
 }
 
@@ -138,7 +138,10 @@ func (this *CommandOutput) propertyChanged(game *R.Game, gobj *R.GameObject, pro
 	// property changes dont cause an object to be serialized
 	// some other event or request is required
 	//
-	if this.serial.IsKnown(gobj) {
+
+	if !this.serial.IsKnown(gobj) {
+		fmt.Println("!!!!!!!!!", gobj)
+	} else {
 		this.flushPending()
 		obj := this.serial.NewObjectRef(gobj)
 
@@ -178,14 +181,14 @@ func (this *CommandOutput) propertyChanged(game *R.Game, gobj *R.GameObject, pro
 			}
 
 			// fire for the original object
-			this.events.Add("x-set", obj.SetMeta("rel", jsonId(prop.Id())))
+			this.events.Add("x-rel", obj.SetMeta("rel", jsonId(prop.Id())))
 			// fire for the prev object's relationships
 			if oprev != nil {
-				this.events.Add("x-set", oprev.SetMeta("rel", jsonId(other.Property)))
+				this.events.Add("x-rel", oprev.SetMeta("rel", jsonId(other.Property)))
 			}
 			// fire for the next object's relationships
 			if onext != nil {
-				this.events.Add("x-set", onext.SetMeta("rel", jsonId(other.Property)))
+				this.events.Add("x-rel", onext.SetMeta("rel", jsonId(other.Property)))
 			}
 		}
 	}
@@ -197,6 +200,6 @@ func (this *CommandOutput) propertyChanged(game *R.Game, gobj *R.GameObject, pro
 func (this *CommandOutput) flushPending() {
 	if lines := this.BufferedOutput.Flush(); len(lines) > 0 {
 		// a queriable resource so that it's reocoverable, pagination?
-		this.events.Add("say", resource.ObjectList{}.NewObject("display", "_sys_").SetAttr("lines", lines))
+		this.events.Add("say", resource.ObjectList{}.NewObject("_display_", "_sys_").SetAttr("lines", lines))
 	}
 }

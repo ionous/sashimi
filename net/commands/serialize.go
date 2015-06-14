@@ -33,14 +33,21 @@ func (this *ObjectSerializer) IsKnown(gobj *R.GameObject) bool {
 //
 func (this *ObjectSerializer) SerializeObject(out resource.IBuildObjects, gobj *R.GameObject, force bool) (obj *resource.Object) {
 	if this.known.SetKnown(gobj.Id()) || force {
+		obj = this.NewObject(out, gobj)
+		//
 		states := []string{}
 		for prop, _ := range gobj.Class().AllProperties() {
+			// FIX: this shouldnt require three map lookups
 			if choice, ok := gobj.Choice(prop); ok {
 				states = append(states, jsonId(choice))
+			} else if text, ok := gobj.Text(prop); ok {
+				obj.SetAttr(jsonId(prop), text)
+			} else if num, ok := gobj.Num(prop); ok {
+				obj.SetAttr(jsonId(prop), num)
 			}
 		}
 		// FIX? not currently serializing text and numbers... need to replace text/template with mustache.
-		obj = this.NewObject(out, gobj).
+		obj.
 			SetMeta("name", gobj.String()).
 			SetMeta("states", states)
 	}

@@ -54,13 +54,11 @@ func (this *CommandSession) Find(name string) (ret resource.IResource, okay bool
 	// by default, objects are grouped by their class:
 	default:
 		if cls, plural := this.game.Model.Classes.FindClass(name); plural {
-			ret, okay = ClassRuntime(this.game.Game, cls, this.output.serial.ObjectSerializer), true
+			ret, okay = ObjectResource(this.game.Game, cls, this.output.serial.ObjectSerializer), true
 		}
 	// a request for information about a class?
-	case "classes":
-		if cls, ok := this.game.Model.Classes.FindClass(name); ok {
-			ret, okay = ClassModel(this.game.Model, cls), true
-		}
+	case "class":
+		ret, okay = ClassResource(this.game.Model), true
 	}
 	return ret, okay
 }

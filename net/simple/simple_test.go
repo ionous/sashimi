@@ -1,7 +1,6 @@
-package net
+package simple
 
 import (
-	"github.com/ionous/sashimi/net/simple"
 	. "github.com/ionous/sashimi/script"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -14,7 +13,7 @@ import (
 
 //
 func TestSimpleStartup(t *testing.T) {
-	ts := httptest.NewServer(simple.NewSimpleServer())
+	ts := httptest.NewServer(NewSimpleServer())
 	defer ts.Close()
 
 	resp, e := http.Get(ts.URL)
@@ -42,7 +41,7 @@ func TestSimpleGame(t *testing.T) {
 		)
 	})
 	//
-	ts := httptest.NewServer(simple.NewSimpleServer())
+	ts := httptest.NewServer(NewSimpleServer())
 	defer ts.Close()
 	URL := ts.URL + "/game/new"
 	match := regexp.MustCompile("^/game/([^/]+)$")

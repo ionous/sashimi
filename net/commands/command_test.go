@@ -1,11 +1,10 @@
-package net
+package commands
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/ionous/sashimi/_examples/stories"
-	"github.com/ionous/sashimi/net/commands"
 	"github.com/ionous/sashimi/net/resource"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -15,15 +14,11 @@ import (
 	"testing"
 )
 
-const (
-	bodyType = "application/json"
-)
-
 //
 func TestCommandGame(t *testing.T) {
 	stories.Select("lab")
 
-	ts := httptest.NewServer(commands.NewServer())
+	ts := httptest.NewServer(NewServer())
 	defer ts.Close()
 
 	g := &Helper{ts, "new"}
@@ -36,7 +31,7 @@ func TestCommandGame(t *testing.T) {
 
 				assert.EqualValues(t, "game", d.Data.Class)
 				// check the room
-				if contents, err := g.get("rooms", "lab", "contents"); assert.NoError(t, err) {
+				if contents, err := g.getMany("rooms", "lab", "contents"); assert.NoError(t, err) {
 					assert.Len(t, contents.Data, 2, "the lab should have two objects")
 					assert.Len(t, contents.Included, 1, "the player should be previously known, the table newly known.")
 				}
@@ -50,13 +45,18 @@ func TestCommandGame(t *testing.T) {
 				if _, err := g.post("take the glass jar"); assert.NoError(t, err) {
 					checkTable(t, g, 0)
 				}
+
+				if cls, err := g.getOne("class", "droppers"); assert.NoError(t, err) {
+					parents := cls.Data.Meta["parents"].([]interface{})
+					assert.EqualValues(t, []interface{}{"kinds", "objects", "props"}, parents)
+				}
 			}
 		}
 	}
 }
 
 func checkTable(t *testing.T, g *Helper, cnt int) {
-	if contents, err := g.get("supporters", "table", "contents"); assert.NoError(t, err) {
+	if contents, err := g.getMany("supporters", "table", "contents"); assert.NoError(t, err) {
 		t.Log(pretty(contents))
 		assert.Len(t, contents.Data, cnt, "the table should have %d objects", cnt)
 	}
@@ -67,7 +67,18 @@ type Helper struct {
 	id string
 }
 
-func (this *Helper) get(parts ...string) (doc resource.MultiDocument, err error) {
+func (this *Helper) getOne(parts ...string) (doc resource.ObjectDocument, err error) {
+	//"rooms", "lab", "contents"
+	url := this.makeUrl(parts...)
+	if resp, e := http.Get(url); e != nil {
+		err = e
+	} else {
+		err = decodeBody(resp, &doc)
+	}
+	return
+}
+
+func (this *Helper) getMany(parts ...string) (doc resource.MultiDocument, err error) {
 	//"rooms", "lab", "contents"
 	url := this.makeUrl(parts...)
 	if resp, e := http.Get(url); e != nil {
@@ -79,12 +90,12 @@ func (this *Helper) get(parts ...string) (doc resource.MultiDocument, err error)
 }
 
 func (this *Helper) post(input string) (doc resource.ObjectDocument, err error) {
-	in := commands.CommandInput{Input: input}
+	in := CommandInput{Input: input}
 	if b, e := json.Marshal(in); e != nil {
 		err = e
 	} else {
 		postUrl := this.makeUrl()
-		if resp, e := http.Post(postUrl, bodyType, bytes.NewReader(b)); e != nil {
+		if resp, e := http.Post(postUrl, "application/json", bytes.NewReader(b)); e != nil {
 			err = e
 		} else if e := decodeBody(resp, &doc); e != nil {
 			err = e

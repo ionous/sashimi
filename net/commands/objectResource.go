@@ -6,7 +6,7 @@ import (
 	R "github.com/ionous/sashimi/runtime"
 )
 
-func ClassRuntime(game *R.Game, cls *M.ClassInfo, serial *ObjectSerializer) resource.IResource {
+func ObjectResource(game *R.Game, cls *M.ClassInfo, serial *ObjectSerializer) resource.IResource {
 	return resource.Wrapper{
 		// Find the id object.
 		Finds: func(id string) (ret resource.IResource, okay bool) {
@@ -56,5 +56,4 @@ func ClassRuntime(game *R.Game, cls *M.ClassInfo, serial *ObjectSerializer) reso
       "title": "Rails is Omakase"
     }
   }]
-  }
-*/
+  }*/
