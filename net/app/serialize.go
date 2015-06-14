@@ -1,4 +1,4 @@
-package commands
+package app
 
 import (
 	"github.com/ionous/sashimi/net/resource"

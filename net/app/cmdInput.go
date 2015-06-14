@@ -1,4 +1,4 @@
-package commands
+package app
 
 type CommandInput struct {
 	Input   string `json:"in"`

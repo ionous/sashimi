@@ -1,4 +1,4 @@
-package commands
+package app
 
 import (
 	"bytes"
@@ -15,7 +15,7 @@ import (
 )
 
 //
-func TestCommandGame(t *testing.T) {
+func TestNetApp(t *testing.T) {
 	stories.Select("lab")
 
 	ts := httptest.NewServer(NewServer())

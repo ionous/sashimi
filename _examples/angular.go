@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/ionous/sashimi/_examples/stories"
-	"github.com/ionous/sashimi/net/commands"
+	"github.com/ionous/sashimi/net/app"
 	"github.com/ionous/sashimi/net/support"
 	"log"
 	"net/http"
@@ -28,7 +28,7 @@ func main() {
 		}
 	} else {
 		fmt.Println("listening on http://localhost:8080")
-		handler := commands.NewServer()
+		handler := app.NewServer()
 		handler.HandleFilePatterns(root,
 			support.Dir("/app/"),
 			support.Dir("/bower_components/"),
