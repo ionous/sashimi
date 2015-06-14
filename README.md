@@ -75,11 +75,13 @@ Possible future features, in no particular order:
 
 ## Examples
 
+### Command line version:
+
 The examples directory includes a version of [A Day For Fresh Sushi](http://ifdb.tads.org/viewgame?id=7yiyxcnrlwejoffd) ported from Inform7 with permission.
 
 ```
-cd $GOPATH/src/github.com/ionous/sashimi/examples/fishy
-go run fishy.go
+cd $GOPATH/src/github.com/ionous/sashimi/_examples
+go run gofishgo.go
 ```
 
 Command line options:
@@ -93,3 +95,11 @@ Suppported comands include:
 * show *something* to *someone*, insert *something* into *something else*
 * ...
 * and, q (to quit)
+
+### Web version:
+
+This is a work in progress. You need both this project and the [sashimi-testapp](https://github.com/ionous/sashimi-testapp).
+```
+run {sashimi}/_examples/angular.go -story sushi  {sashimi-testapp}/
+open a web browser to: http://localhost:8080/app/
+```
