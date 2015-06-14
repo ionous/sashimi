@@ -53,6 +53,14 @@ type SerialOut struct {
 	includes Included
 }
 
+func (this *SerialOut) TryObjectRef(gobj *R.GameObject) (ret *resource.Object, okay bool) {
+	if this.IsKnown(gobj) {
+		ret = this.NewObjectRef(gobj)
+		okay = true
+	}
+	return
+}
+
 func (this *SerialOut) NewObjectRef(gobj *R.GameObject) *resource.Object {
 	this.includes.Include(gobj)
 	return this.NewObject(resource.ObjectList{}, gobj)
@@ -143,54 +151,50 @@ func (this *CommandOutput) propertyChanged(game *R.Game, gobj *R.GameObject, pro
 	// property changes dont cause an object to be serialized
 	// some other event or request is required
 	//
-	if this.serial.IsKnown(gobj) {
-		this.flushPending()
-		obj := this.serial.NewObjectRef(gobj)
-
-		switch prop := prop.(type) {
-		case *M.NumProperty:
+	switch prop := prop.(type) {
+	case *M.NumProperty:
+		if obj, ok := this.serial.TryObjectRef(gobj); ok {
 			this.events.Add("x-num", obj.SetAttr(jsonId(prop.Id()), next))
+		}
 
-		case *M.TextProperty:
+	case *M.TextProperty:
+		if obj, ok := this.serial.TryObjectRef(gobj); ok {
 			this.events.Add("x-txt", obj.SetAttr(jsonId(prop.Id()), next))
+		}
 
-		case *M.EnumProperty:
+	case *M.EnumProperty:
+		if obj, ok := this.serial.TryObjectRef(gobj); ok {
 			prev := jsonId(prev.(M.StringId))
 			next := jsonId(next.(M.StringId))
 			this.events.Add("x-set", obj.SetMeta("change-states", []string{prev, next}))
+		}
 
-		case *M.RelativeProperty:
-			// get the relation
-			relation := game.Model.Relations[prop.Relation()]
+	case *M.RelativeProperty:
+		// get the relation
+		relation := game.Model.Relations[prop.Relation()]
 
-			// get the reverse property
-			other, foundOther := relation.Other(prop.Class(), prop.Id())
-			if !foundOther {
-				panic(fmt.Sprint("couldnt match", prop, relation))
-			}
+		// get the reverse property
+		other, foundOther := relation.Other(prop.Class(), prop.Id())
+		if !foundOther {
+			panic(fmt.Sprint("couldnt match", prop, relation))
+		}
 
-			// ex. glass-jar, support: table, contents;
-			//
-
-			// find the previously related object
-			var oprev, onext *resource.Object
-			if gprev, ok := game.Objects[M.StringId(prev.(string))]; ok {
-				oprev = this.serial.NewObjectRef(gprev)
-			}
-			// find the new reverse relation
-			if gnext, ok := game.Objects[M.StringId(next.(string))]; ok {
-				onext = this.serial.NewObjectRef(gnext)
-			}
-
-			// fire for the original object
+		// fire for the original object
+		if obj, ok := this.serial.TryObjectRef(gobj); ok {
 			this.events.Add("x-rel", obj.SetMeta("rel", jsonId(prop.Id())))
-			// fire for the prev object's relationships
-			if oprev != nil {
-				this.events.Add("x-rel", oprev.SetMeta("rel", jsonId(other.Property)))
+		}
+
+		// fire for the prev object's relationships
+		if gprev, ok := game.Objects[M.StringId(prev.(string))]; ok {
+			if obj, ok := this.serial.TryObjectRef(gprev); ok {
+				this.events.Add("x-rel", obj.SetMeta("rel", jsonId(other.Property)))
 			}
-			// fire for the next object's relationships
-			if onext != nil {
-				this.events.Add("x-rel", onext.SetMeta("rel", jsonId(other.Property)))
+		}
+
+		// fire for the next object's relationships
+		if gnext, ok := game.Objects[M.StringId(next.(string))]; ok {
+			if obj, ok := this.serial.TryObjectRef(gnext); ok {
+				this.events.Add("x-rel", obj.SetMeta("rel", jsonId(other.Property)))
 			}
 		}
 	}
