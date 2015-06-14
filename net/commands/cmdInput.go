@@ -2,7 +2,7 @@ package commands
 
 type CommandInput struct {
 	Input   string `json:"in"`
-	Action  string `json:"act"`
+	Action  string `json:"act"` // FIX? these should all probably be jsonapi refs
 	Target  string `json:"tgt"`
 	Context string `json:"ctx"`
 }

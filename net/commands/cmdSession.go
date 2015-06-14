@@ -105,7 +105,7 @@ func (this *CommandSession) _handleInput(input CommandInput) (err error) {
 			this.game.Input(input.Input)
 		} else {
 			// Run json'd clicky action:
-			if act, ok := this.game.Model.Actions[M.StringId(input.Action)]; !ok {
+			if act, ok := this.game.Model.Actions[M.MakeStringId(input.Action)]; !ok {
 				err = fmt.Errorf("unknown action %s", input.Action)
 				//FIX? RunActions injects the player, that works out well, but is a little strange.
 			} else if e := this.game.RunAction(act, input.Nouns()); e != nil {

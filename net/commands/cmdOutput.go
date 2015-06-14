@@ -80,7 +80,12 @@ func NewCommandOutput(id string) *CommandOutput {
 //
 func (this *CommandOutput) ActorSays(who *R.GameObject, lines []string) {
 	this.flushPending()
-	this.events.Add("say", this.serial.NewObjectRef(who).SetAttr("lines", lines))
+	//this.events.Add("say", this.serial.NewObjectRef(who).SetAttr("lines", lines))
+	this.events.Add("say",
+		resource.ObjectList{}.
+			NewObject("_display_", "_sys_").
+			SetAttr("lines", lines).
+			SetAttr("speaker", this.serial.NewObjectRef(who)))
 }
 
 //

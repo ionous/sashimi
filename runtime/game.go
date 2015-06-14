@@ -291,7 +291,11 @@ func (this *Game) RunAction(action *M.ActionInfo, instances []string) (err error
 					objs := make([]*GameObject, len(types))
 
 					for i, id := range instances {
-						gobj, key := this.Objects[M.StringId(id)], keys[i]
+						// convert to string id for net sake
+						gobj, key := this.Objects[M.MakeStringId(id)], keys[i]
+						if gobj == nil {
+							return fmt.Errorf("unknown object %s", id)
+						}
 						values[key] = gobj.data
 						objs[i] = gobj
 					}
