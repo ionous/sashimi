@@ -99,7 +99,8 @@ Suppported comands include:
 ### Web version:
 
 This is a work in progress. You need both this project and the [sashimi-testapp](https://github.com/ionous/sashimi-testapp).
+For example, from the sashimi-testapp root directory:
 ```
-run {sashimi}/_examples/angular.go -story sushi  {sashimi-testapp}/
-open a web browser to: http://localhost:8080/app/
+go run $GOPATH/src/github.com/ionous/sashimi/_examples/webapp.go -story sushi .
 ```
+then browse to http://localhost:8080/app/
