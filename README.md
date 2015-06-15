@@ -60,6 +60,9 @@ Inform is great, why not just experiment with it?
 Sashimi is currently capable of handling short, one-room stories; but, it lacks many standard IF features, including save-load.
 
 Possible future features, in no particular order:
+
+( See the [wiki](https://github.com/ionous/sashimi/wiki) for more indepth info. )
+
 * A process for mocking up simple point-and-click adventure games ( *in progress*. )
 * A more complete set of IF features, especially: movement from room-to-room, doors, clothing, dialog.
 * Documentation for the current architecture: especially event handling.
