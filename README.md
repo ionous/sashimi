@@ -35,8 +35,6 @@ helps to produce the following game:
 > &gt;look under cabinet
 >
 > evil fish: "Dustbunnies," predicts the fish, with telling accuracy...
-> 
-> The evil fish darts to the bottom of the tank and moves the gravel around with his nose.
 
 ## Motivation
 
@@ -65,12 +63,10 @@ Possible future features, in no particular order:
 
 * A process for mocking up simple point-and-click adventure games ( *in progress*. )
 * A more complete set of IF features, especially: movement from room-to-room, doors, clothing, dialog.
-* Documentation for the current architecture: especially event handling.
+* Documentation for the current architecture.
 * Continuous time ( instead of purely turn-based. )
 * Sqlite storage for the game world, with the ability to merge data about story generated objects from non-story sources.
-* Save and load support.
-* Improved scripting: type injection for script callbacks, global variables, type inferencing, variants for object properties, prettier syntax, ...
-* Improved relationship support: especially relation-by-value; use sql(ite) to represent inter-object relationships in the runtime.
+* Improved scripting: type injection for script callbacks, global variables, type inferencing, variants for object properties, prettier syntax, and improved relationship support...
 * Improved support for testing stories: especially a way to test expected output.
 * Improved object modeling: for instance, [context state machines](https://github.com/ionous/hsm-statechart) to support concepts such as "lockable", "openable", "rideable" ( instead of classes: "container", "door", "vehicle", etc. )
 * AST translation of script callbacks into other programming languages.
@@ -106,4 +102,7 @@ For example, from the sashimi-testapp root directory:
 ```
 go run $GOPATH/src/github.com/ionous/sashimi/_examples/webapp.go -story sushi .
 ```
-then browse to http://localhost:8080/app/
+then browse to http://localhost:8080/app/, for something that looks something like this:
+![Webapp](https://raw.githubusercontent.com/wiki/ionous/sashimi/webapp-15-06-14.png)
+
+
