@@ -159,7 +159,6 @@ func (this *Game) RunCommand(in string) (err error) {
 		err = e
 	}
 	return err
-
 }
 
 //
@@ -171,7 +170,7 @@ func (this *Game) ProcessEvents() (err error) {
 		tgt, msg := this.queue.Pop()
 		// see also: Go()
 		path := E.NewPathTo(tgt)
-		this.log.Printf("sending `%s` to: %s", msg.Name, path)
+		// this.log.Printf("sending `%s` to: %s", msg.Name, path)
 		if runDefault, e := msg.Send(path); e != nil {
 			this.log.Println("error", e)
 			err = e
@@ -192,7 +191,7 @@ func (this *Game) ProcessEvents() (err error) {
 // it might be better to add a name search (interface) to the model
 // and then use the id in the runtime.
 func (this *Game) FindObject(name string) (ret *GameObject, okay bool) {
-	if info, err := this.Model.Instances.FindInstance(name); err == nil {
+	if info, ok := this.Model.Instances.FindInstance(name); ok {
 		ret = this.Objects[info.Id()]
 		okay = true
 	}

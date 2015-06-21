@@ -183,7 +183,7 @@ func (this *Context) newCallback(
 ) {
 	if cls, _ := classes.FindClass(owner); cls != nil {
 		ret = M.NewClassCallback(cls, action, cb, options)
-	} else if inst, _ := instances.FindInstance(owner); inst != nil {
+	} else if inst, ok := instances.FindInstance(owner); ok {
 		ret = M.NewInstanceCallback(inst, action, cb, options)
 	} else {
 		err = fmt.Errorf("unknown listener requested `%s(%s)`", owner, action)
@@ -197,9 +197,9 @@ func (this *Context) makeActionHandlers(classes M.ClassMap, instances M.Instance
 ) {
 	for _, statement := range this.src.ActionHandlers {
 		f := statement.Fields()
-		action, e := actions.FindActionByName(f.Action)
-		if e != nil {
-			err = this.log.AppendError(err, e)
+		action, ok := actions.FindActionByName(f.Action)
+		if !ok {
+			err = this.log.AppendError(err, M.ActionNotFound(f.Action))
 			continue
 		}
 		var options M.ListenerOptions
@@ -271,13 +271,13 @@ func (this *Context) compileAliases(instances M.InstanceMap, actions M.ActionMap
 	// then: add all "is known as"
 	for _, alias := range this.src.Aliases {
 		key, phrases := alias.Key(), alias.Phrases()
-		if inst, e := instances.FindInstance(key); e == nil {
+		if inst, ok := instances.FindInstance(key); ok {
 			id := inst.Id()
 			for _, name := range phrases {
 				names.AddNameForId(name, id)
 			}
 		} else {
-			if act, e := actions.FindActionByName(key); e == nil {
+			if act, ok := actions.FindActionByName(key); ok {
 				// FUTURE: ensure action Parsings always involve the player object?
 				// but, to know the player... might mean we couldnt run without the standard lib,
 				// maybe there's user rules, or something...?
@@ -319,7 +319,7 @@ func (this *Context) compile() (*M.Model, error) {
 		if class, e := this.classes.findByPluralName(fields.Class); e != nil {
 			err = this.log.AppendError(err, e)
 		} else {
-			if _, e := class.addPrimitive(fields); e != nil {
+			if _, e := class.addPrimitive(prop.Source(), fields); e != nil {
 				err = this.log.AppendError(err, e)
 			}
 		}
@@ -351,7 +351,7 @@ func (this *Context) compile() (*M.Model, error) {
 		if class, e := this.classes.findByPluralName(fields.Class); e != nil {
 			err = this.log.AppendError(err, e)
 		} else {
-			if e := class.addRelative(fields); e != nil {
+			if e := class.addRelative(fields, rel.Source()); e != nil {
 				err = this.log.AppendError(err, e)
 			}
 		}

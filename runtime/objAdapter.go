@@ -220,7 +220,7 @@ func (this ObjectAdapter) ObjectList(prop string) (ret []G.IObject) {
 //
 func (this ObjectAdapter) SetObject(prop string, other G.IObject) {
 	if val, ok := this.gobj.info.ValueByName(prop); !ok {
-		this.logError(fmt.Errorf("SetObject: no such relation '%s'.'%s'", this, prop))
+		this.logError(fmt.Errorf("SetObject: no such relation '%s'.'%s' setting %s", this, prop, other))
 	} else {
 		if rel, ok := val.(*M.RelativeValue); !ok {
 			this.logError(TypeMismatch{prop, "SetObject"})
@@ -264,8 +264,8 @@ func (this ObjectAdapter) Says(text string) {
 // @see also: Game.ProcessEventQueue
 //
 func (this ObjectAdapter) Go(act string, objects ...G.IObject) {
-	if action, e := this.game.Model.Actions.FindActionByName(act); e != nil {
-		this.logError(e)
+	if action, ok := this.game.Model.Actions.FindActionByName(act); !ok {
+		this.logError(fmt.Errorf("unknown action for Go %s", act))
 	} else {
 		// ugly: we need the props, even tho we already have the objects...
 		nouns := make([]string, len(objects)+1)

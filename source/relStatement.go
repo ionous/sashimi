@@ -3,7 +3,6 @@ package source
 type RelativeHint int
 
 const (
-	RelativeGuess  = 0
 	RelativeOne    = 1
 	RelativeMany   = 2
 	RelativeSource = 1 << 4

@@ -75,7 +75,7 @@ func init() {
 			Can("insert").And("inserting").RequiresOne("actor").AndOne("container"),
 			To("insert", func(g G.Play) {
 				prop, container := g.The("action.Source"), g.The("action.Context")
-				Assign(container, "enclosure", prop)
+				Assign(prop, "enclosure", container)
 				g.Say("You insert {{action.Source.Name}} into {{action.Context.Name}}.")
 			}))
 		// input: actor, container, prop

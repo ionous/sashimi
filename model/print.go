@@ -20,7 +20,7 @@ func (model *Model) PrintModel(printer printer) {
 			printer("\t\t\t (unconstrained)")
 		} else {
 			for field, cons := range constraints {
-				printer("\t\t\t", fmt.Sprintf("%v_: %T", field, cons))
+				printer("\t\t\t", fmt.Sprintf("%v: %T", field, cons))
 			}
 		}
 
@@ -30,7 +30,7 @@ func (model *Model) PrintModel(printer printer) {
 			printer("\t\t\t (empty)")
 		} else {
 			for field, prop := range properties {
-				printer("\t\t\t", fmt.Sprintf("%v_: %T", field, prop))
+				printer("\t\t\t", fmt.Sprintf("%v: %T", field, prop))
 				switch inner := prop.(type) {
 				case *EnumProperty:
 					printer("\t\t\t ", inner.Values())

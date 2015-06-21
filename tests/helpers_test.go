@@ -5,13 +5,14 @@ import (
 	P "github.com/ionous/sashimi/parser"
 	R "github.com/ionous/sashimi/runtime"
 	. "github.com/ionous/sashimi/script"
-	"log"
 	"os"
+	"testing"
 )
 
 //
 type TestOutput struct {
-	*C.BufCon
+	t *testing.T
+	*C.BufferedOutput
 }
 
 //
@@ -31,55 +32,55 @@ func (this TestOutput) ActorSays(whose *R.GameObject, lines []string) {
 }
 
 func (this TestOutput) Log(s string) {
-	os.Stderr.WriteString(s)
+	this.t.Log(s)
 }
 
 //
-func NewTestGame(s *Script, input []string) (ret TestGame, err error) {
+func NewTestGame(t *testing.T, s *Script) (ret TestGame, err error) {
 	if model, e := s.Compile(os.Stderr); e != nil {
 		err = e
 	} else {
-		cons := TestOutput{C.NewBufCon(input)}
+		cons := TestOutput{t, &C.BufferedOutput{}}
 		if game, e := R.NewGame(model, cons); e != nil {
 			err = e
 		} else {
-			ret = TestGame{cons, game}
+			ret = TestGame{t, game, cons}
 		}
 	}
 	return ret, err
 }
 
 type TestGame struct {
-	console TestOutput
+	t *testing.T
 	*R.Game
-}
-
-func (this TestGame) FlushOutput() []string {
-	return this.console.Flush()
+	out TestOutput
 }
 
 //
 // For testing:
 //
-func (this TestGame) RunTest() []string {
-	for {
-		// process queue
-		if e := this.ProcessEvents(); e != nil {
-			log.Println(e)
-		} else {
-			// read input
-			if s, ok := this.console.Readln(); !ok {
-				break
-			} else {
-				in := P.NormalizeInput(s)
-				if in == "q" || in == "quit" {
-					break
-				}
-				if e := this.RunCommand(in); e != nil {
-					log.Println(e)
-				}
-			}
-		}
+func (this *TestGame) RunInput(s string) *TestGame {
+	if e := this.ProcessEvents(); e != nil {
+		this.out.Println(e)
+	} else if e := this.RunCommand(P.NormalizeInput(s)); e != nil {
+		this.out.Println(e)
 	}
-	return this.FlushOutput()
+	return this
+}
+
+//
+// For testing:
+//
+func (this *TestGame) RunTest(input []string) *TestGame {
+	for _, in := range input {
+		this.RunInput(in)
+	}
+	return this
+}
+
+func (this *TestGame) FlushOutput() []string {
+	if e := this.ProcessEvents(); e != nil {
+		this.out.Println(e)
+	}
+	return this.out.Flush()
 }

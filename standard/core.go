@@ -10,7 +10,7 @@ func InitStandardLibrary() *Script {
 }
 
 // FIX: there's no error testing here and its definitely possible to screw things up.
-func Assign(dest G.IObject, rel string, prop G.IObject) {
+func Assign(prop G.IObject, rel string, dest G.IObject) {
 	// sure hope there's no errors, would relation by value remove the need for transaction?
 	if _, parentRel := DirectParent(prop); parentRel != "" {
 		// note: an object like the fishFood isnt "in the world", and doesnt have an owner field to clear.
@@ -20,14 +20,14 @@ func Assign(dest G.IObject, rel string, prop G.IObject) {
 }
 
 func Give(actor G.IObject, prop G.IObject) {
-	Assign(actor, "owner", prop)
+	Assign(prop, "owner", actor)
 }
 
 //
 func init() {
 	AddScript(func(s *Script) {
 		// FIX: hierarchy is a work in progress.
-		// kinds> stories, rooms, objects > actors (> animals), doors, props(> containers, supporters, devices)
+		// kinds> stories, rooms, objects > actors (> animals),  props(> openers(> doors,containers), supporters, devices)
 
 		// FIX: IObject and GameObject, ObjectList are confusing versus kind/object
 		// Instance might be better...? or some better name for the class of objects
@@ -51,7 +51,7 @@ func init() {
 
 		// the class hierarchy means rooms cant contain other rooms.
 		s.The("rooms",
-			Have("contents", "objects").
+			HaveMany("contents", "objects").
 				Implying("objects", HaveOne("whereabouts", "room")))
 
 		// things		unlit, lit
@@ -76,7 +76,7 @@ func init() {
 			AreEither("unhandled").Or("handled"),
 			AreEither("scenery").Or("not scenery").Usually("not scenery"))
 
-		s.The("objects",
+		s.The("openers",
 			Called("doors"),
 			Exist())
 
@@ -88,10 +88,10 @@ func init() {
 		// hrmm.... implies actors are takeable.
 		s.The("objects",
 			Called("actors"),
-			Have("clothing", "objects").
-				Implying("objects", Have("wearer", "actor")),
-			Have("inventory", "objects").
-				Implying("objects", Have("owner", "actor")))
+			HaveMany("clothing", "objects").
+				Implying("objects", HaveOne("wearer", "actor")),
+			HaveMany("inventory", "objects").
+				Implying("objects", HaveOne("owner", "actor")))
 
 		// changed: used to have "equipment" for held objects
 		// will either implement some sort of "relation with value"
@@ -105,10 +105,10 @@ func init() {
 		// Usually opaque not transparent, open not closed, unopenable not openable, unlocked not locked.
 		// Usually not enterable, lockable.
 		// Can have carrying capacity (number)
-		s.The("props",
+		s.The("openers",
 			Called("containers"),
-			Have("contents", "objects").
-				Implying("objects", Have("enclosure", "container")),
+			HaveMany("contents", "objects").
+				Implying("objects", HaveOne("enclosure", "container")),
 			AreEither("opaque").Or("transparent"),
 		//AreEither("enterable").Or("not enterable"),
 		//AreEither("lockable").Or("unlockable"),
@@ -117,8 +117,8 @@ func init() {
 
 		s.The("props",
 			Called("supporters"),
-			Have("contents", "objects").
-				Implying("objects", Have("support", "supporter")))
+			HaveMany("contents", "objects").
+				Implying("objects", HaveOne("support", "supporter")))
 
 		s.The("props",
 			Called("devices"),
@@ -126,6 +126,7 @@ func init() {
 	})
 }
 
+// reflect to the passed action passing the actors's current whereabouts.
 // will have to become more sophisticated for being inside a box.
 func actorLocation(report string) G.Callback {
 	return func(g G.Play) {
@@ -135,11 +136,12 @@ func actorLocation(report string) G.Callback {
 	}
 }
 
-func actorTarget(report string) G.Callback {
+// reflect to the passed action
+func actorTarget(action string) G.Callback {
 	return func(g G.Play) {
 		actor := g.The("actor")
 		target := g.The("action.Target")
-		target.Go(report, actor)
+		target.Go(action, actor)
 	}
 }
 

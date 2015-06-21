@@ -62,7 +62,7 @@ func init() {
 		s.The("props",
 			Can("give").And("giving").RequiresTwo("actor"),
 			To("give", func(g G.Play) {
-				// FIX: should gemerate a response
+				// FIX: should generate a report/response
 				receiver := g.The("action.Context")
 				g.Say(receiver.Name(), "is unimpressed.")
 			}))

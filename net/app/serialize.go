@@ -46,7 +46,6 @@ func (this *ObjectSerializer) SerializeObject(out resource.IBuildObjects, gobj *
 				obj.SetAttr(jsonId(prop), num)
 			}
 		}
-		// FIX? not currently serializing text and numbers... need to replace text/template with mustache.
 		obj.
 			SetMeta("name", gobj.String()).
 			SetMeta("states", states)

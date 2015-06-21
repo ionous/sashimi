@@ -10,7 +10,6 @@ type PropertyFields struct {
 	Class string
 	Name  string
 	Kind  string
-	Hint  RelativeHint
 }
 
 //

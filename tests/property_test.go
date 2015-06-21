@@ -17,8 +17,8 @@ func testField(
 	value string, // always a string to make enum handling easier
 	notDefault bool, //true if the value should be from the instance
 ) (err error) {
-	if inst, e := res.Instances.FindInstance(instName); e != nil {
-		err = e
+	if inst, ok := res.Instances.FindInstance(instName); !ok {
+		err = M.InstanceNotFound(instName)
 	} else {
 		if field, ok := inst.ValueByName(fieldName); !ok {
 			err = fmt.Errorf("'%s' missing field '%v'", instName, fieldName)

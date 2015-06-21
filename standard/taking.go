@@ -7,7 +7,7 @@ import (
 )
 
 // from inform:
-//  touchable/reach inside checks --, plus:
+// touchable/reach inside checks --, plus:
 // can't take yourself: not applicable, can only take props
 // can't take other people: not applicable, can only take props
 // can't take component parts: not applicable... yet?

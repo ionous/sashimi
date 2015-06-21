@@ -34,8 +34,8 @@ func (this *References) NewInstance(id StringId, class *ClassInfo, name string, 
 // Find the set of references used by the named instance.
 //
 func (this *References) FindByName(name string) (ret Reference, err error) {
-	if inst, e := this.instances.FindInstance(name); e != nil {
-		err = e
+	if inst, ok := this.instances.FindInstance(name); !ok {
+		err = InstanceNotFound(name)
 	} else {
 		ret = Reference{this, inst}
 	}

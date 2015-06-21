@@ -32,8 +32,8 @@ func (this *PartialInstances) _addChoices(choices []S.ChoiceStatement) (err erro
 	this.log.Println("adding instance choices")
 	for _, choice := range choices {
 		fields := choice.Fields()
-		if inst, e := this.instances.FindInstance(fields.Owner); e != nil {
-			err = this.log.AppendError(err, e)
+		if inst, ok := this.instances.FindInstance(fields.Owner); !ok {
+			err = this.log.AppendError(err, M.InstanceNotFound(fields.Owner))
 		} else {
 			if prop, index, ok := inst.Class().PropertyByChoice(fields.Choice); !ok {
 				e := fmt.Errorf("no such choice: '%v'", choice)
@@ -54,7 +54,7 @@ func (this *PartialInstances) _addKeyValues(kvs []S.KeyValueStatement) (err erro
 	this.log.Println("adding instance key values")
 	for _, kv := range kvs {
 		keyValue, src := kv.Fields(), kv.Source()
-		if inst, e := this.instances.FindInstance(keyValue.Owner); e != nil {
+		if inst, ok := this.instances.FindInstance(keyValue.Owner); !ok {
 			e := fmt.Errorf("instance not found %s @ %s", keyValue.Owner, src)
 			err = this.log.AppendError(err, e)
 		} else {

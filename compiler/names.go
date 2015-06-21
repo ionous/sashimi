@@ -3,17 +3,22 @@ package compiler
 import (
 	"fmt"
 	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/source"
 )
 
 // Provides collision detection for names, especially b/t enum choices and other properties,
 // as well as handling for empty string names.
 // FIX? In the future add value and source code?
 // FIX? this would make an excellent verbose logging hook
-type NameSource map[string]string
+type NameSource map[string]NameEntry
+type NameEntry struct {
+	value string
+	ref   string
+}
 
 func NewNameSource() NameSource {
 	res := make(NameSource)
-	res[""] = "empty string"
+	res[""] = NameEntry{value: "empty string", ref: ""}
 	return res
 }
 
@@ -24,7 +29,12 @@ type NameScope struct {
 
 //
 func (this NameScope) addName(name string, value string) (curr M.StringId, err error) {
-	return this.names.addName(this.scope, name, value)
+	return this.names.addName(this.scope, name, value, "")
+}
+
+//
+func (this NameScope) addRef(name string, value string, src source.Code) (curr M.StringId, err error) {
+	return this.names.addName(this.scope, name, value, string(src))
 }
 
 //
@@ -37,7 +47,7 @@ func (this NameSource) newScope(scope interface{}) NameScope {
 
 //
 // to avoid collisions between instances and types, only one name from each can exist
-func (this NameSource) addName(scope interface{}, name string, value string) (id M.StringId, err error) {
+func (this NameSource) addName(scope interface{}, name string, value string, code string) (id M.StringId, err error) {
 	id = M.MakeStringId(name)
 	//
 	if scope != nil {
@@ -46,14 +56,15 @@ func (this NameSource) addName(scope interface{}, name string, value string) (id
 		name = id.String()
 	}
 	//
-	curr := this[name]
-	switch curr {
-	case "": // 'name' didnt exist so add it
-		this[name], curr = value, value
-	case value: // already setup, good to go.
-		break
-	default: // 'name' was set to something other than value
-		err = fmt.Errorf("'%v' in use as '%v'; respecified as '%v'.", name, curr, value)
+	if curr, ok := this[name]; !ok {
+
+		curr = NameEntry{value, code}
+		this[name] = curr
+	} else if curr.value != value {
+		err = fmt.Errorf("'%v' in use as '%v'('%s'); respecified as '%v'('%s').",
+			name,
+			curr.value, curr.ref,
+			value, code)
 	}
 	return id, err
 }

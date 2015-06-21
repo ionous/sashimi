@@ -21,7 +21,7 @@ func newInstanceFactory(names NameSource) *InstanceFactory {
 func (this *InstanceFactory) addInstanceRef(class ClassReference, name string, options S.Options,
 ) (inst *PendingInstance, err error,
 ) {
-	id, err := this.names.addName(nil, name, "instance")
+	id, err := this.names.addName(nil, name, "instance", "")
 	if i, ok := this.pending[id]; ok {
 		inst = i
 	} else {

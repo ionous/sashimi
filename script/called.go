@@ -36,8 +36,8 @@ func Exist() IFragment { return Exists() }
 //
 type CalledFragment struct {
 	origin   Origin
-	subject  string
-	singular string
+	subject  string // name of the class or instance being declared
+	singular string // optional singular version of that name
 }
 
 var articles = regexp.MustCompile(`^((?U)the|a|an|our|some) `)

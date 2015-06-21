@@ -92,8 +92,8 @@ func init() {
 				And("describing the first room").RequiresOne("room"),
 			To("describe the first room", func(g G.Play) {
 				room := g.The("action.Target")
-				room.Go("report the view")
 				/// FIX: visited should happen elsewhere
+				room.Go("report the view")
 				room.SetIs("visited")
 				g.The("status bar").SetText("left", strings.Title(room.Name()))
 			}),

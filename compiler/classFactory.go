@@ -102,7 +102,7 @@ func (this *ClassFactory) addClassRef(parent *PendingClass, plural string, optio
 		err = e
 	} else {
 		// validate the new class plural
-		if id, e := this.allNames.addName(nil, plural, "class"); e != nil {
+		if id, e := this.allNames.addName(nil, plural, "class", ""); e != nil {
 			err = e
 		} else {
 			// ensure the class exists
@@ -110,8 +110,8 @@ func (this *ClassFactory) addClassRef(parent *PendingClass, plural string, optio
 			if class != nil {
 				// FIX? ratchet the class down?
 				if class.parent != parent {
-					err = fmt.Errorf("conflicting parent class `%v` respecified as `%v`",
-						class.parent, parent)
+					err = fmt.Errorf("conflicting `%v` parent class `%v` respecified as `%v`",
+						plural, class.parent, parent)
 				}
 			} else {
 				class = &PendingClass{
@@ -142,6 +142,6 @@ func (this *ClassFactory) _addOptions(plural string, options S.Options,
 	// reserve `room` to mean `rooms`
 	// we dont return the id -- if they meant a specific singular string, we want that
 	// the id is just the internals of name vs. name collision
-	_, err = this.allNames.addName(nil, singular, plural)
+	_, err = this.allNames.addName(nil, singular, plural, "")
 	return singular, err
 }

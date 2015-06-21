@@ -134,9 +134,9 @@ func (this ClassResults) _makeClass(pending *PendingClass,
 		} // end rule loop
 
 		// add relation properties
-		for id, relative := range pending.relatives {
+		for id, r := range pending.relatives {
 			// get-or-create the associated relationship:
-			if prop, e := this.relatives.makeRelative(relative); e != nil {
+			if prop, e := this.relatives.makeRelative(r.rel); e != nil {
 				err = AppendError(err, e)
 			} else {
 				props[id] = prop

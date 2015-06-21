@@ -4,7 +4,6 @@ import (
 	"fmt"
 	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
-	"strings"
 )
 
 const (
@@ -19,41 +18,28 @@ const (
 type PendingProperties map[M.StringId]M.IProperty
 
 //
-func (this *PendingClass) addPrimitive(fields S.PropertyFields,
+func (this *PendingClass) addPrimitive(src S.Code, fields S.PropertyFields,
 ) (prop M.IProperty, err error) {
-	class, name, kind, hint := this.name, fields.Name, fields.Kind, fields.Hint
+	name, kind := fields.Name, fields.Kind
 	// by using name->type this ensures that if the name existed, it is of the same type now
 	// this does not exclude the same name from being used twice in the same class/property hierarchy
 	// that is determined separately, after the hierarchy is known.
-	if id, e := this.names.addName(name, kind); e != nil {
+	if id, e := this.names.addRef(name, kind, src); e != nil {
 		err = e
 	} else {
 		switch kind {
 		case TextType:
-			if hint.IsMany() {
-				err = fmt.Errorf("text fields don't currently allow lists")
-			} else {
-				prop = this.props[id]
-				if prop == nil {
-					prop = M.NewTextProperty(id, name)
-					this.props[id] = prop
-				}
+			prop = this.props[id]
+			if prop == nil {
+				prop = M.NewTextProperty(id, name)
+				this.props[id] = prop
 			}
 		case NumType:
-			if hint.IsMany() {
-				err = fmt.Errorf("num fields don't currently allow lists")
-			} else {
-				prop = this.props[id]
-				if prop == nil {
-					prop = M.NewNumProperty(id, name)
-					this.props[id] = prop
-				}
+			prop = this.props[id]
+			if prop == nil {
+				prop = M.NewNumProperty(id, name)
+				this.props[id] = prop
 			}
-		default:
-			// possibly, a one sided relation. ( ex. no Implying() script fragment )
-			via := strings.Join([]string{class, name, "relation"}, "-")
-			rel := S.RelativeFields{class, name, kind, via, hint | S.RelativeSource}
-			err = this.addRelative(rel)
 		}
 	}
 	return prop, err
@@ -102,22 +88,22 @@ func (this *PendingClass) makePropertySet() (props M.PropertySet) {
 //
 //
 //
-func (this *PendingClass) addRelative(fields S.RelativeFields,
+func (this *PendingClass) addRelative(fields S.RelativeFields, src S.Code,
 ) (err error) {
 	if cls, isMany, e := this.owner.findByRelativeName(fields.RelatesTo, fields.Hint); e != nil {
 		err = e
 	} else {
 		name := fields.Property
-		if id, e := this.names.addName(name, "relation"); e != nil {
+		if id, e := this.names.addRef(name, "relation", src); e != nil {
 			err = e
 		} else {
 			rel := PendingRelative{this, id, name, cls, fields.Relation, isMany, fields.Hint.IsReverse()}
 			if old, existed := this.relatives[id]; existed {
-				if old != rel {
+				if old.rel != rel {
 					err = fmt.Errorf("relation redefined. was %s, now %s", old, rel)
 				}
 			} else {
-				this.relatives[id] = rel
+				this.relatives[id] = PendingRelativeEntry{src, rel}
 			}
 		}
 	}

@@ -13,8 +13,9 @@ type IFragment interface {
 //
 //
 type SubjectBlock struct {
-	subject    string
+	*Script
 	theKeyword string
+	subject    string
 	*S.BuildingBlocks
 }
 

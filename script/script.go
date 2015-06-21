@@ -1,7 +1,6 @@
 package script
 
 import (
-	"fmt"
 	C "github.com/ionous/sashimi/compiler"
 	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
@@ -29,27 +28,26 @@ func (this *Script) Compile(writer io.Writer) (res *M.Model, err error) {
 // The main script function used to asset the existence of a class, instance, property, etc.
 // The("example", this.Has("...") )
 //
-func (this *Script) The(key string, fragments ...IFragment) {
-	// ugh. suggestions are welcome:
-	// scan to find the subject called
-	subject, calledIndex := key, -1
-	for i, f := range fragments {
-		if called, okay := f.(CalledFragment); okay {
-			if calledIndex >= 0 {
-				e := fmt.Errorf("multiplle call statements?")
-				this.err = C.AppendError(this.err, e)
-				break
-			}
-			subject, calledIndex = called.subject, i
-		}
-	}
-
+func (this *Script) The(key string, fragments ...IFragment) error {
+	b := SubjectBlock{this, key, findSubject(key, fragments), &this.blocks}
 	for _, frag := range fragments {
-		b := SubjectBlock{subject, key, &this.blocks}
 		if e := frag.MakeStatement(b); e != nil {
 			this.err = C.AppendError(this.err, e)
 		}
 	}
+	return this.err
+}
+
+// FIX? scan to find the subject called
+func findSubject(key string, fragments []IFragment) string {
+	subject := key
+	for _, f := range fragments {
+		if called, ok := f.(CalledFragment); ok {
+			subject = called.subject
+			break
+		}
+	}
+	return subject
 }
 
 //

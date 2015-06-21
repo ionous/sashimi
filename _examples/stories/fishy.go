@@ -237,8 +237,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 			g.The("player").Says(`"Her mother," you respond without thinking.`)
 			g.The("evil fish").Says(`"Yeah? Man. I never knew my mother. Eggs, that's the way to go."`)
 		}))
-	// FIX: currently, only containers are openable.
-	s.The("container", Called("window"), Is("scenery"), In("the studio"))
+	s.The("opener", Called("window"), Is("scenery"), In("the studio"))
 	s.The("window", Is("openable").And("closed"))
 	s.The("window", Has("description", `{{if .Open}}Through the windows you get a lovely view of the street outside. At the moment, the glass is thrown open, and a light breeze is blowing through.{{else}}Through the windows, you get a lovely view of the street outside -- the little fountain on the corner, the slightly dilapidated but nonetheless magnificent Jugendstil architecture of the facing building. The glass itself is shut, however.{{end}}`))
 	s.The("window", IsKnownAs("windows"))
@@ -291,7 +290,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 					g.The("evil fish").Says(`"Oooh," says the fish. "No one ever changes the plant life in HERE. It's the same seaw--"`)
 					g.The("player").Says(`"Cut me a break and cork it," you reply tartly.`)
 					// FIX: report inserted?
-					standard.Assign(g.The("vase"), "enclosure", g.The("bouquet"))
+					standard.Assign(g.The("bouquet"), "enclosure", g.The("vase"))
 					g.StopHere()
 				}
 			}

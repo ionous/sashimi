@@ -18,7 +18,6 @@ func (this ListOfItems) And(name string) ListOfItems {
 // FIX: move these into a standard rules extension package?
 func In(room string) ListOfItems {
 	return ListOfItems{NewOrigin(2), "whereabouts", []string{room}}
-
 }
 
 func Supports(prop string) ListOfItems {

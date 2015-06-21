@@ -14,8 +14,8 @@ func TestSimpleRelation(t *testing.T) {
 	s := Script{}
 	s.The("kinds",
 		Called("gremlins"),
-		Have("pets", "rocks").
-			Implying("rocks", Have("o beneficent one", "gremlin")),
+		HaveMany("pets", "rocks").
+			Implying("rocks", HaveOne("o beneficent one", "gremlin")),
 		// alternate, non-conflicting specification of the same relation
 		HaveMany("pets", "rocks").
 			// FIX? if the names don't match, this creates two views of the same relation.
@@ -41,8 +41,8 @@ func TestSimpleRelates(t *testing.T) {
 	s := Script{}
 	s.The("kinds",
 		Called("gremlins"),
-		Have("pets", "rocks").
-			Implying("rocks", Have("o beneficent one", "gremlin")),
+		HaveMany("pets", "rocks").
+			Implying("rocks", HaveOne("o beneficent one", "gremlin")),
 	)
 	s.The("kinds", Called("rocks"), Exist())
 	// FIX: for now the property names must match,
@@ -54,16 +54,16 @@ func TestSimpleRelates(t *testing.T) {
 	if assert.NoError(t, err, "compile") {
 		assert.Equal(t, 2, len(model.Instances), "two instances")
 
-		claire, err := model.Instances.FindInstance("claire")
-		assert.NoError(t, err, "found claire")
+		claire, ok := model.Instances.FindInstance("claire")
+		assert.True(t, ok, "found claire")
 
 		pets, ok := claire.ValueByName("pets")
 		assert.True(t, ok)
 		petsrel := pets.(*M.RelativeValue)
 		assert.Exactly(t, []string{"Loofah"}, petsrel.List())
 
-		loofah, err := model.Instances.FindInstance("loofah")
-		assert.NoError(t, err, "found loofah")
+		loofah, ok := model.Instances.FindInstance("loofah")
+		assert.True(t, ok, "found loofah")
 
 		gremlins, ok := loofah.ValueByName("o beneficent one")
 		assert.True(t, ok, "value by name")

@@ -12,7 +12,7 @@ import (
 //
 func TestStandardRules(t *testing.T) {
 	s := InitScripts()
-	_, err := NewTestGame(s, nil)
+	_, err := NewTestGame(t, s)
 	assert.NoError(t, err)
 }
 
@@ -27,11 +27,9 @@ func TestObjectSet(t *testing.T) {
 		Called("test"),
 		Has("amSet", "original"))
 
-	g, err := NewTestGame(s, nil)
+	g, err := NewTestGame(t, s)
 	if assert.NoError(t, err) && assert.NotNil(t, g.Model) {
-
-		inst, err := g.Model.Instances.FindInstance("test")
-		if assert.NoError(t, err) {
+		if inst, ok := g.Model.Instances.FindInstance("test"); assert.True(t, ok) {
 			gobj, exists := g.Game.Objects[inst.Id()]
 			if assert.True(t, exists, "test instance should exist") && assert.NotNil(t, gobj) {
 				obj := R.NewObjectAdapter(g.Game, gobj)
@@ -66,7 +64,7 @@ func TestStartupText(t *testing.T) {
 		}),
 	)
 
-	game, err := NewTestGame(s, nil)
+	game, err := NewTestGame(t, s)
 	assert.NoError(t, err, "compile should work")
 
 	story := game.FindFirstOf(game.Model.Classes.FindClass("stories"))
@@ -78,8 +76,7 @@ func TestStartupText(t *testing.T) {
 	err = game.SendEvent("starting to play", story.String())
 	assert.NoError(t, err, "starting to play")
 
-	out := game.RunTest()
-	assert.Exactly(t, []string{
+	expected := []string{
 		"", // FIX: this line shouldnt exist
 		"testing",
 		"extra extra by me",
@@ -87,5 +84,6 @@ func TestStartupText(t *testing.T) {
 		"",
 		"somewhere",
 		"an empty room",
-	}, out)
+	}
+	assert.Exactly(t, expected, game.FlushOutput())
 }

@@ -6,29 +6,22 @@ type InstanceMap map[StringId]*InstanceInfo
 
 // helper to generate an escaped string and an error,
 // FIX: return okay, and provide common not found error structures instead
-func (this InstanceMap) FindInstance(name string) (ret *InstanceInfo, err error) {
+func (this InstanceMap) FindInstance(name string) (*InstanceInfo, bool) {
 	safe := MakeStringId(name)
-	if inst, ok := this[safe]; ok {
-		ret = inst
-	} else {
-		err = InstanceNotFound(name)
-	}
-	return ret, err
+	ret, okay := this[safe]
+	return ret, okay
 }
 
 func (this InstanceMap) FindInstanceWithClass(name string, class *ClassInfo,
 ) (ret *InstanceInfo, err error) {
-	inst, e := this.FindInstance(name)
-	if e != nil {
-		err = e
+	if inst, ok := this.FindInstance(name); !ok {
+		err = InstanceNotFound(name)
+	} else if have := inst.Class(); have == class || have.HasParent(class) {
+		ret = inst
 	} else {
-		haveClass := inst.Class()
-		if haveClass == class || haveClass.HasParent(class) {
-			ret = inst
-		} else {
-			err = fmt.Errorf("mismatched noun requested: %s,%s!=%s", name, haveClass.Name(), class.Name())
-		}
+		err = fmt.Errorf("mismatched noun requested: %s,%s!=%s", name, have.Name(), class.Name())
 	}
+
 	return ret, err
 }
 

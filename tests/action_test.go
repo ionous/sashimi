@@ -3,41 +3,37 @@ package sashimi
 import (
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
 )
 
 //
 func TestUnknownAction(t *testing.T) {
-	s := Script{}
+	s := &Script{}
 	s.The("kinds",
 		When("this does not exists").Always(func(g G.Play) {
 		}),
 	)
-	model, err := s.Compile(os.Stdout)
-	if err == nil {
+	if model, err := s.Compile(os.Stderr); !assert.Error(t, err, "expected failure") {
 		model.PrintModel(t.Log)
-		t.Fatal("expected failure")
 	}
-	t.Log("okay:", err)
 }
 
 //
 func TestKnownAction(t *testing.T) {
-	s := Script{}
+	s := &Script{}
 	s.The("kinds",
 		When("this exists").Always(func(g G.Play) {}),
 		Can("exist").And("this exists").RequiresNothing())
-	model, err := s.Compile(os.Stdout)
-	if err != nil {
-		t.Fatal(err)
+	if model, err := s.Compile(os.Stderr); assert.NoError(t, err) {
+		model.PrintModel(t.Log)
 	}
-	model.PrintModel(t.Log)
 }
 
 //
 func TestClassCallback(t *testing.T) {
-	s := Script{}
+	s := &Script{}
 	s.The("kinds",
 		Have("description", "text"),
 		Can("test").And("testing").RequiresNothing(),
@@ -62,28 +58,22 @@ func TestClassCallback(t *testing.T) {
 		Called("other"),
 		Has("description", "it's an error!"),
 	)
-	g, err := NewTestGame(&s, nil)
-	if err != nil {
-		t.Error("error:", err)
-	}
-	g.PushParserSource(func(g G.Play) G.IObject {
-		return g.The("obj")
-	})
-	if err := g.SendEvent("testing", "obj"); err != nil {
-		t.Error("error:", err)
-	}
-	if err := g.ProcessEvents(); err != nil {
-		t.Error("error:", err)
-	}
-	out := g.FlushOutput()
-	if len(out) != 1 || out[0] != "it's a trap!" {
-		t.Fatal("mismatched output", out)
+	if g, err := NewTestGame(t, s); assert.NoError(t, err) {
+		g.PushParserSource(func(g G.Play) G.IObject {
+			return g.The("obj")
+		})
+		if err := g.SendEvent("testing", "obj"); assert.NoError(t, err) {
+			if err := g.ProcessEvents(); assert.NoError(t, err) {
+				expected := []string{"it's a trap!"}
+				assert.EqualValues(t, expected, g.FlushOutput())
+			}
+		}
 	}
 }
 
 //
 func TestCallbackBeforeAfter(t *testing.T) {
-	s := Script{}
+	s := &Script{}
 	s.The("kinds",
 		Can("test").And("testing").RequiresNothing(),
 		When("testing").Always(func(g G.Play) {
@@ -94,29 +84,22 @@ func TestCallbackBeforeAfter(t *testing.T) {
 		}),
 	)
 	s.The("kind", Called("obj"), Exists())
-
-	g, err := NewTestGame(&s, nil)
-	if err != nil {
-		t.Error("error:", err)
-	}
-	g.PushParserSource(func(g G.Play) G.IObject {
-		return g.The("obj")
-	})
-	if err := g.SendEvent("testing", "obj"); err != nil {
-		t.Error("error:", err)
-	}
-	if err := g.ProcessEvents(); err != nil {
-		t.Error("error:", err)
-	}
-	out := g.FlushOutput()
-	if len(out) != 2 || out[0] != "Before" || out[1] != "After" {
-		t.Fatal("mismatched output", out)
+	if g, err := NewTestGame(t, s); assert.NoError(t, err) {
+		g.PushParserSource(func(g G.Play) G.IObject {
+			return g.The("obj")
+		})
+		if err := g.SendEvent("testing", "obj"); assert.NoError(t, err) {
+			if err := g.ProcessEvents(); assert.NoError(t, err) {
+				expected := []string{"Before", "After"}
+				assert.EqualValues(t, expected, g.FlushOutput())
+			}
+		}
 	}
 }
 
 //
 func TestCallbackParsing(t *testing.T) {
-	s := Script{}
+	s := &Script{}
 
 	s.The("kinds",
 		Have("description", "text"),
@@ -124,9 +107,7 @@ func TestCallbackParsing(t *testing.T) {
 	)
 	s.The("kinds",
 		When("testing").Always(func(g G.Play) {
-			t.Log("got testing")
 			desc := g.The("action.Target").Text("description")
-			t.Log("got desc", desc)
 			g.Say(desc)
 		}),
 	)
@@ -142,23 +123,14 @@ func TestCallbackParsing(t *testing.T) {
 		Matching("look|l at {{something}}"),
 	)
 	// should trigger "test", which should print the description
-	strs := []string{"look at lookee"}
-	g, err := NewTestGame(&s, strs)
-	if err != nil {
-		t.Error(err)
-	}
-	numNames := len(g.Model.NounNames)
-	if numNames != 2 {
-		t.Error(numNames, "should equal", 2)
-	}
-	t.Log(g.Model.NounNames)
-
-	g.PushParserSource(func(g G.Play) G.IObject {
-		return g.The("looker")
-	})
-	out := g.RunTest()
-	expect := []string{"look it's a test!"}
-	if len(expect) != len(out) || expect[0] != out[0] {
-		t.Fatal("Expected:", expect, "Actual:", out)
+	if g, err := NewTestGame(t, s); assert.NoError(t, err) {
+		if assert.Len(t, g.Model.NounNames, 2) {
+			g.PushParserSource(func(g G.Play) G.IObject {
+				return g.The("looker")
+			})
+			str := "look at lookee"
+			expected := []string{"look it's a test!"}
+			assert.EqualValues(t, expected, g.RunInput(str).FlushOutput())
+		}
 	}
 }

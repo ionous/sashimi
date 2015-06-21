@@ -2,6 +2,7 @@ package compiler
 
 import (
 	M "github.com/ionous/sashimi/model"
+	S "github.com/ionous/sashimi/source"
 )
 
 type PendingClass struct {
@@ -16,7 +17,11 @@ type PendingClass struct {
 	relatives PendingRelatives
 }
 
-type PendingRelatives map[M.StringId]PendingRelative
+type PendingRelativeEntry struct {
+	src S.Code
+	rel PendingRelative
+}
+type PendingRelatives map[M.StringId]PendingRelativeEntry
 
 //
 func (this *PendingClass) String() string {
