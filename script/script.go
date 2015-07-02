@@ -4,6 +4,7 @@ import (
 	C "github.com/ionous/sashimi/compiler"
 	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
+	"github.com/ionous/sashimi/util/errutil"
 	"io"
 )
 
@@ -32,7 +33,7 @@ func (this *Script) The(key string, fragments ...IFragment) error {
 	b := SubjectBlock{this, key, findSubject(key, fragments), &this.blocks}
 	for _, frag := range fragments {
 		if e := frag.MakeStatement(b); e != nil {
-			this.err = C.AppendError(this.err, e)
+			this.err = errutil.Append(this.err, e)
 		}
 	}
 	return this.err

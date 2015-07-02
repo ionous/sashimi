@@ -1,8 +1,10 @@
 package source
 
 import (
+	"fmt"
 	E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game" // for callbacks
+	"github.com/ionous/sashimi/util/errutil"
 )
 
 //
@@ -11,6 +13,13 @@ import (
 // (ex. for handling compile time or run time errors )
 //
 type Code string
+
+func (this Code) Errorf(format string, a ...interface{}) error {
+	return errutil.Func(func() string {
+		s := fmt.Errorf(format, a...)
+		return fmt.Sprintf("Error (%s): %s", this, s)
+	})
+}
 
 //
 type IStatement interface {
@@ -29,6 +38,7 @@ type Blocks struct {
 	Enums          []EnumStatement
 	EventHandlers  []ListenStatement
 	KeyValues      []KeyValueStatement
+	MultiValues    []MultiValueStatement
 	Properties     []PropertyStatement
 	Relatives      []RelativeStatement
 }
@@ -117,6 +127,14 @@ func (this *BuildingBlocks) NewKeyValue(fields KeyValueFields, source Code,
 ) (err error) {
 	kv := KeyValueStatement{fields, source}
 	this.blocks.KeyValues = append(this.blocks.KeyValues, kv)
+	return err
+}
+
+//
+func (this *BuildingBlocks) NewMultiValue(fields MultiValueFields, source Code,
+) (err error) {
+	mv := MultiValueStatement{fields, source}
+	this.blocks.MultiValues = append(this.blocks.MultiValues, mv)
 	return err
 }
 

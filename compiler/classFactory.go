@@ -5,6 +5,7 @@ import (
 	"fmt"
 	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
+	"github.com/ionous/sashimi/util/errutil"
 )
 
 type PendingClasses map[M.StringId]*PendingClass // ptr for presense detection
@@ -14,6 +15,18 @@ type ClassFactory struct {
 	allNames       NameSource
 	pending        PendingClasses
 	singleToPlural SingleToPlural
+}
+
+type ClassNotFound M.StringId
+
+func (this ClassNotFound) Error() string {
+	return fmt.Sprintf("class '%s' not found", this)
+}
+
+func PropertyNotFound(class, prop M.StringId) error {
+	return errutil.Func(func() string {
+		return fmt.Sprintf("property '%s.%s' not found", class, prop)
+	})
 }
 
 //
@@ -29,18 +42,20 @@ func newClassFactory(names NameSource) *ClassFactory {
 // given the passed plural name, find the previously registered class
 //
 func (this *ClassFactory) findBySingularName(singular string,
-) (class *PendingClass, err error) {
-	plural := this.singleToPlural[singular]
-	return this.findById(plural)
+) (*PendingClass, bool) {
+	id := this.singleToPlural[singular]
+	ret, okay := this.pending[id]
+	return ret, okay
 }
 
 //
 // given the passed plural name, find the previously registered class
 //
 func (this *ClassFactory) findByPluralName(plural string,
-) (class *PendingClass, err error) {
+) (*PendingClass, bool) {
 	id := M.MakeStringId(plural)
-	return this.findById(id)
+	ret, okay := this.pending[id]
+	return ret, okay
 }
 
 //
@@ -50,42 +65,32 @@ func (this *ClassFactory) findByRelativeName(kind string, hint S.RelativeHint,
 ) (class *PendingClass, pluralized bool, err error) {
 	switch hint & ^S.RelativeSource {
 	case S.RelativeMany:
-		if cls, e := this.findByPluralName(kind); e != nil {
-			err = e
+		if cls, ok := this.findByPluralName(kind); !ok {
+			err = ClassNotFound(kind)
 		} else {
 			class, pluralized = cls, true
 		}
 	case S.RelativeOne:
-		if cls, e := this.findBySingularName(kind); e != nil {
-			err = e
+		if cls, ok := this.findBySingularName(kind); !ok {
+			err = ClassNotFound(kind)
 		} else {
 			class, pluralized = cls, false
 		}
 	default:
-		if cls, e := this.findByPluralName(kind); e == nil {
+		if cls, ok := this.findByPluralName(kind); ok {
 			class, pluralized = cls, true
-		} else if cls, e := this.findBySingularName(kind); e == nil {
+		} else if cls, ok := this.findBySingularName(kind); ok {
 			class, pluralized = cls, false
 		} else {
-			err = e
+			err = ClassNotFound(kind)
 		}
 	}
 	return class, pluralized, err
 }
 
 //
-func (this *ClassFactory) findById(id M.StringId) (class *PendingClass, err error) {
-	class, ok := this.pending[id]
-	if !ok {
-		err = fmt.Errorf("couldn't find class named `%s`", id)
-	}
-	return class, err
-}
-
-//
 func (this *ClassFactory) makeClasses(relatives *RelativeFactory) (
-	classes M.ClassMap,
-	err error,
+	classes M.ClassMap, err error,
 ) {
 	cr := newResults(this.pending, relatives)
 	return cr.finalizeClasses()

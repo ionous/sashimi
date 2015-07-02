@@ -9,15 +9,20 @@ import (
 // its property values fall back to its associated class when needed.
 //
 type InstanceInfo struct {
-	id    StringId
-	class *ClassInfo
-	name  string
-	long  string      // FIX: kill this, replace with article categorization
-	refs  *References // pointer to shared references, tables.
-	enum  map[StringId]int
-	text  map[StringId]string
-	num   map[StringId]float32
+	id     StringId
+	class  *ClassInfo
+	name   string
+	long   string      // FIX: kill this, replace with article categorization
+	refs   *References // pointer to shared references, tables.
+	values map[StringId]Variant
 }
+
+//
+// Enums are stored as ints;
+// Numbers as float32;
+// Text as string;
+//
+type Variant interface{}
 
 //
 //
@@ -29,11 +34,7 @@ func NewInstanceInfo(
 	long string,
 	refs *References,
 ) *InstanceInfo {
-	inst := &InstanceInfo{id, class, name, long, refs,
-		make(map[StringId]int),
-		make(map[StringId]string),
-		make(map[StringId]float32),
-	}
+	inst := &InstanceInfo{id, class, name, long, refs, make(map[StringId]Variant)}
 	return inst
 }
 

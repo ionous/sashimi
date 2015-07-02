@@ -27,7 +27,8 @@ func (this *PartialInstances) makeData(choices []S.ChoiceStatement, kvs []S.KeyV
 }
 
 //
-// add instance values for later processing
+// Add instance values for later processing
+//
 func (this *PartialInstances) _addChoices(choices []S.ChoiceStatement) (err error) {
 	this.log.Println("adding instance choices")
 	for _, choice := range choices {
@@ -39,7 +40,7 @@ func (this *PartialInstances) _addChoices(choices []S.ChoiceStatement) (err erro
 				e := fmt.Errorf("no such choice: '%v'", choice)
 				err = this.log.AppendError(err, e)
 			} else {
-				if e := _setKeyValue(inst, prop.Name(), index); e != nil {
+				if e := setKeyValue(inst, prop.Name(), index); e != nil {
 					err = this.log.AppendError(err, e)
 				}
 			}
@@ -49,7 +50,8 @@ func (this *PartialInstances) _addChoices(choices []S.ChoiceStatement) (err erro
 }
 
 //
-// add instance values for later processing
+// Add instance values for later processing
+//
 func (this *PartialInstances) _addKeyValues(kvs []S.KeyValueStatement) (err error) {
 	this.log.Println("adding instance key values")
 	for _, kv := range kvs {
@@ -58,7 +60,7 @@ func (this *PartialInstances) _addKeyValues(kvs []S.KeyValueStatement) (err erro
 			e := fmt.Errorf("instance not found %s @ %s", keyValue.Owner, src)
 			err = this.log.AppendError(err, e)
 		} else {
-			if e := _setKeyValue(inst, keyValue.Key, keyValue.Value); e != nil {
+			if e := setKeyValue(inst, keyValue.Key, keyValue.Value); e != nil {
 				err = this.log.AppendError(err, e)
 			}
 		}
@@ -67,9 +69,11 @@ func (this *PartialInstances) _addKeyValues(kvs []S.KeyValueStatement) (err erro
 }
 
 //
-func _setKeyValue(inst *M.InstanceInfo, name string, value interface{}) (err error) {
-	if prop, ok := inst.ValueByName(name); !ok {
-		err = fmt.Errorf("no such property %v", name)
+// Helper to set instance property values
+//
+func setKeyValue(inst *M.InstanceInfo, prop string, value interface{}) (err error) {
+	if prop, ok := inst.ValueByName(prop); !ok {
+		err = fmt.Errorf("no such property %v", prop)
 	} else {
 		if old, was := prop.Any(); !was {
 			err = prop.SetAny(value)

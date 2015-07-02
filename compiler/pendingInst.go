@@ -4,9 +4,11 @@ import (
 	"fmt"
 	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
+	"github.com/ionous/sashimi/util/errutil"
 )
 
 type PendingInstance struct {
+	id       M.StringId
 	name     string
 	longName string
 	classes  ClassReferences
@@ -18,22 +20,14 @@ type ClassReferences struct {
 }
 
 type ClassReference struct {
-	class  *PendingClass
+	class  M.StringId
 	source S.Code // location of first reference
 }
 
 //
-func (this *ClassReferences) addClassReference(class ClassReference) {
-	found := false
-	for _, v := range this.classes {
-		if v.class == class.class {
-			found = true
-			break
-		}
-	}
-	if !found {
-		this.classes = append(this.classes, class)
-	}
+func (this *ClassReferences) addClassReference(class M.StringId, source S.Code) {
+	ref := ClassReference{class, source}
+	this.classes = append(this.classes, ref)
 }
 
 //
@@ -41,14 +35,14 @@ func (this *ClassReferences) addClassReference(class ClassReference) {
 func (this ClassReferences) resolveClass(classes M.ClassMap,
 ) (ret *M.ClassInfo, err error,
 ) {
-	if len(this.classes) != 1 {
-		err = fmt.Errorf("multiple classes not yet supported; `%s`", this.classes)
-	} else {
-		classref := this.classes[0]
-		if cls, ok := classes.FindClass(classref.class.name); !ok {
-			err = fmt.Errorf("couldn't find class %s", classref.class.name)
-		} else {
+	for _, ref := range this.classes {
+
+		if cls, ok := classes[ref.class]; !ok {
+			err = errutil.Append(err, ClassNotFound(ref.class.String()))
+		} else if ret == nil {
 			ret = cls
+		} else if ret != cls {
+			err = fmt.Errorf("multiple classes not yet supported; `%s`", this.classes)
 		}
 	}
 	return ret, err

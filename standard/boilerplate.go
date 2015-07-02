@@ -11,6 +11,8 @@ import (
 )
 
 // implement IConsole for MiniCon
+// FIX-this shouldn't be in root-standard;
+// standard.miniconsole maybe?
 type MiniConsole struct {
 	*minicon.MiniCon
 }

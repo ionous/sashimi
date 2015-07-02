@@ -28,13 +28,13 @@ func (this *NumValue) String() string {
 
 //
 func (this *NumValue) Num() (float32, bool) {
-	num, ok := this.inst.num[this.prop.id]
+	num, ok := this.inst.values[this.prop.id].(float32)
 	return num, ok
 }
 
 //
 func (this *NumValue) SetNum(num float32) {
-	this.inst.num[this.prop.id] = num
+	this.inst.values[this.prop.id] = num
 }
 
 //

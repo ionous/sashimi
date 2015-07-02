@@ -4,6 +4,7 @@ import (
 	"fmt"
 	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
+	"github.com/ionous/sashimi/util/errutil"
 )
 
 type ClassResult struct {
@@ -39,9 +40,8 @@ func (this ClassResults) finalizeClasses() (
 	classes = make(M.ClassMap)
 
 	for name, pending := range this.pending {
-		info, e := this.makeClass(pending)
-		if e != nil {
-			err = AppendError(err, e)
+		if info, e := this.makeClass(pending); e != nil {
+			err = errutil.Append(err, e)
 		} else {
 			classes[name] = info
 		}
@@ -92,11 +92,11 @@ func (this ClassResults) _makeClass(pending *PendingClass,
 			switch prop := prop.(type) {
 			case nil:
 				e := fmt.Errorf("rule specified for unknown field %s", rule.fieldName)
-				err = AppendError(err, e)
+				err = errutil.Append(err, e)
 
 			default:
 				e := fmt.Errorf("rule specified for non-enum field %s", rule.fieldName)
-				err = AppendError(err, e)
+				err = errutil.Append(err, e)
 
 			case *M.EnumProperty:
 				// find a constraint for the rule
@@ -116,19 +116,19 @@ func (this ClassResults) _makeClass(pending *PendingClass,
 				switch rule.RuleType() {
 				case S.AlwaysExpect:
 					e := cons.Always(rule.RuleValue())
-					err = AppendError(err, e)
+					err = errutil.Append(err, e)
 				case S.UsuallyExpect:
 					e := cons.Usually(rule.RuleValue())
-					err = AppendError(err, e)
+					err = errutil.Append(err, e)
 				case S.SeldomExpect:
 					e := cons.Seldom(rule.RuleValue())
-					err = AppendError(err, e)
+					err = errutil.Append(err, e)
 				case S.NeverExpect:
 					e := cons.Exclude(rule.RuleValue())
-					err = AppendError(err, e)
+					err = errutil.Append(err, e)
 				default:
 					e := fmt.Errorf("unknown type for rule %v", rule)
-					err = AppendError(err, e)
+					err = errutil.Append(err, e)
 				} // end rule switch
 			} // end prop switch
 		} // end rule loop
@@ -137,7 +137,7 @@ func (this ClassResults) _makeClass(pending *PendingClass,
 		for id, r := range pending.relatives {
 			// get-or-create the associated relationship:
 			if prop, e := this.relatives.makeRelative(r.rel); e != nil {
-				err = AppendError(err, e)
+				err = errutil.Append(err, e)
 			} else {
 				props[id] = prop
 			}

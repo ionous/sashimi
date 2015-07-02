@@ -6,6 +6,7 @@ import (
 	G "github.com/ionous/sashimi/game"
 	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
+	"github.com/ionous/sashimi/util/errutil"
 	"io"
 	"log"
 	"strings"
@@ -18,7 +19,7 @@ type ErrorLog struct {
 // before appending the error in the normal way, this.log.
 func (this ErrorLog) AppendError(err error, e error) error {
 	this.Output(2, e.Error())
-	return AppendError(err, e)
+	return errutil.Append(err, e)
 }
 
 //
@@ -78,25 +79,25 @@ func (this *Context) processAssertions(asserts []S.AssertionStatement) (err erro
 }
 
 //
-// changes assert blocks into class and instance blocks
-// we keep processing the same blocks over and over until they can all resolve property
+// Changes assert blocks into class and instance blocks.
+// ( the caller keeps processing the same blocks over and over until all are resolved. )
+//
 func (this *Context) processAssertBlock(assert S.AssertionStatement) (processed bool, err error) {
 	owner := assert.Owner()
 
-	// a possible class instancing? we ignore the error b/c it might resolve later
-	class, _ := this.classes.findBySingularName(owner)
-	if class != nil {
-		ref := ClassReference{class, assert.Source()}
-		c, e := this.instances.addInstanceRef(ref, assert.ShortName(), assert.Options())
-		if e != nil {
+	// a possible class instancing?
+	// we dont mind if we dont find the owner class. it might resolve later.
+	if class, ok := this.classes.findBySingularName(owner); ok {
+		if c, e := this.instances.addInstanceRef(assert.ShortName(), class.id, assert.Options(), assert.Source()); e != nil {
 			err = e
 		} else if c != nil {
 			processed = true
 		}
 	} else {
 		// a possible class derivation?
-		parent, _ := this.classes.findByPluralName(owner)
-		if parent != nil {
+		// classFactory seeds itself with the root type "kinds".
+		// ultimately all classes are built as some derivation from that.
+		if parent, ok := this.classes.findByPluralName(owner); ok {
 			c, e := this.classes.addClassRef(parent, assert.FullName(), assert.Options())
 			if e != nil {
 				err = e
@@ -305,22 +306,26 @@ func (this *Context) compileAliases(instances M.InstanceMap, actions M.ActionMap
 
 //
 func (this *Context) compile() (*M.Model, error) {
-	// create empty classes,instances,actions from their assertions
+	// create empty classes,instances,tables,actions from their assertions
 	this.log.Println("reading assertions")
 	err := this.processAssertions(this.src.Asserts)
 	if err != nil {
 		return nil, err
 	}
 
-	// add class primitive values
+	// add class primitive values;
+	// queuing any we types we cant immediately resolve.
+	pendingPointers := []S.PropertyStatement{}
 	this.log.Println("adding class properties")
 	for _, prop := range this.src.Properties {
 		fields := prop.Fields()
-		if class, e := this.classes.findByPluralName(fields.Class); e != nil {
-			err = this.log.AppendError(err, e)
+		if class, ok := this.classes.findByPluralName(fields.Class); !ok {
+			err = this.log.AppendError(err, ClassNotFound(fields.Class))
 		} else {
-			if _, e := class.addPrimitive(prop.Source(), fields); e != nil {
+			if prim, e := class.addPrimitive(prop.Source(), fields); e != nil {
 				err = this.log.AppendError(err, e)
+			} else if prim == nil {
+				pendingPointers = append(pendingPointers, prop)
 			}
 		}
 	}
@@ -332,8 +337,8 @@ func (this *Context) compile() (*M.Model, error) {
 	this.log.Println("adding enums")
 	for _, enum := range this.src.Enums {
 		fields := enum.Fields()
-		if class, e := this.classes.findByPluralName(fields.Class); e != nil {
-			err = this.log.AppendError(err, e)
+		if class, ok := this.classes.findByPluralName(fields.Class); !ok {
+			err = this.log.AppendError(err, ClassNotFound(fields.Class))
 		} else {
 			if _, e := class.addEnum(fields.Name, fields.Choices, fields.Expects); e != nil {
 				err = this.log.AppendError(err, e)
@@ -348,8 +353,8 @@ func (this *Context) compile() (*M.Model, error) {
 	this.log.Println("adding class relatives")
 	for _, rel := range this.src.Relatives {
 		fields := rel.Fields()
-		if class, e := this.classes.findByPluralName(fields.Class); e != nil {
-			err = this.log.AppendError(err, e)
+		if class, ok := this.classes.findByPluralName(fields.Class); !ok {
+			err = this.log.AppendError(err, ClassNotFound(fields.Class))
 		} else {
 			if e := class.addRelative(fields, rel.Source()); e != nil {
 				err = this.log.AppendError(err, e)
@@ -358,6 +363,17 @@ func (this *Context) compile() (*M.Model, error) {
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	// add foreign keys
+	this.log.Println("adding class pointers")
+	for _, prop := range pendingPointers {
+		fields := prop.Fields()
+		if class, ok := this.classes.findByPluralName(fields.Class); !ok {
+			err = this.log.AppendError(err, ClassNotFound(fields.Class))
+		} else if e := class.addPointer(fields, prop.Source()); e != nil {
+			err = this.log.AppendError(err, e)
+		}
 	}
 
 	// make classes
@@ -376,10 +392,34 @@ func (this *Context) compile() (*M.Model, error) {
 		} else {
 			relations[id] = rel
 		}
-
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	multiValueData := []MultiValueData{}
+	this.log.Println("parsing tables")
+	for _, mvs := range this.src.MultiValues {
+		fields := mvs.Fields()
+		// have to delay instance data until after the instnaces have been created.
+		if class, ok := classes.FindClassBySingular(fields.Owner); ok {
+			// make a table to process the rows of data for this class
+			if table, e := MakeValueTable(class, fields.Columns); e != nil {
+				err = this.log.AppendError(err, e)
+			} else {
+				// walk those rows
+				for _, row := range fields.Rows {
+					if data, e := table.AddRow(this.instances, mvs.Source(), row); e != nil {
+						err = this.log.AppendError(err, e)
+					} else {
+						multiValueData = append(multiValueData, data)
+					}
+				}
+			}
+		} else {
+			e := mvs.Source().Errorf("couldn't find a class or instance for %s", fields.Owner)
+			err = this.log.AppendError(err, e)
+		}
 	}
 
 	// make instances
@@ -389,8 +429,20 @@ func (this *Context) compile() (*M.Model, error) {
 		return nil, err
 	}
 
-	this.log.Println("making data")
+	// fills out the instance properties
+	this.log.Println("setting instance properties")
 	instances, tables, err := partials.makeData(this.src.Choices, this.src.KeyValues)
+	if err != nil {
+		return nil, err
+	}
+
+	// merges instance table data
+	this.log.Println("merging instance tables")
+	for _, mvd := range multiValueData {
+		if e := mvd.mergeInto(instances); e != nil {
+			err = errutil.Append(err, e)
+		}
+	}
 	if err != nil {
 		return nil, err
 	}

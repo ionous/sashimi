@@ -19,7 +19,7 @@ func (this *EnumValue) Property() IProperty {
 //
 func (this *EnumValue) Index() (ret int, hadValue bool) {
 	id := this.prop.id
-	if index, ok := this.inst.enum[id]; ok {
+	if index, ok := this.inst.values[id].(int); ok {
 		ret = index
 		hadValue = true
 	} else {
@@ -52,16 +52,29 @@ func (this *EnumValue) Any() (value interface{}, hasValue bool) {
 // FIX: once this is re/moved from the model to the compiler level,
 // then change the values from pointers to concrete types
 func (this *EnumValue) SetAny(value interface{}) (err error) {
-	if choice, ok := value.(int); !ok {
-		err = fmt.Errorf(" %#v set any failed with %#v", this, value)
-	} else {
-		id := this.prop.id
-		econ := this.Constraint()
-		if e := econ.CheckIndex(choice); e != nil {
+	switch choice := value.(type) {
+	case int:
+		err = this.SetByIndex(choice)
+	case string:
+		choiceId := MakeStringId(choice)
+		if idx, e := this.prop.ChoiceToIndex(choiceId); e != nil {
 			err = e
 		} else {
-			this.inst.enum[id] = choice
+			err = this.SetByIndex(idx)
 		}
+	default:
+		err = fmt.Errorf(" %#v set any failed with %#v", this, value)
+	}
+	return err
+}
+
+func (this *EnumValue) SetByIndex(choice int) (err error) {
+	constraints := this.Constraint()
+	if e := constraints.CheckIndex(choice); e != nil {
+		err = e
+	} else {
+		id := this.prop.id
+		this.inst.values[id] = choice
 	}
 	return err
 }

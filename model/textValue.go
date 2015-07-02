@@ -28,13 +28,13 @@ func (this *TextValue) String() string {
 
 //
 func (this *TextValue) Text() (string, bool) {
-	text, ok := this.inst.text[this.prop.id]
+	text, ok := this.inst.values[this.prop.id].(string)
 	return text, ok
 }
 
 //
 func (this *TextValue) SetText(text string) {
-	this.inst.text[this.prop.id] = text
+	this.inst.values[this.prop.id] = text
 }
 
 //
