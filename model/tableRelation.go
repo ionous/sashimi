@@ -25,7 +25,7 @@ func NewTableRelations(rels RelationMap) TableRelations {
 }
 
 //
-func (this *TableRelations) TableById(id StringId) (ret *TableRelation, ok bool) {
+func (this TableRelations) TableById(id StringId) (ret *TableRelation, ok bool) {
 	ret, ok = this.tables[id]
 	return ret, ok
 }

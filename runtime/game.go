@@ -20,7 +20,6 @@ type Game struct {
 	defaultActions DefaultActions
 	SystemActions  SystemActions
 	log            *log.Logger
-	references     M.References
 	Properties     PropertyWatchers
 	parentLookup   ParentLookupStack
 	parserSource   ParserSourceStack
@@ -56,7 +55,6 @@ func NewGame(model *M.Model, output IOutput) (game *Game, err error) {
 		make(DefaultActions),
 		NewSystemActions(),
 		log,
-		M.NewReferences(model.Classes, model.Instances, model.Tables),
 		PropertyWatchers{},
 		ParentLookupStack{},
 		ParserSourceStack{},
@@ -271,40 +269,36 @@ func (this *Game) RunAction(action *M.ActionInfo, instances []string) (err error
 	sourceObj := this.parserSource.FindSource()
 	if sourceObj == nil {
 		err = fmt.Errorf("couldnt find command source for %s", action)
+	} else if !sourceObj.info.Class().CompatibleWith(action.Source().Id()) {
+		err = fmt.Errorf("source class for %s doesnt match", action)
 	} else {
-		sourceClass := sourceObj.info.Class()
-		if action.Source() != sourceClass && !sourceClass.HasParent(action.Source()) {
-			err = fmt.Errorf("source class for %s doesnt match", action)
+		// inject the source object along with the other nouns
+		types := action.NounSlice()
+		instances = append([]string{sourceObj.Id().String()}, instances...)
+		if len(types) != len(instances) {
+			err = fmt.Errorf("mismatched nouns %v!=%v", types, instances)
 		} else {
-			// inject the source object along with the other nouns
-			types := action.NounSlice()
-			instances = append([]string{sourceObj.Id().String()}, instances...)
-			if len(types) != len(instances) {
-				err = fmt.Errorf("mismatched nouns %v!=%v", types, instances)
+			keys := []string{"Source", "Target", "Context"}
+			if len(instances) > len(keys) {
+				err = fmt.Errorf("too many nouns %v", instances)
 			} else {
-				keys := []string{"Source", "Target", "Context"}
-				if len(instances) > len(keys) {
-					err = fmt.Errorf("too many nouns %v", instances)
-				} else {
-					values := make(map[string]TemplateValues)
-					objs := make([]*GameObject, len(types))
+				values := make(map[string]TemplateValues)
+				objs := make([]*GameObject, len(types))
 
-					for i, id := range instances {
-						// convert to string id for net sake
-						gobj, key := this.Objects[M.MakeStringId(id)], keys[i]
-						if gobj == nil {
-							return fmt.Errorf("unknown object %s", id)
-						}
-						values[key] = gobj.data
-						objs[i] = gobj
+				for i, id := range instances {
+					// convert to string id for net sake
+					gobj, key := this.Objects[M.MakeStringId(id)], keys[i]
+					if gobj == nil {
+						return fmt.Errorf("unknown object %s", id)
 					}
-
-					tgt := ObjectTarget{this, objs[0]}
-					act := &RuntimeAction{this, action, objs, values, nil}
-					//log.Println("!!!", tgt, action)
-
-					this.queue.QueueEvent(tgt, action.Event(), act)
+					values[key] = gobj.data
+					objs[i] = gobj
 				}
+
+				tgt := ObjectTarget{this, objs[0]}
+				act := &RuntimeAction{this, action, objs, values, nil}
+
+				this.queue.QueueEvent(tgt, action.Event(), act)
 			}
 		}
 	}

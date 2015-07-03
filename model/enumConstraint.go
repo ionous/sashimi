@@ -12,7 +12,7 @@ type EnumConstraint struct {
 	only         StringId
 	never        map[StringId]bool
 	usual        StringId
-	usuallyLocal bool // usual set for this constraint, or for some ancestor?
+	usuallyLocal bool // usual set for cons constraint, or for some ancestor?
 }
 
 //
@@ -26,14 +26,14 @@ func NewConstraint(enum Enumeration) *EnumConstraint {
 //
 //
 //
-func (this *EnumConstraint) Always(value interface{}) (err error) {
+func (cons *EnumConstraint) Always(value interface{}) (err error) {
 	switch choice := value.(type) {
 	case StringId:
-		err = this.always(choice)
+		err = cons.always(choice)
 	case string:
-		err = this.always(MakeStringId(choice))
+		err = cons.always(MakeStringId(choice))
 	default:
-		err = OutOfRangeError{&this.enum, value}
+		err = OutOfRangeError(cons.enum, value)
 	}
 	return err
 }
@@ -41,14 +41,14 @@ func (this *EnumConstraint) Always(value interface{}) (err error) {
 //
 //
 //
-func (this *EnumConstraint) Usually(value interface{}) (err error) {
+func (cons *EnumConstraint) Usually(value interface{}) (err error) {
 	switch choice := value.(type) {
 	case StringId:
-		err = this.usually(choice)
+		err = cons.usually(choice)
 	case string:
-		err = this.usually(MakeStringId(choice))
+		err = cons.usually(MakeStringId(choice))
 	default:
-		err = OutOfRangeError{&this.enum, value}
+		err = OutOfRangeError(cons.enum, value)
 	}
 	return err
 }
@@ -56,14 +56,14 @@ func (this *EnumConstraint) Usually(value interface{}) (err error) {
 //
 //
 //
-func (this *EnumConstraint) Seldom(value interface{}) (err error) {
+func (cons *EnumConstraint) Seldom(value interface{}) (err error) {
 	switch choice := value.(type) {
 	case StringId:
-		err = this.seldom(choice)
+		err = cons.seldom(choice)
 	case string:
-		err = this.seldom(MakeStringId(choice))
+		err = cons.seldom(MakeStringId(choice))
 	default:
-		err = OutOfRangeError{&this.enum, value}
+		err = OutOfRangeError(cons.enum, value)
 	}
 	return err
 }
@@ -71,14 +71,14 @@ func (this *EnumConstraint) Seldom(value interface{}) (err error) {
 //
 //
 //
-func (this *EnumConstraint) Exclude(value interface{}) (err error) {
+func (cons *EnumConstraint) Exclude(value interface{}) (err error) {
 	switch choice := value.(type) {
 	case StringId:
-		err = this.exclude(choice)
+		err = cons.exclude(choice)
 	case string:
-		err = this.exclude(MakeStringId(choice))
+		err = cons.exclude(MakeStringId(choice))
 	default:
-		err = OutOfRangeError{&this.enum, value}
+		err = OutOfRangeError(cons.enum, value)
 	}
 	return err
 }
@@ -86,24 +86,24 @@ func (this *EnumConstraint) Exclude(value interface{}) (err error) {
 //
 //
 //
-func (this *EnumConstraint) Copy() IConstrain {
+func (cons *EnumConstraint) Copy() IConstrain {
 	never := make(map[StringId]bool)
-	for k, v := range this.never {
+	for k, v := range cons.never {
 		never[k] = v
 	}
-	return &EnumConstraint{this.enum, this.only, never, this.usual, false}
+	return &EnumConstraint{cons.enum, cons.only, never, cons.usual, false}
 }
 
 //
 //
 //
-func (this *EnumConstraint) CheckIndex(index int) (err error) {
-	if choice, e := this.enum.IndexToValue(index); e != nil {
+func (cons *EnumConstraint) CheckIndex(index int) (err error) {
+	if choice, e := cons.enum.IndexToValue(index); e != nil {
 		err = e
-	} else if this.never[choice.id] {
-		err = InvalidChoiceError{&this.enum, choice.id}
-	} else if this.only != "" && this.only != choice.id {
-		err = InvalidChoiceError{&this.enum, choice.id}
+	} else if cons.never[choice.id] {
+		err = InvalidChoiceError(cons.enum, choice.id)
+	} else if cons.only != "" && cons.only != choice.id {
+		err = InvalidChoiceError(cons.enum, choice.id)
 	}
 	return err
 }
@@ -111,18 +111,18 @@ func (this *EnumConstraint) CheckIndex(index int) (err error) {
 //
 //
 //
-func (this *EnumConstraint) BestIndex() (index int) {
+func (cons *EnumConstraint) BestIndex() (index int) {
 	switch {
-	case this.only != "":
-		index = this.enum.choices[this.only]
+	case cons.only != "":
+		index = cons.enum.choices[cons.only]
 
-	case this.usual != "":
-		index = this.enum.choices[this.usual]
+	case cons.usual != "":
+		index = cons.enum.choices[cons.usual]
 
 	default:
 		smallestIndex := math.MaxInt32
-		for k, i := range this.enum.choices {
-			if !this.never[k] && i < smallestIndex {
+		for k, i := range cons.enum.choices {
+			if !cons.never[k] && i < smallestIndex {
 				smallestIndex = i
 				index = i
 			}
@@ -134,24 +134,24 @@ func (this *EnumConstraint) BestIndex() (index int) {
 //
 // Always is forever.
 //
-func (this *EnumConstraint) always(choice StringId) (err error) {
-	if index, e := this.enum.ChoiceToIndex(choice); e != nil {
+func (cons *EnumConstraint) always(choice StringId) (err error) {
+	if index, e := cons.enum.ChoiceToIndex(choice); e != nil {
 		err = e
-	} else if e := this.CheckIndex(index); e != nil {
+	} else if e := cons.CheckIndex(index); e != nil {
 		err = e
 	} else {
 		switch {
 		// first always assertion?
-		case this.only == "":
-			this.only = choice
+		case cons.only == "":
+			cons.only = choice
 
 		// ignore duplicate assertions
-		case this.only == choice:
+		case cons.only == choice:
 			break
 
 		// some other always assertion
 		default:
-			err = fmt.Errorf("always %v respecified as %v", this.only, choice)
+			err = fmt.Errorf("always %v respecified as %v", cons.only, choice)
 		}
 	}
 	return err
@@ -160,23 +160,23 @@ func (this *EnumConstraint) always(choice StringId) (err error) {
 //
 // Usually is a loose recommendation, and can be overriden for each new owner
 //
-func (this *EnumConstraint) usually(choice StringId) (err error) {
-	if index, e := this.enum.ChoiceToIndex(choice); e != nil {
+func (cons *EnumConstraint) usually(choice StringId) (err error) {
+	if index, e := cons.enum.ChoiceToIndex(choice); e != nil {
 		err = e
-	} else if e := this.CheckIndex(index); e != nil {
+	} else if e := cons.CheckIndex(index); e != nil {
 		err = e
 	} else {
 		switch {
 		// when something is first always 'x' and later usually 'x', that's okay.
-		case this.only != "" && this.only != choice:
-			err = fmt.Errorf("usually '%v' was always '%v'", choice, this.only)
+		case cons.only != "" && cons.only != choice:
+			err = fmt.Errorf("usually '%v' was always '%v'", choice, cons.only)
 
-		case this.usuallyLocal && this.usual != choice:
-			err = fmt.Errorf("usually `%v` was usually `%v`", choice, this.usual)
+		case cons.usuallyLocal && cons.usual != choice:
+			err = fmt.Errorf("usually `%v` was usually `%v`", choice, cons.usual)
 
 		default:
-			this.usual = choice
-			this.usuallyLocal = true
+			cons.usual = choice
+			cons.usuallyLocal = true
 		}
 	}
 	return err
@@ -187,10 +187,10 @@ func (this *EnumConstraint) usually(choice StringId) (err error) {
 // ( it really only makes sense if there are two choices,
 // and the other can become usually. )
 //
-func (this *EnumConstraint) seldom(choice StringId) (err error) {
-	for other, _ := range this.enum.choices {
+func (cons *EnumConstraint) seldom(choice StringId) (err error) {
+	for other, _ := range cons.enum.choices {
 		if other != choice {
-			err = this.Usually(other)
+			err = cons.Usually(other)
 			if err != nil {
 				break
 			}
@@ -203,39 +203,39 @@ func (this *EnumConstraint) seldom(choice StringId) (err error) {
 //
 // NOTE: cant exclude the final remaining choice
 //
-func (this *EnumConstraint) exclude(choice StringId) (err error) {
+func (cons *EnumConstraint) exclude(choice StringId) (err error) {
 	// ses raw index to allow the same choice to be excluded multiple times
-	_, err = this.enum.ChoiceToIndex(choice)
+	_, err = cons.enum.ChoiceToIndex(choice)
 	switch {
 	// already an error, so do nothing
 	case err != nil:
 		break
 
 	// "never" cant ever cancel an "always"
-	case this.only == choice:
-		err = fmt.Errorf("never %v was always", this.only)
+	case cons.only == choice:
+		err = fmt.Errorf("never %v was always", cons.only)
 
 	// "never" cant cancel a "usually" from the same owner
-	case this.usuallyLocal && this.usual == choice:
-		err = fmt.Errorf("usually %v respecified as never", this.usual)
+	case cons.usuallyLocal && cons.usual == choice:
+		err = fmt.Errorf("usually %v respecified as never", cons.usual)
 
 	// okay, exclude:
 	default:
 		// ignore if the choice was already removed by another never
-		if !this.never[choice] {
-			olen := len(this.enum.values)
-			xlen := len(this.never)
+		if !cons.never[choice] {
+			olen := len(cons.enum.values)
+			xlen := len(cons.never)
 			if olen-xlen-1 < 1 {
 				err = fmt.Errorf("never %s would remove all choices", choice)
 			} else {
-				this.never[choice] = true
+				cons.never[choice] = true
 			}
 		}
 
 		// never *can* cancel a usual from some earlier owner
 		// but, note: don't turn it off unless we are actually excluding it.
-		if err == nil && this.usual == choice {
-			this.usual = ""
+		if err == nil && cons.usual == choice {
+			cons.usual = ""
 		}
 	}
 

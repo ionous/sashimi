@@ -33,8 +33,10 @@ func NewSimpleServer() *http.ServeMux {
 			http.NotFound(w, r)
 		} else if part := parts[1]; part == "new" {
 			if r.Method != "POST" {
+				log.Println("Method not allowed:", r.Method)
 				http.Error(w, r.Method, http.StatusMethodNotAllowed)
 			} else if id, _, e := sessions.NewSession(); e != nil {
+				log.Println("Failed to create session:", e)
 				http.Error(w, e.Error(), http.StatusInternalServerError)
 			} else {
 				// redirect so that the client can see the session id.
@@ -42,19 +44,21 @@ func NewSimpleServer() *http.ServeMux {
 				http.Redirect(w, r, dest, http.StatusSeeOther)
 			}
 		} else if sd, ok := sessions.Session(part); !ok {
-			log.Println("couldnt find session", part)
+			log.Println("Couldnt find session:", part)
 			http.NotFound(w, r)
 		} else {
 			sd := sd.(*SimpleSession)
 			// post input
 			if r.Method == "POST" {
 				if e := sd.HandleInput(r.FormValue("q")); e != nil {
+					log.Println("Couldn't handle input:", e)
 					http.Error(w, e.Error(), http.StatusInternalServerError)
 					return
 				}
 			}
 			// return current output
 			if r.Method != "POST" && r.Method != "GET" {
+				log.Println("Unknown method:", r.Method)
 				http.Error(w, r.Method, http.StatusMethodNotAllowed)
 			} else {
 				w.Header().Set("Content-Type", "text/html")

@@ -30,9 +30,7 @@ func (this *NounFactory) MatchNoun(word string, _ string) (noun string, err erro
 		} else {
 			for _, name := range names {
 				if inst, ok := this.model.Instances[name]; ok {
-					instClass := inst.Class()
-					//fmt.Println(name, instClass, class, instClass == class, instClass.HasParent(class))
-					if instClass == class || instClass.HasParent(class) {
+					if inst.Class().CompatibleWith(class.Id()) {
 						noun = name.String()
 						break
 					}

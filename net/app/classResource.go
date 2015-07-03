@@ -72,13 +72,13 @@ func addClass(model *M.Model, doc, sub resource.IBuildObjects, cls *M.ClassInfo)
 	}
 	actionRefs := resource.NewObjectList()
 	for _, act := range model.Actions {
-		var dst *M.ClassInfo
+		var dst M.StringId
 		if d := act.Context(); d != nil {
-			dst = d
-		} else {
-			dst = act.Target()
+			dst = d.Id()
+		} else if d := act.Target(); d != nil {
+			dst = d.Id()
 		}
-		if dst == cls || cls.HasParent(dst) {
+		if cls.CompatibleWith(dst) {
 			actionRefs.NewObject(jsonId(act.Id()), "action")
 			actionResource(sub, act)
 		}

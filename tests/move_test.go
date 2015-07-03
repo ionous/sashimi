@@ -1,4 +1,4 @@
-package sashimi
+package tests
 
 import (
 	G "github.com/ionous/sashimi/game"
@@ -109,7 +109,7 @@ func testMoves(t *testing.T, g TestGame, moves ...xMove) {
 }
 
 func where(inst *M.InstanceInfo) (ret string) {
-	if rel, ok := inst.RelativeValue("whereabouts"); ok {
+	if rel, ok := inst.GetRelativeValue("whereabouts"); ok {
 		ret = rel.List()[0]
 	}
 	return ret

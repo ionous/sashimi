@@ -14,7 +14,7 @@ type RelativeFields struct {
 	ToMany   bool     `json:"many"`
 }
 
-func NewRelative(fields RelativeFields) *RelativeProperty {
+func NewRelativeProperty(fields RelativeFields) *RelativeProperty {
 	return &RelativeProperty{fields}
 }
 

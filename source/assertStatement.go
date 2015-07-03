@@ -28,8 +28,8 @@ func (this AssertionStatement) FullName() string {
 }
 
 //
-func (this AssertionStatement) Options() Options {
-	return this.options
+func (this AssertionStatement) Option(option string) string {
+	return this.options[option]
 }
 
 //

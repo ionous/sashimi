@@ -12,26 +12,17 @@ import (
 	"strings"
 )
 
-type ErrorLog struct {
-	*log.Logger
-}
-
-// before appending the error in the normal way, this.log.
-func (this ErrorLog) AppendError(err error, e error) error {
-	this.Output(2, e.Error())
-	return errutil.Append(err, e)
-}
-
 //
 // create a new instance of script results
 func Compile(out io.Writer, src S.Blocks) (*M.Model, error) {
 	names := NewNameSource()
+	rel := newRelativeFactory(names.newScope(nil))
 	ctx := &Context{
 		src, names.newScope(nil),
-		newClassFactory(names),
+		newClassFactory(names, rel),
 		newInstanceFactory(names),
-		newRelativeFactory(names.newScope(nil)),
-		&ErrorLog{log.New(out, "compling: ", log.Lshortfile)},
+		rel,
+		log.New(out, "compling: ", log.Lshortfile),
 	}
 	return ctx.compile()
 }
@@ -44,19 +35,20 @@ type Context struct {
 	classes   *ClassFactory
 	instances *InstanceFactory
 	relatives *RelativeFactory
-	log       *ErrorLog
+	log       *log.Logger
 }
 
 //
 // generate classes and instances from the assertions
 // adds to the instance and class maps
 // adds to the pending instance and classes lists
+//
 func (this *Context) processAssertions(asserts []S.AssertionStatement) (err error) {
 	for err == nil && len(asserts) > 0 {
 		didSomething := false
 		for i := 0; i < len(asserts); i++ {
 			if ok, e := this.processAssertBlock(asserts[i]); e != nil {
-				err = this.log.AppendError(err, e)
+				err = errutil.Append(err, e)
 			} else if ok {
 				last := len(asserts) - 1
 				if last != i {
@@ -71,7 +63,7 @@ func (this *Context) processAssertions(asserts []S.AssertionStatement) (err erro
 		if !didSomething {
 			for _, pending := range asserts {
 				e := fmt.Errorf("couldn't resolve the assertion for `%v`", pending)
-				err = this.log.AppendError(err, e)
+				err = errutil.Append(err, e)
 			}
 		}
 	}
@@ -88,7 +80,8 @@ func (this *Context) processAssertBlock(assert S.AssertionStatement) (processed 
 	// a possible class instancing?
 	// we dont mind if we dont find the owner class. it might resolve later.
 	if class, ok := this.classes.findBySingularName(owner); ok {
-		if c, e := this.instances.addInstanceRef(assert.ShortName(), class.id, assert.Options(), assert.Source()); e != nil {
+		short, long, source := assert.ShortName(), assert.Option("long name"), assert.Source()
+		if c, e := this.instances.addInstanceRef(class, short, long, source); e != nil {
 			err = e
 		} else if c != nil {
 			processed = true
@@ -98,7 +91,8 @@ func (this *Context) processAssertBlock(assert S.AssertionStatement) (processed 
 		// classFactory seeds itself with the root type "kinds".
 		// ultimately all classes are built as some derivation from that.
 		if parent, ok := this.classes.findByPluralName(owner); ok {
-			c, e := this.classes.addClassRef(parent, assert.FullName(), assert.Options())
+			plural, single := assert.FullName(), assert.Option("singular name")
+			c, e := this.classes.addClassRef(parent, plural, single)
 			if e != nil {
 				err = e
 			} else if c != nil {
@@ -117,19 +111,19 @@ func (this *Context) compileActions(classes M.ClassMap,
 	for _, act := range this.src.Actions {
 		fields := act.Fields()
 		if actionId, source, target, context, e := this.resolveAction(classes, fields); e != nil {
-			err = this.log.AppendError(err, e)
+			err = errutil.Append(err, e)
 		} else {
 			// and the name of event...
 			eventId, e := this.names.addName(fields.Event, actionId.String())
 			if e != nil {
-				err = this.log.AppendError(err, e)
+				err = errutil.Append(err, e)
 				continue
 			}
 			// add the action; if it exists, the uniquifier should have excluded any difs, so just ignore....
 			act := actions[actionId]
 			if act == nil {
 				if act, e = M.NewAction(actionId, fields.Action, fields.Event, source, target, context); e != nil {
-					err = this.log.AppendError(err, e)
+					err = errutil.Append(err, e)
 				} else {
 					actions[actionId] = act
 				}
@@ -148,18 +142,18 @@ func (this *Context) resolveAction(classes M.ClassMap, fields S.ActionAssertionF
 	// find the primary class
 	if cls, ok := classes.FindClass(fields.Source); !ok {
 		e := fmt.Errorf("couldn't find class %+v", fields)
-		err = this.log.AppendError(err, e)
+		err = errutil.Append(err, e)
 	} else {
 		// and the other two optional ones
 		target, ok = classes[this.classes.singleToPlural[fields.Target]]
 		if !ok && fields.Target != "" {
 			e := fmt.Errorf("couldn't find class for noun %s", fields.Target)
-			err = this.log.AppendError(err, e)
+			err = errutil.Append(err, e)
 		}
 		context, ok = classes[this.classes.singleToPlural[fields.Context]]
 		if !ok && fields.Context != "" {
 			e := fmt.Errorf("couldn't find class for noun %s", fields.Context)
-			err = this.log.AppendError(err, e)
+			err = errutil.Append(err, e)
 		}
 		if err == nil {
 			// make sure these names are unique
@@ -200,7 +194,7 @@ func (this *Context) makeActionHandlers(classes M.ClassMap, instances M.Instance
 		f := statement.Fields()
 		action, ok := actions.FindActionByName(f.Action)
 		if !ok {
-			err = this.log.AppendError(err, M.ActionNotFound(f.Action))
+			err = errutil.Append(err, M.ActionNotFound(f.Action))
 			continue
 		}
 		var options M.ListenerOptions
@@ -212,7 +206,7 @@ func (this *Context) makeActionHandlers(classes M.ClassMap, instances M.Instance
 
 		cb, e := this.newCallback(f.Owner, classes, instances, action, f.Callback, options)
 		if e != nil {
-			err = this.log.AppendError(err, e)
+			err = errutil.Append(err, e)
 			continue
 		}
 		callbacks = append(callbacks, cb)
@@ -228,7 +222,7 @@ func (this *Context) makeEventListeners(events M.EventMap, classes M.ClassMap, i
 		r := l.Fields()
 		action, e := events.FindEventByName(r.Event)
 		if e != nil {
-			err = this.log.AppendError(err, e)
+			err = errutil.Append(err, e)
 			continue
 		}
 		var options M.ListenerOptions
@@ -243,7 +237,7 @@ func (this *Context) makeEventListeners(events M.EventMap, classes M.ClassMap, i
 		}
 		cb, e := this.newCallback(r.Owner, classes, instances, action, r.Callback, options)
 		if e != nil {
-			err = this.log.AppendError(err, e)
+			err = errutil.Append(err, e)
 			continue
 		}
 		callbacks = append(callbacks, cb)
@@ -286,7 +280,7 @@ func (this *Context) compileAliases(instances M.InstanceMap, actions M.ActionMap
 				parserActions = append(parserActions, parserAction)
 			} else {
 				e := fmt.Errorf("unknown alias requested %s", key)
-				err = this.log.AppendError(err, e)
+				err = errutil.Append(err, e)
 			}
 		}
 	}
@@ -320,10 +314,10 @@ func (this *Context) compile() (*M.Model, error) {
 	for _, prop := range this.src.Properties {
 		fields := prop.Fields()
 		if class, ok := this.classes.findByPluralName(fields.Class); !ok {
-			err = this.log.AppendError(err, ClassNotFound(fields.Class))
+			err = errutil.Append(err, ClassNotFound(fields.Class))
 		} else {
 			if prim, e := class.addPrimitive(prop.Source(), fields); e != nil {
-				err = this.log.AppendError(err, e)
+				err = errutil.Append(err, e)
 			} else if prim == nil {
 				pendingPointers = append(pendingPointers, prop)
 			}
@@ -338,11 +332,9 @@ func (this *Context) compile() (*M.Model, error) {
 	for _, enum := range this.src.Enums {
 		fields := enum.Fields()
 		if class, ok := this.classes.findByPluralName(fields.Class); !ok {
-			err = this.log.AppendError(err, ClassNotFound(fields.Class))
-		} else {
-			if _, e := class.addEnum(fields.Name, fields.Choices, fields.Expects); e != nil {
-				err = this.log.AppendError(err, e)
-			}
+			err = errutil.Append(err, ClassNotFound(fields.Class))
+		} else if _, e := class.addEnum(fields.Name, fields.Choices, fields.Expects); e != nil {
+			err = errutil.Append(err, e)
 		}
 	}
 	if err != nil {
@@ -354,11 +346,9 @@ func (this *Context) compile() (*M.Model, error) {
 	for _, rel := range this.src.Relatives {
 		fields := rel.Fields()
 		if class, ok := this.classes.findByPluralName(fields.Class); !ok {
-			err = this.log.AppendError(err, ClassNotFound(fields.Class))
-		} else {
-			if e := class.addRelative(fields, rel.Source()); e != nil {
-				err = this.log.AppendError(err, e)
-			}
+			err = errutil.Append(err, ClassNotFound(fields.Class))
+		} else if _, e := class.addRelative(fields, rel.Source()); e != nil {
+			err = errutil.Append(err, e)
 		}
 	}
 	if err != nil {
@@ -370,9 +360,9 @@ func (this *Context) compile() (*M.Model, error) {
 	for _, prop := range pendingPointers {
 		fields := prop.Fields()
 		if class, ok := this.classes.findByPluralName(fields.Class); !ok {
-			err = this.log.AppendError(err, ClassNotFound(fields.Class))
-		} else if e := class.addPointer(fields, prop.Source()); e != nil {
-			err = this.log.AppendError(err, e)
+			err = errutil.Append(err, ClassNotFound(fields.Class))
+		} else if _, e := class.addPointer(fields, prop.Source()); e != nil {
+			err = errutil.Append(err, e)
 		}
 	}
 
@@ -388,7 +378,7 @@ func (this *Context) compile() (*M.Model, error) {
 	relations := make(M.RelationMap)
 	for id, rel := range this.relatives.relations {
 		if rel, e := rel.makeRelation(id); e != nil {
-			err = this.log.AppendError(err, e)
+			err = errutil.Append(err, e)
 		} else {
 			relations[id] = rel
 		}
@@ -401,37 +391,24 @@ func (this *Context) compile() (*M.Model, error) {
 	this.log.Println("parsing tables")
 	for _, mvs := range this.src.MultiValues {
 		fields := mvs.Fields()
-		// have to delay instance data until after the instnaces have been created.
-		if class, ok := classes.FindClassBySingular(fields.Owner); ok {
-			// make a table to process the rows of data for this class
-			if table, e := MakeValueTable(class, fields.Columns); e != nil {
-				err = this.log.AppendError(err, e)
-			} else {
-				// walk those rows
-				for _, row := range fields.Rows {
-					if data, e := table.AddRow(this.instances, mvs.Source(), row); e != nil {
-						err = this.log.AppendError(err, e)
-					} else {
-						multiValueData = append(multiValueData, data)
-					}
+		// make a table to process the rows of data for this class
+		if table, e := makeValueTable(this.classes, fields.Owner, fields.Columns); e != nil {
+			err = errutil.Append(err, e)
+		} else {
+			// walk those rows
+			for _, row := range fields.Rows {
+				if data, e := table.addRow(this.instances, mvs.Source(), row); e != nil {
+					err = errutil.Append(err, e)
+				} else {
+					multiValueData = append(multiValueData, data)
 				}
 			}
-		} else {
-			e := mvs.Source().Errorf("couldn't find a class or instance for %s", fields.Owner)
-			err = this.log.AppendError(err, e)
 		}
 	}
 
 	// make instances
 	this.log.Println("making instances")
-	partials, err := this.instances.makeInstances(this.log, classes, relations)
-	if err != nil {
-		return nil, err
-	}
-
-	// fills out the instance properties
-	this.log.Println("setting instance properties")
-	instances, tables, err := partials.makeData(this.src.Choices, this.src.KeyValues)
+	partials, err := this.instances.makeInstances(classes, relations)
 	if err != nil {
 		return nil, err
 	}
@@ -439,10 +416,16 @@ func (this *Context) compile() (*M.Model, error) {
 	// merges instance table data
 	this.log.Println("merging instance tables")
 	for _, mvd := range multiValueData {
-		if e := mvd.mergeInto(instances); e != nil {
+		if e := mvd.mergeInto(partials); e != nil {
 			err = errutil.Append(err, e)
 		}
 	}
+	if err != nil {
+		return nil, err
+	}
+	// fills out the instance properties
+	this.log.Println("setting instance properties")
+	instances, tables, err := partials.makeData(this.src.Choices, this.src.KeyValues)
 	if err != nil {
 		return nil, err
 	}

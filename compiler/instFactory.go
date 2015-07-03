@@ -16,31 +16,22 @@ func newInstanceFactory(names NameSource) *InstanceFactory {
 	return &InstanceFactory{names, make(PendingInstances)}
 }
 
-func (this *InstanceFactory) findPendingInstance(name string,
-) (*PendingInstance, bool,
-) {
-	id, _ := this.names.addName(nil, name, "instance", "")
-	ret, okay := this.pending[id]
-	return ret, okay
-}
-
 //
 // Register the passed `name` as an instance of `class`
 // NOTE: there can be multiple assertions refering to the same instance.
 //
-func (this *InstanceFactory) addInstanceRef(inst string, cls M.StringId, options S.Options, code S.Code,
+func (this *InstanceFactory) addInstanceRef(cls *PendingClass, name string, longName string, code S.Code,
 ) (ret *PendingInstance, err error,
 ) {
-	id, err := this.names.addName(nil, inst, "instance", "")
+	id, err := this.names.addName(nil, name, "instance", "")
 	if i, ok := this.pending[id]; ok {
 		ret = i
 	} else {
-		ret = &PendingInstance{id: id, name: inst}
+		ret = &PendingInstance{id: id, name: name}
 		this.pending[id] = ret
 	}
 	ret.classes.addClassReference(cls, code)
 	//1
-	longName := options["long name"]
 	if longName != "" {
 		ret.longName = longName
 	}
@@ -48,22 +39,22 @@ func (this *InstanceFactory) addInstanceRef(inst string, cls M.StringId, options
 }
 
 //
-func (this *InstanceFactory) makeInstances(log *ErrorLog, classes M.ClassMap, relations M.RelationMap) (
+// MakeInstances resolves all of the classes for the pending instances.
+// Returns "partial instances" which allows for setting instance values, and finally baking the model instance.
+//
+func (this *InstanceFactory) makeInstances(classes M.ClassMap, relations M.RelationMap) (
 	ret PartialInstances,
 	err error,
 ) {
-	inner := make(M.InstanceMap)
-	tables := M.NewTableRelations(relations)
-	refs := M.NewReferences(classes, inner, tables)
-	instances := PartialInstances{log, inner, tables}
+	partials := newPartialInstances(relations)
 	// resolve all of the classes and create instances for them
-	for id, pending := range this.pending {
-		if class, e := pending.classes.resolveClass(classes); e != nil {
+	for _, pending := range this.pending {
+		if class, props, e := pending.classes.resolveClass(classes); e != nil {
 			err = errutil.Append(err, e)
 		} else {
 			// NOTE: this implicitly adds to the inner instances list
-			refs.NewInstance(id, class, pending.name, pending.longName)
+			partials.newInstance(pending, class, props)
 		}
 	}
-	return instances, err
+	return partials, err
 }

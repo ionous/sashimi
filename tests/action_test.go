@@ -1,4 +1,4 @@
-package sashimi
+package tests
 
 import (
 	G "github.com/ionous/sashimi/game"

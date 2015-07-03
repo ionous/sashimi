@@ -20,7 +20,7 @@ func ObjectResource(game *R.Game, cls *M.ClassInfo, serial *ObjectSerializer) re
 					Finds: func(propertyName string) (ret resource.IResource, okay bool) {
 						// FIX: relations are stored in the model
 						inst := game.Model.Instances[gobj.Id()]
-						if rel, ok := inst.RelativeValue(propertyName); ok {
+						if rel, ok := inst.GetRelativeValue(propertyName); ok {
 							okay, ret = true, resource.Wrapper{
 								// Return the list of related objects:
 								Queries: func(doc resource.DocumentBuilder) {

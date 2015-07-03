@@ -1,11 +1,15 @@
 package model
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/ionous/sashimi/util/errutil"
+)
 
 type InstanceMap map[StringId]*InstanceInfo
 
 // helper to generate an escaped string and an error,
-// FIX: return okay, and provide common not found error structures instead
+// FIX: to generize the name to string search with distance, you will (probably) have to walk all strings
+// a generic filter function with which takes a distance visitor might be the best you can do in go.
 func (this InstanceMap) FindInstance(name string) (*InstanceInfo, bool) {
 	safe := MakeStringId(name)
 	ret, okay := this[safe]
@@ -16,7 +20,7 @@ func (this InstanceMap) FindInstanceWithClass(name string, class *ClassInfo,
 ) (ret *InstanceInfo, err error) {
 	if inst, ok := this.FindInstance(name); !ok {
 		err = InstanceNotFound(name)
-	} else if have := inst.Class(); have == class || have.HasParent(class) {
+	} else if have := inst.Class(); have.CompatibleWith(class.Id()) {
 		ret = inst
 	} else {
 		err = fmt.Errorf("mismatched noun requested: %s,%s!=%s", name, have.Name(), class.Name())
@@ -25,8 +29,8 @@ func (this InstanceMap) FindInstanceWithClass(name string, class *ClassInfo,
 	return ret, err
 }
 
-type InstanceNotFound string
-
-func (this InstanceNotFound) Error() string {
-	return fmt.Sprintf("instance not found `%s`", string(this))
+func InstanceNotFound(name string) error {
+	return errutil.Func(func() string {
+		return fmt.Sprintf("instance not found `%s`", name)
+	})
 }

@@ -1,7 +1,5 @@
 package model
 
-import "fmt"
-
 //
 // Text variable used by game objects.
 //
@@ -30,19 +28,4 @@ func (this *TextValue) String() string {
 func (this *TextValue) Text() (string, bool) {
 	text, ok := this.inst.values[this.prop.id].(string)
 	return text, ok
-}
-
-//
-func (this *TextValue) SetText(text string) {
-	this.inst.values[this.prop.id] = text
-}
-
-//
-func (this *TextValue) SetAny(value interface{}) (err error) {
-	if text, ok := value.(string); !ok {
-		err = fmt.Errorf(" %#v set any failed with %#v", this, value)
-	} else {
-		this.SetText(text)
-	}
-	return err
 }

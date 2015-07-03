@@ -1,4 +1,4 @@
-package sashimi
+package tests
 
 import (
 	"fmt"
@@ -19,19 +19,12 @@ func testField(
 ) (err error) {
 	if inst, ok := res.Instances.FindInstance(instName); !ok {
 		err = M.InstanceNotFound(instName)
-	} else {
-		if field, ok := inst.ValueByName(fieldName); !ok {
-			err = fmt.Errorf("'%s' missing field '%v'", instName, fieldName)
-		} else {
-			if raw, hadValue := field.Any(); hadValue != notDefault {
-				err = fmt.Errorf("%v different default %v != %v", raw, hadValue, notDefault)
-			} else {
-				test := field.String()
-				if test != value {
-					err = fmt.Errorf("%v != %v", test, value)
-				}
-			}
-		}
+	} else if field, ok := inst.ValueByName(fieldName); !ok {
+		err = fmt.Errorf("'%s' missing field '%v'", instName, fieldName)
+	} else if raw, hadValue := field.Any(); hadValue != notDefault {
+		err = fmt.Errorf("%v different default %v != %v", raw, hadValue, notDefault)
+	} else if test := field.String(); test != value {
+		err = fmt.Errorf("%s: '%v'!= '%v' for %s(%T)", instName, test, value, fieldName, field)
 	}
 	return err
 }
@@ -238,7 +231,7 @@ func TestEitherOr(t *testing.T) {
 	if err != nil {
 		t.Log(err)
 	}
-	res.PrintModel(t.Log)
+	//res.PrintModel(t.Log)
 	//
 	err = testField(res, "scored-default", "scoredProperty", "scored", false)
 	if err != nil {

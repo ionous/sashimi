@@ -5,7 +5,6 @@ import (
 	"fmt"
 	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
-	"github.com/ionous/sashimi/util/errutil"
 )
 
 type PendingClasses map[M.StringId]*PendingClass // ptr for presense detection
@@ -13,28 +12,17 @@ type SingleToPlural map[string]M.StringId        // it kind of makes senses its 
 
 type ClassFactory struct {
 	allNames       NameSource
+	relatives      *RelativeFactory
 	pending        PendingClasses
 	singleToPlural SingleToPlural
 }
 
-type ClassNotFound M.StringId
-
-func (this ClassNotFound) Error() string {
-	return fmt.Sprintf("class '%s' not found", this)
-}
-
-func PropertyNotFound(class, prop M.StringId) error {
-	return errutil.Func(func() string {
-		return fmt.Sprintf("property '%s.%s' not found", class, prop)
-	})
-}
-
 //
 //
 //
-func newClassFactory(names NameSource) *ClassFactory {
-	res := &ClassFactory{names, make(PendingClasses), make(SingleToPlural)}
-	res.addClassRef(nil, "kinds", S.Options{"singular name": "kind"})
+func newClassFactory(names NameSource, rel *RelativeFactory) *ClassFactory {
+	res := &ClassFactory{names, rel, make(PendingClasses), make(SingleToPlural)}
+	res.addClassRef(nil, "kinds", "kind")
 	return res
 }
 
@@ -99,54 +87,48 @@ func (this *ClassFactory) makeClasses(relatives *RelativeFactory) (
 //
 //
 //
-func (this *ClassFactory) addClassRef(parent *PendingClass, plural string, options S.Options,
+func (this *ClassFactory) addClassRef(parent *PendingClass, plural, single string,
 ) (class *PendingClass, err error,
 ) {
 	// FIX: sanity check singular?
-	if singular, e := this._addOptions(plural, options); e != nil {
+	if singular, e := this._addOptions(plural, single); e != nil {
 		err = e
-	} else {
-		// validate the new class plural
-		if id, e := this.allNames.addName(nil, plural, "class", ""); e != nil {
-			err = e
-		} else {
-			// ensure the class exists
-			class = this.pending[id]
-			if class != nil {
-				// FIX? ratchet the class down?
-				if class.parent != parent {
-					err = fmt.Errorf("conflicting `%v` parent class `%v` respecified as `%v`",
-						plural, class.parent, parent)
-				}
-			} else {
-				class = &PendingClass{
-					this, parent, id, plural, singular,
-					this.allNames.newScope(plural),
-					make(PendingProperties),
-					make(PendingRules, 0), //PendingRules{},
-					make(PendingRelatives),
-				}
-				this.pending[id] = class
-				this.singleToPlural[singular] = id
-			}
+	} else if id, e := this.allNames.addName(nil, plural, "class", ""); e != nil {
+		err = e
+	} else if class = this.pending[id]; class != nil {
+		// FIX? ratchet the class down?
+		if class.parent != parent {
+			err = fmt.Errorf("conflicting `%v` parent class `%v` respecified as `%v`",
+				plural, class.parent, parent)
 		}
+	} else {
+		var parentProps *PropertyBuilders
+		if parent != nil {
+			parentProps = &parent.props
+		}
+		class = &PendingClass{
+			this, parent, id, plural, singular,
+			this.allNames.newScope(plural),
+			NewProperties(parentProps),
+			make(PendingRules, 0),
+		}
+		this.pending[id] = class
+		this.singleToPlural[singular] = id
 	}
+
 	return class, err
 }
 
 //
 // ex. name="rooms", value="room".
 //
-func (this *ClassFactory) _addOptions(plural string, options S.Options,
-) (singular string, err error,
-) {
-	singular = options["singular name"]
+func (this *ClassFactory) _addOptions(plural, singular string) (string, error) {
 	if singular == "" {
 		singular = inflect.Singularize(plural)
 	}
 	// reserve `room` to mean `rooms`
 	// we dont return the id -- if they meant a specific singular string, we want that
 	// the id is just the internals of name vs. name collision
-	_, err = this.allNames.addName(nil, singular, plural, "")
+	_, err := this.allNames.addName(nil, singular, plural, "")
 	return singular, err
 }

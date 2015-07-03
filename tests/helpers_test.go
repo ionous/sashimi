@@ -1,4 +1,4 @@
-package sashimi
+package tests
 
 import (
 	C "github.com/ionous/sashimi/console"

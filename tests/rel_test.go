@@ -1,4 +1,4 @@
-package sashimi
+package tests
 
 import (
 	M "github.com/ionous/sashimi/model"
@@ -49,6 +49,7 @@ func TestSimpleRelates(t *testing.T) {
 	// i'd prefer the signular: Has("pet", "Loofah")
 	s.The("gremlin", Called("Claire"), Has("pets", "Loofah"))
 	s.The("rock", Called("Loofah"), Exists())
+
 	//
 	model, err := s.Compile(os.Stderr)
 	if assert.NoError(t, err, "compile") {

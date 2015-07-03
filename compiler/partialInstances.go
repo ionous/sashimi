@@ -4,81 +4,86 @@ import (
 	"fmt"
 	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
+	"github.com/ionous/sashimi/util/errutil"
+	"log"
 )
 
 type PartialInstances struct {
-	log       *ErrorLog
-	instances M.InstanceMap
-	tables    M.TableRelations
+	tables   M.TableRelations
+	partials PartialMap
+}
+type PartialMap map[M.StringId]*PartialInstance
+
+func newPartialInstances(relations M.RelationMap) PartialInstances {
+	tables := M.NewTableRelations(relations)
+	partials := make(PartialMap)
+	return PartialInstances{tables, partials}
 }
 
 //
-func (this *PartialInstances) makeData(choices []S.ChoiceStatement, kvs []S.KeyValueStatement,
-) (ret M.InstanceMap, tables M.TableRelations, err error) {
-	if e := this._addChoices(choices); e != nil {
+// Add a new set of references for the passed id'd reference.
+//
+func (part *PartialInstances) newInstance(pending *PendingInstance, class *M.ClassInfo, props PropertyBuilders) {
+	id, name, long := pending.id, pending.name, pending.longName
+	values := make(PendingValues)
+	partial := &PartialInstance{id, name, long, class, props, values, part.partials, part.tables}
+	part.partials[id] = partial
+}
+
+//
+// makeData sets all pending data to the known instances.
+// returns thos instance and the tables
+//
+func (part *PartialInstances) makeData(choices []S.ChoiceStatement, kvs []S.KeyValueStatement,
+) (instances M.InstanceMap, tables M.TableRelations, err error) {
+	if e := part._addChoices(choices); e != nil {
 		err = e
-	} else if e := this._addKeyValues(kvs); e != nil {
+	} else if e := part._addKeyValues(kvs); e != nil {
 		err = e
-	} else {
-		ret = this.instances
-		tables = this.tables
 	}
-	return ret, tables, err
+	tables = part.tables
+	instances = make(M.InstanceMap)
+	for id, p := range part.partials {
+		instance := M.NewInstanceInfo(p.id, p.class, p.name, p.longName, instances, tables, p.values)
+		instances[id] = instance
+	}
+
+	return instances, tables, err
 }
 
 //
-// Add instance values for later processing
+// via makeData(): Add key value data to the targeted instances
 //
-func (this *PartialInstances) _addChoices(choices []S.ChoiceStatement) (err error) {
-	this.log.Println("adding instance choices")
+func (part *PartialInstances) _addChoices(choices []S.ChoiceStatement) (err error) {
+	log.Println("adding instance choices")
 	for _, choice := range choices {
 		fields := choice.Fields()
-		if inst, ok := this.instances.FindInstance(fields.Owner); !ok {
-			err = this.log.AppendError(err, M.InstanceNotFound(fields.Owner))
-		} else {
-			if prop, index, ok := inst.Class().PropertyByChoice(fields.Choice); !ok {
-				e := fmt.Errorf("no such choice: '%v'", choice)
-				err = this.log.AppendError(err, e)
-			} else {
-				if e := setKeyValue(inst, prop.Name(), index); e != nil {
-					err = this.log.AppendError(err, e)
-				}
-			}
+		id := M.MakeStringId(fields.Owner)
+		if inst, ok := part.partials[id]; !ok {
+			err = errutil.Append(err, M.InstanceNotFound(fields.Owner))
+		} else if prop, index, ok := inst.class.PropertyByChoice(fields.Choice); !ok {
+			e := fmt.Errorf("no such choice: '%v'", choice)
+			err = errutil.Append(err, e)
+		} else if e := inst.setKeyValue(prop.Name(), index); e != nil {
+			err = errutil.Append(err, e)
 		}
+
 	}
 	return err
 }
 
 //
-// Add instance values for later processing
+// via makeData(): Add key value data to the targeted instances
 //
-func (this *PartialInstances) _addKeyValues(kvs []S.KeyValueStatement) (err error) {
-	this.log.Println("adding instance key values")
+func (part *PartialInstances) _addKeyValues(kvs []S.KeyValueStatement) (err error) {
+	log.Println("adding instance key values")
 	for _, kv := range kvs {
-		keyValue, src := kv.Fields(), kv.Source()
-		if inst, ok := this.instances.FindInstance(keyValue.Owner); !ok {
-			e := fmt.Errorf("instance not found %s @ %s", keyValue.Owner, src)
-			err = this.log.AppendError(err, e)
-		} else {
-			if e := setKeyValue(inst, keyValue.Key, keyValue.Value); e != nil {
-				err = this.log.AppendError(err, e)
-			}
-		}
-	}
-	return err
-}
-
-//
-// Helper to set instance property values
-//
-func setKeyValue(inst *M.InstanceInfo, prop string, value interface{}) (err error) {
-	if prop, ok := inst.ValueByName(prop); !ok {
-		err = fmt.Errorf("no such property %v", prop)
-	} else {
-		if old, was := prop.Any(); !was {
-			err = prop.SetAny(value)
-		} else if old != value {
-			err = ValueMismatch{prop.Property().Id(), old, value}
+		fields := kv.Fields()
+		id := M.MakeStringId(fields.Owner)
+		if inst, ok := part.partials[id]; !ok {
+			err = errutil.Append(err, M.InstanceNotFound(fields.Owner))
+		} else if e := inst.setKeyValue(fields.Key, fields.Value); e != nil {
+			err = errutil.Append(err, e)
 		}
 	}
 	return err

@@ -5,7 +5,7 @@ type ClassInfo struct {
 	id          StringId
 	name        string
 	singular    string
-	props       PropertySet // properties only for this class
+	props       PropertySet // properties only for this cls
 	constraints ConstraintSet
 }
 
@@ -21,59 +21,59 @@ func NewClassInfo(
 }
 
 //
-func (this *ClassInfo) Id() StringId {
-	return this.id
+func (cls *ClassInfo) Id() StringId {
+	return cls.id
 }
 
 //
-func (this *ClassInfo) Name() string {
-	return this.name
+func (cls *ClassInfo) Name() string {
+	return cls.name
 }
 
 //
-func (this *ClassInfo) Singular() string {
-	return this.singular
+func (cls *ClassInfo) Singular() string {
+	return cls.singular
 }
 
 //
-func (this *ClassInfo) String() string {
-	return this.name
+func (cls *ClassInfo) String() string {
+	return cls.name
 }
 
 //
-func (this *ClassInfo) Parent() *ClassInfo {
-	return this.parent
+func (cls *ClassInfo) Parent() *ClassInfo {
+	return cls.parent
 }
 
 //
-func (this *ClassInfo) Properties() PropertySet {
-	return this.props
+func (cls *ClassInfo) Properties() PropertySet {
+	return cls.props
 }
 
 //
-// Returns a new property set consisting of all properties in this class and all parents
+// Returns a new property set consisting of all properties in this cls and all parents
 //
-func (this *ClassInfo) AllProperties() PropertySet {
+func (cls *ClassInfo) AllProperties() PropertySet {
 	props := make(PropertySet)
-	this._flatten(props)
+	cls._flatten(props)
 	return props
 }
 
 //
 //
 //
-func (this *ClassInfo) FindProperty(name string) (prop IProperty, okay bool) {
+func (cls *ClassInfo) FindProperty(name string) (IProperty, bool) {
 	id := MakeStringId(name)
-	return this.PropertyById(id)
+	return cls.PropertyById(id)
 }
 
 //
 //
 //
-func (this *ClassInfo) PropertyById(id StringId) (prop IProperty, okay bool) {
-	prop, okay = this.props[id]
-	if !okay && this.parent != nil {
-		prop, okay = this.parent.PropertyById(id)
+func (cls *ClassInfo) PropertyById(id StringId) (IProperty, bool) {
+	prop, okay := cls.props[id]
+	if !okay && cls.parent != nil {
+		prop, okay = cls.parent.PropertyById(id)
 	}
 	return prop, okay
 }
@@ -81,35 +81,60 @@ func (this *ClassInfo) PropertyById(id StringId) (prop IProperty, okay bool) {
 //
 //
 //
-func (this *ClassInfo) Constraints() ConstraintSet {
-	return this.constraints
+func (cls *ClassInfo) Constraints() ConstraintSet {
+	return cls.constraints
 }
 
 //
+// FindConstraint returns the contraint of the named property.
 //
-//
-func (this *ClassInfo) Constraint(name string) IConstrain {
-	id := MakeStringId(name)
-	return this.ConstraintById(id)
-}
-
-//
-//
-//
-func (this *ClassInfo) ConstraintById(id StringId) IConstrain {
-	constraint := this.constraints[id]
-	if constraint == nil && this.parent != nil {
-		constraint = this.parent.ConstraintById(id)
+func (cls *ClassInfo) FindConstraint(name string) (ret IConstrain, okay bool) {
+	if prop, ok := cls.FindProperty(name); ok {
+		ret, okay = cls.PropertyConstraint(prop)
 	}
-	return constraint
+	return ret, okay
+}
+
+//
+// Currently, only enum constraints are supported.
+// NOTE: Contraints can appear in any descendent cls at or below the property it constrains.
+// FIX? doesnt validate property comes from this class -- perhaps switch to id?
+//
+func (cls *ClassInfo) PropertyConstraint(prop IProperty) (ret IConstrain, okay bool) {
+	switch prop := prop.(type) {
+	case *EnumProperty:
+		if c, ok := cls.ConstraintById(prop.Id()); ok {
+			ret = c
+		} else {
+			ret = NewConstraint(prop.Enumeration)
+		}
+		okay = true
+	}
+	return ret, okay
+}
+
+func (cls *ClassInfo) ConstraintById(id StringId) (ret IConstrain, okay bool) {
+	if c, ok := cls.constraints[id]; ok {
+		ret, okay = c, ok
+	} else if cls.parent != nil {
+		ret, okay = cls.parent.ConstraintById(id)
+	}
+	return ret, okay
+}
+
+//
+// CompatibleWith returns true when this class can be used in situtations which require the other class.
+//
+func (cls *ClassInfo) CompatibleWith(other StringId) bool {
+	return cls.Id() == other || cls.HasParent(other)
 }
 
 //
 //
 //
-func (this *ClassInfo) HasParent(p *ClassInfo) (yes bool) {
-	for c := this.Parent(); c != nil; c = c.Parent() {
-		if c == p {
+func (cls *ClassInfo) HasParent(p StringId) (yes bool) {
+	for c := cls.Parent(); c != nil; c = c.Parent() {
+		if c.Id() == p {
 			yes = true
 			break
 		}
@@ -120,21 +145,21 @@ func (this *ClassInfo) HasParent(p *ClassInfo) (yes bool) {
 //
 //
 //
-func (this *ClassInfo) PropertyByChoice(choice string) (
+func (cls *ClassInfo) PropertyByChoice(choice string) (
 	prop *EnumProperty,
 	index int,
 	ok bool,
 ) {
 	choiceId := MakeStringId(choice)
-	prop, index = this._propertyByChoice(choiceId)
+	prop, index = cls._propertyByChoice(choiceId)
 	return prop, index, prop != nil
 }
 
-func (this *ClassInfo) _propertyByChoice(choice StringId) (
+func (cls *ClassInfo) _propertyByChoice(choice StringId) (
 	prop *EnumProperty,
 	index int,
 ) {
-	for _, p := range this.props {
+	for _, p := range cls.props {
 		switch enum := p.(type) {
 		case *EnumProperty:
 			idx, err := enum.ChoiceToIndex(choice)
@@ -147,8 +172,8 @@ func (this *ClassInfo) _propertyByChoice(choice StringId) (
 			break
 		}
 	}
-	if prop == nil && this.parent != nil {
-		prop, index = this.parent._propertyByChoice(choice)
+	if prop == nil && cls.parent != nil {
+		prop, index = cls.parent._propertyByChoice(choice)
 	}
 	return prop, index
 }
@@ -156,11 +181,11 @@ func (this *ClassInfo) _propertyByChoice(choice StringId) (
 // NOTE: does NOT check for conflicts.
 // ( trying to be a little looser than normal,
 // and get to the point where the model is known to be safe at creation time. )
-func (this *ClassInfo) _flatten(props PropertySet) {
-	if this.parent != nil {
-		this.parent._flatten(props)
+func (cls *ClassInfo) _flatten(props PropertySet) {
+	if cls.parent != nil {
+		cls.parent._flatten(props)
 	}
-	for k, prop := range this.props {
+	for k, prop := range cls.props {
 		props[k] = prop
 	}
 }

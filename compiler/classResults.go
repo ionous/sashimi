@@ -7,13 +7,16 @@ import (
 	"github.com/ionous/sashimi/util/errutil"
 )
 
+// Each class has an associated result
 type ClassResult struct {
 	class *M.ClassInfo
 	err   error
 }
 
+// Each pending class gets turned into a result
 type ClassResultMap map[*PendingClass]*ClassResult
 
+//
 type ClassResults struct {
 	pending   PendingClasses
 	results   ClassResultMap
@@ -74,10 +77,9 @@ func (this ClassResults) _makeClass(pending *PendingClass,
 	parent, e := this.makeClass(pending.parent)
 	if e != nil {
 		err = e
+	} else if props, e := pending.makePropertySet(); e != nil {
+		err = e
 	} else {
-		// make all the simple properties
-		props := pending.makePropertySet()
-
 		// distill all rules
 		constraints := make(M.ConstraintSet)
 
@@ -100,15 +102,19 @@ func (this ClassResults) _makeClass(pending *PendingClass,
 
 			case *M.EnumProperty:
 				// find a constraint for the rule
-				cons := constraints[rule.fieldName]
-				if cons == nil && parent != nil {
-					pcons := parent.ConstraintById(rule.fieldName)
-					if pcons != nil {
-						cons = pcons.Copy()
+				var cons M.IConstrain
+				found := false
+				if c, ok := constraints[rule.fieldName]; ok {
+					cons = c
+					found = true
+				} else if parent != nil {
+					if p, ok := parent.ConstraintById(rule.fieldName); ok {
+						cons = p.Copy()
 						constraints[rule.fieldName] = cons
+						found = true
 					}
 				}
-				if cons == nil {
+				if !found {
 					cons = M.NewConstraint(prop.Enumeration)
 					constraints[rule.fieldName] = cons
 				}
@@ -133,15 +139,6 @@ func (this ClassResults) _makeClass(pending *PendingClass,
 			} // end prop switch
 		} // end rule loop
 
-		// add relation properties
-		for id, r := range pending.relatives {
-			// get-or-create the associated relationship:
-			if prop, e := this.relatives.makeRelative(r.rel); e != nil {
-				err = errutil.Append(err, e)
-			} else {
-				props[id] = prop
-			}
-		}
 		if err == nil {
 			cls = M.NewClassInfo(
 				parent,
