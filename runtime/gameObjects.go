@@ -30,12 +30,14 @@ MakeObjects:
 		for propId, prop := range props {
 			val := inst.PropertyValue(prop)
 			switch prop := prop.(type) {
+			case *M.PointerProperty:
+				values.setDirect(propId, val)
 			case *M.NumProperty:
 				values.setDirect(propId, val)
 			case *M.TextProperty:
-				str := val.(string)
-				values.setDirect(propId, str)
+				values.setDirect(propId, val)
 				// TBD: when to parse this? maybe options? here for early errors.
+				str := val.(string)
 				if e := temps.New(propId.String(), str); e != nil {
 					err = e
 					break MakeObjects

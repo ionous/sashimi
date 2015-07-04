@@ -66,7 +66,7 @@ func TestMoveGoing(t *testing.T) {
 	s := makeTestRoom()
 	s.The("player", Exists(), In("the foyer"))
 	if g, err := NewTestGame(t, s); assert.NoError(t, err) {
-		// FIX: move parser source into the model/parser
+		// FIX: move parser source and parent lookup elsewhere
 		g.PushParserSource(func(g G.Play) (ret G.IObject) {
 			return g.The("player")
 		})
@@ -109,8 +109,11 @@ func testMoves(t *testing.T, g TestGame, moves ...xMove) {
 }
 
 func where(inst *M.InstanceInfo) (ret string) {
-	if rel, ok := inst.GetRelativeValue("whereabouts"); ok {
-		ret = rel.List()[0]
+	if rel, ok := inst.FindRelativeValue("whereabouts"); ok {
+		for _, v := range rel.List() {
+			ret = v
+			break
+		}
 	}
 	return ret
 }

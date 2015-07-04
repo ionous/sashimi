@@ -1,38 +1,31 @@
 package runtime
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/ionous/sashimi/util/errutil"
+)
 
 //
 //
 //
-type TypeMismatch struct {
-	name string
-	kind string
+func TypeMismatch(name string, kind string) error {
+	return errutil.Func(func() string {
+		return fmt.Sprintf("type mismatch %s %s", name, kind)
+	})
 }
 
-func (this TypeMismatch) Error() string {
-	return fmt.Sprintf("type mismatch %s %s", this.name, this.kind)
-}
-
 //
 //
 //
-type NoSuchChoice struct {
-	owner  string
-	choice string
-}
-
-func (this NoSuchChoice) Error() string {
-	return fmt.Sprintf("no such choice '%s'.'%s'", this.owner, this.choice)
+func NoSuchValue(owner string, choice string) error {
+	return errutil.Func(func() string {
+		return fmt.Sprintf("no such value '%s'.'%s'", owner, choice)
+	})
 }
 
 //
 // for unexpected runtime errors
 //
-type RuntimeError struct {
-	err error
-}
-
-func (this RuntimeError) Error() string {
-	return this.err.Error()
+func RuntimeError(err error) error {
+	return err
 }

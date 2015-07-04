@@ -2,7 +2,9 @@ package tests
 
 import (
 	M "github.com/ionous/sashimi/model"
+	R "github.com/ionous/sashimi/runtime"
 	. "github.com/ionous/sashimi/script"
+	"github.com/ionous/sashimi/standard"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
@@ -80,14 +82,15 @@ func TestTabledData(t *testing.T) {
 }
 
 func makePeople(s *Script) *Script {
-	s.The("kinds",
-		Called("people").WithSingularName("person"),
+	s.The("kinds", Called("objects"), Exist())
+	s.The("objects",
+		Called("actors"),
 		Have("favorite sweet", "sweet"))
 	return s
 }
 
 func namePeople(s *Script) {
-	s.The("people",
+	s.The("actors",
 		Table("name", "favorite sweet").Contains(
 			"Marvin", "Sugar coated ants").And(
 			"Allen", "Boreo").And(
@@ -107,7 +110,7 @@ func TestTablePointers(t *testing.T) {
 		if inst, ok := m.Instances.FindInstance("Grace"); assert.True(t, ok, "find person by name") {
 			if val, ok := inst.ValueByName("Favorite Sweet"); assert.True(t, ok, "find favorite") {
 				if id, ok := val.(M.StringId); assert.True(t, ok, "id") {
-					assert.EqualValues(t, id.String(), M.StringId("VeganChocolateChipCookies").String())
+					assert.EqualValues(t, id, "VeganChocolateChipCookies")
 				}
 			}
 		}
@@ -115,3 +118,23 @@ func TestTablePointers(t *testing.T) {
 }
 
 // 5. test runtime instance usage which use pointers
+func TestTableRuntime(t *testing.T) {
+	s := standard.InitStandardLibrary()
+	makeSweets(s)
+	nameSweets(s)
+	makePeople(s)
+	namePeople(s)
+	if g, err := NewTestGame(t, s); assert.NoError(t, err) {
+		if gobj, ok := g.FindObject("Grace"); assert.True(t, ok) {
+			grace := R.NewObjectAdapter(g.Game, gobj)
+			if sweet := grace.Object("favorite sweet"); assert.True(t, sweet.Exists(), "grace should have a treat") {
+				if gobj, ok := g.FindObject("Boreo"); assert.True(t, ok) {
+					boreo := R.NewObjectAdapter(g.Game, gobj)
+					grace.SetObject("favorite sweet", boreo)
+					retread := grace.Object("favorite sweet").Name()
+					assert.Equal(t, retread, "Boreo")
+				}
+			}
+		}
+	}
+}

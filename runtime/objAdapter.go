@@ -64,7 +64,7 @@ func (adapt ObjectAdapter) Is(state string) (ret bool) {
 		adapt.logError(fmt.Errorf("is: no such choice '%s'.'%s'", adapt, state))
 	} else {
 		testChoice, _ := prop.IndexToChoice(index)
-		currChoice, _ := adapt.gobj.Choice(prop.Id())
+		currChoice := adapt.gobj.GetValue(prop.Id())
 		ret = currChoice == testChoice
 	}
 	return ret
@@ -78,8 +78,8 @@ func (adapt ObjectAdapter) SetIs(state string) {
 		adapt.logError(fmt.Errorf("SetIs: no such choice '%s'.'%s'", adapt, state))
 	} else {
 		// get the current choice from the implied property slot
-		if currChoice, existed := adapt.gobj.Choice(prop.Id()); !existed {
-			err := fmt.Errorf("internal error: choice mismatch via %s for %s %v", state, prop.Id(), adapt.gobj.RuntimeValues)
+		if currChoice, ok := adapt.gobj.GetValue(prop.Id()).(M.StringId); !ok {
+			err := TypeMismatch(adapt.gobj.Id().String(), prop.Id().String())
 			adapt.logError(err)
 		} else {
 			newChoice, _ := prop.IndexToChoice(index)
@@ -98,10 +98,10 @@ func (adapt ObjectAdapter) SetIs(state string) {
 //
 func (adapt ObjectAdapter) Num(prop string) (ret float32) {
 	id := M.MakeStringId(prop)
-	if v, ok := adapt.gobj.Num(id); ok {
-		ret = v
+	if val, ok := adapt.gobj.GetValue(id).(float32); !ok {
+		adapt.logError(TypeMismatch(prop, "get num"))
 	} else {
-		adapt.logError(TypeMismatch{prop, "get num"})
+		ret = val
 	}
 	return ret
 }
@@ -112,7 +112,7 @@ func (adapt ObjectAdapter) Num(prop string) (ret float32) {
 func (adapt ObjectAdapter) SetNum(prop string, value float32) {
 	id := M.MakeStringId(prop)
 	if old, ok := adapt.gobj.SetValue(id, value); !ok {
-		adapt.logError(TypeMismatch{prop, "set num"})
+		adapt.logError(TypeMismatch(prop, "set num"))
 	} else {
 		adapt.game.Properties.Notify(adapt.gobj.Id(), id, old, value)
 	}
@@ -131,12 +131,10 @@ func (adapt ObjectAdapter) Text(prop string) (ret string) {
 		} else {
 			ret = s
 		}
+	} else if val, ok := adapt.gobj.GetValue(id).(string); !ok {
+		adapt.logError(TypeMismatch(prop, "get text"))
 	} else {
-		if v, ok := adapt.gobj.Text(id); ok {
-			ret = v
-		} else {
-			adapt.logError(TypeMismatch{prop, fmt.Sprint(adapt.gobj.data)})
-		}
+		ret = val
 	}
 	return ret
 }
@@ -149,7 +147,7 @@ func (adapt ObjectAdapter) SetText(prop string, text string) {
 	if e := adapt.gobj.temps.New(id.String(), text); e != nil {
 		adapt.logError(e)
 	} else if old, ok := adapt.gobj.SetValue(id, text); !ok {
-		adapt.logError(TypeMismatch{prop, "set text"})
+		adapt.logError(TypeMismatch(prop, "set text"))
 	} else {
 		adapt.game.Properties.Notify(adapt.gobj.Id(), id, old, text)
 	}
@@ -159,24 +157,31 @@ func (adapt ObjectAdapter) SetText(prop string, text string) {
 // Return a related object.
 //
 func (adapt ObjectAdapter) Object(prop string) (ret G.IObject) {
-	var res *ObjectAdapter
-	if rel, ok := adapt.gobj.info.GetRelativeValue(prop); !ok {
-		// TBD: should adapt be logged? its sure nice to have be able to test objects generically for properties
-		// adapt.logError(fmt.Errorf("object requested, but no such property %s", prop))
-	} else {
-		if rel.GetRelativeProperty().ToMany() {
-			adapt.logError(fmt.Errorf("object requested, but relation is list"))
-		} else {
-			list := rel.List()
-			if len(list) != 0 {
-				if gobj, ok := adapt.game.FindObject(list[0]); ok {
-					res = &ObjectAdapter{adapt.game, gobj}
+	// TBD: should these be logged? its sure nice to have be able to test objects generically for properties
+	var res M.StringId
+	if p, ok := adapt.gobj.info.Class().FindProperty(prop); ok {
+		switch p := p.(type) {
+		case *M.PointerProperty:
+			if val, ok := adapt.gobj.GetValue(p.Id()).(M.StringId); ok {
+				res = val
+			}
+		case *M.RelativeProperty:
+			// TBD: can the relative property changes automatically reflect into the value table
+			// ex. on event?
+			rel := adapt.gobj.info.GetRelativeValue(p)
+			if rel.GetRelativeProperty().ToMany() {
+				adapt.logError(fmt.Errorf("object requested, but relation is list"))
+			} else {
+				list := rel.List()
+				if len(list) != 0 {
+					res = M.StringId(list[0])
 				}
 			}
+
 		}
 	}
-	if res != nil {
-		ret = *res
+	if gobj, ok := adapt.game.Objects[res]; ok {
+		ret = ObjectAdapter{adapt.game, gobj}
 	} else {
 		ret = adapt.game.nullobj
 	}
@@ -184,10 +189,56 @@ func (adapt ObjectAdapter) Object(prop string) (ret G.IObject) {
 }
 
 //
+// Changes a relationship.
+//
+func (adapt ObjectAdapter) SetObject(prop string, object G.IObject) {
+	if p, ok := adapt.gobj.info.Class().FindProperty(prop); ok {
+		switch p := p.(type) {
+		default:
+			adapt.logError(TypeMismatch(adapt.Name(), prop))
+		case *M.PointerProperty:
+			set := false
+			if other, ok := object.(ObjectAdapter); !ok {
+				adapt.gobj.SetValue(p.Id(), M.StringId(""))
+				set = true
+			} else {
+				adapt.gobj.SetValue(p.Id(), other.gobj.Id())
+				set = true
+			}
+			if !set {
+				adapt.logError(fmt.Errorf("couldnt set value for prop %s", prop))
+			}
+		case *M.RelativeProperty:
+			rel := adapt.gobj.info.GetRelativeValue(p)
+
+			// if the referenced object doesnt exist, we take it to mean they are clearing the reference.
+			if other, ok := object.(ObjectAdapter); !ok {
+				if removed, e := rel.ClearReference(); e != nil {
+					adapt.logError(e)
+				} else {
+					adapt.game.Properties.Notify(adapt.gobj.Id(), rel.Property().Id(), removed, "")
+				}
+			} else {
+				// FIX? the impedence b/t IObject and Reference is annoying.
+				other := other.gobj.Id()
+				if ref, ok := adapt.game.Model.Instances[other]; !ok {
+					adapt.logError(fmt.Errorf("SetObject: couldnt find object names %s", other))
+				} else if removed, e := rel.SetReference(ref); e != nil {
+					adapt.logError(e)
+				} else {
+					// removed is probably a single object
+					adapt.game.Properties.Notify(adapt.gobj.Id(), rel.Property().Id(), removed, other.String())
+				}
+			}
+		}
+	}
+}
+
+//
 // Return a list of related objects.
 //
 func (adapt ObjectAdapter) ObjectList(prop string) (ret []G.IObject) {
-	if rel, ok := adapt.gobj.info.GetRelativeValue(prop); !ok {
+	if rel, ok := adapt.gobj.info.FindRelativeValue(prop); !ok {
 		adapt.logError(fmt.Errorf("object list requested, but no such property"))
 	} else {
 		if !rel.GetRelativeProperty().ToMany() {
@@ -205,37 +256,6 @@ func (adapt ObjectAdapter) ObjectList(prop string) (ret []G.IObject) {
 		}
 	}
 	return ret
-}
-
-//
-// Changes a relationship.
-//
-func (adapt ObjectAdapter) SetObject(prop string, other G.IObject) {
-	if rel, ok := adapt.gobj.info.GetRelativeValue(prop); !ok {
-		adapt.logError(TypeMismatch{prop, "SetObject"})
-	} else {
-		// if the referenced object doesnt exist, we take it to mean they are clearing the reference.
-		if other, ok := other.(ObjectAdapter); !ok {
-			//adapt.game.log.Println("clearing", adapt.Name(), prop)
-			if removed, e := rel.ClearReference(); e != nil {
-				adapt.logError(e)
-			} else {
-				adapt.game.Properties.Notify(adapt.gobj.Id(), rel.Property().Id(), removed, "")
-			}
-		} else {
-			// FIX? the impedence b/t IObject and Reference is annoying.
-			other := other.gobj.Id()
-			if ref, ok := adapt.game.Model.Instances[other]; !ok {
-				adapt.logError(fmt.Errorf("SetObject: couldnt find object names %s", other))
-			} else if removed, e := rel.SetReference(ref); e != nil {
-				adapt.logError(e)
-			} else {
-				// removed is probably a single object
-				adapt.game.Properties.Notify(adapt.gobj.Id(), rel.Property().Id(), removed, other.String())
-			}
-		}
-	}
-
 }
 
 //

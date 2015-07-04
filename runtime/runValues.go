@@ -21,33 +21,13 @@ func (this RuntimeValues) removeDirect(id M.StringId) {
 
 //
 func (this RuntimeValues) setDirect(id M.StringId, value interface{}) {
-	key := id.String()
-	this.data[key] = value
+	this.data[id.String()] = value
 }
 
-//
-// func (this RuntimeValues) Any(id M.StringId) (interface{}, bool) {
-// 	return this.data[id.String()]
-// }
-
-//
-func (this RuntimeValues) Num(id M.StringId) (float32, bool) {
-	value, ok := this.data[id.String()].(float32)
-	return value, ok
-}
-
-//
-func (this RuntimeValues) Text(id M.StringId) (string, bool) {
-	value, ok := this.data[id.String()].(string)
-	return value, ok
-}
-
-//
-// pass the property id: ex. ScoredProperty to determine the current selection
-//
-func (this RuntimeValues) Choice(id M.StringId) (M.StringId, bool) {
-	value, ok := this.data[id.String()].(M.StringId)
-	return value, ok
+// nil if it didnt exist, which beacuse the values for the instances are "flattened"
+// and because nil isn't used for the default value of anything, should be a fine signal.
+func (this RuntimeValues) GetValue(id M.StringId) interface{} {
+	return this.data[id.String()]
 }
 
 //

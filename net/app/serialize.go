@@ -1,6 +1,7 @@
 package app
 
 import (
+	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/net/resource"
 	R "github.com/ionous/sashimi/runtime"
 )
@@ -36,14 +37,15 @@ func (this *ObjectSerializer) SerializeObject(out resource.IBuildObjects, gobj *
 		obj = this.NewObject(out, gobj)
 		//
 		states := []string{}
-		for prop, _ := range gobj.Class().AllProperties() {
-			// FIX: this shouldnt require three map lookups
-			if choice, ok := gobj.Choice(prop); ok {
-				states = append(states, jsonId(choice))
-			} else if text, ok := gobj.Text(prop); ok {
-				obj.SetAttr(jsonId(prop), text)
-			} else if num, ok := gobj.Num(prop); ok {
-				obj.SetAttr(jsonId(prop), num)
+		for propId, prop := range gobj.Class().AllProperties() {
+			if val := gobj.GetValue(propId); val != nil {
+				switch prop.(type) {
+				case *M.EnumProperty:
+					choice := val.(M.StringId)
+					states = append(states, jsonId(choice))
+				default:
+					obj.SetAttr(jsonId(propId), val)
+				}
 			}
 		}
 		obj.

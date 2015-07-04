@@ -126,7 +126,7 @@ func (inst *InstanceInfo) PropertyValue(prop IProperty) (ret interface{}) {
 		ret, _ = v.(float32)
 	case *PointerProperty:
 		v, _ := inst.values[prop.id]
-		ret = v.(StringId)
+		ret, _ = v.(StringId)
 	default:
 		panic(fmt.Sprintf("unhandled property %s type %T", prop.Id(), prop))
 	}
@@ -137,12 +137,16 @@ func (inst *InstanceInfo) PropertyValue(prop IProperty) (ret interface{}) {
 // the model shouldnt (directly) support changing the values
 // that's the runtime's job.
 //
-func (inst *InstanceInfo) GetRelativeValue(name string) (ret RelativeValue, okay bool) {
+func (inst *InstanceInfo) FindRelativeValue(name string) (ret RelativeValue, okay bool) {
 	if prop, ok := inst.class.FindProperty(name); ok {
 		if prop, ok := prop.(*RelativeProperty); ok {
-			ret = RelativeValue{inst, prop, inst.tables}
-			okay = ok
+			ret = inst.GetRelativeValue(prop)
+			okay = true
 		}
 	}
 	return ret, okay
+}
+
+func (inst *InstanceInfo) GetRelativeValue(prop *RelativeProperty) RelativeValue {
+	return RelativeValue{inst, prop, inst.tables}
 }
