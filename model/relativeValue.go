@@ -3,6 +3,7 @@ package model
 import "fmt"
 
 // interface to access instance data.
+// FIX: may need to split into hasone,hasmany subtypes
 type RelativeValue struct {
 	inst   *InstanceInfo
 	prop   *RelativeProperty
@@ -20,11 +21,10 @@ func (rel *RelativeValue) GetRelativeProperty() *RelativeProperty {
 
 //
 // return the underlying value of rel variant
-// FIX: always returns false for the compiler setKeyValue() change detection pattern;
-// may need to expose a coerce to marshal the input to an acceptable value,
-// and for one-to-one relations return the current value; then the compiler could check for changes properly.
-func (rel *RelativeValue) Any() (interface{}, bool) {
-	return nil, false
+// FIX: need to expose a coerce to marshal the input to an acceptable value,
+// and for one-to-one relations return the current value
+func (rel *RelativeValue) Any() interface{} {
+	return nil
 }
 
 //

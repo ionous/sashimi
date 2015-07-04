@@ -14,18 +14,17 @@ func (this *TextValue) Property() IProperty {
 }
 
 //
-func (this *TextValue) Any() (interface{}, bool) {
+func (this *TextValue) Any() interface{} {
 	return this.Text()
 }
 
 //
 func (this *TextValue) String() string {
-	text, _ := this.Text()
-	return text
+	return this.Text()
 }
 
 //
-func (this *TextValue) Text() (string, bool) {
-	text, ok := this.inst.values[this.prop.id].(string)
-	return text, ok
+func (this *TextValue) Text() string {
+	text, _ := this.inst.values[this.prop.id].(string)
+	return text
 }

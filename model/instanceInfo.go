@@ -107,6 +107,9 @@ func (inst *InstanceInfo) PropertyValue(prop IProperty) (ret IValue, okay bool) 
 	case *NumProperty:
 		ret = &NumValue{inst, prop}
 		okay = true
+	case *PointerProperty:
+		ret = &PointerValue{inst, prop}
+		okay = true
 	default:
 		panic(fmt.Sprintf("unhandled property %s type %T", prop.Id(), prop))
 	}

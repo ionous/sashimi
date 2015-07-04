@@ -309,17 +309,14 @@ func (this *Context) compile() (*M.Model, error) {
 
 	// add class primitive values;
 	// queuing any we types we cant immediately resolve.
-	pendingPointers := []S.PropertyStatement{}
 	this.log.Println("adding class properties")
 	for _, prop := range this.src.Properties {
 		fields := prop.Fields()
 		if class, ok := this.classes.findByPluralName(fields.Class); !ok {
 			err = errutil.Append(err, ClassNotFound(fields.Class))
 		} else {
-			if prim, e := class.addPrimitive(prop.Source(), fields); e != nil {
+			if _, e := class.addProperty(prop.Source(), fields); e != nil {
 				err = errutil.Append(err, e)
-			} else if prim == nil {
-				pendingPointers = append(pendingPointers, prop)
 			}
 		}
 	}
@@ -341,7 +338,7 @@ func (this *Context) compile() (*M.Model, error) {
 		return nil, err
 	}
 
-	// add class primitive values
+	// add class relatives
 	this.log.Println("adding class relatives")
 	for _, rel := range this.src.Relatives {
 		fields := rel.Fields()
@@ -356,15 +353,15 @@ func (this *Context) compile() (*M.Model, error) {
 	}
 
 	// add foreign keys
-	this.log.Println("adding class pointers")
-	for _, prop := range pendingPointers {
-		fields := prop.Fields()
-		if class, ok := this.classes.findByPluralName(fields.Class); !ok {
-			err = errutil.Append(err, ClassNotFound(fields.Class))
-		} else if _, e := class.addPointer(fields, prop.Source()); e != nil {
-			err = errutil.Append(err, e)
-		}
-	}
+	// this.log.Println("adding class pointers")
+	// for _, prop := range pendingPointers {
+	// 	fields := prop.Fields()
+	// 	if class, ok := this.classes.findByPluralName(fields.Class); !ok {
+	// 		err = errutil.Append(err, ClassNotFound(fields.Class))
+	// 	} else if _, e := class.addPointer(fields, prop.Source()); e != nil {
+	// 		err = errutil.Append(err, e)
+	// 	}
+	// }
 
 	// make classes
 	this.log.Println("making classes")

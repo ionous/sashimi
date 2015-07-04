@@ -46,6 +46,7 @@ func SetValueChanged(inst, prop M.StringId, curr, want interface{}) error {
 // SetValueMismatch
 //
 func SetValueMismatch(inst, prop M.StringId, want, got interface{}) error {
+	panic(inst)
 	return errutil.Func(func() string {
 		return fmt.Sprintf("%s.%s expected value of %T got %T", inst, prop, want, got)
 	})
@@ -54,8 +55,8 @@ func SetValueMismatch(inst, prop M.StringId, want, got interface{}) error {
 //
 // UnknownPropertyError
 //
-func UnknownPropertyError(inst M.StringId, name string) error {
+func UnknownPropertyError(cls M.StringId, name string) error {
 	return errutil.Func(func() string {
-		return fmt.Sprintf("internal error: unhandled property %s type %T", inst, name)
+		return fmt.Sprintf("unhandled property %s.%s.", cls, name)
 	})
 }

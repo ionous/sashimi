@@ -7,9 +7,9 @@ import (
 //
 // NewNumBuilder returns an interface which can generate a number property
 //
-func NewNumBuilder(id M.StringId, name string) IBuildProperty {
+func NewNumBuilder(id M.StringId, name string) (IBuildProperty, error) {
 	prop := M.NewNumProperty(id, name)
-	return NumBuilder{id, prop}
+	return NumBuilder{id, prop}, nil
 }
 
 type NumBuilder struct {

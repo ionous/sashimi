@@ -15,16 +15,16 @@ func testField(
 	instName string,
 	fieldName string,
 	value string, // always a string to make enum handling easier
-	notDefault bool, //true if the value should be from the instance
 ) (err error) {
 	if inst, ok := res.Instances.FindInstance(instName); !ok {
 		err = M.InstanceNotFound(instName)
 	} else if field, ok := inst.ValueByName(fieldName); !ok {
 		err = fmt.Errorf("'%s' missing field '%v'", instName, fieldName)
-	} else if raw, hadValue := field.Any(); hadValue != notDefault {
-		err = fmt.Errorf("%v different default %v != %v", raw, hadValue, notDefault)
-	} else if test := field.String(); test != value {
-		err = fmt.Errorf("%s: '%v'!= '%v' for %s(%T)", instName, test, value, fieldName, field)
+	} else {
+		raw := field.Any()
+		if test := fmt.Sprintf("%s", raw); test != value {
+			err = fmt.Errorf("%s: '%v'!= '%v' for %s(%T)", instName, test, value, fieldName, field)
+		}
 	}
 	return err
 }
@@ -163,7 +163,7 @@ func TestTextProperties(t *testing.T) {
 		t.Fatal(err)
 	}
 	res.PrintModel(t.Log)
-	err = testField(res, "test", "author", "any mouse", true)
+	err = testField(res, "test", "author", "any mouse")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -187,11 +187,11 @@ func TestNumProperties(t *testing.T) {
 		t.Fatal(err)
 	}
 	res.PrintModel(t.Log)
-	err = testField(res, "test", "int", "5", true)
+	err = testField(res, "test", "int", "5")
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = testField(res, "test", "float", "3.2", true)
+	err = testField(res, "test", "float", "3.2")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -233,19 +233,19 @@ func TestEitherOr(t *testing.T) {
 	}
 	//res.PrintModel(t.Log)
 	//
-	err = testField(res, "scored-default", "scoredProperty", "scored", false)
+	err = testField(res, "scored-default", "scoredProperty", "scored") // not default: false
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = testField(res, "unscored-default", "scoredProperty", "unscored", false)
+	err = testField(res, "unscored-default", "scoredProperty", "unscored") // not default: false
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = testField(res, "scored", "scoredProperty", "scored", true)
+	err = testField(res, "scored", "scoredProperty", "scored") // not default: true
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = testField(res, "unscored", "scoredProperty", "unscored", true)
+	err = testField(res, "unscored", "scoredProperty", "unscored") // not default: true
 	if err != nil {
 		t.Fatal(err)
 	}

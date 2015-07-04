@@ -4,9 +4,13 @@ import (
 	M "github.com/ionous/sashimi/model"
 )
 
-func NewPointerBuilder(id M.StringId, name string, class M.StringId) IBuildProperty {
+// note: it probably doesnt make sense to allow a ratcheting down of cls
+// such a ratcheting would *increasing* restrictiveness, not permissability.
+// for example: "pointer","kind" could store "teddy bears",
+// but changed to "pointer","adult white male" could only store "teddy roosevelt"
+func NewPointerBuilder(id M.StringId, name string, class M.StringId) (IBuildProperty, error) {
 	prop := M.NewPointerProperty(id, name, class)
-	return PointerBuilder{id, class, prop}
+	return PointerBuilder{id, class, prop}, nil
 }
 
 type PointerBuilder struct {
@@ -20,7 +24,7 @@ func (ptr PointerBuilder) BuildProperty() (M.IProperty, error) {
 }
 
 func (ptr PointerBuilder) SetProperty(ctx PropertyContext) (err error) {
-	nilVal := ""
+	var nilVal M.StringId
 	if otherName, okay := ctx.value.(string); !okay {
 		err = SetValueMismatch(ctx.inst, ptr.id, nilVal, ctx.value)
 	} else {

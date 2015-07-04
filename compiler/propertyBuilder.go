@@ -57,9 +57,10 @@ func (b *PropertyBuilders) make(
 			ret = p
 		}
 	} else {
-		if e := validator(old); e != nil {
-			err = e
-		} else {
+		if validator != nil {
+			err = validator(old)
+		}
+		if err == nil {
 			ret = old
 		}
 	}

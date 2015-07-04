@@ -21,14 +21,14 @@ type MultiValueData struct {
 	values     []interface{}
 }
 
-func makeValueTable(classes *ClassFactory, singular string, columns []string) (
+func makeValueTable(classes *ClassFactory, class string, columns []string) (
 	ret MultiValueTable, err error,
 ) {
-	// have to delay instance data until after the instnaces have been created.
-	if class, ok := classes.findBySingularName(singular); !ok {
-		err = ClassNotFound(singular)
+	// have to delay instance data until after the instances have been created.
+	if cls, ok := classes.findByPluralName(class); !ok {
+		err = ClassNotFound(class)
 	} else {
-		ret = MultiValueTable{cls: class, remap: make(map[int]IBuildProperty), count: len(columns)}
+		ret = MultiValueTable{cls: cls, remap: make(map[int]IBuildProperty), count: len(columns)}
 		missing := []string{}
 		dupes := make(map[string]int)
 		for idx, name := range columns {
@@ -39,7 +39,7 @@ func makeValueTable(classes *ClassFactory, singular string, columns []string) (
 				id, idx := M.MakeStringId(name), idx+1
 				if id == "Name" {
 					ret.name = idx
-				} else if prop, ok := class.props.propertyById(id); ok {
+				} else if prop, ok := cls.props.propertyById(id); ok {
 					ret.remap[idx] = prop
 				} else {
 					missing = append(missing, name)

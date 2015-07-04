@@ -16,18 +16,17 @@ func (this *NumValue) Property() IProperty {
 }
 
 //
-func (this *NumValue) Any() (interface{}, bool) {
+func (this *NumValue) Any() interface{} {
 	return this.Num()
 }
 
 //
 func (this *NumValue) String() string {
-	value, _ := this.Num()
-	return fmt.Sprint(value)
+	return fmt.Sprint(this.Num())
 }
 
 //
-func (this *NumValue) Num() (float32, bool) {
-	num, ok := this.inst.values[this.prop.id].(float32)
-	return num, ok
+func (this *NumValue) Num() float32 {
+	num, _ := this.inst.values[this.prop.id].(float32)
+	return num
 }

@@ -35,10 +35,10 @@ MakeObjects:
 				values.setDirect(propId, choice)
 				values.setDirect(choice, true)
 			case *M.NumValue:
-				num, _ := val.Num()
+				num := val.Num()
 				values.setDirect(propId, num)
 			case *M.TextValue:
-				text, _ := val.Text()
+				text := val.Text()
 				values.setDirect(propId, text)
 				// TBD: when to parse this? maybe options? here for early errors.
 				if e := temps.New(propId.String(), text); e != nil {

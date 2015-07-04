@@ -7,9 +7,9 @@ import (
 //
 // NewTextBuilder returns an interface which can generate a text property
 //
-func NewTextBuilder(id M.StringId, name string) IBuildProperty {
+func NewTextBuilder(id M.StringId, name string) (IBuildProperty, error) {
 	prop := M.NewTextProperty(id, name)
-	return TextBuilder{prop}
+	return TextBuilder{prop}, nil
 }
 
 type TextBuilder struct {

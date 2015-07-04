@@ -41,7 +41,7 @@ func (cls *PendingClass) makePropertySet() (props M.PropertySet, err error) {
 //
 // Add a primitive ( text or number ) property to cls class.
 //
-func (cls *PendingClass) addPrimitive(src S.Code, fields S.PropertyFields,
+func (cls *PendingClass) addProperty(src S.Code, fields S.PropertyFields,
 ) (ret IBuildProperty, err error) {
 	name, kind := fields.Name, fields.Kind
 	// by using name->type cls ensures that if the name existed, it is of the same type now
@@ -50,19 +50,34 @@ func (cls *PendingClass) addPrimitive(src S.Code, fields S.PropertyFields,
 	if id, e := cls.names.addRef(name, kind, src); e != nil {
 		err = e
 	} else {
-		ret, err = cls.props.make(id,
-			func(_ IBuildProperty) error { return nil },
-			func() (prop IBuildProperty, err error) {
-				switch kind {
-				case "text":
-					prop = NewTextBuilder(id, name)
-				case "num":
-					prop = NewNumBuilder(id, name)
-				default:
-					err = fmt.Errorf("unknown property type: %s", kind)
-				}
-				return
-			})
+		switch kind {
+		case "text":
+			ret, err = cls.props.make(id, nil,
+				func() (IBuildProperty, error) {
+					return NewTextBuilder(id, name)
+				})
+		case "num":
+			ret, err = cls.props.make(id, nil,
+				func() (IBuildProperty, error) {
+					return NewNumBuilder(id, name)
+				})
+		default:
+			if other, ok := cls.classes.findBySingularName(kind); !ok {
+				err = ClassNotFound(kind)
+			} else {
+				ret, err = cls.props.make(id,
+					func(old IBuildProperty) (err error) {
+						ptr, existed := old.(PointerBuilder)
+						if !existed || ptr.class != other.id {
+							err = fmt.Errorf("pointer redefined. was %s, now %s", old, other)
+						}
+						return
+					},
+					func() (IBuildProperty, error) {
+						return NewPointerBuilder(id, name, other.id)
+					})
+			}
+		}
 	}
 	return ret, err
 }
@@ -80,7 +95,9 @@ func (cls *PendingClass) addEnum(name string,
 		err = e
 	} else {
 		ret, err = cls.props.make(id,
-			func(_ IBuildProperty) error { return EnumMultiplySpecified(cls.id, id) },
+			func(_ IBuildProperty) error {
+				return EnumMultiplySpecified(cls.id, id)
+			},
 			func() (prop IBuildProperty, err error) {
 				return NewEnumBuilder(id, name, choices)
 			})
@@ -144,32 +161,32 @@ func (cls *PendingClass) addRelative(fields S.RelativeFields, src S.Code,
 //
 // Add a property capable of tracking another class.
 //
-func (cls *PendingClass) addPointer(fields S.PropertyFields, src S.Code,
-) (ret IBuildProperty,
-	err error,
-) {
-	name, kind := fields.Name, fields.Kind
-	// note: it probably doesnt make sense to allow a ratcheting down of cls
-	// such a ratcheting would *increasing* restrictiveness, not permissability.
-	// for example: "pointer","kind" could store "teddy bears",
-	// but changed to "pointer","adult white male" could only store "teddy roosevelt"
-	if id, e := cls.names.addRef(name, kind, src); e != nil {
-		err = e
-	} else if other, ok := cls.classes.findBySingularName(kind); !ok {
-		err = ClassNotFound(kind)
-	} else {
-		ret, err = cls.props.make(id,
-			func(old IBuildProperty) (err error) {
-				if old, existed := old.(PointerBuilder); existed {
-					if old.class != other.id {
-						err = fmt.Errorf("pointer redefined. was %s, now %s", old.class, other.id)
-					}
-				}
-				return
-			},
-			func() (IBuildProperty, error) {
-				return NewPointerBuilder(id, name, other.id), nil
-			})
-	}
-	return ret, err
-}
+// func (cls *PendingClass) _addPointer(fields S.PropertyFields, src S.Code,
+// ) (ret IBuildProperty,
+// 	err error,
+// ) {
+// 	name, kind := fields.Name, fields.Kind
+// 	// note: it probably doesnt make sense to allow a ratcheting down of cls
+// 	// such a ratcheting would *increasing* restrictiveness, not permissability.
+// 	// for example: "pointer","kind" could store "teddy bears",
+// 	// but changed to "pointer","adult white male" could only store "teddy roosevelt"
+// 	if id, e := cls.names.addRef(name, kind, src); e != nil {
+// 		err = e
+// 	} else if other, ok := cls.classes.findBySingularName(kind); !ok {
+// 		err = ClassNotFound(kind)
+// 	} else {
+// 		ret, err = cls.props.make(id,
+// 			func(old IBuildProperty) (err error) {
+// 				if old, existed := old.(PointerBuilder); existed {
+// 					if old.class != other.id {
+// 						err = fmt.Errorf("pointer redefined. was %s, now %s", old.class, other.id)
+// 					}
+// 				}
+// 				return
+// 			},
+// 			func() (IBuildProperty, error) {
+// 				return NewPointerBuilder(id, name, other.id), nil
+// 			})
+// 	}
+// 	return ret, err
+// }
