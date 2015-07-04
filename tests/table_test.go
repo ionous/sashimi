@@ -36,21 +36,13 @@ func TestTableDecl(t *testing.T) {
 		if inst, ok := m.Instances.FindInstance("boreo"); assert.True(t, ok, "find tabled instance by name") {
 			//
 			if val, ok := inst.ValueByName("desc"); assert.True(t, ok, "find desc") {
-				if str, ok := val.(*M.TextValue); assert.True(t, ok, "have string") {
-					assert.EqualValues(t, str.String(), "creme filled wafer things.")
+				if str, ok := val.(string); assert.True(t, ok, "have string") {
+					assert.EqualValues(t, str, "Creme filled wafer things.")
 				}
 			}
 			//
 			if val, ok := inst.ValueByName("delicious-property"); assert.True(t, ok, "find deliciousness") {
-				if enum, ok := val.(*M.EnumValue); assert.True(t, ok, "have enum") {
-					assert.EqualValues(t, enum.String(), "acceptable")
-				}
-			}
-			//
-			if val, ok := inst.ValueByName("delicious-property"); assert.True(t, ok, "find deliciousness") {
-				if enum, ok := val.(*M.EnumValue); assert.True(t, ok, "have enum") {
-					assert.EqualValues(t, enum.String(), "acceptable")
-				}
+				assert.EqualValues(t, val, M.MakeStringId("acceptable"))
 			}
 		}
 	}
@@ -81,7 +73,7 @@ func TestTabledData(t *testing.T) {
 	if m, err := s.Compile(os.Stderr); assert.NoError(t, err, "table compile") {
 		if inst, ok := m.Instances.FindInstance("boreo"); assert.True(t, ok, "find tabled instance by name") {
 			if val, ok := inst.ValueByName("price"); assert.True(t, ok, "find desc") {
-				assert.EqualValues(t, 42, val.Any())
+				assert.EqualValues(t, 42, val)
 			}
 		}
 	}
@@ -114,9 +106,7 @@ func TestTablePointers(t *testing.T) {
 	if m, err := s.Compile(os.Stderr); assert.NoError(t, err, "table compile") {
 		if inst, ok := m.Instances.FindInstance("Grace"); assert.True(t, ok, "find person by name") {
 			if val, ok := inst.ValueByName("Favorite Sweet"); assert.True(t, ok, "find favorite") {
-				// if everyone is casting the result of any, then maybe its worthwhile to make it one value
-				// and then just return interface{} instead of "IValue"
-				if id, ok := val.Any().(M.StringId); assert.True(t, ok, "id") {
+				if id, ok := val.(M.StringId); assert.True(t, ok, "id") {
 					assert.EqualValues(t, id.String(), M.StringId("VeganChocolateChipCookies").String())
 				}
 			}

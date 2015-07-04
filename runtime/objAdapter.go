@@ -160,21 +160,17 @@ func (adapt ObjectAdapter) SetText(prop string, text string) {
 //
 func (adapt ObjectAdapter) Object(prop string) (ret G.IObject) {
 	var res *ObjectAdapter
-	if val, ok := adapt.gobj.info.ValueByName(prop); !ok {
+	if rel, ok := adapt.gobj.info.GetRelativeValue(prop); !ok {
 		// TBD: should adapt be logged? its sure nice to have be able to test objects generically for properties
 		// adapt.logError(fmt.Errorf("object requested, but no such property %s", prop))
 	} else {
-		if rel, ok := val.(*M.RelativeValue); !ok {
-			adapt.logError(fmt.Errorf("object requested, but property is %T", val))
+		if rel.GetRelativeProperty().ToMany() {
+			adapt.logError(fmt.Errorf("object requested, but relation is list"))
 		} else {
-			if rel.GetRelativeProperty().ToMany() {
-				adapt.logError(fmt.Errorf("object requested, but relation is list"))
-			} else {
-				list := rel.List()
-				if len(list) != 0 {
-					if gobj, ok := adapt.game.FindObject(list[0]); ok {
-						res = &ObjectAdapter{adapt.game, gobj}
-					}
+			list := rel.List()
+			if len(list) != 0 {
+				if gobj, ok := adapt.game.FindObject(list[0]); ok {
+					res = &ObjectAdapter{adapt.game, gobj}
 				}
 			}
 		}
@@ -191,23 +187,19 @@ func (adapt ObjectAdapter) Object(prop string) (ret G.IObject) {
 // Return a list of related objects.
 //
 func (adapt ObjectAdapter) ObjectList(prop string) (ret []G.IObject) {
-	if val, ok := adapt.gobj.info.ValueByName(prop); !ok {
+	if rel, ok := adapt.gobj.info.GetRelativeValue(prop); !ok {
 		adapt.logError(fmt.Errorf("object list requested, but no such property"))
 	} else {
-		if rel, ok := val.(*M.RelativeValue); !ok {
-			adapt.logError(fmt.Errorf("object list requested, but property is %T", val))
+		if !rel.GetRelativeProperty().ToMany() {
+			adapt.logError(fmt.Errorf("object list requested, but relation is singular"))
 		} else {
-			if !rel.GetRelativeProperty().ToMany() {
-				adapt.logError(fmt.Errorf("object list requested, but relation is singular"))
-			} else {
-				list := rel.List()
-				ret = make([]G.IObject, len(list))
-				for i, objName := range list {
-					if gobj, ok := adapt.game.FindObject(objName); ok {
-						ret[i] = ObjectAdapter{adapt.game, gobj}
-					} else {
-						ret[i] = adapt.game.nullobj
-					}
+			list := rel.List()
+			ret = make([]G.IObject, len(list))
+			for i, objName := range list {
+				if gobj, ok := adapt.game.FindObject(objName); ok {
+					ret[i] = ObjectAdapter{adapt.game, gobj}
+				} else {
+					ret[i] = adapt.game.nullobj
 				}
 			}
 		}
@@ -219,36 +211,31 @@ func (adapt ObjectAdapter) ObjectList(prop string) (ret []G.IObject) {
 // Changes a relationship.
 //
 func (adapt ObjectAdapter) SetObject(prop string, other G.IObject) {
-	if p, ok := adapt.gobj.info.Class().FindProperty(prop); ok {
-		if val, ok := adapt.gobj.info.PropertyValue(p); !ok {
-			adapt.logError(fmt.Errorf("SetObject: no such relation '%s'.'%s' setting %s", adapt, prop, other))
-		} else {
-			if rel, ok := val.(*M.RelativeValue); !ok {
-				adapt.logError(TypeMismatch{prop, "SetObject"})
+	if rel, ok := adapt.gobj.info.GetRelativeValue(prop); !ok {
+		adapt.logError(TypeMismatch{prop, "SetObject"})
+	} else {
+		// if the referenced object doesnt exist, we take it to mean they are clearing the reference.
+		if other, ok := other.(ObjectAdapter); !ok {
+			//adapt.game.log.Println("clearing", adapt.Name(), prop)
+			if removed, e := rel.ClearReference(); e != nil {
+				adapt.logError(e)
 			} else {
-				// if the referenced object doesnt exist, we take it to mean they are clearing the reference.
-				if other, ok := other.(ObjectAdapter); !ok {
-					//adapt.game.log.Println("clearing", adapt.Name(), prop)
-					if removed, e := rel.ClearReference(); e != nil {
-						adapt.logError(e)
-					} else {
-						adapt.game.Properties.Notify(adapt.gobj.Id(), p.Id(), removed, "")
-					}
-				} else {
-					// FIX? the impedence b/t IObject and Reference is annoying.
-					other := other.gobj.Id()
-					if ref, ok := adapt.game.Model.Instances[other]; !ok {
-						adapt.logError(fmt.Errorf("SetObject: couldnt find object names %s", other))
-					} else if removed, e := rel.SetReference(ref); e != nil {
-						adapt.logError(e)
-					} else {
-						// removed is probably a single object
-						adapt.game.Properties.Notify(adapt.gobj.Id(), p.Id(), removed, other.String())
-					}
-				}
+				adapt.game.Properties.Notify(adapt.gobj.Id(), rel.Property().Id(), removed, "")
+			}
+		} else {
+			// FIX? the impedence b/t IObject and Reference is annoying.
+			other := other.gobj.Id()
+			if ref, ok := adapt.game.Model.Instances[other]; !ok {
+				adapt.logError(fmt.Errorf("SetObject: couldnt find object names %s", other))
+			} else if removed, e := rel.SetReference(ref); e != nil {
+				adapt.logError(e)
+			} else {
+				// removed is probably a single object
+				adapt.game.Properties.Notify(adapt.gobj.Id(), rel.Property().Id(), removed, other.String())
 			}
 		}
 	}
+
 }
 
 //

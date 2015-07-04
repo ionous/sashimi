@@ -54,8 +54,8 @@ func (model *Model) PrintModel(printer printer) {
 	for _, inst := range model.Instances {
 		printer("\t", inst)
 		all := inst.Class().AllProperties()
-		for id, prop := range all {
-			v, hadValue := inst.ValueByName(prop.Name())
+		for id, _ := range all {
+			v, hadValue := inst.values[id]
 			l := map[bool]string{false: "_", true: ""}[hadValue]
 			printer("\t\t", fmt.Sprintf("%v%v: %s", id, l, v))
 		}

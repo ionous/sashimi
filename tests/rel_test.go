@@ -60,7 +60,7 @@ func TestSimpleRelates(t *testing.T) {
 
 		pets, ok := claire.ValueByName("pets")
 		assert.True(t, ok)
-		petsrel := pets.(*M.RelativeValue)
+		petsrel := pets.(M.RelativeValue)
 		assert.Exactly(t, []string{"Loofah"}, petsrel.List())
 
 		loofah, ok := model.Instances.FindInstance("loofah")
@@ -68,7 +68,7 @@ func TestSimpleRelates(t *testing.T) {
 
 		gremlins, ok := loofah.ValueByName("o beneficent one")
 		assert.True(t, ok, "value by name")
-		gremlinrel := gremlins.(*M.RelativeValue)
+		gremlinrel := gremlins.(M.RelativeValue)
 		assert.Exactly(t, []string{"Claire"}, gremlinrel.List())
 
 		model.PrintModel(t.Log)

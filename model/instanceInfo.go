@@ -85,46 +85,62 @@ func (inst *InstanceInfo) Class() *ClassInfo {
 //
 // return a interface representing the contents of the passed property name
 // WARNING/FIX: inst is default value for everything but relatives(!)
+// Only currently used for testing
 //
-func (inst *InstanceInfo) ValueByName(name string) (ret IValue, okay bool) {
+func (inst *InstanceInfo) ValueByName(name string) (ret interface{}, okay bool) {
 	if prop, ok := inst.class.FindProperty(name); ok {
-		ret, okay = inst.PropertyValue(prop)
+		ret, okay = inst.PropertyValue(prop), true
 	}
 	return ret, okay
 }
 
-func (inst *InstanceInfo) PropertyValue(prop IProperty) (ret IValue, okay bool) {
+//
+// PropertyValue returns the story assigned value of an instance property
+// FIX? see CreateGameObjects for why this is needed.
+//
+func (inst *InstanceInfo) PropertyValue(prop IProperty) (ret interface{}) {
 	switch prop := prop.(type) {
 	case *RelativeProperty:
-		ret = &RelativeValue{inst, prop, inst.tables}
-		okay = true
+		ret = RelativeValue{inst, prop, inst.tables}
 	case *TextProperty:
-		ret = &TextValue{inst, prop}
-		okay = true
+		v, _ := inst.values[prop.id]
+		ret, _ = v.(string)
 	case *EnumProperty:
-		ret = &EnumValue{inst, prop}
-		okay = true
+		var index int
+		if v, ok := inst.values[prop.id].(int); ok {
+			index = v
+		} else {
+			if cons, ok := inst.class.PropertyConstraint(prop); ok {
+				if cons, ok := cons.(*EnumConstraint); ok {
+					index = cons.BestIndex()
+				}
+			}
+		}
+		if choice, e := prop.IndexToChoice(index); e != nil {
+			panic(e)
+		} else {
+			ret = choice
+		}
 	case *NumProperty:
-		ret = &NumValue{inst, prop}
-		okay = true
+		v, _ := inst.values[prop.id]
+		ret, _ = v.(float32)
 	case *PointerProperty:
-		ret = &PointerValue{inst, prop}
-		okay = true
+		v, _ := inst.values[prop.id]
+		ret = v.(StringId)
 	default:
 		panic(fmt.Sprintf("unhandled property %s type %T", prop.Id(), prop))
 	}
-	return ret, okay
+	return ret
 }
 
 //
-// FIX: see ValueByName() and IValue
 // the model shouldnt (directly) support changing the values
 // that's the runtime's job.
 //
-func (inst *InstanceInfo) GetRelativeValue(name string) (ret *RelativeValue, okay bool) {
+func (inst *InstanceInfo) GetRelativeValue(name string) (ret RelativeValue, okay bool) {
 	if prop, ok := inst.class.FindProperty(name); ok {
 		if prop, ok := prop.(*RelativeProperty); ok {
-			ret = &RelativeValue{inst, prop, inst.tables}
+			ret = RelativeValue{inst, prop, inst.tables}
 			okay = ok
 		}
 	}

@@ -11,20 +11,12 @@ type RelativeValue struct {
 }
 
 //
-func (rel *RelativeValue) Property() IProperty {
+func (rel RelativeValue) Property() IProperty {
 	return rel.prop
 }
 
-func (rel *RelativeValue) GetRelativeProperty() *RelativeProperty {
+func (rel RelativeValue) GetRelativeProperty() *RelativeProperty {
 	return rel.prop
-}
-
-//
-// return the underlying value of rel variant
-// FIX: need to expose a coerce to marshal the input to an acceptable value,
-// and for one-to-one relations return the current value
-func (rel *RelativeValue) Any() interface{} {
-	return nil
 }
 
 //
@@ -32,12 +24,12 @@ func (rel *RelativeValue) Any() interface{} {
 // FIX: can the tables live in the properties maybe? it doesnt really need the info here.
 // or, -- since there might be a bunch of other tables -- a table reference in the property.
 //
-func (rel *RelativeValue) Table() (ret *TableRelation, ok bool) {
+func (rel RelativeValue) Table() (ret *TableRelation, ok bool) {
 	return rel.tables.TableById(rel.prop.Relation())
 }
 
 // return a list of referenced instances
-func (rel *RelativeValue) List() (ret []string) {
+func (rel RelativeValue) List() (ret []string) {
 	// gee, so cache friendly.
 	if table, ok := rel.Table(); ok {
 		src := rel.inst.id.String()
@@ -47,7 +39,7 @@ func (rel *RelativeValue) List() (ret []string) {
 }
 
 //
-func (rel *RelativeValue) String() string {
+func (rel RelativeValue) String() string {
 	list := rel.List()
 	return fmt.Sprint(list)
 }
@@ -56,7 +48,7 @@ func (rel *RelativeValue) String() string {
 //
 // FIX: where and how to validate table.style?
 // returns list of items cleared
-func (rel *RelativeValue) ClearReference() (ret string, err error) {
+func (rel RelativeValue) ClearReference() (ret string, err error) {
 	if rel.prop.ToMany() {
 		err = fmt.Errorf("setting an object, but relation is a list")
 	} else {
@@ -82,7 +74,7 @@ func (rel *RelativeValue) ClearReference() (ret string, err error) {
 
 //
 // FIX: table.style: where and how to validate style?
-func (rel *RelativeValue) SetReference(other *InstanceInfo) (removed string, err error) {
+func (rel RelativeValue) SetReference(other *InstanceInfo) (removed string, err error) {
 	prop := rel.prop
 	if !other.Class().CompatibleWith(prop.Relates()) {
 		err = fmt.Errorf("%s not compatible with %+v", other, prop.fields)

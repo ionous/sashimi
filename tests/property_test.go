@@ -4,6 +4,7 @@ import (
 	"fmt"
 	M "github.com/ionous/sashimi/model"
 	. "github.com/ionous/sashimi/script"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
 )
@@ -14,18 +15,16 @@ func testField(
 	res *M.Model,
 	instName string,
 	fieldName string,
-	value string, // always a string to make enum handling easier
+	value interface{},
 ) (err error) {
 	if inst, ok := res.Instances.FindInstance(instName); !ok {
 		err = M.InstanceNotFound(instName)
-	} else if field, ok := inst.ValueByName(fieldName); !ok {
-		err = fmt.Errorf("'%s' missing field '%v'", instName, fieldName)
-	} else {
-		raw := field.Any()
-		if test := fmt.Sprintf("%s", raw); test != value {
-			err = fmt.Errorf("%s: '%v'!= '%v' for %s(%T)", instName, test, value, fieldName, field)
-		}
+	} else if raw, ok := inst.ValueByName(fieldName); !ok {
+		err = fmt.Errorf("'%s.%v' missing field", instName, fieldName)
+	} else if !assert.ObjectsAreEqualValues(raw, value) {
+		err = fmt.Errorf("'%s.%v' %#v!= %#v", instName, fieldName, raw, value)
 	}
+
 	return err
 }
 
@@ -181,17 +180,17 @@ func TestNumProperties(t *testing.T) {
 		Called("test"),
 		Has("int", 5))
 	s.The("test",
-		Has("float", 3.2))
+		Has("float", 3.25))
 	res, err := s.Compile(os.Stderr)
 	if err != nil {
 		t.Fatal(err)
 	}
 	res.PrintModel(t.Log)
-	err = testField(res, "test", "int", "5")
+	err = testField(res, "test", "int", 5)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = testField(res, "test", "float", "3.2")
+	err = testField(res, "test", "float", 3.25)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -233,19 +232,19 @@ func TestEitherOr(t *testing.T) {
 	}
 	//res.PrintModel(t.Log)
 	//
-	err = testField(res, "scored-default", "scoredProperty", "scored") // not default: false
+	err = testField(res, "scored-default", "scoredProperty", M.MakeStringId("scored")) // not default: false
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = testField(res, "unscored-default", "scoredProperty", "unscored") // not default: false
+	err = testField(res, "unscored-default", "scoredProperty", M.MakeStringId("unscored")) // not default: false
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = testField(res, "scored", "scoredProperty", "scored") // not default: true
+	err = testField(res, "scored", "scoredProperty", M.MakeStringId("scored")) // not default: true
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = testField(res, "unscored", "scoredProperty", "unscored") // not default: true
+	err = testField(res, "unscored", "scoredProperty", M.MakeStringId("unscored")) // not default: true
 	if err != nil {
 		t.Fatal(err)
 	}

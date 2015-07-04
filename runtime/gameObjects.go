@@ -16,9 +16,9 @@ func CreateGameObjects(src M.InstanceMap,
 	allProps := make(map[*M.ClassInfo]M.PropertySet)
 
 MakeObjects:
-	for _, info := range src {
+	for _, inst := range src {
 		// create property sets for this instance's class
-		class := info.Class()
+		class := inst.Class()
 		props, had := allProps[class]
 		if !had {
 			props = class.AllProperties()
@@ -26,26 +26,25 @@ MakeObjects:
 		}
 		// turn properties into tables:
 		values, temps := NewRuntimeValues(), make(TemplatePool)
-		values.setDirect("Name", info.FullName())
+		values.setDirect("Name", inst.FullName())
 		for propId, prop := range props {
-			v, _ := info.ValueByName(prop.Name())
-			switch val := v.(type) {
-			case *M.EnumValue:
-				choice := val.Choice()
-				values.setDirect(propId, choice)
-				values.setDirect(choice, true)
-			case *M.NumValue:
-				num := val.Num()
-				values.setDirect(propId, num)
-			case *M.TextValue:
-				text := val.Text()
-				values.setDirect(propId, text)
+			val := inst.PropertyValue(prop)
+			switch prop := prop.(type) {
+			case *M.NumProperty:
+				values.setDirect(propId, val)
+			case *M.TextProperty:
+				str := val.(string)
+				values.setDirect(propId, str)
 				// TBD: when to parse this? maybe options? here for early errors.
-				if e := temps.New(propId.String(), text); e != nil {
+				if e := temps.New(propId.String(), str); e != nil {
 					err = e
 					break MakeObjects
 				}
-			case *M.RelativeValue:
+			case *M.EnumProperty:
+				choice := val.(M.StringId)
+				values.setDirect(propId, choice)
+				values.setDirect(choice, true)
+			case *M.RelativeProperty:
 				// no table enties
 			default:
 				err = fmt.Errorf("internal error: unknown property type %s:%T", propId, prop)
@@ -53,8 +52,8 @@ MakeObjects:
 			}
 		}
 		// creat the game obj
-		gameobj := &GameObject{info, values, temps, E.NewDispatcher()}
-		ret[info.Id()] = gameobj
+		gameobj := &GameObject{inst, values, temps, E.NewDispatcher()}
+		ret[inst.Id()] = gameobj
 	}
 	return ret, err
 }
