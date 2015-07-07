@@ -16,6 +16,7 @@ import (
 
 //
 func TestNetApp(t *testing.T) {
+
 	stories.Select("lab")
 
 	ts := httptest.NewServer(NewServer())
@@ -35,15 +36,15 @@ func TestNetApp(t *testing.T) {
 					assert.Len(t, contents.Data, 3, "the lab should have two objects")
 					assert.Len(t, contents.Included, 2, "the player should be previously known, the table newly known.")
 				}
-				checkTable(t, g, 1)
+				assert.NoError(t, checkTable(g, 1))
 
 				if _, err := g.post("open the glass jar"); assert.NoError(t, err) {
-					checkTable(t, g, 1)
+					assert.NoError(t, checkTable(g, 1))
 				}
 
 				// take the beaker
 				if _, err := g.post("take the glass jar"); assert.NoError(t, err) {
-					checkTable(t, g, 0)
+					assert.NoError(t, checkTable(g, 0))
 				}
 				cmd := CommandInput{
 					Action:  "show-it-to",
@@ -65,11 +66,13 @@ func TestNetApp(t *testing.T) {
 	}
 }
 
-func checkTable(t *testing.T, g *Helper, cnt int) {
-	if contents, err := g.getMany("supporters", "table", "contents"); assert.NoError(t, err) {
-		t.Log(pretty(contents))
-		assert.Len(t, contents.Data, cnt, "the table should have %d objects", cnt)
+func checkTable(g *Helper, cnt int) (err error) {
+	if contents, e := g.getMany("supporters", "table", "contents"); e != nil {
+		err = e
+	} else if len(contents.Data) != cnt {
+		err = fmt.Errorf("the table should have %d objects. has %s", cnt, pretty(contents))
 	}
+	return err
 }
 
 type Helper struct {

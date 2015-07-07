@@ -8,13 +8,13 @@ import (
 //
 // For the sake of text/templates, and for *setting* values,
 // the game object flattens all class properties and values into a single map.
-// Could potentially use this for diffing to make save files or report changes from the initial instance values.
-// note: for templates, this stores choices as the value of the choice ( rather than as their property names )
+// Could potentially use gobj for diffing to make save files or report changes from the initial instance values.
+// note: for templates, gobj stores choices as the value of the choice ( rather than as their property names )
 //
 type GameObject struct {
-	info *M.InstanceInfo
+	inst *M.InstanceInfo
 	RuntimeValues
-	temps      TemplatePool // this isn' terrible here, but the templates could just go into the runtime values...
+	temps      TemplatePool // gobj isn' terrible here, but the templates could just go into the runtime values...
 	dispatcher E.Dispatcher
 }
 
@@ -26,42 +26,42 @@ type GameObjects map[M.StringId]*GameObject
 //
 // Return the name of the object.
 //
-func (this *GameObject) Id() M.StringId {
-	return this.info.Id()
+func (gobj *GameObject) Id() M.StringId {
+	return gobj.inst.Id()
 }
 
 //
 //
 //
-func (this *GameObject) Class() *M.ClassInfo {
-	return this.info.Class()
-}
-
-//
-// Return the name of the object.
-//
-func (this *GameObject) Name() string {
-	return this.info.Name()
+func (gobj *GameObject) Class() *M.ClassInfo {
+	return gobj.inst.Class()
 }
 
 //
 // Return the name of the object.
 //
-func (this *GameObject) String() string {
-	// FIX: can this be id?
-	return this.info.Name()
+func (gobj *GameObject) Name() string {
+	return gobj.inst.Name()
+}
+
+//
+// Return the name of the object.
+//
+func (gobj *GameObject) String() string {
+	// FIX: can gobj be id?
+	return gobj.inst.Name()
 }
 
 //
 // E.Dispatcher
 //
-func (this *GameObject) Listen(evt string, handler E.IListen, capture bool) {
-	this.dispatcher.Listen(evt, handler, capture)
+func (gobj *GameObject) Listen(evt string, handler E.IListen, capture bool) {
+	gobj.dispatcher.Listen(evt, handler, capture)
 }
 
 //
 // E.Dispatcher
 //
-func (this *GameObject) Silence(evt string, handler E.IListen, capture bool) {
-	this.dispatcher.Silence(evt, handler, capture)
+func (gobj *GameObject) Silence(evt string, handler E.IListen, capture bool) {
+	gobj.dispatcher.Silence(evt, handler, capture)
 }

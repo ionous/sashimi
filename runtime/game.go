@@ -14,7 +14,7 @@ type Game struct {
 	Objects        GameObjects
 	Dispatchers    ClassDispatchers
 	output         IOutput
-	parser         *ModelParser
+	Parser         *ModelParser
 	queue          *E.Queue
 	nullobj        *NullObject
 	defaultActions DefaultActions
@@ -29,8 +29,8 @@ type logAdapter struct {
 	output IOutput
 }
 
-func (this logAdapter) Write(p []byte) (n int, err error) {
-	this.output.Log(string(p))
+func (log logAdapter) Write(p []byte) (n int, err error) {
+	log.output.Log(string(p))
 	return len(p), nil
 }
 
@@ -64,7 +64,7 @@ func NewGame(model *M.Model, output IOutput) (game *Game, err error) {
 	if e != nil {
 		return nil, e
 	}
-	game.parser = parser
+	game.Parser = parser
 
 	for _, handler := range model.ActionHandlers {
 		act, cb := handler.Action(), handler.Callback()
@@ -105,10 +105,10 @@ func NewGame(model *M.Model, output IOutput) (game *Game, err error) {
 }
 
 //
-func (this *Game) PushParserSource(userSource G.SourceLookup) {
-	this.parserSource.PushSource(func() (ret *GameObject) {
+func (game *Game) PushParserSource(userSource G.SourceLookup) {
+	game.parserSource.PushSource(func() (ret *GameObject) {
 		// setup callback context:
-		play := &GameEventAdapter{Game: this}
+		play := &GameEventAdapter{Game: game}
 		// call the user function
 		res := userSource(play)
 		// unpack the result
@@ -120,18 +120,18 @@ func (this *Game) PushParserSource(userSource G.SourceLookup) {
 }
 
 //
-func (this *Game) PopParserSource() {
-	this.parserSource.PopSource()
+func (game *Game) PopParserSource() {
+	game.parserSource.PopSource()
 }
 
 //
 // change the user's parent lookup (IObject -> name) into
 // the runtime's parent lookup (GameObject->GameObject)
-func (this *Game) PushParentLookup(userLookup G.TargetLookup) {
-	this.parentLookup.PushLookup(func(gobj *GameObject) (ret *GameObject) {
+func (game *Game) PushParentLookup(userLookup G.TargetLookup) {
+	game.parentLookup.PushLookup(func(gobj *GameObject) (ret *GameObject) {
 		// setup callback context:
-		play := &GameEventAdapter{Game: this}
-		obj := ObjectAdapter{this, gobj}
+		play := &GameEventAdapter{Game: game}
+		obj := ObjectAdapter{game, gobj}
 		// call the user function
 		res := userLookup(play, obj)
 		// unpack the result
@@ -143,34 +143,22 @@ func (this *Game) PushParentLookup(userLookup G.TargetLookup) {
 }
 
 //
-func (this *Game) PopParentLookup() {
-	this.parentLookup.PopLookup()
-}
-
-//
-// For testing:
-//
-func (this *Game) RunCommand(in string) (err error) {
-	if _, res, e := this.parser.Parse(in); e != nil {
-		err = e
-	} else if e := res.Run(); e != nil {
-		err = e
-	}
-	return err
+func (game *Game) PopParentLookup() {
+	game.parentLookup.PopLookup()
 }
 
 //
 //
 // Run the event queue till there's an error
 //
-func (this *Game) ProcessEvents() (err error) {
-	for err == nil && !this.queue.Empty() {
-		tgt, msg := this.queue.Pop()
+func (game *Game) ProcessEvents() (err error) {
+	for err == nil && !game.queue.Empty() {
+		tgt, msg := game.queue.Pop()
 		// see also: Go()
 		path := E.NewPathTo(tgt)
-		// this.log.Printf("sending `%s` to: %s", msg.Name, path)
+		// game.log.Printf("sending `%s` to: %s", msg.Name, path)
 		if runDefault, e := msg.Send(path); e != nil {
-			this.log.Println("error", e)
+			game.log.Println("error", e)
 			err = e
 		} else {
 			if runDefault {
@@ -188,18 +176,18 @@ func (this *Game) ProcessEvents() (err error) {
 // FIX: TEMP(ish)
 // it might be better to add a name search (interface) to the model
 // and then use the id in the runtime.
-func (this *Game) FindObject(name string) (ret *GameObject, okay bool) {
-	if info, ok := this.Model.Instances.FindInstance(name); ok {
-		ret = this.Objects[info.Id()]
+func (game *Game) FindObject(name string) (ret *GameObject, okay bool) {
+	if info, ok := game.Model.Instances.FindInstance(name); ok {
+		ret = game.Objects[info.Id()]
 		okay = true
 	}
 	return ret, okay
 }
 
 // FIX: TEMP(ish)
-func (this *Game) FindFirstOf(cls *M.ClassInfo, _ ...bool) (ret *GameObject) {
-	for _, o := range this.Objects {
-		if o.info.Class() == cls {
+func (game *Game) FindFirstOf(cls *M.ClassInfo, _ ...bool) (ret *GameObject) {
+	for _, o := range game.Objects {
+		if o.inst.Class() == cls {
 			ret = o
 			break
 		}
@@ -209,18 +197,18 @@ func (this *Game) FindFirstOf(cls *M.ClassInfo, _ ...bool) (ret *GameObject) {
 
 //
 // mainly for testing; manual send of an event
-// FIX: merge this with runCommand()
-func (this *Game) SendEvent(event string, nouns ...string,
+// FIX: merge game with runCommand()
+func (game *Game) SendEvent(event string, nouns ...string,
 ) (err error,
 ) {
-	if action, e := this.Model.Events.FindEventByName(event); e != nil {
+	if action, e := game.Model.Events.FindEventByName(event); e != nil {
 		err = e
 	} else {
-		if act, e := this.newRuntimeAction(action, nouns...); e != nil {
+		if act, e := game.newRuntimeAction(action, nouns...); e != nil {
 			err = e
 		} else {
-			tgt := ObjectTarget{this, act.objs[0]}
-			this.queue.QueueEvent(tgt, action.Event(), act)
+			tgt := ObjectTarget{game, act.objs[0]}
+			game.queue.QueueEvent(tgt, action.Event(), act)
 		}
 	}
 	return err
@@ -229,7 +217,7 @@ func (this *Game) SendEvent(event string, nouns ...string,
 //
 // FIX: merge with runCommand()
 //
-func (this *Game) newRuntimeAction(action *M.ActionInfo, nouns ...string,
+func (game *Game) newRuntimeAction(action *M.ActionInfo, nouns ...string,
 ) (ret *RuntimeAction, err error,
 ) {
 	types := action.NounSlice()
@@ -245,62 +233,18 @@ func (this *Game) newRuntimeAction(action *M.ActionInfo, nouns ...string,
 
 		for i, class := range types {
 			noun, key := nouns[i], keys[i]
-			inst, e := this.Model.Instances.FindInstanceWithClass(noun, class)
+			inst, e := game.Model.Instances.FindInstanceWithClass(noun, class)
 			if e != nil {
 				err = e
 				break
 			}
-			gobj := this.Objects[inst.Id()]
+			gobj := game.Objects[inst.Id()]
 			values[key] = gobj.data
 			objs[i] = gobj
 		}
 		if err == nil {
-			ret = &RuntimeAction{this, action, objs, values, nil}
+			ret = &RuntimeAction{game, action, objs, values, nil}
 		}
 	}
 	return ret, err
-}
-
-//
-// Called from the parser after it has succesfully found the command and nouns
-//
-func (this *Game) RunAction(action *M.ActionInfo, instances []string) (err error) {
-	// make sure the source class matches
-	sourceObj := this.parserSource.FindSource()
-	if sourceObj == nil {
-		err = fmt.Errorf("couldnt find command source for %s", action)
-	} else if !sourceObj.info.Class().CompatibleWith(action.Source().Id()) {
-		err = fmt.Errorf("source class for %s doesnt match", action)
-	} else {
-		// inject the source object along with the other nouns
-		types := action.NounSlice()
-		instances = append([]string{sourceObj.Id().String()}, instances...)
-		if len(types) != len(instances) {
-			err = fmt.Errorf("mismatched nouns %v!=%v", types, instances)
-		} else {
-			keys := []string{"Source", "Target", "Context"}
-			if len(instances) > len(keys) {
-				err = fmt.Errorf("too many nouns %v", instances)
-			} else {
-				values := make(map[string]TemplateValues)
-				objs := make([]*GameObject, len(types))
-
-				for i, id := range instances {
-					// convert to string id for net sake
-					gobj, key := this.Objects[M.MakeStringId(id)], keys[i]
-					if gobj == nil {
-						return fmt.Errorf("unknown object %s", id)
-					}
-					values[key] = gobj.data
-					objs[i] = gobj
-				}
-
-				tgt := ObjectTarget{this, objs[0]}
-				act := &RuntimeAction{this, action, objs, values, nil}
-
-				this.queue.QueueEvent(tgt, action.Event(), act)
-			}
-		}
-	}
-	return err
 }

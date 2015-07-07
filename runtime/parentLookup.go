@@ -13,10 +13,6 @@ type ParentLookupStack struct {
 
 //
 func (this *ParentLookupStack) FindParent(gobj *GameObject) (ret *GameObject) {
-	if gobj == nil {
-		panic("nil")
-	}
-
 	count := len(this.arr)
 	if count > 0 {
 		parentLookup := this.arr[count-1]

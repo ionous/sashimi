@@ -111,9 +111,7 @@ func (this *StandardGame) Input(s string) bool {
 		if in == "q" || in == "quit" {
 			this.quit = true
 		} else {
-			if _, res, e := parser.Parse(in); e != nil {
-				out.Println(e)
-			} else if e := res.Run(); e != nil {
+			if _, e := parser.Parse(in); e != nil {
 				out.Println(e)
 			}
 			this.EndTurn()

@@ -6,8 +6,17 @@ import (
 	"strings"
 )
 
-// mash the groups back together while assigning tags to nouns
-func patternize(nouns *NounCheck, groups []string, tags map[int]bool) (*regexp.Regexp, error) {
+//
+// mash the groups together while assigning tags to nouns
+//
+func newNounCheck(groups []string, tags map[int]bool) (*NounCheck, error) {
+	n := &NounCheck{}
+	exp, err := n.patternize(groups, tags)
+	n.exp = exp
+	return n, err
+}
+
+func (nouns *NounCheck) patternize(groups []string, tags map[int]bool) (*regexp.Regexp, error) {
 	var buffer []string
 	for i, content := range groups {
 		if !tags[i] {

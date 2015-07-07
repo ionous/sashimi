@@ -352,17 +352,6 @@ func (this *Context) compile() (*M.Model, error) {
 		return nil, err
 	}
 
-	// add foreign keys
-	// this.log.Println("adding class pointers")
-	// for _, prop := range pendingPointers {
-	// 	fields := prop.Fields()
-	// 	if class, ok := this.classes.findByPluralName(fields.Class); !ok {
-	// 		err = errutil.Append(err, ClassNotFound(fields.Class))
-	// 	} else if _, e := class.addPointer(fields, prop.Source()); e != nil {
-	// 		err = errutil.Append(err, e)
-	// 	}
-	// }
-
 	// make classes
 	this.log.Println("making classes")
 	classes, err := this.classes.makeClasses(this.relatives)

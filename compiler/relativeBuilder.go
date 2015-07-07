@@ -36,7 +36,6 @@ func (rel RelativeBuilder) BuildProperty() (ret M.IProperty, err error) {
 	relationId := rel.fields.Relation
 	relation := rel.relations[relationId]
 	if e := relation.setRelative(rel.name, rel.fields); e != nil {
-		panic(e)
 		err = e
 	} else {
 		// write merged data back

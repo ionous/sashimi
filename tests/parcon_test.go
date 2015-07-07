@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/ionous/sashimi/console"
 	"github.com/ionous/sashimi/parser"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -17,37 +18,38 @@ func (this TestNoun) Name() string {
 	return this.name
 }
 
-// ICommand
-type TestNouns struct {
-	t     *testing.T
+// IComprehend
+type TestComprehension struct {
+	*testing.T
 	name  string
 	count int
 }
 
-func (this TestNouns) NewMatcher() parser.IMatch {
-	return &TestMatcher{this.count}
+func (nouns TestComprehension) NewMatcher() (parser.IMatch, error) {
+	return &TestMatcher{test: nouns}, nil
 }
 
-func (this TestNouns) RunCommand(nouns ...string) (err error) {
-	this.t.Log(">", this.name, nouns)
-	if len(nouns) != this.count {
-		err = fmt.Errorf("mismatched nouns")
+// IMatch
+type TestMatcher struct {
+	test  TestComprehension
+	nouns []string
+}
+
+func (m *TestMatcher) MatchNoun(word string, article string) (err error) {
+	if len(m.nouns) >= m.test.count {
+		err = fmt.Errorf("too many nouns")
+	} else {
+		m.nouns = append(m.nouns, word)
 	}
 	return err
 }
 
-type TestMatcher struct {
-	count int
-}
-
-func (this *TestMatcher) MatchNoun(word string, article string) (noun string, err error) {
-	if this.count <= 0 {
-		err = fmt.Errorf("too many nouns")
-	} else {
-		noun = word
-		this.count--
+func (m *TestMatcher) Matched() (err error) {
+	m.test.Log(">", m.test.name, m.nouns)
+	if len(m.nouns) != m.test.count {
+		err = fmt.Errorf("mismatched nouns")
 	}
-	return noun, err
+	return err
 }
 
 //
@@ -62,17 +64,23 @@ func TestConsoleParser(t *testing.T) {
 
 	// commands
 	p := parser.NewParser()
-	looking, _ := p.AddCommand("looking", TestNouns{t, "l", 0}, 0)
-	examining, _ := p.AddCommand("examining it", TestNouns{t, "x", 1}, 1)
-	showingItTo, _ := p.AddCommand("showing to it", TestNouns{t, "s", 2}, 2)
+	looking, _ := p.NewComprehension("looking", TestComprehension{t, "l", 0}.NewMatcher)
+	examining, _ := p.NewComprehension("examining it", TestComprehension{t, "x", 1}.NewMatcher)
+	showingItTo, _ := p.NewComprehension("showing to it", TestComprehension{t, "s", 2}.NewMatcher)
 
 	// grammar
-	looking.LearnPattern(Look)
-	examining.LearnPattern(Examine)
-	examining.LearnPattern(LookThing)
-	examining.LearnPattern(LookAt)
-	showingItTo.LearnPattern(Show)
-	showingItTo.LearnPattern(ShowTo)
+	_, e := looking.LearnPattern(Look)
+	assert.NoError(t, e)
+	_, e = examining.LearnPattern(Examine)
+	assert.NoError(t, e)
+	_, e = examining.LearnPattern(LookThing)
+	assert.NoError(t, e)
+	_, e = examining.LearnPattern(LookAt)
+	assert.NoError(t, e)
+	_, e = showingItTo.LearnPattern(Show)
+	assert.NoError(t, e)
+	_, e = showingItTo.LearnPattern(ShowTo)
+	assert.NoError(t, e)
 
 	// globals
 	strs := []string{
@@ -90,10 +98,8 @@ func TestConsoleParser(t *testing.T) {
 		if s, ok := c.Readln(); !ok {
 			break
 		} else {
-			if name, res, e := p.Parse(s); e != nil {
+			if name, e := p.Parse(s); e != nil {
 				t.Fatal(name, e)
-			} else {
-				res.Run()
 			}
 		}
 	}

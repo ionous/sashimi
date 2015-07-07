@@ -36,7 +36,7 @@ func (adapt ObjectAdapter) String() string {
 // Name of the object.
 //
 func (adapt ObjectAdapter) Name() string {
-	return adapt.gobj.info.Name()
+	return adapt.gobj.inst.Name()
 }
 
 //
@@ -51,7 +51,7 @@ func (adapt ObjectAdapter) Exists() bool {
 //
 func (adapt ObjectAdapter) Class(class string) (okay bool) {
 	if cls, ok := adapt.game.Model.Classes.FindClassBySingular(class); ok {
-		okay = adapt.gobj.info.Class().CompatibleWith(cls.Id())
+		okay = adapt.gobj.inst.Class().CompatibleWith(cls.Id())
 	}
 	return okay
 }
@@ -60,7 +60,7 @@ func (adapt ObjectAdapter) Class(class string) (okay bool) {
 // Is adapt object in the passed state?
 //
 func (adapt ObjectAdapter) Is(state string) (ret bool) {
-	if prop, index, ok := adapt.gobj.info.Class().PropertyByChoice(state); !ok {
+	if prop, index, ok := adapt.gobj.inst.Class().PropertyByChoice(state); !ok {
 		adapt.logError(fmt.Errorf("is: no such choice '%s'.'%s'", adapt, state))
 	} else {
 		testChoice, _ := prop.IndexToChoice(index)
@@ -74,7 +74,7 @@ func (adapt ObjectAdapter) Is(state string) (ret bool) {
 // Change the state of an object.
 //
 func (adapt ObjectAdapter) SetIs(state string) {
-	if prop, index, ok := adapt.gobj.info.Class().PropertyByChoice(state); !ok {
+	if prop, index, ok := adapt.gobj.inst.Class().PropertyByChoice(state); !ok {
 		adapt.logError(fmt.Errorf("SetIs: no such choice '%s'.'%s'", adapt, state))
 	} else {
 		// get the current choice from the implied property slot
@@ -159,7 +159,7 @@ func (adapt ObjectAdapter) SetText(prop string, text string) {
 func (adapt ObjectAdapter) Object(prop string) (ret G.IObject) {
 	// TBD: should these be logged? its sure nice to have be able to test objects generically for properties
 	var res M.StringId
-	if p, ok := adapt.gobj.info.Class().FindProperty(prop); ok {
+	if p, ok := adapt.gobj.inst.Class().FindProperty(prop); ok {
 		switch p := p.(type) {
 		case *M.PointerProperty:
 			if val, ok := adapt.gobj.GetValue(p.Id()).(M.StringId); ok {
@@ -168,7 +168,7 @@ func (adapt ObjectAdapter) Object(prop string) (ret G.IObject) {
 		case *M.RelativeProperty:
 			// TBD: can the relative property changes automatically reflect into the value table
 			// ex. on event?
-			rel := adapt.gobj.info.GetRelativeValue(p)
+			rel := adapt.gobj.inst.GetRelativeValue(p)
 			if rel.GetRelativeProperty().ToMany() {
 				adapt.logError(fmt.Errorf("object requested, but relation is list"))
 			} else {
@@ -192,7 +192,7 @@ func (adapt ObjectAdapter) Object(prop string) (ret G.IObject) {
 // Changes a relationship.
 //
 func (adapt ObjectAdapter) SetObject(prop string, object G.IObject) {
-	if p, ok := adapt.gobj.info.Class().FindProperty(prop); ok {
+	if p, ok := adapt.gobj.inst.Class().FindProperty(prop); ok {
 		switch p := p.(type) {
 		default:
 			adapt.logError(TypeMismatch(adapt.Name(), prop))
@@ -209,7 +209,7 @@ func (adapt ObjectAdapter) SetObject(prop string, object G.IObject) {
 				adapt.logError(fmt.Errorf("couldnt set value for prop %s", prop))
 			}
 		case *M.RelativeProperty:
-			rel := adapt.gobj.info.GetRelativeValue(p)
+			rel := adapt.gobj.inst.GetRelativeValue(p)
 
 			// if the referenced object doesnt exist, we take it to mean they are clearing the reference.
 			if other, ok := object.(ObjectAdapter); !ok {
@@ -238,7 +238,7 @@ func (adapt ObjectAdapter) SetObject(prop string, object G.IObject) {
 // Return a list of related objects.
 //
 func (adapt ObjectAdapter) ObjectList(prop string) (ret []G.IObject) {
-	if rel, ok := adapt.gobj.info.FindRelativeValue(prop); !ok {
+	if rel, ok := adapt.gobj.inst.FindRelativeValue(prop); !ok {
 		adapt.logError(fmt.Errorf("object list requested, but no such property"))
 	} else {
 		if !rel.GetRelativeProperty().ToMany() {

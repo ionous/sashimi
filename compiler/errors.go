@@ -46,7 +46,6 @@ func SetValueChanged(inst, prop M.StringId, curr, want interface{}) error {
 // SetValueMismatch
 //
 func SetValueMismatch(inst, prop M.StringId, want, got interface{}) error {
-	panic(inst)
 	return errutil.Func(func() string {
 		return fmt.Sprintf("%s.%s expected value of %T got %T", inst, prop, want, got)
 	})

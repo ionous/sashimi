@@ -1,81 +1,72 @@
 package parser
 
-import (
-	"fmt"
-	"regexp"
-)
-
 //
-// created via Parser.New()
+// Comprehension contains a set of patterns against which user input gets matched.
+// Comprehensions are created via NewComprehension() and expanded via LearnPattern().
 //
 type Comprehension struct {
-	parser    *Parser
-	name      string
-	command   ICommand
-	nounCount int
-	patterns  []Pattern
+	parser     *Parser
+	name       string
+	newMatcher NewMatcher
+	patterns   []Pattern
 }
 
-type Pattern struct {
-	*regexp.Regexp
-	pattern     string
-	matchByNoun []int // noun index => regexp match index
+//
+// Name of this pattern set.
+//
+func (c *Comprehension) Name() string {
+	return c.name
 }
 
-type TryParseResult int
-
 //
-// implements ILearn
+// LearnPattern adds a new pattern to this pattern set.
+// Patterns are tried successively to match a user's input.
 //
-func (this *Comprehension) LearnPattern(pattern string) (err error) {
+func (c *Comprehension) LearnPattern(pattern string) (p Pattern, err error) {
 	// split the pattern into groups separated by tags
 	groups, tags := tokenize(pattern)
-	nouns := newNounCheck(this.nounCount)
-	if exp, e := patternize(nouns, groups, tags); e != nil {
+	if nouns, e := newNounCheck(groups, tags); e != nil {
 		err = e
-	} else if !nouns.foundAllNouns() {
-		// FIX: allow missing nouns to be specified via... callbacks?
-		err = fmt.Errorf("`%s` pattern `%s` didn't specify enough nouns (%d of %d)", this.name, pattern, nouns.count, this.nounCount)
 	} else {
-		indices := nouns.matchIndices()
-		p := Pattern{exp, pattern, indices[0:this.nounCount]}
-		this.patterns = append(this.patterns, p)
+		p = Pattern{c, nouns.exp, pattern, nouns.matchIndices()}
+		c.patterns = append(c.patterns, p)
 	}
-	return err
+	return p, err
 }
 
 //
-// If this pattern matches the passed input, return a new pattern matcher
+// Patterns used by this pattern set.
+// Note, it's not a copy because pattern objects are not modifiable by the caller.
 //
-func (this *Pattern) TryParse(input string) (ret PatternMatch, okay bool) {
-	if match := this.FindStringSubmatch(input); len(match) > 0 {
-		ret, okay = PatternMatch{match, this.matchByNoun}, true
-	}
-	return ret, okay
+func (c *Comprehension) Patterns() []Pattern {
+	return c.patterns
 }
 
 //
-// Helper for input parsing, returned by TryMatch()
+// Parse the paseed input, trying each of the known patterns in turn.
+// If one of the patterns matched, found will contain that pattern --
+// even if the nouns from that pattern failed to match.
 //
-type PatternMatch struct {
-	match       []string // from regexp.FindSubStringMatch
-	matchByNoun []int    // noun index => regexp match index
-}
-
-//
-// Change all the words into nouns.
-// Returns error if any of the nouns could not be parsed
-//
-func (this *PatternMatch) MatchNouns(matcher IMatch) (nouns []string, err error) {
-	for _, matchIdx := range this.matchByNoun {
-		words := this.match[matchIdx]
-		name, article := NormalizeNoun(words)
-		if noun, e := matcher.MatchNoun(name, article); e == nil {
-			nouns = append(nouns, noun)
-		} else {
-			err = e
-			break
+func (c *Comprehension) TryParse(input string) (found *Pattern, matched IMatch, err error) {
+	// for all patterns in those sets:
+	for _, p := range c.patterns {
+		// try the pattern:
+		if match, ok := p.TryPattern(input); ok {
+			// let the caller know that something matched:
+			found = &p
+			// try the nouns:
+			if m, e := c.newMatcher(); e != nil {
+				err = e // provisional return
+			} else if e := match.MatchNouns(m); e != nil {
+				err = e // provisional return
+			} else {
+				matched, err = m, nil
+				break
+			}
 		}
 	}
-	return nouns, err
+	if found == nil {
+		err = UnknownInput(input)
+	}
+	return found, matched, err
 }

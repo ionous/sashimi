@@ -62,7 +62,7 @@ type TestGame struct {
 func (this *TestGame) RunInput(s string) *TestGame {
 	if e := this.ProcessEvents(); e != nil {
 		this.out.Println(e)
-	} else if e := this.RunCommand(P.NormalizeInput(s)); e != nil {
+	} else if _, e := this.Parser.Parse(P.NormalizeInput(s)); e != nil {
 		this.out.Println(e)
 	}
 	return this

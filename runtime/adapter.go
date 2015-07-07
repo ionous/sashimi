@@ -117,7 +117,7 @@ func (this *GameEventAdapter) GetObject(name string) (obj G.IObject) {
 		if obj == nil {
 			src := this.data.objs[0]
 			cls, _ := this.Model.Classes.FindClassBySingular(name)
-			if src.info.Class().CompatibleWith(cls.Id()) {
+			if src.inst.Class().CompatibleWith(cls.Id()) {
 				obj = ObjectAdapter{this.Game, src}
 			}
 		}

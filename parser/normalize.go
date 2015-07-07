@@ -6,9 +6,10 @@ import (
 	"strings"
 )
 
-// lower case the input,
-// strip multiple spaces and replace with single spaces,
-// [ this helps match multi-word nouns: "evil   fish" ]
+//
+// NormalizeInput turns the passed input to lower-case and replaces multiple spaces with single spaces.
+// This helps the parser to match multi-word nouns: "evil   FIsh".
+//
 func NormalizeInput(input string) string {
 	lower := strings.ToLower(input)
 	fields := strings.Fields(lower)
@@ -21,9 +22,9 @@ var articleBar = strings.Join(articles, " |")
 var articlesExp = regexp.MustCompile(fmt.Sprintf("^(%s |)(.*?)$", articleBar))
 
 //
-// returns noun, article of the noun
+// SliceArticles returns the noun and its article
 //
-func NormalizeNoun(noun string) (string, string) {
-	match := articlesExp.FindStringSubmatch(noun)
+func SliceArticles(phrase string) (noun string, article string) {
+	match := articlesExp.FindStringSubmatch(phrase)
 	return match[2], strings.TrimSpace(match[1])
 }
