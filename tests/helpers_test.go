@@ -18,21 +18,21 @@ type TestOutput struct {
 //
 // Standard output.
 //
-func (this TestOutput) ScriptSays(lines []string) {
+func (out TestOutput) ScriptSays(lines []string) {
 	for _, l := range lines {
-		this.Println(l)
+		out.Println(l)
 	}
 }
 
-func (this TestOutput) ActorSays(whose *R.GameObject, lines []string) {
+func (out TestOutput) ActorSays(whose *R.GameObject, lines []string) {
 	name := whose.Name()
 	for _, l := range lines {
-		this.Println(name, ":", l)
+		out.Println(name, ":", l)
 	}
 }
 
-func (this TestOutput) Log(s string) {
-	this.t.Log(s)
+func (out TestOutput) Log(s string) {
+	out.t.Log(s)
 }
 
 //
@@ -43,8 +43,10 @@ func NewTestGame(t *testing.T, s *Script) (ret TestGame, err error) {
 		cons := TestOutput{t, &C.BufferedOutput{}}
 		if game, e := R.NewGame(model, cons); e != nil {
 			err = e
+		} else if parser, e := R.NewParser(game); e != nil {
+			err = e
 		} else {
-			ret = TestGame{t, game, cons}
+			ret = TestGame{t, game, cons, parser}
 		}
 	}
 	return ret, err
@@ -54,33 +56,34 @@ type TestGame struct {
 	t *testing.T
 	*R.Game
 	out TestOutput
+	*R.ObjectParser
 }
 
 //
 // For testing:
 //
-func (this *TestGame) RunInput(s string) *TestGame {
-	if e := this.ProcessEvents(); e != nil {
-		this.out.Println(e)
-	} else if _, e := this.Parser.Parse(P.NormalizeInput(s)); e != nil {
-		this.out.Println(e)
+func (test *TestGame) RunInput(s string) *TestGame {
+	if e := test.ProcessEvents(); e != nil {
+		test.out.Println(e)
+	} else if _, e := test.Parse(P.NormalizeInput(s)); e != nil {
+		test.out.Println(e)
 	}
-	return this
+	return test
 }
 
 //
 // For testing:
 //
-func (this *TestGame) RunTest(input []string) *TestGame {
+func (test *TestGame) RunTest(input []string) *TestGame {
 	for _, in := range input {
-		this.RunInput(in)
+		test.RunInput(in)
 	}
-	return this
+	return test
 }
 
-func (this *TestGame) FlushOutput() []string {
-	if e := this.ProcessEvents(); e != nil {
-		this.out.Println(e)
+func (test *TestGame) FlushOutput() []string {
+	if e := test.ProcessEvents(); e != nil {
+		test.out.Println(e)
 	}
-	return this.out.Flush()
+	return test.out.Flush()
 }

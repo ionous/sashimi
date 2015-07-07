@@ -14,7 +14,6 @@ type Game struct {
 	Objects        GameObjects
 	Dispatchers    ClassDispatchers
 	output         IOutput
-	Parser         *ModelParser
 	queue          *E.Queue
 	nullobj        *NullObject
 	defaultActions DefaultActions
@@ -22,7 +21,6 @@ type Game struct {
 	log            *log.Logger
 	Properties     PropertyWatchers
 	parentLookup   ParentLookupStack
-	parserSource   ParserSourceStack
 }
 
 type logAdapter struct {
@@ -49,7 +47,7 @@ func NewGame(model *M.Model, output IOutput) (game *Game, err error) {
 		model,
 		objects,
 		dispatchers,
-		output, nil,
+		output,
 		E.NewQueue(),
 		&NullObject{log},
 		make(DefaultActions),
@@ -57,15 +55,7 @@ func NewGame(model *M.Model, output IOutput) (game *Game, err error) {
 		log,
 		PropertyWatchers{},
 		ParentLookupStack{},
-		ParserSourceStack{},
 	}
-
-	parser, e := NewParser(game)
-	if e != nil {
-		return nil, e
-	}
-	game.Parser = parser
-
 	for _, handler := range model.ActionHandlers {
 		act, cb := handler.Action(), handler.Callback()
 		arr := game.defaultActions[act]
@@ -105,24 +95,6 @@ func NewGame(model *M.Model, output IOutput) (game *Game, err error) {
 }
 
 //
-func (game *Game) PushParserSource(userSource G.SourceLookup) {
-	game.parserSource.PushSource(func() (ret *GameObject) {
-		// setup callback context:
-		play := &GameEventAdapter{Game: game}
-		// call the user function
-		res := userSource(play)
-		// unpack the result
-		if par, ok := res.(ObjectAdapter); ok {
-			ret = par.gobj
-		}
-		return ret
-	})
-}
-
-//
-func (game *Game) PopParserSource() {
-	game.parserSource.PopSource()
-}
 
 //
 // change the user's parent lookup (IObject -> name) into

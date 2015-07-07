@@ -6,7 +6,6 @@ import (
 	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/net/resource"
 	"github.com/ionous/sashimi/net/session"
-	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/standard"
 	"io"
 	"log"
@@ -110,7 +109,7 @@ func (sess *CommandSession) _handleInput(input CommandInput) (err error) {
 				err = fmt.Errorf("unknown action %s", input.Action)
 				//FIX? RunActions injects the player, that works out well, but is a little strange.
 			} else {
-				if om, e := R.NewObjectMatcher(sess.game.Game, act); e != nil {
+				if om, e := sess.game.NewObjectMatcher(act); e != nil {
 					err = e
 				} else {
 					for _, n := range input.Nouns() {

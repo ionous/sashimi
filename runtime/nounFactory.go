@@ -17,19 +17,18 @@ type ObjectMatcher struct {
 }
 
 // make sure the source class matches
-func NewObjectMatcher(game *Game, act *M.ActionInfo,
+func NewObjectMatcher(game *Game, source *GameObject, act *M.ActionInfo,
 ) (
 	ret *ObjectMatcher,
 	err error,
 ) {
-	sourceObj := game.parserSource.FindSource()
-	if sourceObj == nil {
+	if source == nil {
 		err = fmt.Errorf("couldnt find command source for %s", act)
-	} else if !sourceObj.inst.Class().CompatibleWith(act.Source().Id()) {
+	} else if !source.inst.Class().CompatibleWith(act.Source().Id()) {
 		err = fmt.Errorf("source class for %s doesnt match", act)
 	} else {
 		om := &ObjectMatcher{game, act, nil, make(map[string]TemplateValues)}
-		om.addObject(sourceObj)
+		om.addObject(source)
 		ret = om
 	}
 	return ret, err

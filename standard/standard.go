@@ -10,7 +10,7 @@ import (
 
 type StandardCore struct {
 	*R.Game
-	parser        *R.ModelParser
+	*R.ObjectParser
 	output        R.IOutput
 	story, status R.ObjectAdapter
 }
@@ -22,54 +22,54 @@ type StandardGame struct {
 	quit, completed bool
 }
 
-func (this *StandardCore) Left() string {
-	return this.status.Text("left")
+func (sc *StandardCore) Left() string {
+	return sc.status.Text("left")
 }
 
-func (this *StandardCore) Right() string {
-	return this.status.Text("right")
+func (sc *StandardCore) Right() string {
+	return sc.status.Text("right")
 }
 
-func (this *StandardCore) SetLeft(status string) {
-	this.status.SetText("left", status)
+func (sc *StandardCore) SetLeft(status string) {
+	sc.status.SetText("left", status)
 }
 
-func (this *StandardCore) SetRight(status string) {
-	this.status.SetText("right", status)
+func (sc *StandardCore) SetRight(status string) {
+	sc.status.SetText("right", status)
 }
 
 func NewStandardGame(model *M.Model, output R.IOutput) (ret StandardStart, err error) {
 	if game, e := R.NewGame(model, output); e != nil {
 		err = e
+	} else if parser, e := R.NewParser(game); e != nil {
+		err = e
 	} else {
-		if parser, e := R.NewParser(game); e != nil {
-			err = e
+		//
+		parser.PushParserSource(func(g G.Play) G.IObject {
+			return g.The("player")
+		})
+		//
+		game.PushParentLookup(func(g G.Play, o G.IObject) (ret G.IObject) {
+			if parent, where := DirectParent(o); where != "" {
+				ret = parent
+			}
+			return ret
+		})
+		//
+		storyObject := game.FindFirstOf(model.Classes.FindClass("stories"))
+		if storyObject == nil {
+			err = fmt.Errorf("couldn't find story")
 		} else {
-			// FIX: move parser source into the model/parser
-			game.PushParserSource(func(g G.Play) (ret G.IObject) {
-				return g.The("player")
-			})
-			game.PushParentLookup(func(g G.Play, o G.IObject) (ret G.IObject) {
-				if parent, where := DirectParent(o); where != "" {
-					ret = parent
-				}
-				return ret
-			})
-			storyObject := game.FindFirstOf(model.Classes.FindClass("stories"))
-			if storyObject == nil {
-				err = fmt.Errorf("couldn't find story")
+			if statusObject, ok := game.FindObject("status bar"); !ok {
+				err = fmt.Errorf("couldn't find status bar")
 			} else {
-				if statusObject, ok := game.FindObject("status bar"); !ok {
-					err = fmt.Errorf("couldn't find status bar")
-				} else {
-					story := R.NewObjectAdapter(game, storyObject)
-					status := R.NewObjectAdapter(game, statusObject)
-					//
-					core := StandardCore{game, parser, output, story, status}
-					core.SetLeft(story.Name())
-					core.SetRight(fmt.Sprint(story.Name(), "by ", story.Text("author")))
-					ret = StandardStart{core}
-				}
+				story := R.NewObjectAdapter(game, storyObject)
+				status := R.NewObjectAdapter(game, statusObject)
+				//
+				core := StandardCore{game, parser, output, story, status}
+				core.SetLeft(story.Name())
+				core.SetRight(fmt.Sprint(story.Name(), "by ", story.Text("author")))
+				ret = StandardStart{core}
 			}
 		}
 	}
@@ -79,55 +79,54 @@ func NewStandardGame(model *M.Model, output R.IOutput) (ret StandardStart, err e
 //
 // sends starting to play, and returns a new game.
 //
-func (this *StandardStart) Start() (ret StandardGame, err error) {
+func (sg *StandardStart) Start() (ret StandardGame, err error) {
 	// FIX: shouldnt the interface be Go("commence")?
-	if e := this.SendEvent("starting to play", this.story.String()); e != nil {
+	if e := sg.SendEvent("starting to play", sg.story.String()); e != nil {
 		err = e
 	} else {
 		// process all existing messages in the queue first
-		if e := this.ProcessEvents(); e != nil {
+		if e := sg.ProcessEvents(); e != nil {
 			err = e
 		}
 	}
-	return StandardGame{this.StandardCore, false, false}, err
+	return StandardGame{sg.StandardCore, false, false}, err
 }
 
-func (this *StandardGame) IsQuit() bool {
-	return this.quit
+func (sg *StandardGame) IsQuit() bool {
+	return sg.quit
 }
 
-func (this *StandardGame) IsFinished() bool {
-	return this.quit || this.completed
+func (sg *StandardGame) IsFinished() bool {
+	return sg.quit || sg.completed
 }
 
 //
 // return false if the game has finished
 // (automatically ends the turn )
 //
-func (this *StandardGame) Input(s string) bool {
-	if !this.IsFinished() {
-		out, parser := this.output, this.parser
-		in := parser.NormalizeInput(s)
+func (sg *StandardGame) Input(s string) bool {
+	if !sg.IsFinished() {
+		in := sg.NormalizeInput(s)
 		if in == "q" || in == "quit" {
-			this.quit = true
+			sg.quit = true
 		} else {
-			if _, e := parser.Parse(in); e != nil {
-				out.Println(e)
+			if _, e := sg.Parse(in); e != nil {
+				sg.output.Println(e)
 			}
-			this.EndTurn()
+			sg.EndTurn()
 		}
 	}
-	return !this.IsFinished()
+	return !sg.IsFinished()
 }
 
-func (this *StandardGame) EndTurn() {
-	game := this.Game
-	game.SendEvent("ending the turn", this.story.String())
+func (sg *StandardGame) EndTurn() {
+	game := sg.Game
+	game.SendEvent("ending the turn", sg.story.String())
 	if e := game.ProcessEvents(); e != nil {
 		log.Println(e)
 	} else {
-		if this.story.Is("completed") {
-			this.completed = true
+		if sg.story.Is("completed") {
+			sg.completed = true
 		}
 	}
 }

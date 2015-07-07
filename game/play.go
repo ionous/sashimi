@@ -6,9 +6,6 @@ type ContextLookup func(Play, IObject, IObject) IObject
 type Callback func(Play)
 
 type IGameRules interface {
-	PushParserSource(SourceLookup)
-	PopParserSource()
-
 	PushParentLookup(TargetLookup)
 	PopParentLookup()
 }

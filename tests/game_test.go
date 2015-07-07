@@ -64,26 +64,25 @@ func TestStartupText(t *testing.T) {
 		}),
 	)
 
-	game, err := NewTestGame(t, s)
-	assert.NoError(t, err, "compile should work")
+	if game, err := NewTestGame(t, s); assert.NoError(t, err, "compile should work") {
+		story := game.FindFirstOf(game.Model.Classes.FindClass("stories"))
+		assert.NotNil(t, story, "should have game")
 
-	story := game.FindFirstOf(game.Model.Classes.FindClass("stories"))
-	assert.NotNil(t, story, "should have game")
+		room := game.FindFirstOf(game.Model.Classes.FindClass("rooms"))
+		assert.NotNil(t, room, "should have room")
 
-	room := game.FindFirstOf(game.Model.Classes.FindClass("rooms"))
-	assert.NotNil(t, room, "should have room")
+		err = game.SendEvent("starting to play", story.String())
+		assert.NoError(t, err, "starting to play")
 
-	err = game.SendEvent("starting to play", story.String())
-	assert.NoError(t, err, "starting to play")
-
-	expected := []string{
-		"", // FIX: this line shouldnt exist
-		"testing",
-		"extra extra by me",
-		standard.VersionString,
-		"",
-		"somewhere",
-		"an empty room",
+		expected := []string{
+			"", // FIX: this line shouldnt exist
+			"testing",
+			"extra extra by me",
+			standard.VersionString,
+			"",
+			"somewhere",
+			"an empty room",
+		}
+		assert.Exactly(t, expected, game.FlushOutput())
 	}
-	assert.Exactly(t, expected, game.FlushOutput())
 }
