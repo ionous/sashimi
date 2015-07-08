@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"github.com/ionous/sashimi/util/ident"
 	"math"
 )
 
@@ -9,9 +10,9 @@ type EnumConstraint struct {
 	enum Enumeration
 
 	// FIX? would it be better to use index internally for these things?
-	only         StringId
-	never        map[StringId]bool
-	usual        StringId
+	only         ident.Id
+	never        map[ident.Id]bool
+	usual        ident.Id
 	usuallyLocal bool // usual set for cons constraint, or for some ancestor?
 }
 
@@ -19,7 +20,7 @@ type EnumConstraint struct {
 //
 //
 func NewConstraint(enum Enumeration) *EnumConstraint {
-	never := make(map[StringId]bool)
+	never := make(map[ident.Id]bool)
 	return &EnumConstraint{enum: enum, never: never}
 }
 
@@ -28,7 +29,7 @@ func NewConstraint(enum Enumeration) *EnumConstraint {
 //
 func (cons *EnumConstraint) Always(value interface{}) (err error) {
 	switch choice := value.(type) {
-	case StringId:
+	case ident.Id:
 		err = cons.always(choice)
 	case string:
 		err = cons.always(MakeStringId(choice))
@@ -43,7 +44,7 @@ func (cons *EnumConstraint) Always(value interface{}) (err error) {
 //
 func (cons *EnumConstraint) Usually(value interface{}) (err error) {
 	switch choice := value.(type) {
-	case StringId:
+	case ident.Id:
 		err = cons.usually(choice)
 	case string:
 		err = cons.usually(MakeStringId(choice))
@@ -58,7 +59,7 @@ func (cons *EnumConstraint) Usually(value interface{}) (err error) {
 //
 func (cons *EnumConstraint) Seldom(value interface{}) (err error) {
 	switch choice := value.(type) {
-	case StringId:
+	case ident.Id:
 		err = cons.seldom(choice)
 	case string:
 		err = cons.seldom(MakeStringId(choice))
@@ -73,7 +74,7 @@ func (cons *EnumConstraint) Seldom(value interface{}) (err error) {
 //
 func (cons *EnumConstraint) Exclude(value interface{}) (err error) {
 	switch choice := value.(type) {
-	case StringId:
+	case ident.Id:
 		err = cons.exclude(choice)
 	case string:
 		err = cons.exclude(MakeStringId(choice))
@@ -87,7 +88,7 @@ func (cons *EnumConstraint) Exclude(value interface{}) (err error) {
 //
 //
 func (cons *EnumConstraint) Copy() IConstrain {
-	never := make(map[StringId]bool)
+	never := make(map[ident.Id]bool)
 	for k, v := range cons.never {
 		never[k] = v
 	}
@@ -134,7 +135,7 @@ func (cons *EnumConstraint) BestIndex() (index int) {
 //
 // Always is forever.
 //
-func (cons *EnumConstraint) always(choice StringId) (err error) {
+func (cons *EnumConstraint) always(choice ident.Id) (err error) {
 	if index, e := cons.enum.ChoiceToIndex(choice); e != nil {
 		err = e
 	} else if e := cons.CheckIndex(index); e != nil {
@@ -160,7 +161,7 @@ func (cons *EnumConstraint) always(choice StringId) (err error) {
 //
 // Usually is a loose recommendation, and can be overriden for each new owner
 //
-func (cons *EnumConstraint) usually(choice StringId) (err error) {
+func (cons *EnumConstraint) usually(choice ident.Id) (err error) {
 	if index, e := cons.enum.ChoiceToIndex(choice); e != nil {
 		err = e
 	} else if e := cons.CheckIndex(index); e != nil {
@@ -187,7 +188,7 @@ func (cons *EnumConstraint) usually(choice StringId) (err error) {
 // ( it really only makes sense if there are two choices,
 // and the other can become usually. )
 //
-func (cons *EnumConstraint) seldom(choice StringId) (err error) {
+func (cons *EnumConstraint) seldom(choice ident.Id) (err error) {
 	for other, _ := range cons.enum.choices {
 		if other != choice {
 			err = cons.Usually(other)
@@ -203,7 +204,7 @@ func (cons *EnumConstraint) seldom(choice StringId) (err error) {
 //
 // NOTE: cant exclude the final remaining choice
 //
-func (cons *EnumConstraint) exclude(choice StringId) (err error) {
+func (cons *EnumConstraint) exclude(choice ident.Id) (err error) {
 	// ses raw index to allow the same choice to be excluded multiple times
 	_, err = cons.enum.ChoiceToIndex(choice)
 	switch {

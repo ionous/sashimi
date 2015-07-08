@@ -3,6 +3,7 @@ package runtime
 import (
 	E "github.com/ionous/sashimi/event"
 	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/util/ident"
 	"log"
 )
 
@@ -10,7 +11,7 @@ import (
 // Pool of all active class dispatchers
 //
 type ClassDispatchers struct {
-	all map[M.StringId]ClassDispatcher
+	all map[ident.Id]ClassDispatcher
 	log *log.Logger
 }
 type ClassDispatcher struct {
@@ -21,7 +22,7 @@ type ClassDispatcher struct {
 // Create a new dispatcher pool.
 //
 func NewDispatchers(log *log.Logger) ClassDispatchers {
-	return ClassDispatchers{make(map[M.StringId]ClassDispatcher), log}
+	return ClassDispatchers{make(map[ident.Id]ClassDispatcher), log}
 }
 
 //

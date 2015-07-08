@@ -2,8 +2,8 @@ package extensions
 
 import (
 	G "github.com/ionous/sashimi/game"
-	R "github.com/ionous/sashimi/runtime"
 	. "github.com/ionous/sashimi/script"
+	_ "github.com/ionous/sashimi/standard"
 )
 
 func init() {
@@ -14,7 +14,7 @@ func init() {
 			//If there is no comment then it is considered “npc-directed”.
 			//For instance, a greeting when the player selects an NPC.
 			Have("comment", "text"),
-			Have("responder", "actor"),
+			Have("speaker", "actor"),
 			Have("reply", "text"),
 			//Have("hook", "text"), // displayed on the menu
 			//performative, informative, questioning: used for ask about, tell about, or simply state the quip name
@@ -26,7 +26,7 @@ func init() {
 			Called("following quips"),
 			Have("leading", "quip"),
 			Have("following", "quip"),
-			AreOneOf("indirectly following", "directly following", "tangential"),
+			AreEither("indirectly following").Or("directly following"),
 		)
 		s.The("kinds",
 			Called("pending quips"),
@@ -44,43 +44,52 @@ func init() {
 			// having the same property as a parent class probably shouldnt be an error
 			Have("summary", "text"))
 
-		var interlocutor G.IObject
+		// this is overspecification --
+		// we've got recollection after all.
+		// FIX: we just need fast sorting.
+		qh := QuipHistory{}
+
+		s.The("actors",
+			Have("greeting", "quip"))
 
 		s.The("actors",
 			Can("greet").And("greeting").RequiresOne("actor"),
 			To("greet", func(g G.Play) {
-				speaker, receiver := g.The("action.Source"), g.The("action.Target")
-				if speaker == g.The("player") {
-					interlocutor = receiver
-					//				receiver.
+				greeter, speaker := g.The("action.Source"), g.The("action.Target")
+				if greeter == g.The("player") {
+					quips := GetQuipPool(g)
+					if lastQuip, ok := quips.MostRecent(qh); !ok {
+						if greeting := greeter.Object("greeting"); !greeting.Exists() {
+						} else {
+							qh.Push(greeting.Id())
+						}
+						// QUEUE!
+					} else {
+						interlocutor := quips.Interlocutor(lastQuip)
+						if interlocutor == speaker.Id() {
+							g.Say("You're already speaking to them!")
+						} else {
+							g.Say("You're already speaking to someone!")
+						}
+					}
 				}
 			}))
 
 		s.The("actors",
 			Can("depart").And("departing").RequiresNothing(),
 			To("depart", func(g G.Play) {
-				// if speaker == g.The("player") {
-
-				// }
+				qh.Clear()
 			}))
 
 		s.The("stories",
 			When("ending the turn").Always(func(g G.Play) {
-				// Filter to quips which have player comments.
-				// Filter to quips which quip supply the interlocutor.
-				// Exclude one-time quips, checking the recollection table.
-				// Filter restrictive quips to limit available responses to those which directly follow. And, the opposite of restrictive quips: include those which indirectly follow.
-				// Include/exclude quips based on the recollection of others.
-				// Include/exclude quips based on the knowledge of facts.
-				adapt := g.(*R.GameEventAdapter)
-				for _, o := range adapt.Game.Model.Instances {
-					if isQuip := o.Class().CompatibleWith("Quip"); isQuip {
-						o := R.NewObjectAdapter(adapt.Game, o)
-						if o.Text("comment") != "" {
-							//	if o.Text
-						}
-					}
-				}
+				// have a turn of thinking
+
+				// present player choices
+				qp := GetQuipPool(g)
+				list := qp.GetPlayerQuips(qh)
+				panic(list)
+
 			}))
 	})
 }

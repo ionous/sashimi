@@ -5,7 +5,9 @@ import (
 	R "github.com/ionous/sashimi/runtime"
 	. "github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/standard"
+	"github.com/ionous/sashimi/util/ident"
 	"github.com/stretchr/testify/assert"
+
 	"os"
 	"testing"
 )
@@ -109,7 +111,7 @@ func TestTablePointers(t *testing.T) {
 	if m, err := s.Compile(os.Stderr); assert.NoError(t, err, "table compile") {
 		if inst, ok := m.Instances.FindInstance("Grace"); assert.True(t, ok, "find person by name") {
 			if val, ok := inst.ValueByName("Favorite Sweet"); assert.True(t, ok, "find favorite") {
-				if id, ok := val.(M.StringId); assert.True(t, ok, "id") {
+				if id, ok := val.(ident.Id); assert.True(t, ok, "id") {
 					assert.EqualValues(t, id, "VeganChocolateChipCookies")
 				}
 			}

@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"github.com/ionous/sashimi/util/errutil"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 //
@@ -10,7 +11,7 @@ import (
 // An indexed set of values.
 //
 type Enumeration struct {
-	choices map[StringId]int // index + 1, to handle zero/nil
+	choices map[ident.Id]int // index + 1, to handle zero/nil
 	values  []StringPair     // 0-based index
 }
 
@@ -18,7 +19,7 @@ type Enumeration struct {
 //
 //
 func NewEnumeration(values []string) Enumeration {
-	choices, outvalues := make(map[StringId]int), make([]StringPair, 0, len(values))
+	choices, outvalues := make(map[ident.Id]int), make([]StringPair, 0, len(values))
 	for i, v := range values {
 		s := MakeStringId(v)
 		outvalues = append(outvalues, StringPair{s, v})
@@ -69,7 +70,7 @@ func (enum Enumeration) IndexToValue(index int) (ret StringPair, err error) {
 //
 //
 //
-func (enum Enumeration) IndexToChoice(index int) (ret StringId, err error) {
+func (enum Enumeration) IndexToChoice(index int) (ret ident.Id, err error) {
 	if value, e := enum.IndexToValue(index); e != nil {
 		err = e
 	} else {
@@ -89,7 +90,7 @@ func (enum Enumeration) StringToIndex(choice string) (index int, err error) {
 //
 //
 //
-func (enum Enumeration) ChoiceToIndex(choice StringId) (ret int, err error) {
+func (enum Enumeration) ChoiceToIndex(choice ident.Id) (ret int, err error) {
 	if idx, ok := enum.choices[choice]; !ok {
 		err = OutOfRangeError(enum, choice)
 	} else {
@@ -128,7 +129,7 @@ func OutOfRangeError(enum Enumeration, value interface{}) error {
 //
 //
 //
-func InvalidChoiceError(enum Enumeration, choice StringId) error {
+func InvalidChoiceError(enum Enumeration, choice ident.Id) error {
 	return errutil.Func(func() string {
 		return fmt.Sprintf("%v is an disallowed choice for %v", choice, enum)
 	})

@@ -1,16 +1,18 @@
 package model
 
+import "github.com/ionous/sashimi/util/ident"
+
 type EnumProperty struct {
-	id   StringId
+	id   ident.Id
 	name string
 	Enumeration
 }
 
-func NewEnumProperty(id StringId, name string, src Enumeration) *EnumProperty {
+func NewEnumProperty(id ident.Id, name string, src Enumeration) *EnumProperty {
 	return &EnumProperty{id, name, src}
 }
 
-func (this *EnumProperty) Id() StringId {
+func (this *EnumProperty) Id() ident.Id {
 	return this.id
 }
 

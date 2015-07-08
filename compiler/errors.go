@@ -2,8 +2,8 @@ package compiler
 
 import (
 	"fmt"
-	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/util/errutil"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 //
@@ -18,7 +18,7 @@ func ClassNotFound(class string) error {
 //
 // ClassNotFound
 //
-func EnumMultiplySpecified(class M.StringId, enum M.StringId) error {
+func EnumMultiplySpecified(class ident.Id, enum ident.Id) error {
 	return errutil.Func(func() string {
 		return fmt.Sprintf("enum %s.%s specified more than once", class, enum)
 	})
@@ -27,7 +27,7 @@ func EnumMultiplySpecified(class M.StringId, enum M.StringId) error {
 //
 // PropertyNotFound
 //
-func PropertyNotFound(class M.StringId, prop string) error {
+func PropertyNotFound(class ident.Id, prop string) error {
 	return errutil.Func(func() string {
 		return fmt.Sprintf("property '%s.%s' not found", class, prop)
 	})
@@ -36,7 +36,7 @@ func PropertyNotFound(class M.StringId, prop string) error {
 //
 // SetValueChanged
 //
-func SetValueChanged(inst, prop M.StringId, curr, want interface{}) error {
+func SetValueChanged(inst, prop ident.Id, curr, want interface{}) error {
 	return errutil.Func(func() string {
 		return fmt.Sprintf("%s.%s value change '%v' to '%v'", inst, prop, curr, want)
 	})
@@ -45,7 +45,7 @@ func SetValueChanged(inst, prop M.StringId, curr, want interface{}) error {
 //
 // SetValueMismatch
 //
-func SetValueMismatch(inst, prop M.StringId, want, got interface{}) error {
+func SetValueMismatch(inst, prop ident.Id, want, got interface{}) error {
 	return errutil.Func(func() string {
 		return fmt.Sprintf("%s.%s expected value of %T got %T", inst, prop, want, got)
 	})
@@ -54,7 +54,7 @@ func SetValueMismatch(inst, prop M.StringId, want, got interface{}) error {
 //
 // UnknownPropertyError
 //
-func UnknownPropertyError(cls M.StringId, name string) error {
+func UnknownPropertyError(cls ident.Id, name string) error {
 	return errutil.Func(func() string {
 		return fmt.Sprintf("unhandled property %s.%s.", cls, name)
 	})

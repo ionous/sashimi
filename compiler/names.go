@@ -4,6 +4,7 @@ import (
 	"fmt"
 	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/source"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 // Provides collision detection for names, especially b/t enum choices and other properties,
@@ -28,12 +29,12 @@ type NameScope struct {
 }
 
 //
-func (this NameScope) addName(name string, value string) (curr M.StringId, err error) {
+func (this NameScope) addName(name string, value string) (curr ident.Id, err error) {
 	return this.names.addName(this.scope, name, value, "")
 }
 
 //
-func (this NameScope) addRef(name string, value string, src source.Code) (curr M.StringId, err error) {
+func (this NameScope) addRef(name string, value string, src source.Code) (curr ident.Id, err error) {
 	return this.names.addName(this.scope, name, value, string(src))
 }
 
@@ -47,7 +48,7 @@ func (this NameSource) newScope(scope interface{}) NameScope {
 
 //
 // to avoid collisions between instances and types, only one name from each can exist
-func (this NameSource) addName(scope interface{}, name string, value string, code string) (id M.StringId, err error) {
+func (this NameSource) addName(scope interface{}, name string, value string, code string) (id ident.Id, err error) {
 	id = M.MakeStringId(name)
 	//
 	if scope != nil {

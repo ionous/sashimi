@@ -1,14 +1,14 @@
 package compiler
 
 import (
-	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 //
 // PendingInstance records all of the classes which use an instance
 //
 type PendingInstance struct {
-	id       M.StringId
+	id       ident.Id
 	name     string
 	longName string
 	classes  ClassReferences

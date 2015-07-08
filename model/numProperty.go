@@ -1,15 +1,17 @@
 package model
 
+import "github.com/ionous/sashimi/util/ident"
+
 type NumProperty struct {
-	id   StringId
+	id   ident.Id
 	name string
 }
 
-func NewNumProperty(id StringId, name string) *NumProperty {
+func NewNumProperty(id ident.Id, name string) *NumProperty {
 	return &NumProperty{id, name}
 }
 
-func (this *NumProperty) Id() StringId {
+func (this *NumProperty) Id() ident.Id {
 	return this.id
 }
 

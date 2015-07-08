@@ -1,15 +1,17 @@
 package model
 
+import "github.com/ionous/sashimi/util/ident"
+
 type RelativeProperty struct {
 	fields RelativeFields
 }
 
 type RelativeFields struct {
-	Class    StringId `json:"id"`       // property id
-	Id       StringId `json:"id"`       // property id
+	Class    ident.Id `json:"id"`       // property id
+	Id       ident.Id `json:"id"`       // property id
 	Name     string   `json:"name"`     // property name
-	Relates  StringId `json:"relates"`  // other class id
-	Relation StringId `json:"relation"` // relation id
+	Relates  ident.Id `json:"relates"`  // other class id
+	Relation ident.Id `json:"relation"` // relation id
 	IsRev    bool     `json:"rev"`
 	ToMany   bool     `json:"many"`
 }
@@ -18,11 +20,11 @@ func NewRelativeProperty(fields RelativeFields) *RelativeProperty {
 	return &RelativeProperty{fields}
 }
 
-func (this *RelativeProperty) Class() StringId {
+func (this *RelativeProperty) Class() ident.Id {
 	return this.fields.Class
 }
 
-func (this *RelativeProperty) Id() StringId {
+func (this *RelativeProperty) Id() ident.Id {
 	return this.fields.Id
 }
 
@@ -31,12 +33,12 @@ func (this *RelativeProperty) Name() string {
 }
 
 // id of the relation table
-func (this *RelativeProperty) Relation() StringId {
+func (this *RelativeProperty) Relation() ident.Id {
 	return this.fields.Relation
 }
 
 // id of the other class this property inolves
-func (this *RelativeProperty) Relates() StringId {
+func (this *RelativeProperty) Relates() ident.Id {
 	return this.fields.Relates
 }
 

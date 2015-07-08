@@ -6,6 +6,7 @@ import (
 	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/net/resource"
 	R "github.com/ionous/sashimi/runtime"
+	"github.com/ionous/sashimi/util/ident"
 	"os"
 )
 
@@ -22,7 +23,7 @@ type CommandOutput struct {
 //
 //
 //
-type Included map[M.StringId]*R.GameObject
+type Included map[ident.Id]*R.GameObject
 
 func (this Included) Include(gobj *R.GameObject) {
 	this[gobj.Id()] = gobj
@@ -164,8 +165,8 @@ func (this *CommandOutput) propertyChanged(game *R.Game, gobj *R.GameObject, pro
 
 	case *M.EnumProperty:
 		if obj, ok := this.serial.TryObjectRef(gobj); ok {
-			prev := jsonId(prev.(M.StringId))
-			next := jsonId(next.(M.StringId))
+			prev := jsonId(prev.(ident.Id))
+			next := jsonId(next.(ident.Id))
 			this.events.Add("x-set", obj.SetMeta("change-states", []string{prev, next}))
 		}
 
@@ -185,14 +186,14 @@ func (this *CommandOutput) propertyChanged(game *R.Game, gobj *R.GameObject, pro
 		}
 
 		// fire for the prev object's relationships
-		if gprev, ok := game.Objects[M.StringId(prev.(string))]; ok {
+		if gprev, ok := game.Objects[ident.Id(prev.(string))]; ok {
 			if obj, ok := this.serial.TryObjectRef(gprev); ok {
 				this.events.Add("x-rel", obj.SetMeta("rel", jsonId(other.Property)))
 			}
 		}
 
 		// fire for the next object's relationships
-		if gnext, ok := game.Objects[M.StringId(next.(string))]; ok {
+		if gnext, ok := game.Objects[ident.Id(next.(string))]; ok {
 			if obj, ok := this.serial.TryObjectRef(gnext); ok {
 				this.events.Add("x-rel", obj.SetMeta("rel", jsonId(other.Property)))
 			}

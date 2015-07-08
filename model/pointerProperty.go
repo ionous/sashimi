@@ -1,16 +1,18 @@
 package model
 
+import "github.com/ionous/sashimi/util/ident"
+
 //
 // PointerProperty represents a class member which points to a single class instance.
 // Unlike RelativeProperty the referenced instance does not know about the reference.
 //
 type PointerProperty struct {
-	id   StringId
+	id   ident.Id
 	name string
-	cls  StringId
+	cls  ident.Id
 }
 
-func NewPointerProperty(id StringId, name string, cls StringId) *PointerProperty {
+func NewPointerProperty(id ident.Id, name string, cls ident.Id) *PointerProperty {
 	return &PointerProperty{id, name, cls}
 }
 
@@ -18,7 +20,7 @@ func NewPointerProperty(id StringId, name string, cls StringId) *PointerProperty
 // Id returns the unique id of this property.
 // It is usually derived from the property's name.
 //
-func (this *PointerProperty) Id() StringId {
+func (this *PointerProperty) Id() ident.Id {
 	return this.id
 }
 
@@ -32,6 +34,6 @@ func (this *PointerProperty) Name() string {
 //
 // Class returns the id of the kind of class which instances with this property point to.
 //
-func (this *PointerProperty) Class() StringId {
+func (this *PointerProperty) Class() ident.Id {
 	return this.cls
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	M "github.com/ionous/sashimi/model"
 	P "github.com/ionous/sashimi/parser"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 //
@@ -42,7 +43,7 @@ func (om *ObjectMatcher) MatchNoun(name string, _ string) (err error) {
 	if cnt, max := len(om.objects), len(nouns); cnt >= max {
 		err = fmt.Errorf("You've told me more than I've understood.")
 	} else {
-		tried, ok := om.game.Model.NounNames.Try(name, func(id M.StringId) (okay bool) {
+		tried, ok := om.game.Model.NounNames.Try(name, func(id ident.Id) (okay bool) {
 			return om.MatchId(id)
 		})
 		if !ok {
@@ -74,7 +75,7 @@ func (om *ObjectMatcher) Matched() (err error) {
 //
 // MatchId is usually called by MatchNoun, public for net sessions :(
 //
-func (om *ObjectMatcher) MatchId(id M.StringId) (okay bool) {
+func (om *ObjectMatcher) MatchId(id ident.Id) (okay bool) {
 	if obj, ok := om.game.Objects[id]; ok {
 		nouns := om.act.NounSlice()
 		if cnt, max := len(om.objects), len(nouns); cnt < max {

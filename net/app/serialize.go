@@ -4,6 +4,7 @@ import (
 	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/net/resource"
 	R "github.com/ionous/sashimi/runtime"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 //
@@ -41,7 +42,7 @@ func (this *ObjectSerializer) SerializeObject(out resource.IBuildObjects, gobj *
 			if val := gobj.GetValue(propId); val != nil {
 				switch prop.(type) {
 				case *M.EnumProperty:
-					choice := val.(M.StringId)
+					choice := val.(ident.Id)
 					states = append(states, jsonId(choice))
 				default:
 					obj.SetAttr(jsonId(propId), val)

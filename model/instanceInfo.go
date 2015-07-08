@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 //
@@ -9,14 +10,14 @@ import (
 // its property values fall back to its associated class when needed.
 //
 type InstanceInfo struct {
-	id    StringId
+	id    ident.Id
 	class *ClassInfo
 	name  string
 	long  string // FIX: kill inst, replace with article categorization
 	//
 	instances InstanceMap
 	tables    TableRelations
-	values    map[StringId]Variant
+	values    map[ident.Id]Variant
 }
 
 //
@@ -30,13 +31,13 @@ type Variant interface{}
 //
 //
 func NewInstanceInfo(
-	id StringId,
+	id ident.Id,
 	class *ClassInfo,
 	name string,
 	long string,
 	instances InstanceMap,
 	tables TableRelations,
-	values map[StringId]Variant,
+	values map[ident.Id]Variant,
 ) *InstanceInfo {
 	inst := &InstanceInfo{id, class, name, long, instances, tables, values}
 	return inst
@@ -45,7 +46,7 @@ func NewInstanceInfo(
 //
 // Every instance has a unique id based on its original name.
 //
-func (inst *InstanceInfo) Id() StringId {
+func (inst *InstanceInfo) Id() ident.Id {
 	return inst.id
 }
 
@@ -126,7 +127,7 @@ func (inst *InstanceInfo) PropertyValue(prop IProperty) (ret interface{}) {
 		ret, _ = v.(float32)
 	case *PointerProperty:
 		v, _ := inst.values[prop.id]
-		ret, _ = v.(StringId)
+		ret, _ = v.(ident.Id)
 	default:
 		panic(fmt.Sprintf("unhandled property %s type %T", prop.Id(), prop))
 	}

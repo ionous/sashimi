@@ -4,13 +4,14 @@ import (
 	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 type InstanceFactory struct {
 	names   NameSource
 	pending PendingInstances
 }
-type PendingInstances map[M.StringId]*PendingInstance
+type PendingInstances map[ident.Id]*PendingInstance
 
 func newInstanceFactory(names NameSource) *InstanceFactory {
 	return &InstanceFactory{names, make(PendingInstances)}

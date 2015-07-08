@@ -2,6 +2,7 @@ package compiler
 
 import (
 	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 //
@@ -18,7 +19,7 @@ type IBuildProperty interface {
 // the compiler publishes a model which pushes out all data via tabless.
 //
 type PropertyContext struct {
-	inst   M.StringId       // owner instance id
+	inst   ident.Id         // owner instance id
 	tables M.TableRelations // source of relation data
 	class  *M.ClassInfo     // finalized class; the class comes after the builder, so we dont normally have access to it.
 	values PendingValues    // accumulates the object's initial values
@@ -31,18 +32,18 @@ type PropertyContext struct {
 //
 type PropertyBuilders struct {
 	parent *PropertyBuilders
-	props  map[M.StringId]IBuildProperty
+	props  map[ident.Id]IBuildProperty
 }
 
 func NewProperties(parent *PropertyBuilders) PropertyBuilders {
-	return PropertyBuilders{parent, make(map[M.StringId]IBuildProperty)}
+	return PropertyBuilders{parent, make(map[ident.Id]IBuildProperty)}
 }
 
 //
 // Make a new property, or validate an existing one using the passed callbacks for the id'd property.
 //
 func (b *PropertyBuilders) make(
-	id M.StringId,
+	id ident.Id,
 	validator func(IBuildProperty) error,
 	creator func() (IBuildProperty, error),
 ) (
@@ -78,7 +79,7 @@ func (b *PropertyBuilders) findProperty(name string) (IBuildProperty, bool) {
 //
 // PropertyById returns the id'd property, searching upwards through the property hierarchy.
 //
-func (b *PropertyBuilders) propertyById(id M.StringId) (IBuildProperty, bool) {
+func (b *PropertyBuilders) propertyById(id ident.Id) (IBuildProperty, bool) {
 	prop, okay := b.props[id]
 	if !okay && b.parent != nil {
 		prop, okay = b.parent.propertyById(id)

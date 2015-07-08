@@ -3,13 +3,14 @@ package compiler
 import (
 	"fmt"
 	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 //
 // NewEnumBuilder returns an interface which can generate an enumerated property
 //
 func NewEnumBuilder(
-	id M.StringId,
+	id ident.Id,
 	name string,
 	choices []string,
 ) (ret IBuildProperty, err error,
@@ -24,7 +25,7 @@ func NewEnumBuilder(
 }
 
 type EnumBuilder struct {
-	id      M.StringId
+	id      ident.Id
 	choices M.Enumeration
 	prop    *M.EnumProperty
 }
@@ -56,7 +57,7 @@ func (enum EnumBuilder) SetProperty(ctx PropertyContext) (err error) {
 	return err
 }
 
-func (enum EnumBuilder) _enumSet(inst M.StringId, choice int, values PendingValues, constraint *M.EnumConstraint) (err error) {
+func (enum EnumBuilder) _enumSet(inst ident.Id, choice int, values PendingValues, constraint *M.EnumConstraint) (err error) {
 	if e := constraint.CheckIndex(choice); e != nil {
 		err = e
 	} else {

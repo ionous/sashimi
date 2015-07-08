@@ -1,14 +1,17 @@
 package model
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/ionous/sashimi/util/ident"
+)
 
 type ActionInfo struct {
-	id            StringId
+	id            ident.Id
 	action, event string
 	nounTypes     []*ClassInfo
 }
 
-func NewAction(id StringId, action, event string, classes ...*ClassInfo) (ret *ActionInfo, err error) {
+func NewAction(id ident.Id, action, event string, classes ...*ClassInfo) (ret *ActionInfo, err error) {
 	end, found := len(classes), false
 	for i := len(classes) - 1; i >= 0; i-- {
 		c := classes[i]
@@ -31,7 +34,7 @@ func NewAction(id StringId, action, event string, classes ...*ClassInfo) (ret *A
 }
 
 // based on the action name
-func (this *ActionInfo) Id() StringId {
+func (this *ActionInfo) Id() ident.Id {
 	return this.id
 }
 

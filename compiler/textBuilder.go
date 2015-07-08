@@ -2,12 +2,13 @@ package compiler
 
 import (
 	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 //
 // NewTextBuilder returns an interface which can generate a text property
 //
-func NewTextBuilder(id M.StringId, name string) (IBuildProperty, error) {
+func NewTextBuilder(id ident.Id, name string) (IBuildProperty, error) {
 	prop := M.NewTextProperty(id, name)
 	return TextBuilder{prop}, nil
 }

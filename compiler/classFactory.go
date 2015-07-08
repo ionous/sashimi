@@ -5,10 +5,11 @@ import (
 	"fmt"
 	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
+	"github.com/ionous/sashimi/util/ident"
 )
 
-type PendingClasses map[M.StringId]*PendingClass // ptr for presense detection
-type SingleToPlural map[string]M.StringId        // it kind of makes senses its single to plural id
+type PendingClasses map[ident.Id]*PendingClass // ptr for presense detection
+type SingleToPlural map[string]ident.Id        // it kind of makes senses its single to plural id
 
 type ClassFactory struct {
 	allNames       NameSource

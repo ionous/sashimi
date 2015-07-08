@@ -1,13 +1,13 @@
 package compiler
 
 import (
-	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 //
 type PropertyRule struct {
-	fieldName M.StringId
+	fieldName ident.Id
 	S.PropertyExpectation
 }
 

@@ -2,18 +2,19 @@ package compiler
 
 import (
 	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 //
 // NewNumBuilder returns an interface which can generate a number property
 //
-func NewNumBuilder(id M.StringId, name string) (IBuildProperty, error) {
+func NewNumBuilder(id ident.Id, name string) (IBuildProperty, error) {
 	prop := M.NewNumProperty(id, name)
 	return NumBuilder{id, prop}, nil
 }
 
 type NumBuilder struct {
-	id   M.StringId
+	id   ident.Id
 	prop *M.NumProperty
 }
 

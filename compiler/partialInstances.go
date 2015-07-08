@@ -5,6 +5,7 @@ import (
 	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
+	"github.com/ionous/sashimi/util/ident"
 	"log"
 )
 
@@ -12,7 +13,7 @@ type PartialInstances struct {
 	tables   M.TableRelations
 	partials PartialMap
 }
-type PartialMap map[M.StringId]*PartialInstance
+type PartialMap map[ident.Id]*PartialInstance
 
 func newPartialInstances(relations M.RelationMap) PartialInstances {
 	tables := M.NewTableRelations(relations)

@@ -4,6 +4,7 @@ import (
 	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/net/resource"
 	R "github.com/ionous/sashimi/runtime"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 func ObjectResource(game *R.Game, cls *M.ClassInfo, serial *ObjectSerializer) resource.IResource {
@@ -27,7 +28,7 @@ func ObjectResource(game *R.Game, cls *M.ClassInfo, serial *ObjectSerializer) re
 									classes, includes := doc.NewObjects(), doc.NewIncludes()
 									//
 									for _, n := range rel.List() {
-										gobj := game.Objects[M.StringId(n)]
+										gobj := game.Objects[ident.Id(n)]
 										serial.AddObjectRef(classes, gobj, includes)
 									}
 								},

@@ -5,6 +5,7 @@ import (
 	E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game"
 	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/util/ident"
 	"strings"
 )
 
@@ -30,6 +31,13 @@ func NewObjectAdapter(game *Game, obj *GameObject) ObjectAdapter {
 //
 func (adapt ObjectAdapter) String() string {
 	return adapt.Name()
+}
+
+//
+// Name of the object.
+//
+func (adapt ObjectAdapter) Id() ident.Id {
+	return ident.Id(adapt.gobj.inst.Id())
 }
 
 //
@@ -78,7 +86,7 @@ func (adapt ObjectAdapter) SetIs(state string) {
 		adapt.logError(fmt.Errorf("SetIs: no such choice '%s'.'%s'", adapt, state))
 	} else {
 		// get the current choice from the implied property slot
-		if currChoice, ok := adapt.gobj.GetValue(prop.Id()).(M.StringId); !ok {
+		if currChoice, ok := adapt.gobj.GetValue(prop.Id()).(ident.Id); !ok {
 			err := TypeMismatch(adapt.gobj.Id().String(), prop.Id().String())
 			adapt.logError(err)
 		} else {
@@ -158,11 +166,11 @@ func (adapt ObjectAdapter) SetText(prop string, text string) {
 //
 func (adapt ObjectAdapter) Object(prop string) (ret G.IObject) {
 	// TBD: should these be logged? its sure nice to have be able to test objects generically for properties
-	var res M.StringId
+	var res ident.Id
 	if p, ok := adapt.gobj.inst.Class().FindProperty(prop); ok {
 		switch p := p.(type) {
 		case *M.PointerProperty:
-			if val, ok := adapt.gobj.GetValue(p.Id()).(M.StringId); ok {
+			if val, ok := adapt.gobj.GetValue(p.Id()).(ident.Id); ok {
 				res = val
 			}
 		case *M.RelativeProperty:
@@ -174,7 +182,7 @@ func (adapt ObjectAdapter) Object(prop string) (ret G.IObject) {
 			} else {
 				list := rel.List()
 				if len(list) != 0 {
-					res = M.StringId(list[0])
+					res = ident.Id(list[0])
 				}
 			}
 
@@ -199,7 +207,7 @@ func (adapt ObjectAdapter) SetObject(prop string, object G.IObject) {
 		case *M.PointerProperty:
 			set := false
 			if other, ok := object.(ObjectAdapter); !ok {
-				adapt.gobj.SetValue(p.Id(), M.StringId(""))
+				adapt.gobj.SetValue(p.Id(), ident.Id(""))
 				set = true
 			} else {
 				adapt.gobj.SetValue(p.Id(), other.gobj.Id())

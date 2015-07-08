@@ -1,5 +1,7 @@
 package model
 
+import "github.com/ionous/sashimi/util/ident"
+
 type RelationStyle string
 
 const (
@@ -9,7 +11,7 @@ const (
 	ManyToMany               = "ManyToMany"
 )
 
-func NewRelation(id StringId, name string, src, dst HalfRelation, style RelationStyle) Relation {
+func NewRelation(id ident.Id, name string, src, dst HalfRelation, style RelationStyle) Relation {
 	return Relation{id, name, src, dst, style}
 }
 
@@ -19,7 +21,7 @@ func NewRelation(id StringId, name string, src, dst HalfRelation, style Relation
 // This might always be the case, but it's also possible to imagine many property views of the same table.
 //
 type Relation struct {
-	id    StringId // unique id
+	id    ident.Id // unique id
 	name  string   // user specified name
 	src   HalfRelation
 	dst   HalfRelation
@@ -27,13 +29,13 @@ type Relation struct {
 }
 
 type HalfRelation struct {
-	Class    StringId
-	Property StringId
+	Class    ident.Id
+	Property ident.Id
 }
 
-type RelationMap map[StringId]Relation
+type RelationMap map[ident.Id]Relation
 
-func (this Relation) Id() StringId {
+func (this Relation) Id() ident.Id {
 	return this.id
 }
 
@@ -53,7 +55,7 @@ func (this Relation) Destination() HalfRelation {
 	return this.dst
 }
 
-func (this Relation) Other(class StringId, property StringId) (other HalfRelation, okay bool) {
+func (this Relation) Other(class ident.Id, property ident.Id) (other HalfRelation, okay bool) {
 	relative := HalfRelation{class, property}
 	if relative == this.src {
 		other = this.dst

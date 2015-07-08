@@ -1,11 +1,14 @@
 package model
 
-import "github.com/ionous/sashimi/model/table"
+import (
+	"github.com/ionous/sashimi/model/table"
+	"github.com/ionous/sashimi/util/ident"
+)
 
 //
 type TableRelations struct {
 	relation RelationMap // FIX: a little weird this is here when it's also in the model itself
-	tables   map[StringId]*TableRelation
+	tables   map[ident.Id]*TableRelation
 }
 
 //
@@ -16,7 +19,7 @@ type TableRelation struct {
 
 //
 func NewTableRelations(rels RelationMap) TableRelations {
-	tables := make(map[StringId]*TableRelation)
+	tables := make(map[ident.Id]*TableRelation)
 	for id, rel := range rels {
 		entry := &TableRelation{&rel, table.NewTable()}
 		tables[id] = entry
@@ -25,7 +28,7 @@ func NewTableRelations(rels RelationMap) TableRelations {
 }
 
 //
-func (this TableRelations) TableById(id StringId) (ret *TableRelation, ok bool) {
+func (this TableRelations) TableById(id ident.Id) (ret *TableRelation, ok bool) {
 	ret, ok = this.tables[id]
 	return ret, ok
 }

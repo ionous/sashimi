@@ -1,8 +1,10 @@
 package model
 
+import "github.com/ionous/sashimi/util/ident"
+
 type IProperty interface {
-	Id() StringId
+	Id() ident.Id
 	Name() string
 }
 
-type PropertySet map[StringId]IProperty
+type PropertySet map[ident.Id]IProperty

@@ -2,6 +2,7 @@ package runtime
 
 import (
 	G "github.com/ionous/sashimi/game" // iobject
+	"github.com/ionous/sashimi/util/ident"
 	"log"
 	"runtime" // go's runtime
 )
@@ -20,6 +21,10 @@ func (this *NullObject) println(args ...interface{}) {
 //
 func (this *NullObject) String() string {
 	return this.Name()
+}
+
+func (adapt *NullObject) Id() ident.Id {
+	return ""
 }
 
 //

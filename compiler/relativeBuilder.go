@@ -4,11 +4,12 @@ import (
 	"fmt"
 	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 type RelativeBuilder struct {
-	cls       M.StringId
-	id        M.StringId
+	cls       ident.Id
+	id        ident.Id
 	name      string
 	src       S.Code
 	fields    M.RelativeFields
@@ -17,7 +18,7 @@ type RelativeBuilder struct {
 
 func NewRelativeBuilder(
 	relatives *RelativeFactory,
-	cls, id M.StringId,
+	cls, id ident.Id,
 	name string,
 	src S.Code,
 	fields M.RelativeFields,
@@ -66,7 +67,7 @@ func (rel RelativeBuilder) SetProperty(ctx PropertyContext) (err error) {
 func (rel RelativeBuilder) _refSet(
 	cls *M.ClassInfo,
 	tables M.TableRelations,
-	inst M.StringId,
+	inst ident.Id,
 	other *PartialInstance,
 ) (
 	err error,

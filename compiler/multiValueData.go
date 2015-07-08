@@ -5,6 +5,7 @@ import (
 	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
+	"github.com/ionous/sashimi/util/ident"
 	"github.com/satori/go.uuid"
 )
 
@@ -17,7 +18,7 @@ type MultiValueTable struct {
 
 type MultiValueData struct {
 	table      *MultiValueTable
-	instanceId M.StringId
+	instanceId ident.Id
 	values     []interface{}
 }
 

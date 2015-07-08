@@ -1,8 +1,10 @@
 package model
 
+import "github.com/ionous/sashimi/util/ident"
+
 type ClassInfo struct {
 	parent      *ClassInfo
-	id          StringId
+	id          ident.Id
 	name        string
 	singular    string
 	props       PropertySet // properties only for this cls
@@ -11,7 +13,7 @@ type ClassInfo struct {
 
 func NewClassInfo(
 	parent *ClassInfo,
-	id StringId,
+	id ident.Id,
 	plural string,
 	singular string,
 	props PropertySet,
@@ -21,7 +23,7 @@ func NewClassInfo(
 }
 
 //
-func (cls *ClassInfo) Id() StringId {
+func (cls *ClassInfo) Id() ident.Id {
 	return cls.id
 }
 
@@ -70,7 +72,7 @@ func (cls *ClassInfo) FindProperty(name string) (IProperty, bool) {
 //
 //
 //
-func (cls *ClassInfo) PropertyById(id StringId) (IProperty, bool) {
+func (cls *ClassInfo) PropertyById(id ident.Id) (IProperty, bool) {
 	prop, okay := cls.props[id]
 	if !okay && cls.parent != nil {
 		prop, okay = cls.parent.PropertyById(id)
@@ -113,7 +115,7 @@ func (cls *ClassInfo) PropertyConstraint(prop IProperty) (ret IConstrain, okay b
 	return ret, okay
 }
 
-func (cls *ClassInfo) ConstraintById(id StringId) (ret IConstrain, okay bool) {
+func (cls *ClassInfo) ConstraintById(id ident.Id) (ret IConstrain, okay bool) {
 	if c, ok := cls.constraints[id]; ok {
 		ret, okay = c, ok
 	} else if cls.parent != nil {
@@ -125,14 +127,14 @@ func (cls *ClassInfo) ConstraintById(id StringId) (ret IConstrain, okay bool) {
 //
 // CompatibleWith returns true when this class can be used in situtations which require the other class.
 //
-func (cls *ClassInfo) CompatibleWith(other StringId) bool {
+func (cls *ClassInfo) CompatibleWith(other ident.Id) bool {
 	return cls.Id() == other || cls.HasParent(other)
 }
 
 //
 //
 //
-func (cls *ClassInfo) HasParent(p StringId) (yes bool) {
+func (cls *ClassInfo) HasParent(p ident.Id) (yes bool) {
 	for c := cls.Parent(); c != nil; c = c.Parent() {
 		if c.Id() == p {
 			yes = true
@@ -155,7 +157,7 @@ func (cls *ClassInfo) PropertyByChoice(choice string) (
 	return prop, index, prop != nil
 }
 
-func (cls *ClassInfo) _propertyByChoice(choice StringId) (
+func (cls *ClassInfo) _propertyByChoice(choice ident.Id) (
 	prop *EnumProperty,
 	index int,
 ) {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	E "github.com/ionous/sashimi/event"
 	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 //
@@ -43,7 +44,7 @@ MakeObjects:
 					break MakeObjects
 				}
 			case *M.EnumProperty:
-				choice := val.(M.StringId)
+				choice := val.(ident.Id)
 				values.setDirect(propId, choice)
 				values.setDirect(choice, true)
 			case *M.RelativeProperty:

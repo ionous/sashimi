@@ -1,7 +1,9 @@
 package model
 
+import "github.com/ionous/sashimi/util/ident"
+
 //
-type ClassMap map[StringId]*ClassInfo
+type ClassMap map[ident.Id]*ClassInfo
 
 // helper to generate an escaped string and an error,
 func (this ClassMap) FindClass(name string) (ret *ClassInfo, okay bool) {

@@ -7,6 +7,7 @@ import (
 	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
+	"github.com/ionous/sashimi/util/ident"
 	"io"
 	"log"
 	"strings"
@@ -138,7 +139,7 @@ func (this *Context) compileActions(classes M.ClassMap,
 }
 
 func (this *Context) resolveAction(classes M.ClassMap, fields S.ActionAssertionFields,
-) (actionId M.StringId, owner, target, context *M.ClassInfo, err error) {
+) (actionId ident.Id, owner, target, context *M.ClassInfo, err error) {
 	// find the primary class
 	if cls, ok := classes.FindClass(fields.Source); !ok {
 		e := fmt.Errorf("couldn't find class %+v", fields)

@@ -3,6 +3,7 @@ package compiler
 import (
 	"fmt"
 	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 //
@@ -16,7 +17,7 @@ type PendingRelation struct {
 //
 // PendingRelations maps relation-id to a pending relation.
 //
-type PendingRelations map[M.StringId]PendingRelation
+type PendingRelations map[ident.Id]PendingRelation
 
 //
 // Assign a relative to the relation.
@@ -54,7 +55,7 @@ func (this *PendingRelation) setRelative(name string, pending M.RelativeFields) 
 //
 // Generate the model Relation from this PendingRelation.
 //
-func (this PendingRelation) makeRelation(id M.StringId) (rel M.Relation, err error) {
+func (this PendingRelation) makeRelation(id ident.Id) (rel M.Relation, err error) {
 	if this.src == nil || this.dst == nil {
 		err = fmt.Errorf("missing half of relation %v", this)
 	} else {

@@ -3,6 +3,7 @@ package app
 import (
 	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/net/resource"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 func ClassResource(model *M.Model) resource.IResource {
@@ -72,7 +73,7 @@ func addClass(model *M.Model, doc, sub resource.IBuildObjects, cls *M.ClassInfo)
 	}
 	actionRefs := resource.NewObjectList()
 	for _, act := range model.Actions {
-		var dst M.StringId
+		var dst ident.Id
 		if d := act.Context(); d != nil {
 			dst = d.Id()
 		} else if d := act.Target(); d != nil {

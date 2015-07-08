@@ -1,6 +1,7 @@
 package model
 
 import "fmt"
+import "github.com/ionous/sashimi/util/ident"
 
 type IConstrain interface {
 	Always(value interface{}) error
@@ -13,7 +14,7 @@ type IConstrain interface {
 //
 //
 //
-type ConstraintSet map[StringId]IConstrain
+type ConstraintSet map[ident.Id]IConstrain
 
 //
 //

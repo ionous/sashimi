@@ -5,12 +5,13 @@ import (
 	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 type PendingClass struct {
 	classes  *ClassFactory
 	parent   *PendingClass
-	id       M.StringId
+	id       ident.Id
 	name     string
 	singular string
 	names    NameScope

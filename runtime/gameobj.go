@@ -3,6 +3,7 @@ package runtime
 import (
 	E "github.com/ionous/sashimi/event"
 	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 //
@@ -21,12 +22,12 @@ type GameObject struct {
 //
 // Map of all game objects, keyed by model instance id.
 //
-type GameObjects map[M.StringId]*GameObject
+type GameObjects map[ident.Id]*GameObject
 
 //
 // Return the name of the object.
 //
-func (gobj *GameObject) Id() M.StringId {
+func (gobj *GameObject) Id() ident.Id {
 	return gobj.inst.Id()
 }
 

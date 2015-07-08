@@ -2,6 +2,7 @@ package compiler
 
 import (
 	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 //
@@ -9,7 +10,7 @@ import (
 // and begins to fill out the values for the future object.
 //
 type PartialInstance struct {
-	id               M.StringId // unique id for the instance
+	id               ident.Id // unique id for the instance
 	name             string
 	longName         string
 	class            *M.ClassInfo     // the class this object will use to construct itself

@@ -1,10 +1,10 @@
 package app
 
 import (
-	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/util/ident"
 	"strings"
 )
 
-func jsonId(id M.StringId) string {
+func jsonId(id ident.Id) string {
 	return strings.Join(id.Split(), "-")
 }

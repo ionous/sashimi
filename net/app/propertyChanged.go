@@ -1,8 +1,8 @@
 package app
 
 import (
-	M "github.com/ionous/sashimi/model"
 	R "github.com/ionous/sashimi/runtime"
+	"github.com/ionous/sashimi/util/ident"
 	"log"
 )
 
@@ -15,7 +15,7 @@ type PropertyChangeHandler struct {
 // IPropertyChanged
 //
 func (this PropertyChangeHandler) PropertyChanged(
-	objectId, propertyId M.StringId,
+	objectId, propertyId ident.Id,
 	prev, value interface{},
 ) {
 	if prev != value {

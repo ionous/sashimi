@@ -1,7 +1,7 @@
 package runtime
 
 import (
-	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 //
@@ -10,7 +10,7 @@ import (
 // and then the user/implementer code could implement the watch inside its own set.
 //
 type IPropertyChanged interface {
-	PropertyChanged(object, property M.StringId, prev, value interface{})
+	PropertyChanged(object, property ident.Id, prev, value interface{})
 }
 
 //
@@ -24,8 +24,8 @@ type PropertyWatchers struct {
 // Sends a notification that an object property has changed.
 //
 func (this *PropertyWatchers) Notify(
-	object M.StringId,
-	property M.StringId,
+	object ident.Id,
+	property ident.Id,
 	prev interface{},
 	value interface{}) {
 	for _, el := range this.arr {

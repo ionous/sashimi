@@ -1,11 +1,14 @@
 package model
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/ionous/sashimi/util/ident"
+)
 
 // actions and events have slightly different purposes
 // but for now, we put all of the info into action
 // and just provide a way to find it by event name
-type EventMap map[StringId]*ActionInfo
+type EventMap map[ident.Id]*ActionInfo
 
 // FIX: i kind of think all maps with the string ids should have this
 func (this EventMap) FindEventByName(name string) (ret *ActionInfo, err error) {
