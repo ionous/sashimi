@@ -81,7 +81,7 @@ func (this ClassResults) _makeClass(pending *PendingClass,
 		err = e
 	} else {
 		// distill all rules
-		constraints := make(M.ConstraintSet)
+		constraints := make(M.ConstraintMap)
 
 		for _, rule := range pending.rules {
 			// find prop for the rule
@@ -108,7 +108,7 @@ func (this ClassResults) _makeClass(pending *PendingClass,
 					cons = c
 					found = true
 				} else if parent != nil {
-					if p, ok := parent.ConstraintById(rule.fieldName); ok {
+					if p, ok := parent.Constraints().ConstraintById(rule.fieldName); ok {
 						cons = p.Copy()
 						constraints[rule.fieldName] = cons
 						found = true

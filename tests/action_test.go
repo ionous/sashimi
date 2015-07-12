@@ -40,7 +40,7 @@ func TestClassCallback(t *testing.T) {
 		When("testing").Always(func(g G.Play) {
 			t.Log("got the testing event")
 			src := g.The("action.Source")
-			if src.Name() != "obj" {
+			if src.Text("Name") != "obj" {
 				t.Error("wrong object", src)
 			}
 			desc := src.Text("description")

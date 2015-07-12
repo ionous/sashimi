@@ -46,7 +46,7 @@ func init() {
 			WhenCapturing("giving it to", func(g G.Play) {
 				presenter, prop := g.The("action.Source"), g.The("action.Context")
 				if carrier, ok := Carrier(prop); !ok || carrier != presenter {
-					g.Say("You aren't holding", prop.Name())
+					g.Say("You aren't holding", prop.Text("Name"))
 					g.StopHere()
 				}
 			}),
@@ -64,7 +64,7 @@ func init() {
 			To("give", func(g G.Play) {
 				// FIX: should generate a report/response
 				receiver := g.The("action.Context")
-				g.Say(receiver.Name(), "is unimpressed.")
+				g.Say(receiver.Text("Name"), "is unimpressed.")
 			}))
 		// input
 		s.Execute("give it to",

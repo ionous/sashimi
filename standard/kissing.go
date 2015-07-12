@@ -15,7 +15,7 @@ func init() {
 			WhenCapturing("kissing it", func(g G.Play) {
 				source, target := g.The("action.Source"), g.The("action.Target")
 				if source == target {
-					g.Say(source.Name(), "didn't get much from that.")
+					g.Say(source.Text("Name"), "didn't get much from that.")
 					g.StopHere()
 				}
 			}),
@@ -25,7 +25,7 @@ func init() {
 			Can("kiss").And("kissing").RequiresOne("actor"),
 			To("kiss", func(g G.Play) {
 				source := g.The("action.Source")
-				g.Say(source.Name(), "might not like that.")
+				g.Say(source.Text("Name"), "might not like that.")
 			}))
 
 		s.Execute("kiss it", Matching("kiss|hug|embrace {{something}}"))

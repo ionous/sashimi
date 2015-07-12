@@ -5,6 +5,8 @@ import (
 	E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game"
 	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/util/errutil"
+	"github.com/ionous/sashimi/util/ident"
 	"log"
 )
 
@@ -12,10 +14,9 @@ import (
 type Game struct {
 	Model          *M.Model
 	Objects        GameObjects
-	Dispatchers    ClassDispatchers
+	Dispatchers    Dispatchers
 	output         IOutput
 	queue          *E.Queue
-	nullobj        *NullObject
 	defaultActions DefaultActions
 	SystemActions  SystemActions
 	log            *log.Logger
@@ -38,7 +39,7 @@ type DefaultActions map[*M.ActionInfo][]G.Callback
 func NewGame(model *M.Model, output IOutput) (game *Game, err error) {
 	log := log.New(logAdapter{output}, "game: ", log.Lshortfile)
 	dispatchers := NewDispatchers(log)
-	objects, e := CreateGameObjects(model.Instances)
+	objects, e := CreateGameObjects(model.Instances, model.Tables)
 	if e != nil {
 		return nil, e
 	}
@@ -49,7 +50,6 @@ func NewGame(model *M.Model, output IOutput) (game *Game, err error) {
 		dispatchers,
 		output,
 		E.NewQueue(),
-		&NullObject{log},
 		make(DefaultActions),
 		NewSystemActions(),
 		log,
@@ -75,18 +75,19 @@ func NewGame(model *M.Model, output IOutput) (game *Game, err error) {
 	for _, listener := range model.EventListeners {
 		act := listener.Action()
 		callback := GameCallback{game, listener}
-		//log.Printf("creating listener %s", listener.String())
 
+		var id ident.Id
 		if inst := listener.Instance(); inst != nil {
-			obj := objects[inst.Id()]
-			obj.dispatcher.Listen(act.Event(), callback, listener.UseCapture())
+			id = inst.Id()
 		} else if cls := listener.Class(); cls != nil {
-			dispatch := dispatchers.CreateDispatcher(cls)
-			dispatch.Listen(act.Event(), callback, listener.UseCapture())
+			id = cls.Id()
 		} else {
-			err = fmt.Errorf("couldnt find action class %v", cls)
-			break
+			e := fmt.Errorf("couldnt create listener %v", listener)
+			err = errutil.Append(err, e)
+			continue
 		}
+		dispatch := dispatchers.CreateDispatcher(id)
+		dispatch.Listen(act.Event(), callback, listener.UseCapture())
 	}
 	if err != nil {
 		return nil, err

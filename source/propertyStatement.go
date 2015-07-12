@@ -13,11 +13,11 @@ type PropertyFields struct {
 }
 
 //
-func (this PropertyStatement) Fields() PropertyFields {
-	return this.fields
+func (ts PropertyStatement) Fields() PropertyFields {
+	return ts.fields
 }
 
 //
-func (this PropertyStatement) Source() Code {
-	return this.source
+func (ts PropertyStatement) Source() Code {
+	return ts.source
 }

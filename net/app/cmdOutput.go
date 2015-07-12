@@ -186,14 +186,14 @@ func (this *CommandOutput) propertyChanged(game *R.Game, gobj *R.GameObject, pro
 		}
 
 		// fire for the prev object's relationships
-		if gprev, ok := game.Objects[ident.Id(prev.(string))]; ok {
+		if gprev, ok := game.Objects[prev.(ident.Id)]; ok {
 			if obj, ok := this.serial.TryObjectRef(gprev); ok {
 				this.events.Add("x-rel", obj.SetMeta("rel", jsonId(other.Property)))
 			}
 		}
 
 		// fire for the next object's relationships
-		if gnext, ok := game.Objects[ident.Id(next.(string))]; ok {
+		if gnext, ok := game.Objects[next.(ident.Id)]; ok {
 			if obj, ok := this.serial.TryObjectRef(gnext); ok {
 				this.events.Add("x-rel", obj.SetMeta("rel", jsonId(other.Property)))
 			}

@@ -13,11 +13,11 @@ type KeyValueFields struct {
 }
 
 //
-func (this KeyValueStatement) Fields() KeyValueFields {
-	return this.fields
+func (ts KeyValueStatement) Fields() KeyValueFields {
+	return ts.fields
 }
 
 //
-func (this KeyValueStatement) Source() Code {
-	return this.source
+func (ts KeyValueStatement) Source() Code {
+	return ts.source
 }

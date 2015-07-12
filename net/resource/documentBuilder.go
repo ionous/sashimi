@@ -42,7 +42,7 @@ func (this DocumentBuilder) NewObjects() ObjectsBuilder {
 // Set the document data to an array of objects or object identifiers.
 // Return a builder to add objects to that array.
 //
-func (this DocumentBuilder) SetObjects(objects ObjectList) DocumentBuilder {
+func (this DocumentBuilder) Sets(objects ObjectList) DocumentBuilder {
 	if this.doc.Data == nil {
 		// a blank placeholder for ObjectsBuilder.NewObject
 		this.doc.Data = objects.doc.Included

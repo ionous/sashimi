@@ -1,7 +1,9 @@
 package model
 
-import "fmt"
-import "github.com/ionous/sashimi/util/ident"
+import (
+	"fmt"
+	"github.com/ionous/sashimi/util/ident"
+)
 
 type IConstrain interface {
 	Always(value interface{}) error
@@ -14,7 +16,20 @@ type IConstrain interface {
 //
 //
 //
-type ConstraintSet map[ident.Id]IConstrain
+type ConstraintSet struct {
+	parent      *ConstraintSet
+	constraints ConstraintMap
+}
+type ConstraintMap map[ident.Id]IConstrain
+
+func (cons ConstraintSet) ConstraintById(id ident.Id) (ret IConstrain, okay bool) {
+	if c, ok := cons.constraints[id]; ok {
+		ret, okay = c, ok
+	} else if cons.parent != nil {
+		ret, okay = cons.parent.ConstraintById(id)
+	}
+	return ret, okay
+}
 
 //
 //

@@ -5,12 +5,12 @@ type ActionStatement struct {
 	source Code
 }
 
-func (this ActionStatement) Source() Code {
-	return this.source
+func (ts ActionStatement) Source() Code {
+	return ts.source
 }
 
-func (this ActionStatement) Fields() ActionAssertionFields {
-	return this.fields
+func (ts ActionStatement) Fields() ActionAssertionFields {
+	return ts.fields
 }
 
 type ActionAssertionFields struct {

@@ -8,12 +8,12 @@ const (
 	RelativeSource = 1 << 4
 )
 
-func (this RelativeHint) IsMany() bool {
-	return this&RelativeMany != 0
+func (hint RelativeHint) IsMany() bool {
+	return hint&RelativeMany != 0
 }
 
-func (this RelativeHint) IsReverse() bool {
-	return this&RelativeSource == 0
+func (hint RelativeHint) IsReverse() bool {
+	return hint&RelativeSource == 0
 }
 
 //
@@ -31,11 +31,11 @@ type RelativeFields struct {
 }
 
 //
-func (this RelativeStatement) Fields() RelativeFields {
-	return this.fields
+func (ts RelativeStatement) Fields() RelativeFields {
+	return ts.fields
 }
 
 //
-func (this RelativeStatement) Source() Code {
-	return this.source
+func (ts RelativeStatement) Source() Code {
+	return ts.source
 }

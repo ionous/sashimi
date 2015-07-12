@@ -39,14 +39,17 @@ func TestTableDecl(t *testing.T) {
 		// and now some values:
 		if inst, ok := m.Instances.FindInstance("boreo"); assert.True(t, ok, "find tabled instance by name") {
 			//
-			if val, ok := inst.ValueByName("desc"); assert.True(t, ok, "find desc") {
+			if val, ok := inst.FindValue("desc"); assert.True(t, ok, "find desc") {
 				if str, ok := val.(string); assert.True(t, ok, "have string") {
 					assert.EqualValues(t, str, "Creme filled wafer things.")
 				}
 			}
 			//
-			if val, ok := inst.ValueByName("delicious-property"); assert.True(t, ok, "find deliciousness") {
-				assert.EqualValues(t, val, M.MakeStringId("acceptable"))
+			if prop, ok := inst.Class().FindProperty("delicious-property"); assert.True(t, ok, "find deliciousness") {
+				if val, ok := inst.Value(prop.Id()); assert.True(t, ok, "find value") {
+					val, _ := prop.(*M.EnumProperty).IndexToChoice(val.(int))
+					assert.EqualValues(t, val, M.MakeStringId("acceptable"))
+				}
 			}
 		}
 	}
@@ -76,7 +79,7 @@ func TestTabledData(t *testing.T) {
 	s.Our("Boreo", Is("acceptable"), Has("price", 42))
 	if m, err := s.Compile(os.Stderr); assert.NoError(t, err, "table compile") {
 		if inst, ok := m.Instances.FindInstance("boreo"); assert.True(t, ok, "find tabled instance by name") {
-			if val, ok := inst.ValueByName("price"); assert.True(t, ok, "find desc") {
+			if val, ok := inst.FindValue("price"); assert.True(t, ok, "find desc") {
 				assert.EqualValues(t, 42, val)
 			}
 		}
@@ -110,7 +113,7 @@ func TestTablePointers(t *testing.T) {
 	namePeople(s)
 	if m, err := s.Compile(os.Stderr); assert.NoError(t, err, "table compile") {
 		if inst, ok := m.Instances.FindInstance("Grace"); assert.True(t, ok, "find person by name") {
-			if val, ok := inst.ValueByName("Favorite Sweet"); assert.True(t, ok, "find favorite") {
+			if val, ok := inst.FindValue("Favorite Sweet"); assert.True(t, ok, "find favorite") {
 				if id, ok := val.(ident.Id); assert.True(t, ok, "id") {
 					assert.EqualValues(t, id, "VeganChocolateChipCookies")
 				}
@@ -132,8 +135,8 @@ func TestTableRuntime(t *testing.T) {
 			if sweet := grace.Object("favorite sweet"); assert.True(t, sweet.Exists(), "grace should have a treat") {
 				if gobj, ok := g.FindObject("Boreo"); assert.True(t, ok) {
 					boreo := R.NewObjectAdapter(g.Game, gobj)
-					grace.SetObject("favorite sweet", boreo)
-					retread := grace.Object("favorite sweet").Name()
+					grace.Set("favorite sweet", boreo)
+					retread := grace.Object("favorite sweet").Text("Name")
 					assert.Equal(t, retread, "Boreo")
 				}
 			}

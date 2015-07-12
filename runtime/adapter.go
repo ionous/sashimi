@@ -7,8 +7,7 @@ import (
 )
 
 //
-// implements Game.Play
-// used internally, mainly for the event return values
+// GameEventAdapter implements game.Play.
 //
 type GameEventAdapter struct {
 	*Game
@@ -17,44 +16,55 @@ type GameEventAdapter struct {
 }
 
 //
-//(I)Play interface
-//
-func (this *GameEventAdapter) The(name string) G.IObject {
-	return this.GetObject(name)
+func (ga *GameEventAdapter) The(name string) G.IObject {
+	return ga.GetObject(name)
 }
 
 //
-func (this *GameEventAdapter) Our(name string) G.IObject {
-	return this.GetObject(name)
+func (ga *GameEventAdapter) Our(name string) G.IObject {
+	return ga.GetObject(name)
 }
 
 //
-func (this *GameEventAdapter) A(name string) G.IObject {
-	return this.GetObject(name)
+func (ga *GameEventAdapter) A(name string) G.IObject {
+	return ga.GetObject(name)
 }
 
 //
-func (this *GameEventAdapter) Any(name string) (obj G.IObject) {
-	cls, _ := this.Model.Classes.FindClassBySingular(name)
-	gobj := this.FindFirstOf(cls)
-	if gobj != nil {
-		obj = ObjectAdapter{this.Game, gobj}
+func (ga *GameEventAdapter) Add(data string) (ret G.IObject) {
+	if _, ok := ga.Model.Classes.FindClassBySingular(data); !ok {
+		ret = NullObject{}
 	} else {
-		this.log.Printf("no objects found of type requested `%s`", name)
-		obj = this.nullobj
+
+	}
+	return nil
+}
+
+//
+func (ga *GameEventAdapter) Remove(G.IObject) {
+}
+
+//
+func (ga *GameEventAdapter) Any(name string) (obj G.IObject) {
+	cls, _ := ga.Model.Classes.FindClassBySingular(name)
+	if gobj := ga.FindFirstOf(cls); gobj != nil {
+		obj = ObjectAdapter{ga.Game, gobj}
+	} else {
+		ga.log.Printf("no objects found of type requested `%s`", name)
+		obj = NullObject{}
 	}
 	return obj
 }
 
 //
-func (this *GameEventAdapter) Say(texts ...string) {
+func (ga *GameEventAdapter) Say(texts ...string) {
 	if len(texts) > 0 {
 		for i, text := range texts {
 			if strings.Contains(text, "{{") {
 				// FIX? use source text as a cache index?
 				// NOTE: cant easily use caller program counter index, because sub-functions might break that.
-				if text, e := reallySlow(text, this.data.values); e != nil {
-					this.log.Println(e)
+				if text, e := reallySlow(text, ga.data.values); e != nil {
+					ga.log.Println(e)
 				} else {
 					texts[i] = text
 				}
@@ -64,68 +74,68 @@ func (this *GameEventAdapter) Say(texts ...string) {
 		text := strings.Join(texts, " ")
 		// find the new lines
 		lines := strings.Split(text, "\n")
-		this.output.ScriptSays(lines)
+		ga.output.ScriptSays(lines)
 	}
 }
 
 //
-// func (this *GameEventAdapter) Report(texts ...string) {
+// func (ga *GameEventAdapter) Report(texts ...string) {
 // 	if len(texts) > 0 {
 // 		text := strings.Join(texts, " ")
-// 		this.output.Println(text)
+// 		ga.output.Println(text)
 // 	}
 // }
 
 //
-func (this *GameEventAdapter) Log(texts ...string) {
+func (ga *GameEventAdapter) Log(texts ...string) {
 	if len(texts) > 0 {
 		text := strings.Join(texts, " ")
-		this.output.Log(text)
+		ga.output.Log(text)
 	}
 }
 
 //
-func (this *GameEventAdapter) StopHere() {
-	this.cancelled = true
+func (ga *GameEventAdapter) StopHere() {
+	ga.cancelled = true
 }
 
 //
-func (this *GameEventAdapter) Rules() G.IGameRules {
-	return this.Game
+func (ga *GameEventAdapter) Rules() G.IGameRules {
+	return ga.Game
 }
 
 //
 // could make a map that implements IObject?
 // could use special keys for $name, $fullname, $game, etc.
 // the point would be, what exactly?
-func (this *GameEventAdapter) GetObject(name string) (obj G.IObject) {
+func (ga *GameEventAdapter) GetObject(name string) (obj G.IObject) {
 	// asking by original name
-	if gobj, ok := this.FindObject(name); ok {
-		obj = ObjectAdapter{this.Game, gobj}
+	if gobj, ok := ga.FindObject(name); ok {
+		obj = ObjectAdapter{ga.Game, gobj}
 	}
 	// testing against data, because sometimes the adapter isnt invoked via an event
 	// use different interfaces perhaps? maybe after injection works?
-	if obj == nil && this.data != nil {
+	if obj == nil && ga.data != nil {
 		ctx := map[string]int{"action.Source": 0, "action.Target": 1, "action.Context": 2}
 		// asking by action.something
 		if index, okay := ctx[name]; okay {
-			if gobj := this.data.objs[index]; gobj != nil {
-				obj = ObjectAdapter{this.Game, gobj}
+			if gobj := ga.data.objs[index]; gobj != nil {
+				obj = ObjectAdapter{ga.Game, gobj}
 			}
 		}
 		// asking by class name, ex. The("story")
 		if obj == nil {
-			src := this.data.objs[0]
-			cls, _ := this.Model.Classes.FindClassBySingular(name)
+			src := ga.data.objs[0]
+			cls, _ := ga.Model.Classes.FindClassBySingular(name)
 			if src.inst.Class().CompatibleWith(cls.Id()) {
-				obj = ObjectAdapter{this.Game, src}
+				obj = ObjectAdapter{ga.Game, src}
 			}
 		}
 	}
 	// logging and safety
 	if obj == nil {
-		this.log.Output(3, fmt.Sprintf("unknown object requested `%s`", name))
-		obj = this.nullobj
+		ga.log.Output(3, fmt.Sprintf("unknown object requested `%s`", name))
+		obj = NullObject{}
 	}
 	return obj
 }

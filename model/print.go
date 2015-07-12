@@ -13,14 +13,14 @@ func (model *Model) PrintModel(printer printer) {
 	printer("*** Classes:")
 	for _, class := range model.Classes {
 		printer("\t", class.Name(), class.Singular())
-		constraints := class.Constraints()
+		cons := class.Constraints()
 		printer("\t\t Constraints:")
 
-		if len(constraints) == 0 {
+		if len(cons.constraints) == 0 {
 			printer("\t\t\t (unconstrained)")
 		} else {
-			for field, cons := range constraints {
-				printer("\t\t\t", fmt.Sprintf("%v: %T", field, cons))
+			for field, con := range cons.constraints {
+				printer("\t\t\t", fmt.Sprintf("%v: %T", field, con))
 			}
 		}
 

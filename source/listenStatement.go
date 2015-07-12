@@ -27,22 +27,22 @@ type ListenFields struct {
 	Options  ListenOptions
 }
 
-func (this ListenStatement) Fields() ListenFields {
-	return this.fields
+func (ts ListenStatement) Fields() ListenFields {
+	return ts.fields
 }
 
-func (this ListenStatement) Source() Code {
-	return this.source
+func (ts ListenStatement) Source() Code {
+	return ts.source
 }
 
-func (this ListenFields) Captures() bool {
-	return this.Options&ListenCapture != 0
+func (ts ListenFields) Captures() bool {
+	return ts.Options&ListenCapture != 0
 }
 
-func (this ListenFields) OnlyTargets() bool {
-	return this.Options&ListenTargetOnly != 0
+func (ts ListenFields) OnlyTargets() bool {
+	return ts.Options&ListenTargetOnly != 0
 }
 
-func (this ListenFields) RunsAfter() bool {
-	return this.Options&ListenRunAfter != 0
+func (ts ListenFields) RunsAfter() bool {
+	return ts.Options&ListenRunAfter != 0
 }

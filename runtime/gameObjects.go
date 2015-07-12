@@ -2,21 +2,23 @@ package runtime
 
 import (
 	"fmt"
-	E "github.com/ionous/sashimi/event"
 	M "github.com/ionous/sashimi/model"
-	"github.com/ionous/sashimi/util/ident"
+	"github.com/ionous/sashimi/util/errutil"
 )
 
 //
 // Turn the passed instances into objects.
 //
-func CreateGameObjects(src M.InstanceMap,
-) (ret GameObjects, err error,
+func CreateGameObjects(
+	src M.InstanceMap,
+	tables M.TableRelations,
+) (
+	ret GameObjects,
+	err error,
 ) {
 	ret = make(GameObjects)
 	allProps := make(map[*M.ClassInfo]M.PropertySet)
 
-MakeObjects:
 	for _, inst := range src {
 		// create property sets for this instance's class
 		class := inst.Class()
@@ -26,36 +28,46 @@ MakeObjects:
 			allProps[class] = props
 		}
 		// turn properties into tables:
-		values, temps := NewRuntimeValues(), make(TemplatePool)
-		values.setDirect("Name", inst.FullName())
+		values := NewRuntimeValues(tables)
+
+		values.setDirect("Name", inst.Name()) // full name?
 		for propId, prop := range props {
-			val := inst.PropertyValue(prop)
+			val, _ := inst.Value(propId)
 			switch prop := prop.(type) {
-			case *M.PointerProperty:
-				values.setDirect(propId, val)
+			case *M.EnumProperty:
+				if choice, e := prop.IndexToChoice(val.(int)); e != nil {
+					err = errutil.Append(err, e)
+				} else {
+					values.setDirect(propId, choice)
+					values.setDirect(choice, true)
+				}
 			case *M.NumProperty:
 				values.setDirect(propId, val)
+			case *M.PointerProperty:
+				values.setDirect(propId, val)
+			case *M.RelativeProperty:
+				if table, ok := tables.TableById(prop.Relation()); !ok {
+					e := fmt.Errorf("couldn't find table", prop.Relation())
+					err = errutil.Append(err, e)
+				} else {
+					rel := RelativeValue{inst, prop, table}
+					values.setDirect(propId, rel)
+				}
+
 			case *M.TextProperty:
 				values.setDirect(propId, val)
 				// TBD: when to parse this? maybe options? here for early errors.
 				str := val.(string)
-				if e := temps.New(propId.String(), str); e != nil {
-					err = e
-					break MakeObjects
+				if e := values.temps.New(propId.String(), str); e != nil {
+					err = errutil.Append(err, e)
 				}
-			case *M.EnumProperty:
-				choice := val.(ident.Id)
-				values.setDirect(propId, choice)
-				values.setDirect(choice, true)
-			case *M.RelativeProperty:
-				// no table enties
 			default:
-				err = fmt.Errorf("internal error: unknown property type %s:%T", propId, prop)
-				break MakeObjects
+				e := fmt.Errorf("internal error: unknown property type %s:%T", propId, prop)
+				err = errutil.Append(err, e)
 			}
 		}
-		// creat the game obj
-		gameobj := &GameObject{inst, values, temps, E.NewDispatcher()}
+		// create the game obj
+		gameobj := &GameObject{inst, values}
 		ret[inst.Id()] = gameobj
 	}
 	return ret, err

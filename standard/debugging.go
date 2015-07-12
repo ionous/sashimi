@@ -14,9 +14,9 @@ func init() {
 				target := g.The("action.Target")
 				parent, relation := DirectParent(target)
 				if relation == "" {
-					g.Say(target.Name(), "=>", "out of world")
+					g.Say(target.Text("Name"), "=>", "out of world")
 				} else {
-					g.Say(target.Name(), "=>", relation, parent.Name())
+					g.Say(target.Text("Name"), "=>", relation, parent.Text("Name"))
 				}
 			}))
 

@@ -17,9 +17,14 @@ func NewClassInfo(
 	plural string,
 	singular string,
 	props PropertySet,
-	constraints ConstraintSet,
+	constraints ConstraintMap,
 ) (cls *ClassInfo) {
-	return &ClassInfo{parent, id, plural, singular, props, constraints}
+	var parentConstraints *ConstraintSet
+	if parent != nil {
+		parentConstraints = &parent.constraints
+	}
+	conset := ConstraintSet{parentConstraints, constraints}
+	return &ClassInfo{parent, id, plural, singular, props, conset}
 }
 
 //
@@ -85,43 +90,6 @@ func (cls *ClassInfo) PropertyById(id ident.Id) (IProperty, bool) {
 //
 func (cls *ClassInfo) Constraints() ConstraintSet {
 	return cls.constraints
-}
-
-//
-// FindConstraint returns the contraint of the named property.
-//
-func (cls *ClassInfo) FindConstraint(name string) (ret IConstrain, okay bool) {
-	if prop, ok := cls.FindProperty(name); ok {
-		ret, okay = cls.PropertyConstraint(prop)
-	}
-	return ret, okay
-}
-
-//
-// Currently, only enum constraints are supported.
-// NOTE: Contraints can appear in any descendent cls at or below the property it constrains.
-// FIX? doesnt validate property comes from this class -- perhaps switch to id?
-//
-func (cls *ClassInfo) PropertyConstraint(prop IProperty) (ret IConstrain, okay bool) {
-	switch prop := prop.(type) {
-	case *EnumProperty:
-		if c, ok := cls.ConstraintById(prop.Id()); ok {
-			ret = c
-		} else {
-			ret = NewConstraint(prop.Enumeration)
-		}
-		okay = true
-	}
-	return ret, okay
-}
-
-func (cls *ClassInfo) ConstraintById(id ident.Id) (ret IConstrain, okay bool) {
-	if c, ok := cls.constraints[id]; ok {
-		ret, okay = c, ok
-	} else if cls.parent != nil {
-		ret, okay = cls.parent.ConstraintById(id)
-	}
-	return ret, okay
 }
 
 //

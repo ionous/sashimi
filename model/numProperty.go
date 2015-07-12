@@ -11,10 +11,14 @@ func NewNumProperty(id ident.Id, name string) *NumProperty {
 	return &NumProperty{id, name}
 }
 
-func (this *NumProperty) Id() ident.Id {
-	return this.id
+func (num *NumProperty) Id() ident.Id {
+	return num.id
 }
 
-func (this *NumProperty) Name() string {
-	return this.name
+func (num *NumProperty) Name() string {
+	return num.name
+}
+
+func (num *NumProperty) Zero(_ ConstraintSet) interface{} {
+	return float32(0)
 }

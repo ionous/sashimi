@@ -20,7 +20,7 @@ func (this *Script) Compile(writer io.Writer) (res *M.Model, err error) {
 	if this.err != nil {
 		err = this.err
 	} else {
-		res, err = C.Compile(writer, this.blocks.GetBlocks())
+		res, err = C.Compile(writer, this.blocks.GetStatements())
 	}
 	return res, err
 }

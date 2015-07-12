@@ -11,6 +11,7 @@ import (
 
 //
 // test whether the instance has the value or not
+//
 func testField(
 	res *M.Model,
 	instName string,
@@ -19,12 +20,18 @@ func testField(
 ) (err error) {
 	if inst, ok := res.Instances.FindInstance(instName); !ok {
 		err = M.InstanceNotFound(instName)
-	} else if raw, ok := inst.ValueByName(fieldName); !ok {
+	} else if prop, ok := inst.Class().FindProperty(fieldName); !ok {
 		err = fmt.Errorf("'%s.%v' missing field", instName, fieldName)
-	} else if !assert.ObjectsAreEqualValues(raw, value) {
-		err = fmt.Errorf("'%s.%v' %#v!= %#v", instName, fieldName, raw, value)
+	} else if val, ok := inst.Value(prop.Id()); !ok {
+		err = fmt.Errorf("'%s.%v' missing value", instName, fieldName)
+	} else {
+		if enum, ok := prop.(*M.EnumProperty); ok {
+			val, _ = enum.IndexToChoice(val.(int))
+		}
+		if !assert.ObjectsAreEqualValues(val, value) {
+			err = fmt.Errorf("'%s.%v' %#v!= %#v", instName, fieldName, val, value)
+		}
 	}
-
 	return err
 }
 

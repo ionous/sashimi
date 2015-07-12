@@ -82,14 +82,6 @@ func (enum Enumeration) IndexToChoice(index int) (ret ident.Id, err error) {
 //
 //
 //
-func (enum Enumeration) StringToIndex(choice string) (index int, err error) {
-	safer := MakeStringId(choice)
-	return enum.ChoiceToIndex(safer)
-}
-
-//
-//
-//
 func (enum Enumeration) ChoiceToIndex(choice ident.Id) (ret int, err error) {
 	if idx, ok := enum.choices[choice]; !ok {
 		err = OutOfRangeError(enum, choice)

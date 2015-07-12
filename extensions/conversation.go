@@ -22,6 +22,8 @@ func init() {
 			AreEither("restrictive").Or("unrestricted").Usually("unrestricted"),
 		//really important, unimportant, ...: from my extension to add priority sorting
 		)
+
+		// FIX: data not kinds.
 		s.The("kinds",
 			Called("following quips"),
 			Have("leading", "quip"),
@@ -86,10 +88,35 @@ func init() {
 				// have a turn of thinking
 
 				// present player choices
-				qp := GetQuipPool(g)
-				list := qp.GetPlayerQuips(qh)
-				panic(list)
-
+				//qp := GetQuipPool(g)
+				//list := qp.GetPlayerQuips(qh)
 			}))
+
+		s.The("quips",
+			Can("discuss").And("discussing").RequiresNothing(),
+			To("discuss", func(g G.Play) {
+				quip := g.The("quip")
+				queue := g.Add("queued quip")
+				// default is immediate/obligatory.]
+				// NOTE: inform doesnt have event parameters.
+				// threaded convesation simply exposes a handful of different actions to queue things in different ways.
+				queue.Set("quip", quip)
+			}))
+
+		s.The("kinds",
+			Called("queued quips"),
+			Have("quip", "quip"),
+			AreEither("immediate").Or("postponed"),
+			AreEither("obligatory").Or("optional"),
+		)
+
+		// discussing action to choose and exectue a line of dialog
+		// saying hello to queue an npc greeting
+		// present player choices
+		// inject player choice as discussing
+		// move spoken quips to the recollection table.
+		// check that every dialog line has an npc
+		// check that every npc has a greeting
+		// perhaps a Requires for Has
 	})
 }

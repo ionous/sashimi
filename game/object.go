@@ -11,7 +11,6 @@ import (
 // * testing which logs all calls
 type IObject interface {
 	Id() ident.Id
-	Name() string      // FIX: this is confusing: should support obj.Text("name") instead
 	Exists() bool      // FIX: added for obj.Object() tests, alternatives?
 	Class(string) bool // FIX: seems to programmery, alternatives?
 
@@ -24,7 +23,7 @@ type IObject interface {
 
 	Object(string) IObject
 	ObjectList(string) []IObject
-	SetObject(string, IObject)
+	Set(string, IObject)
 
 	Text(string) string
 	SetText(string, string)

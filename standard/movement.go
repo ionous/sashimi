@@ -71,13 +71,13 @@ func init() {
 				actor, dir := g.The("actor"), g.The("action.Target")
 				from := actor.Object("whereabouts")
 				// try the forward direction:
-				exit := from.Object(dir.Name() + "-via")
+				exit := from.Object(dir.Text("Name") + "-via")
 				if exit.Exists() {
 					TryMove(actor, dir, exit)
 				} else {
 					// try a connected link:
 					rev := dir.Object("opposite")
-					exit := from.Object(rev.Name() + "-rev-via")
+					exit := from.Object(rev.Text("Name") + "-rev-via")
 					if exit.Exists() {
 						if sources := exit.ObjectList("sources"); len(sources) == 1 {
 							TryMove(actor, dir, sources[0])
@@ -105,7 +105,7 @@ func init() {
 						// FIX: duplicated in stories describe the first room
 						room.Go("report the view")
 						room.SetIs("visited")
-						g.The("status bar").SetText("left", strings.Title(room.Name()))
+						g.The("status bar").SetText("left", strings.Title(room.Text("Name")))
 					}
 				}
 			}))

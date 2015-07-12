@@ -41,7 +41,7 @@ func (this ClassTarget) Parent() (ret E.ITarget, ok bool) {
 // (from E.ITarget)
 //
 func (this ClassTarget) Dispatch(evt E.IEvent) (err error) {
-	if d, ok := this.host.game.Dispatchers.GetDispatcher(this.class); ok {
+	if d, ok := this.host.game.Dispatchers.GetDispatcher(this.class.Id()); ok {
 		err = d.Dispatch(evt)
 	}
 	return err

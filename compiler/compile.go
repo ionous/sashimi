@@ -15,7 +15,7 @@ import (
 
 //
 // create a new instance of script results
-func Compile(out io.Writer, src S.Blocks) (*M.Model, error) {
+func Compile(out io.Writer, src S.Statements) (*M.Model, error) {
 	names := NewNameSource()
 	rel := newRelativeFactory(names.newScope(nil))
 	ctx := &Context{
@@ -31,7 +31,7 @@ func Compile(out io.Writer, src S.Blocks) (*M.Model, error) {
 //
 // internal for compiling a script
 type Context struct {
-	src       S.Blocks
+	src       S.Statements
 	names     NameScope
 	classes   *ClassFactory
 	instances *InstanceFactory
@@ -76,13 +76,19 @@ func (this *Context) processAssertions(asserts []S.AssertionStatement) (err erro
 // ( the caller keeps processing the same blocks over and over until all are resolved. )
 //
 func (this *Context) processAssertBlock(assert S.AssertionStatement) (processed bool, err error) {
-	owner := assert.Owner()
+	fields, source := assert.Fields(), assert.Source()
+
+	//
+	longName := fields.Options["long name"]
+	if longName == "" {
+		longName = fields.Called
+	}
 
 	// a possible class instancing?
 	// we dont mind if we dont find the owner class. it might resolve later.
-	if class, ok := this.classes.findBySingularName(owner); ok {
-		short, long, source := assert.ShortName(), assert.Option("long name"), assert.Source()
-		if c, e := this.instances.addInstanceRef(class, short, long, source); e != nil {
+	if class, ok := this.classes.findBySingularName(fields.Owner); ok {
+		name, longName := fields.Called, longName
+		if c, e := this.instances.addInstanceRef(class, name, longName, source); e != nil {
 			err = e
 		} else if c != nil {
 			processed = true
@@ -91,8 +97,8 @@ func (this *Context) processAssertBlock(assert S.AssertionStatement) (processed 
 		// a possible class derivation?
 		// classFactory seeds itself with the root type "kinds".
 		// ultimately all classes are built as some derivation from that.
-		if parent, ok := this.classes.findByPluralName(owner); ok {
-			plural, single := assert.FullName(), assert.Option("singular name")
+		if parent, ok := this.classes.findByPluralName(fields.Owner); ok {
+			plural, single := longName, fields.GetOption("singular name", "")
 			c, e := this.classes.addClassRef(parent, plural, single)
 			if e != nil {
 				err = e

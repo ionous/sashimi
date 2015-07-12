@@ -10,48 +10,45 @@ import (
 // its property values fall back to its associated class when needed.
 //
 type InstanceInfo struct {
-	id    ident.Id
-	class *ClassInfo
-	name  string
-	long  string // FIX: kill inst, replace with article categorization
-	//
-	instances InstanceMap
-	tables    TableRelations
-	values    map[ident.Id]Variant
+	id     ident.Id
+	class  *ClassInfo
+	name   string // FIX: kill name, replace wth name text value.
+	long   string // FIX: kill long name, replace with article categorization. somehow.
+	values map[ident.Id]Variant
 }
 
 //
-// Enums are stored as ints;
+// Enums are stored as int;
 // Numbers as float32;
-// Text as string;
+// Pointers as ident.Id;
+// Text as string.
 //
 type Variant interface{}
 
 //
-//
+// NewInstanceInfo creates a new instance record.
 //
 func NewInstanceInfo(
 	id ident.Id,
 	class *ClassInfo,
 	name string,
 	long string,
-	instances InstanceMap,
-	tables TableRelations,
 	values map[ident.Id]Variant,
 ) *InstanceInfo {
-	inst := &InstanceInfo{id, class, name, long, instances, tables, values}
+	inst := &InstanceInfo{id, class, name, long, values}
 	return inst
 }
 
 //
-// Every instance has a unique id based on its original name.
+// Id to uniquely identify the instance.
+// Usually, the id is derived automatically from the instance's name.
 //
 func (inst *InstanceInfo) Id() ident.Id {
 	return inst.id
 }
 
 //
-//
+// String representation of the instance and its class.
 //
 func (inst *InstanceInfo) String() string {
 	// FIX: inst looks silly when singular starts with a vowel.
@@ -59,95 +56,50 @@ func (inst *InstanceInfo) String() string {
 }
 
 //
-//
+// Name given by the user for this instance ( sans articles of speech. )
 //
 func (inst *InstanceInfo) Name() string {
 	return inst.name
 }
 
 //
-//
-//
-func (inst *InstanceInfo) FullName() string {
-	name := inst.long
-	if name == "" {
-		name = inst.name
-	}
-	return name
-}
-
-//
-//
+// Class of this instance.
 //
 func (inst *InstanceInfo) Class() *ClassInfo {
 	return inst.class
 }
 
 //
-// return a interface representing the contents of the passed property name
-// WARNING/FIX: inst is default value for everything but relatives(!)
-// Only currently used for testing
+// FindValue returns the (default) value of the named property.
+// By design, there is no equivalent SetValue.
 //
-func (inst *InstanceInfo) ValueByName(name string) (ret interface{}, okay bool) {
+func (inst *InstanceInfo) FindValue(name string) (ret interface{}, okay bool) {
 	if prop, ok := inst.class.FindProperty(name); ok {
-		ret, okay = inst.PropertyValue(prop), true
+		ret, okay = inst._value(prop), true
 	}
 	return ret, okay
 }
 
+func (inst *InstanceInfo) Values() map[ident.Id]Variant {
+	return inst.values
+}
+
 //
-// PropertyValue returns the story assigned value of an instance property
-// FIX? see CreateGameObjects for why this is needed.
+// Value returns the (default) value of the identified property.
+// By design, there is no equivalent SetValue.
 //
-func (inst *InstanceInfo) PropertyValue(prop IProperty) (ret interface{}) {
-	switch prop := prop.(type) {
-	case *RelativeProperty:
-		ret = RelativeValue{inst, prop, inst.tables}
-	case *TextProperty:
-		v, _ := inst.values[prop.id]
-		ret, _ = v.(string)
-	case *EnumProperty:
-		var index int
-		if v, ok := inst.values[prop.id].(int); ok {
-			index = v
-		} else {
-			if cons, ok := inst.class.PropertyConstraint(prop); ok {
-				if cons, ok := cons.(*EnumConstraint); ok {
-					index = cons.BestIndex()
-				}
-			}
-		}
-		if choice, e := prop.IndexToChoice(index); e != nil {
-			panic(e)
-		} else {
-			ret = choice
-		}
-	case *NumProperty:
-		v, _ := inst.values[prop.id]
-		ret, _ = v.(float32)
-	case *PointerProperty:
-		v, _ := inst.values[prop.id]
-		ret, _ = v.(ident.Id)
-	default:
-		panic(fmt.Sprintf("unhandled property %s type %T", prop.Id(), prop))
+func (inst *InstanceInfo) Value(id ident.Id) (ret interface{}, okay bool) {
+	if prop, ok := inst.class.PropertyById(id); ok {
+		ret, okay = inst._value(prop), true
+	}
+	return ret, okay
+}
+
+func (inst *InstanceInfo) _value(prop IProperty) (ret interface{}) {
+	if v, ok := inst.values[prop.Id()]; ok {
+		ret = v
+	} else {
+		ret = prop.Zero(inst.class.Constraints())
 	}
 	return ret
-}
-
-//
-// the model shouldnt (directly) support changing the values
-// that's the runtime's job.
-//
-func (inst *InstanceInfo) FindRelativeValue(name string) (ret RelativeValue, okay bool) {
-	if prop, ok := inst.class.FindProperty(name); ok {
-		if prop, ok := prop.(*RelativeProperty); ok {
-			ret = inst.GetRelativeValue(prop)
-			okay = true
-		}
-	}
-	return ret, okay
-}
-
-func (inst *InstanceInfo) GetRelativeValue(prop *RelativeProperty) RelativeValue {
-	return RelativeValue{inst, prop, inst.tables}
 }

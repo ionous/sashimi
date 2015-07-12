@@ -8,168 +8,132 @@ import (
 )
 
 // FIX? generate the implemenation via "go generate"
-type NullObject struct {
-	log *log.Logger
-}
+type NullObject struct{}
 
-func (this *NullObject) println(args ...interface{}) {
-	this.log.Println(append([]interface{}{"NullObject>"}, args...))
-}
-
-//
-//
-//
-func (this *NullObject) String() string {
-	return this.Name()
-}
-
-func (adapt *NullObject) Id() ident.Id {
-	return ""
+func (null NullObject) println(args ...interface{}) {
+	log.Println(append([]interface{}{"NullObject>"}, args...))
 }
 
 //
-// FIX: maybe dont share the NullObject, and have unique names for them all
-//
-func (this *NullObject) Name() (ret string) {
+func (null NullObject) String() string {
 	return "NullObject"
 }
 
 //
+func (null NullObject) Id() ident.Id {
+	return ""
+}
+
 //
-//
-func (this *NullObject) Exists() bool {
+func (null NullObject) Exists() bool {
 	return false
 }
 
 //
-//
-//
-func (this *NullObject) Class(cls string) bool {
+func (null NullObject) Class(cls string) bool {
 	return false
 }
 
 //
-//
-//
-func (this *NullObject) Is(c string) (ret bool) {
+func (null NullObject) Is(c string) (ret bool) {
 	pc, _, _, okay := runtime.Caller(0)
 	if okay {
 		name := runtime.FuncForPC(pc).Name()
-		this.println(name, c)
+		null.println(name, c)
 	}
 	return
 }
 
 //
-//
-//
-func (this *NullObject) SetIs(c string) {
+func (null NullObject) SetIs(c string) {
 	pc, _, _, okay := runtime.Caller(0)
 	if okay {
 		name := runtime.FuncForPC(pc).Name()
-		this.println(name, c)
+		null.println(name, c)
 	}
 }
 
 //
-//
-//
-func (this *NullObject) Num(p string) (ret float32) {
+func (null NullObject) Num(p string) (ret float32) {
 	pc, _, _, okay := runtime.Caller(0)
 	if okay {
 		name := runtime.FuncForPC(pc).Name()
-		this.println(name, p)
+		null.println(name, p)
 	}
 	return
 }
 
 //
-//
-//
-func (this *NullObject) SetNum(p string, v float32) {
+func (null NullObject) SetNum(p string, v float32) {
 	pc, _, _, okay := runtime.Caller(0)
 	if okay {
 		name := runtime.FuncForPC(pc).Name()
-		this.println(name, p, v)
+		null.println(name, p, v)
 	}
 }
 
 //
-//
-//
-func (this *NullObject) Object(c string) G.IObject {
+func (null NullObject) Object(c string) G.IObject {
 	pc, _, _, okay := runtime.Caller(0)
 	if okay {
 		name := runtime.FuncForPC(pc).Name()
-		this.println(name, c)
+		null.println(name, c)
 	}
-	return this
+	return null
 }
 
 //
-//
-//
-func (this *NullObject) ObjectList(c string) (ret []G.IObject) {
+func (null NullObject) ObjectList(c string) (ret []G.IObject) {
 	pc, _, _, okay := runtime.Caller(0)
 	if okay {
 		name := runtime.FuncForPC(pc).Name()
-		this.println(name, c)
+		null.println(name, c)
 	}
 	return
 }
 
 //
-//
-//
-func (this *NullObject) SetObject(c string, _ G.IObject) {
+func (null NullObject) Set(c string, _ G.IObject) {
 	pc, _, _, okay := runtime.Caller(0)
 	if okay {
 		name := runtime.FuncForPC(pc).Name()
-		this.println(name, c)
+		null.println(name, c)
 	}
 }
 
 //
-//
-//
-func (this *NullObject) Text(p string) (ret string) {
+func (null NullObject) Text(p string) (ret string) {
 	pc, _, _, okay := runtime.Caller(0)
 	if okay {
 		name := runtime.FuncForPC(pc).Name()
-		this.println(name, p)
+		null.println(name, p)
 	}
 	return
 }
 
 //
-//
-//
-func (this *NullObject) SetText(p string, v string) {
+func (null NullObject) SetText(p string, v string) {
 	pc, _, _, okay := runtime.Caller(0)
 	if okay {
 		name := runtime.FuncForPC(pc).Name()
-		this.println(name, p, v)
+		null.println(name, p, v)
 	}
 }
 
 //
-//
-//
-func (this *NullObject) Go(s string, _ ...G.IObject) {
+func (null NullObject) Go(s string, _ ...G.IObject) {
 	pc, _, _, okay := runtime.Caller(0)
 	if okay {
 		name := runtime.FuncForPC(pc).Name()
-		this.println(name, s)
+		null.println(name, s)
 	}
 }
 
 //
-//
-//
-func (this *NullObject) Says(s string) {
+func (null NullObject) Says(s string) {
 	pc, _, _, okay := runtime.Caller(0)
 	if okay {
 		name := runtime.FuncForPC(pc).Name()
-		this.println(name, s)
+		null.println(name, s)
 	}
 }

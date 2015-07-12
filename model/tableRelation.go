@@ -14,7 +14,7 @@ type TableRelations struct {
 //
 type TableRelation struct {
 	*Relation
-	table.Table
+	*table.Table
 }
 
 //

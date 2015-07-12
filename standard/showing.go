@@ -26,7 +26,7 @@ func init() {
 			WhenCapturing("showing it to", func(g G.Play) {
 				presenter, _, prop := g.The("action.Source"), g.The("action.Target"), g.The("action.Context")
 				if carrier, ok := Carrier(prop); !ok || carrier != presenter {
-					g.Say("You aren't holding", prop.Name())
+					g.Say("You aren't holding", prop.Text("Name"))
 					g.StopHere()
 				}
 			}),
@@ -51,7 +51,7 @@ func init() {
 			Can("show").And("showing").RequiresTwo("actor"),
 			To("show", func(g G.Play) {
 				_, _, receiver := g.The("action.Source"), g.The("action.Target"), g.The("action.Context")
-				g.Say(receiver.Name(), "is unimpressed")
+				g.Say(receiver.Text("Name"), "is unimpressed")
 			}))
 		// input
 		s.Execute("show it to",

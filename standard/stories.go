@@ -84,7 +84,7 @@ func init() {
 			To("set initial position", func(g G.Play) {
 				player := g.The("action.Target")
 				room := g.The("action.Context")
-				player.SetObject("whereabouts", room) // Now("player's whereabouts is $room")
+				player.Set("whereabouts", room) // Now("player's whereabouts is $room")
 			}))
 
 		s.The("stories",
@@ -95,7 +95,7 @@ func init() {
 				/// FIX: visited should happen elsewhere
 				room.Go("report the view")
 				room.SetIs("visited")
-				g.The("status bar").SetText("left", strings.Title(room.Name()))
+				g.The("status bar").SetText("left", strings.Title(room.Text("Name")))
 			}),
 		)
 	})

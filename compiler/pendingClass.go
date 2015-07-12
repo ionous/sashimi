@@ -107,7 +107,6 @@ func (cls *PendingClass) addEnum(name string,
 				rule := PropertyRule{id, expect}
 				cls.rules = append(cls.rules, rule)
 			}
-
 		}
 	}
 	return ret, err
@@ -158,36 +157,3 @@ func (cls *PendingClass) addRelative(fields S.RelativeFields, src S.Code,
 	}
 	return ret, err
 }
-
-//
-// Add a property capable of tracking another class.
-//
-// func (cls *PendingClass) _addPointer(fields S.PropertyFields, src S.Code,
-// ) (ret IBuildProperty,
-// 	err error,
-// ) {
-// 	name, kind := fields.Name, fields.Kind
-// 	// note: it probably doesnt make sense to allow a ratcheting down of cls
-// 	// such a ratcheting would *increasing* restrictiveness, not permissability.
-// 	// for example: "pointer","kind" could store "teddy bears",
-// 	// but changed to "pointer","adult white male" could only store "teddy roosevelt"
-// 	if id, e := cls.names.addRef(name, kind, src); e != nil {
-// 		err = e
-// 	} else if other, ok := cls.classes.findBySingularName(kind); !ok {
-// 		err = ClassNotFound(kind)
-// 	} else {
-// 		ret, err = cls.props.make(id,
-// 			func(old IBuildProperty) (err error) {
-// 				if old, existed := old.(PointerBuilder); existed {
-// 					if old.class != other.id {
-// 						err = fmt.Errorf("pointer redefined. was %s, now %s", old.class, other.id)
-// 					}
-// 				}
-// 				return
-// 			},
-// 			func() (IBuildProperty, error) {
-// 				return NewPointerBuilder(id, name, other.id), nil
-// 			})
-// 	}
-// 	return ret, err
-// }

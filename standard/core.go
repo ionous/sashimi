@@ -14,9 +14,9 @@ func Assign(prop G.IObject, rel string, dest G.IObject) {
 	// sure hope there's no errors, would relation by value remove the need for transaction?
 	if _, parentRel := DirectParent(prop); parentRel != "" {
 		// note: an object like the fishFood isnt "in the world", and doesnt have an owner field to clear.
-		prop.SetObject(parentRel, nil)
+		prop.Set(parentRel, nil)
 	}
-	prop.SetObject(rel, dest)
+	prop.Set(rel, dest)
 }
 
 func Give(actor G.IObject, prop G.IObject) {
@@ -233,14 +233,14 @@ func init() {
 
 //
 // when is the right time for functions versus callbacks?
-func listContents(g G.Play, header string, this G.IObject) (printed bool) {
+func listContents(g G.Play, header string, obj G.IObject) (printed bool) {
 	// if something described which is not scenery is on the noun and something which is not the player is on the noun:
 	// obviously a filterd callback, visitor, would be nice FilterList("contents", func() ... )
-	contents := this.ObjectList("contents")
+	contents := obj.ObjectList("contents")
 	if len(contents) > 0 {
-		g.Say(header, this.Name(), "is:")
-		for _, obj := range contents {
-			obj.Go("print description")
+		g.Say(header, obj.Text("Name"), "is:")
+		for _, content := range contents {
+			content.Go("print description")
 		}
 		g.Say("")
 		printed = true
@@ -262,7 +262,7 @@ func init() {
 				if g.The("player") == actor {
 					g.Say("You jump on the spot.")
 				} else {
-					g.Say(actor.Name(), "jumps on the spot.")
+					g.Say(actor.Text("Name"), "jumps on the spot.")
 				}
 			}))
 
@@ -279,7 +279,7 @@ func init() {
 				if g.The("player") == actor {
 					g.Say("You find nothing of interest.")
 				} else {
-					g.Say(actor.Name(), "looks under the", source.Name(), ".")
+					g.Say(actor.Text("Name"), "looks under the", source.Text("Name"), ".")
 				}
 			}))
 
@@ -291,7 +291,7 @@ func init() {
 				if g.The("player") == actor {
 					g.Say("You smell nothing unexpected.")
 				} else {
-					g.Say(actor.Name(), "sniffs.")
+					g.Say(actor.Text("Name"), "sniffs.")
 				}
 			}),
 			Can("report the sound").And("reporting the sound").RequiresOne("actor"),
@@ -300,7 +300,7 @@ func init() {
 				if g.The("player") == actor {
 					g.Say("You hear nothing unexpected.")
 				} else {
-					g.Say(actor.Name(), "listens.")
+					g.Say(actor.Text("Name"), "listens.")
 				}
 			}))
 
@@ -308,7 +308,7 @@ func init() {
 			Can("print name").And("printing name text").RequiresNothing(),
 			To("print name", func(g G.Play) {
 				obj := g.The("object")
-				g.Say(obj.Name())
+				g.Say(obj.Text("Name"))
 			}))
 
 		s.The("containers",
@@ -320,9 +320,9 @@ func init() {
 				this := g.The("container")
 				list := this.ObjectList("contents")
 				if this.Is("transparent") && len(list) == 0 {
-					g.Say(this.Name(), "(empty)")
+					g.Say(this.Text("Name"), "(empty)")
 				} else {
-					g.Say(this.Name())
+					g.Say(this.Text("Name"))
 				}
 				g.StopHere()
 			}))
@@ -331,12 +331,12 @@ func init() {
 			Can("report the view").And("room describing").RequiresNothing(),
 			To("report the view", func(g G.Play) {
 				room := g.The("room")
-				g.Say(room.Name())
+				g.Say(room.Text("Name"))
 				//
 				desc := room.Text("description")
 				if desc == "" {
-					// FIX: this .Name() is confusing: possibly support obj.Text("name") instead?
-					desc = room.Name()
+					// FIX: this .Text("Name") is confusing: possibly support obj.Text("name") instead?
+					desc = room.Text("Name")
 				}
 				g.Say(desc)
 				for _, obj := range room.ObjectList("contents") {

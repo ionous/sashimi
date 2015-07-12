@@ -12,10 +12,14 @@ func NewTextProperty(id ident.Id, name string) *TextProperty {
 	return &TextProperty{id, name}
 }
 
-func (this *TextProperty) Id() ident.Id {
-	return this.id
+func (text *TextProperty) Id() ident.Id {
+	return text.id
 }
 
-func (this *TextProperty) Name() string {
-	return this.name
+func (text *TextProperty) Name() string {
+	return text.name
+}
+
+func (text *TextProperty) Zero(_ ConstraintSet) interface{} {
+	return ""
 }

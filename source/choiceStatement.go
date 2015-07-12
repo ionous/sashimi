@@ -12,11 +12,11 @@ type ChoiceFields struct {
 }
 
 //
-func (this ChoiceStatement) Fields() ChoiceFields {
-	return this.fields
+func (ts ChoiceStatement) Fields() ChoiceFields {
+	return ts.fields
 }
 
 //
-func (this ChoiceStatement) Source() Code {
-	return this.source
+func (ts ChoiceStatement) Source() Code {
+	return ts.source
 }

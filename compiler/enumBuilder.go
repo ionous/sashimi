@@ -35,7 +35,14 @@ func (enum EnumBuilder) BuildProperty() (M.IProperty, error) {
 }
 
 func (enum EnumBuilder) SetProperty(ctx PropertyContext) (err error) {
-	constraints, _ := ctx.class.PropertyConstraint(enum.prop)
+
+	var constraints M.IConstrain
+	if c, ok := ctx.class.Constraints().ConstraintById(enum.id); ok {
+		constraints = c
+	} else {
+		constraints = M.NewConstraint(enum.choices)
+	}
+
 	if constraint, ok := constraints.(*M.EnumConstraint); !ok {
 		err = fmt.Errorf("internal error: expected enum contraints")
 	} else {

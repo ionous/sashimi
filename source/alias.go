@@ -8,16 +8,16 @@ type AliasStatement struct {
 }
 
 //
-func (this AliasStatement) Key() string {
-	return this.key
+func (ts AliasStatement) Key() string {
+	return ts.key
 }
 
 //
-func (this AliasStatement) Phrases() []string {
-	return this.phrases
+func (ts AliasStatement) Phrases() []string {
+	return ts.phrases
 }
 
 //
-func (this AliasStatement) Source() Code {
-	return this.source
+func (ts AliasStatement) Source() Code {
+	return ts.source
 }

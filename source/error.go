@@ -11,6 +11,6 @@ package source
 // }
 
 // //
-// func (this ErrorStatement) Source() Code {
+// func (ts ErrorStatement) Source() Code {
 // 	return ""
 // }

@@ -24,10 +24,10 @@ func NewExpectation(rule RuleType, value interface{}) PropertyExpectation {
 	return PropertyExpectation{rule, value}
 }
 
-func (this PropertyExpectation) RuleType() RuleType {
-	return this.rule
+func (ts PropertyExpectation) RuleType() RuleType {
+	return ts.rule
 }
 
-func (this PropertyExpectation) RuleValue() interface{} {
-	return this.value
+func (ts PropertyExpectation) RuleValue() interface{} {
+	return ts.value
 }

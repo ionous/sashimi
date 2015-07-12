@@ -17,23 +17,27 @@ func NewPointerProperty(id ident.Id, name string, cls ident.Id) *PointerProperty
 }
 
 //
-// Id returns the unique id of this property.
+// Id returns the unique id of ptr property.
 // It is usually derived from the property's name.
 //
-func (this *PointerProperty) Id() ident.Id {
-	return this.id
+func (ptr *PointerProperty) Id() ident.Id {
+	return ptr.id
 }
 
 //
 // Name returns the property's appelation as specified by the author.
 //
-func (this *PointerProperty) Name() string {
-	return this.name
+func (ptr *PointerProperty) Name() string {
+	return ptr.name
 }
 
 //
-// Class returns the id of the kind of class which instances with this property point to.
+// Class returns the id of the kind of class which instances with ptr property point to.
 //
-func (this *PointerProperty) Class() ident.Id {
-	return this.cls
+func (ptr *PointerProperty) Class() ident.Id {
+	return ptr.cls
+}
+
+func (ptr *PointerProperty) Zero(_ ConstraintSet) interface{} {
+	return ident.Empty()
 }

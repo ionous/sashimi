@@ -20,10 +20,10 @@ type MultiValueFields struct {
 type Row []interface{}
 
 //
-func (this MultiValueStatement) Fields() MultiValueFields {
-	return this.fields
+func (ts MultiValueStatement) Fields() MultiValueFields {
+	return ts.fields
 }
 
-func (this MultiValueStatement) Source() Code {
-	return this.source
+func (ts MultiValueStatement) Source() Code {
+	return ts.source
 }

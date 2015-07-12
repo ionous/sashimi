@@ -45,7 +45,7 @@ func (part *PartialInstances) makeData(choices []S.ChoiceStatement, kvs []S.KeyV
 	tables = part.tables
 	instances = make(M.InstanceMap)
 	for id, p := range part.partials {
-		instance := M.NewInstanceInfo(p.id, p.class, p.name, p.longName, instances, tables, p.values)
+		instance := M.NewInstanceInfo(p.id, p.class, p.name, p.longName, p.values)
 		instances[id] = instance
 	}
 

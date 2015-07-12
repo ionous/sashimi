@@ -15,19 +15,19 @@ type EnumFields struct {
 }
 
 //
-func (this EnumStatement) Source() Code {
-	return this.source
+func (ts EnumStatement) Source() Code {
+	return ts.source
 }
 
 //
-func (this EnumStatement) Fields() EnumFields {
-	return this.fields
+func (ts EnumStatement) Fields() EnumFields {
+	return ts.fields
 }
 
 //
-func (this EnumFields) IndexOf(choice string) int {
+func (ts EnumFields) IndexOf(choice string) int {
 	index := -1
-	for i, v := range this.Choices {
+	for i, v := range ts.Choices {
 		if v == choice {
 			index = i
 			break

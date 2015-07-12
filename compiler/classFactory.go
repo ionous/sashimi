@@ -24,51 +24,52 @@ type ClassFactory struct {
 func newClassFactory(names NameSource, rel *RelativeFactory) *ClassFactory {
 	res := &ClassFactory{names, rel, make(PendingClasses), make(SingleToPlural)}
 	res.addClassRef(nil, "kinds", "kind")
+	res.addClassRef(nil, "data", "data")
 	return res
 }
 
 //
 // given the passed plural name, find the previously registered class
 //
-func (this *ClassFactory) findBySingularName(singular string,
+func (fac *ClassFactory) findBySingularName(singular string,
 ) (*PendingClass, bool) {
-	id := this.singleToPlural[singular]
-	ret, okay := this.pending[id]
+	id := fac.singleToPlural[singular]
+	ret, okay := fac.pending[id]
 	return ret, okay
 }
 
 //
 // given the passed plural name, find the previously registered class
 //
-func (this *ClassFactory) findByPluralName(plural string,
+func (fac *ClassFactory) findByPluralName(plural string,
 ) (*PendingClass, bool) {
 	id := M.MakeStringId(plural)
-	ret, okay := this.pending[id]
+	ret, okay := fac.pending[id]
 	return ret, okay
 }
 
 //
 //
 //
-func (this *ClassFactory) findByRelativeName(kind string, hint S.RelativeHint,
+func (fac *ClassFactory) findByRelativeName(kind string, hint S.RelativeHint,
 ) (class *PendingClass, pluralized bool, err error) {
 	switch hint & ^S.RelativeSource {
 	case S.RelativeMany:
-		if cls, ok := this.findByPluralName(kind); !ok {
+		if cls, ok := fac.findByPluralName(kind); !ok {
 			err = ClassNotFound(kind)
 		} else {
 			class, pluralized = cls, true
 		}
 	case S.RelativeOne:
-		if cls, ok := this.findBySingularName(kind); !ok {
+		if cls, ok := fac.findBySingularName(kind); !ok {
 			err = ClassNotFound(kind)
 		} else {
 			class, pluralized = cls, false
 		}
 	default:
-		if cls, ok := this.findByPluralName(kind); ok {
+		if cls, ok := fac.findByPluralName(kind); ok {
 			class, pluralized = cls, true
-		} else if cls, ok := this.findBySingularName(kind); ok {
+		} else if cls, ok := fac.findBySingularName(kind); ok {
 			class, pluralized = cls, false
 		} else {
 			err = ClassNotFound(kind)
@@ -78,25 +79,25 @@ func (this *ClassFactory) findByRelativeName(kind string, hint S.RelativeHint,
 }
 
 //
-func (this *ClassFactory) makeClasses(relatives *RelativeFactory) (
+func (fac *ClassFactory) makeClasses(relatives *RelativeFactory) (
 	classes M.ClassMap, err error,
 ) {
-	cr := newResults(this.pending, relatives)
+	cr := newResults(fac.pending, relatives)
 	return cr.finalizeClasses()
 }
 
 //
 //
 //
-func (this *ClassFactory) addClassRef(parent *PendingClass, plural, single string,
+func (fac *ClassFactory) addClassRef(parent *PendingClass, plural, single string,
 ) (class *PendingClass, err error,
 ) {
 	// FIX: sanity check singular?
-	if singular, e := this._addOptions(plural, single); e != nil {
+	if singular, e := fac._addOptions(plural, single); e != nil {
 		err = e
-	} else if id, e := this.allNames.addName(nil, plural, "class", ""); e != nil {
+	} else if id, e := fac.allNames.addName(nil, plural, "class", ""); e != nil {
 		err = e
-	} else if class = this.pending[id]; class != nil {
+	} else if class = fac.pending[id]; class != nil {
 		// FIX? ratchet the class down?
 		if class.parent != parent {
 			err = fmt.Errorf("conflicting `%v` parent class `%v` respecified as `%v`",
@@ -108,13 +109,13 @@ func (this *ClassFactory) addClassRef(parent *PendingClass, plural, single strin
 			parentProps = &parent.props
 		}
 		class = &PendingClass{
-			this, parent, id, plural, singular,
-			this.allNames.newScope(plural),
+			fac, parent, id, plural, singular,
+			fac.allNames.newScope(plural),
 			NewProperties(parentProps),
 			make(PendingRules, 0),
 		}
-		this.pending[id] = class
-		this.singleToPlural[singular] = id
+		fac.pending[id] = class
+		fac.singleToPlural[singular] = id
 	}
 
 	return class, err
@@ -123,13 +124,13 @@ func (this *ClassFactory) addClassRef(parent *PendingClass, plural, single strin
 //
 // ex. name="rooms", value="room".
 //
-func (this *ClassFactory) _addOptions(plural, singular string) (string, error) {
+func (fac *ClassFactory) _addOptions(plural, singular string) (string, error) {
 	if singular == "" {
 		singular = inflect.Singularize(plural)
 	}
 	// reserve `room` to mean `rooms`
 	// we dont return the id -- if they meant a specific singular string, we want that
 	// the id is just the internals of name vs. name collision
-	_, err := this.allNames.addName(nil, singular, plural, "")
+	_, err := fac.allNames.addName(nil, singular, plural, "")
 	return singular, err
 }

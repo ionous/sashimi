@@ -11,11 +11,12 @@ import (
 )
 
 //
-func TestTalk(t *testing.T) {
+func xTestTalk(t *testing.T) {
 	s := InitScripts()
 	Talk(s)
 	if g, err := NewTestGame(t, s); assert.NoError(t, err) {
 		qh := QuipHistory{}
+		// FIX:  saying hello.
 		qh.Push(ident.MakeId("OldBoy # WhatsTheMatter"))
 		qp := QuipPool(g.Objects)
 		newQuip := qp[ident.MakeId("OldBoy # Later")]
@@ -43,7 +44,7 @@ func TestTalk(t *testing.T) {
 	}
 }
 
-func TestVisit(t *testing.T) {
+func xTestVisit(t *testing.T) {
 	s := InitScripts()
 	Talk(s)
 	if g, err := NewTestGame(t, s); assert.NoError(t, err) {

@@ -2,9 +2,10 @@ package tests
 
 import (
 	G "github.com/ionous/sashimi/game"
-	M "github.com/ionous/sashimi/model"
+	R "github.com/ionous/sashimi/runtime"
 	. "github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/standard"
+	"github.com/ionous/sashimi/util/ident"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
@@ -91,12 +92,13 @@ func TestMoveGoing(t *testing.T) {
 }
 
 type xMove struct {
-	cmd, res string
+	cmd string
+	res ident.Id
 }
 
 func testMoves(t *testing.T, g TestGame, moves ...xMove) {
 	// FIX: relations are stored in the model
-	if p, ok := g.Model.Instances.FindInstance("player"); assert.True(t, ok) {
+	if p, ok := g.FindObject("player"); assert.True(t, ok) {
 		for _, move := range moves {
 			t.Logf("%s => %s", move.cmd, move.res)
 			out := g.RunInput(move.cmd).FlushOutput()
@@ -108,8 +110,8 @@ func testMoves(t *testing.T, g TestGame, moves ...xMove) {
 	}
 }
 
-func where(inst *M.InstanceInfo) (ret string) {
-	if rel, ok := inst.FindRelativeValue("whereabouts"); ok {
+func where(gobj *R.GameObject) (ret ident.Id) {
+	if rel, ok := gobj.GetValue(ident.MakeId("whereabouts")).(R.RelativeValue); ok {
 		for _, v := range rel.List() {
 			ret = v
 			break

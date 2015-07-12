@@ -9,15 +9,15 @@ import (
 
 //
 // Placeholder for information about the location of definitions
-// the runtime might implement an interface for this, or we could use stringer
+// the runtime might implement an interface for blocks, or we could use stringer
 // (ex. for handling compile time or run time errors )
 //
 type Code string
 
-func (this Code) Errorf(format string, a ...interface{}) error {
+func (code Code) Errorf(format string, a ...interface{}) error {
 	return errutil.Func(func() string {
 		s := fmt.Errorf(format, a...)
-		return fmt.Sprintf("Error (%s): %s", this, s)
+		return fmt.Sprintf("Error (%s): %s", code, s)
 	})
 }
 
@@ -29,7 +29,7 @@ type IStatement interface {
 //
 //
 //
-type Blocks struct {
+type Statements struct {
 	ActionHandlers []RunStatement
 	Aliases        []AliasStatement
 	Asserts        []AssertionStatement
@@ -44,15 +44,15 @@ type Blocks struct {
 }
 
 type BuildingBlocks struct {
-	blocks Blocks
+	statements Statements
 }
 
-func (this *BuildingBlocks) GetBlocks() Blocks {
-	return this.blocks
+func (blocks *BuildingBlocks) GetStatements() Statements {
+	return blocks.statements
 }
 
 //
-func (this *BuildingBlocks) NewActionAssertion(
+func (blocks *BuildingBlocks) NewActionAssertion(
 	actionName string,
 	eventName string,
 	source string,
@@ -61,12 +61,12 @@ func (this *BuildingBlocks) NewActionAssertion(
 ) (err error) {
 	fields := ActionAssertionFields{actionName, eventName, source, target, context}
 	statement := ActionStatement{fields, ""}
-	this.blocks.Actions = append(this.blocks.Actions, statement)
+	blocks.statements.Actions = append(blocks.statements.Actions, statement)
 	return err
 }
 
 //
-func (this *BuildingBlocks) NewActionHandler(
+func (blocks *BuildingBlocks) NewActionHandler(
 	owner string,
 	action string,
 	callback G.Callback,
@@ -74,82 +74,79 @@ func (this *BuildingBlocks) NewActionHandler(
 ) (err error) {
 	fields := RunFields{owner, action, callback, phase}
 	statement := RunStatement{fields, ""}
-	this.blocks.ActionHandlers = append(this.blocks.ActionHandlers, statement)
+	blocks.statements.ActionHandlers = append(blocks.statements.ActionHandlers, statement)
 	return err
 }
 
-func (this *BuildingBlocks) NewAlias(
+func (blocks *BuildingBlocks) NewAlias(
 	key string,
 	phrases []string,
 ) (err error) {
 	a := AliasStatement{key, phrases, ""}
-	this.blocks.Aliases = append(this.blocks.Aliases, a)
+	blocks.statements.Aliases = append(blocks.statements.Aliases, a)
 	return err
 }
 
 //
-func (this *BuildingBlocks) NewAssertion(
-	owner string,
-	called string,
-	opts map[string]string,
+func (blocks *BuildingBlocks) NewAssertion(fields AssertionFields, source Code,
 ) (err error) {
-	a := AssertionStatement{owner, called, opts}
-	this.blocks.Asserts = append(this.blocks.Asserts, a)
+	a := AssertionStatement{fields, source}
+	blocks.statements.Asserts = append(blocks.statements.Asserts, a)
 	return err
 }
 
 //
-func (this *BuildingBlocks) NewChoice(fields ChoiceFields, source Code,
+func (blocks *BuildingBlocks) NewChoice(fields ChoiceFields, source Code,
 ) (err error) {
 	choice := ChoiceStatement{fields, source}
-	this.blocks.Choices = append(this.blocks.Choices, choice)
+	blocks.statements.Choices = append(blocks.statements.Choices, choice)
 	return err
 }
 
 //
-func (this *BuildingBlocks) NewEnumeration(fields EnumFields, source Code,
+func (blocks *BuildingBlocks) NewEnumeration(fields EnumFields, source Code,
 ) (err error) {
 	enum := EnumStatement{fields, source}
-	this.blocks.Enums = append(this.blocks.Enums, enum)
+	blocks.statements.Enums = append(blocks.statements.Enums, enum)
 	return err
 }
 
 //
-func (this *BuildingBlocks) NewEventHandler(fields ListenFields, source Code,
+func (blocks *BuildingBlocks) NewEventHandler(fields ListenFields, source Code,
 ) (err error) {
 	statement := ListenStatement{fields, source}
-	this.blocks.EventHandlers = append(this.blocks.EventHandlers, statement)
+	blocks.statements.EventHandlers = append(blocks.statements.EventHandlers, statement)
 	return err
 }
 
 //
-func (this *BuildingBlocks) NewKeyValue(fields KeyValueFields, source Code,
+func (blocks *BuildingBlocks) NewKeyValue(fields KeyValueFields, source Code,
 ) (err error) {
 	kv := KeyValueStatement{fields, source}
-	this.blocks.KeyValues = append(this.blocks.KeyValues, kv)
+	blocks.statements.KeyValues = append(blocks.statements.KeyValues, kv)
 	return err
 }
 
 //
-func (this *BuildingBlocks) NewMultiValue(fields MultiValueFields, source Code,
+func (blocks *BuildingBlocks) NewMultiValue(fields MultiValueFields, source Code,
 ) (err error) {
 	mv := MultiValueStatement{fields, source}
-	this.blocks.MultiValues = append(this.blocks.MultiValues, mv)
+	blocks.statements.MultiValues = append(blocks.statements.MultiValues, mv)
 	return err
 }
 
 //
-func (this *BuildingBlocks) NewProperty(fields PropertyFields, source Code,
+func (blocks *BuildingBlocks) NewProperty(fields PropertyFields, source Code,
 ) (err error) {
 	prop := PropertyStatement{fields, source}
-	this.blocks.Properties = append(this.blocks.Properties, prop)
+	blocks.statements.Properties = append(blocks.statements.Properties, prop)
 	return err
 }
 
 //
-func (this *BuildingBlocks) NewRelative(fields RelativeFields, source Code,
+func (blocks *BuildingBlocks) NewRelative(fields RelativeFields, source Code,
 ) (err error) {
 	rel := RelativeStatement{fields, source}
-	this.blocks.Relatives = append(this.blocks.Relatives, rel)
+	blocks.statements.Relatives = append(blocks.statements.Relatives, rel)
 	return err
 }

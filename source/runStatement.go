@@ -19,10 +19,10 @@ type RunFields struct {
 	Phase    E.Phase
 }
 
-func (this RunStatement) Fields() RunFields {
-	return this.fields
+func (ts RunStatement) Fields() RunFields {
+	return ts.fields
 }
 
-func (this RunStatement) Source() Code {
-	return this.source
+func (ts RunStatement) Source() Code {
+	return ts.source
 }

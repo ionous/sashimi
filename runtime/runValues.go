@@ -1,17 +1,20 @@
 package runtime
 
 import (
+	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/util/ident"
 	"reflect"
 )
 
 type RuntimeValues struct {
-	data TemplateValues // runtime values are key'd by string for go's templates
+	data   TemplateValues // runtime values are key'd by string for go's templates
+	temps  TemplatePool
+	tables M.TableRelations
 }
 
 //
-func NewRuntimeValues() RuntimeValues {
-	return RuntimeValues{make(map[string]interface{})}
+func NewRuntimeValues(tables M.TableRelations) RuntimeValues {
+	return RuntimeValues{make(map[string]interface{}), make(TemplatePool), tables}
 }
 
 //

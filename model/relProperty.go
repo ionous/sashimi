@@ -20,36 +20,44 @@ func NewRelativeProperty(fields RelativeFields) *RelativeProperty {
 	return &RelativeProperty{fields}
 }
 
-func (this *RelativeProperty) Class() ident.Id {
-	return this.fields.Class
+func (rel *RelativeProperty) Fields() RelativeFields {
+	return rel.fields
 }
 
-func (this *RelativeProperty) Id() ident.Id {
-	return this.fields.Id
+func (rel *RelativeProperty) Class() ident.Id {
+	return rel.fields.Class
 }
 
-func (this *RelativeProperty) Name() string {
-	return this.fields.Name
+func (rel *RelativeProperty) Id() ident.Id {
+	return rel.fields.Id
+}
+
+func (rel *RelativeProperty) Name() string {
+	return rel.fields.Name
 }
 
 // id of the relation table
-func (this *RelativeProperty) Relation() ident.Id {
-	return this.fields.Relation
+func (rel *RelativeProperty) Relation() ident.Id {
+	return rel.fields.Relation
 }
 
-// id of the other class this property inolves
-func (this *RelativeProperty) Relates() ident.Id {
-	return this.fields.Relates
+// id of the other class rel property inolves
+func (rel *RelativeProperty) Relates() ident.Id {
+	return rel.fields.Relates
 }
 
 // in the case where a one to many relation involves a class and itself,
 // distingushes which side of the relation propery is the primary.
-func (this *RelativeProperty) IsRev() bool {
-	return this.fields.IsRev
+func (rel *RelativeProperty) IsRev() bool {
+	return rel.fields.IsRev
 }
 
 // in the case where a one to many relation involves a class and itself,
 // distingushes which side of the relation propery is the many.
-func (this *RelativeProperty) ToMany() bool {
-	return this.fields.ToMany
+func (rel *RelativeProperty) ToMany() bool {
+	return rel.fields.ToMany
+}
+
+func (rel *RelativeProperty) Zero(_ ConstraintSet) interface{} {
+	return nil
 }

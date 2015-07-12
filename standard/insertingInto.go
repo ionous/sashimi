@@ -42,7 +42,7 @@ func init() {
 			WhenCapturing("inserting it into", func(g G.Play) {
 				actor, prop := g.The("action.Source"), g.The("action.Context")
 				if carrier, ok := Carrier(prop); !ok || carrier != actor {
-					g.Say(fmt.Sprintf("You aren't holding %s.", prop.Name()))
+					g.Say(fmt.Sprintf("You aren't holding %s.", prop.Text("Name")))
 					g.StopHere()
 				}
 			}),
@@ -58,7 +58,7 @@ func init() {
 			WhenCapturing("inserting it into", func(g G.Play) {
 				container := g.The("action.Target")
 				if container.Is("closed") {
-					g.Say(fmt.Sprintf("%s is closed.", container.Name()))
+					g.Say(fmt.Sprintf("%s is closed.", container.Text("Name")))
 					g.StopHere()
 				}
 			}),

@@ -1,22 +1,23 @@
 package script
 
 import (
+	S "github.com/ionous/sashimi/source"
 	"regexp"
 	"strings"
 )
 
 //
 // Fragment to assert the existence of a class or instance
-// this.The("room", this.Called("home" )
-// this.The("kinds", this.Called("coins").Singular("coin")
+// The("room", Called("home" )
+// The("kinds", Called("coins").Singular("coin")
 func Called(subject string) CalledFragment {
-	return CalledFragment{NewOrigin(1), subject, ""}
+	return CalledFragment{NewOrigin(2), subject, ""}
 }
 
 //
-func (this CalledFragment) WithSingularName(name string) IFragment {
-	this.singular = name
-	return this
+func (frag CalledFragment) WithSingularName(name string) IFragment {
+	frag.singular = name
+	return frag
 }
 
 //
@@ -42,20 +43,20 @@ type CalledFragment struct {
 
 var articles = regexp.MustCompile(`^((?U)the|a|an|our|some) `)
 
-func (this CalledFragment) MakeStatement(b SubjectBlock) error {
+func (frag CalledFragment) MakeStatement(b SubjectBlock) error {
 	// FIX: this is only half measure --
 	// really it needs to split into words, then compare the first article.
-	name := strings.TrimSpace(this.subject)
+	name := strings.TrimSpace(frag.subject)
 	article, bare := "", name
-	pair := articles.FindStringIndex(name)
-	if pair != nil {
+	if pair := articles.FindStringIndex(name); pair != nil {
 		article = name[:pair[0]]
 		bare = name[pair[1]:]
 	}
 	opt := map[string]string{
 		"article":       article,
 		"long name":     name,
-		"singular name": this.singular,
+		"singular name": frag.singular,
 	}
-	return b.NewAssertion(b.theKeyword, bare, opt)
+	fields := S.AssertionFields{b.theKeyword, bare, opt}
+	return b.NewAssertion(fields, frag.origin.Code())
 }

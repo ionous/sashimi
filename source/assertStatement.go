@@ -1,38 +1,25 @@
 package source
 
 //
+// An AssertionStatement declares the existence of a class or instance.
+//
 type AssertionStatement struct {
-	owner   string  // base type or class
-	called  string  // name of reference being asserted into existance
-	options Options // ex. called
+	fields AssertionFields
+	source Code
+}
+
+type AssertionFields struct {
+	Owner   string // base type or class
+	Called  string // name of reference being asserted into existence
+	Options        // ex. called
 }
 
 //
-func (this AssertionStatement) Owner() string {
-	return this.owner
+func (ts AssertionStatement) Fields() AssertionFields {
+	return ts.fields
 }
 
 //
-// bare name without articles
-func (this AssertionStatement) ShortName() string {
-	return this.called
-}
-
-//
-func (this AssertionStatement) FullName() string {
-	long := this.options["long name"]
-	if long == "" {
-		long = this.called
-	}
-	return long
-}
-
-//
-func (this AssertionStatement) Option(option string) string {
-	return this.options[option]
-}
-
-//
-func (this AssertionStatement) Source() Code {
-	return ""
+func (ts AssertionStatement) Source() Code {
+	return ts.source
 }

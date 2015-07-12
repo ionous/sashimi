@@ -21,6 +21,10 @@ func (id Id) Empty() bool {
 	return id == ""
 }
 
+func Empty() Id {
+	return ""
+}
+
 //
 // Create a new string id from the passed raw string.
 // Dashes and spaces are treated as word separators.

@@ -1,21 +1,23 @@
 package table
 
+import "github.com/ionous/sashimi/util/ident"
+
 type Table struct {
 	table []Pair
 }
 
-func NewTable() Table {
-	return Table{}
+func NewTable() *Table {
+	return &Table{}
 }
 
 // might actually implement this in sqlite at some point
 // ( along with the rest of the model data )
 // not quite there yet.
 type Pair struct {
-	x, y string
+	x, y ident.Id
 }
 
-func (this *Table) Add(x, y string) (index int) {
+func (this *Table) Add(x, y ident.Id) (index int) {
 	index = this.Find(x, y)
 	if index == 0 {
 		this.table = append(this.table, Pair{x, y})
@@ -24,7 +26,7 @@ func (this *Table) Add(x, y string) (index int) {
 	return index
 }
 
-func (this *Table) Find(x, y string) (index int) {
+func (this *Table) Find(x, y ident.Id) (index int) {
 	for i, pair := range this.table {
 		if pair.x == x && pair.y == y {
 			index = i + 1
@@ -34,7 +36,7 @@ func (this *Table) Find(x, y string) (index int) {
 	return index
 }
 
-func (this *Table) list(x string) (ret []string) {
+func (this *Table) list(x ident.Id) (ret []ident.Id) {
 	for _, pair := range this.table {
 		if pair.x == x {
 			ret = append(ret, pair.y)
@@ -43,7 +45,7 @@ func (this *Table) list(x string) (ret []string) {
 	return ret
 }
 
-func (this *Table) listRev(y string) (ret []string) {
+func (this *Table) listRev(y ident.Id) (ret []ident.Id) {
 	for _, pair := range this.table {
 		if pair.y == y {
 			ret = append(ret, pair.x)
@@ -52,7 +54,7 @@ func (this *Table) listRev(y string) (ret []string) {
 	return ret
 }
 
-func (this *Table) List(x string, rev bool) (ret []string) {
+func (this *Table) List(x ident.Id, rev bool) (ret []ident.Id) {
 	if !rev {
 		ret = this.list(x)
 	} else {
@@ -61,7 +63,7 @@ func (this *Table) List(x string, rev bool) (ret []string) {
 	return ret
 }
 
-type pairTest func(x, y string) bool
+type pairTest func(x, y ident.Id) bool
 
 func (this *Table) Remove(pairTest pairTest) (removed int) {
 	t := this.table

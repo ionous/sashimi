@@ -44,7 +44,7 @@ func init() {
 			Can("report now open").And("reporting now open").RequiresOne("actor"),
 			To("report now open", func(g G.Play) {
 				this, _ := g.The("opener"), g.The("action.Target")
-				g.Say("Now the", this.Name(), "is open.")
+				g.Say("Now the", this.Text("Name"), "is open.")
 				// if the noun doesnt not enclose the actor
 				// list the contents of the noun, as a sentence, tersely, not listing concealed items;
 				if this.Is("opaque") {
@@ -84,7 +84,7 @@ func init() {
 			Can("report now closed").And("reporting now closed").RequiresOne("actor"),
 			To("report now closed", func(g G.Play) {
 				this, _ := g.The("opener"), g.The("action.Target")
-				g.Say("Now the", this.Name(), "is closed.")
+				g.Say("Now the", this.Text("Name"), "is closed.")
 			}),
 		)
 

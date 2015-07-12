@@ -3,6 +3,8 @@ package tests
 import (
 	M "github.com/ionous/sashimi/model"
 	. "github.com/ionous/sashimi/script"
+
+	"github.com/ionous/sashimi/util/ident"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
@@ -58,18 +60,23 @@ func TestSimpleRelates(t *testing.T) {
 		claire, ok := model.Instances.FindInstance("claire")
 		assert.True(t, ok, "found claire")
 
-		pets, ok := claire.ValueByName("pets")
+		pets, ok := claire.Class().FindProperty("pets")
 		assert.True(t, ok)
-		petsrel := pets.(M.RelativeValue)
-		assert.Exactly(t, []string{"Loofah"}, petsrel.List())
+
+		petsrel := pets.(*M.RelativeProperty)
+		table, ok := model.Tables.TableById(petsrel.Relation())
+		assert.True(t, ok, "found table")
+
+		assert.EqualValues(t, []ident.Id{"Loofah"}, table.List(claire.Id(), petsrel.IsRev()))
 
 		loofah, ok := model.Instances.FindInstance("loofah")
 		assert.True(t, ok, "found loofah")
 
-		gremlins, ok := loofah.ValueByName("o beneficent one")
-		assert.True(t, ok, "value by name")
-		gremlinrel := gremlins.(M.RelativeValue)
-		assert.Exactly(t, []string{"Claire"}, gremlinrel.List())
+		revField, ok := loofah.Class().FindProperty("o beneficent one")
+		assert.True(t, ok, "rev property")
+		revProp := revField.(*M.RelativeProperty)
+
+		assert.Exactly(t, []ident.Id{"Claire"}, table.List(loofah.Id(), revProp.IsRev()))
 
 		model.PrintModel(t.Log)
 	}
