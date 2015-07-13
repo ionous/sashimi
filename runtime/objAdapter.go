@@ -10,7 +10,7 @@ import (
 )
 
 //
-// Adapts GameObjects for user script callbacks.
+// ObjectAdapter wraps GameObject(s) for user script callbacks.
 // WARNING: for users to test object equality, the ObjectAdapter must be comparable;
 // it can't implement the interface as a pointer, and it cant have any cached values.
 //
@@ -20,73 +20,73 @@ type ObjectAdapter struct {
 }
 
 //
-// Public for testing.
+// NewObjectAdapter gives the passed game object the IObject interface.
 //
-func NewObjectAdapter(game *Game, obj *GameObject) ObjectAdapter {
-	return ObjectAdapter{game, obj}
+func NewObjectAdapter(game *Game, gobj *GameObject) ObjectAdapter {
+	return ObjectAdapter{game, gobj}
 }
 
 //
-// Helper for debugging.
+// String helps debugging.
 //
 func (adapt ObjectAdapter) String() string {
-	return adapt.Name()
+	return adapt.gobj.Id().String()
 }
 
 //
-// Name of the object.
+// Id uniquely identifies the object.
 //
 func (adapt ObjectAdapter) Id() ident.Id {
-	return ident.Id(adapt.gobj.inst.Id())
+	return adapt.gobj.Id()
 }
 
 //
 // Name of the object.
 //
-func (adapt ObjectAdapter) Name() string {
-	return adapt.gobj.inst.Name()
-}
+// func (adapt ObjectAdapter) Name() string {
+// 	return adapt.gobj.inst.Name()
+// }
 
 //
-// Is adapt a valid object?
+// Exists always returns true for ObjectAdapter; see also NullObject which always returns false.
 //
 func (adapt ObjectAdapter) Exists() bool {
 	return true
 }
 
 //
-// Is adapt object based on the passed class in any fashion. ( parent or other ancestor )
+// Class returns true when this object is compatible with ( based on ) the named class. ( parent or other ancestor )
 //
 func (adapt ObjectAdapter) Class(class string) (okay bool) {
 	if cls, ok := adapt.game.Model.Classes.FindClassBySingular(class); ok {
-		okay = adapt.gobj.inst.Class().CompatibleWith(cls.Id())
+		okay = adapt.gobj.Class().CompatibleWith(cls.Id())
 	}
 	return okay
 }
 
 //
-// Is adapt object in the passed state?
+// Is this object in the passed state?
 //
 func (adapt ObjectAdapter) Is(state string) (ret bool) {
-	if prop, index, ok := adapt.gobj.inst.Class().PropertyByChoice(state); !ok {
+	if prop, index, ok := adapt.gobj.Class().PropertyByChoice(state); !ok {
 		adapt.logError(fmt.Errorf("is: no such choice '%s'.'%s'", adapt, state))
 	} else {
 		testChoice, _ := prop.IndexToChoice(index)
-		currChoice := adapt.gobj.GetValue(prop.Id())
+		currChoice := adapt.gobj.Value(prop.Id())
 		ret = currChoice == testChoice
 	}
 	return ret
 }
 
 //
-// Change the state of an object.
+// SetIs changes the state of an object.
 //
 func (adapt ObjectAdapter) SetIs(state string) {
-	if prop, index, ok := adapt.gobj.inst.Class().PropertyByChoice(state); !ok {
+	if prop, index, ok := adapt.gobj.Class().PropertyByChoice(state); !ok {
 		adapt.logError(fmt.Errorf("SetIs: no such choice '%s'.'%s'", adapt, state))
 	} else {
 		// get the current choice from the implied property slot
-		if currChoice, ok := adapt.gobj.GetValue(prop.Id()).(ident.Id); !ok {
+		if currChoice, ok := adapt.gobj.Value(prop.Id()).(ident.Id); !ok {
 			err := TypeMismatch(adapt.gobj.Id().String(), prop.Id().String())
 			adapt.logError(err)
 		} else {
@@ -102,11 +102,11 @@ func (adapt ObjectAdapter) SetIs(state string) {
 }
 
 //
-// Return the value of the passed number property.
+// Num value of the named property.
 //
 func (adapt ObjectAdapter) Num(prop string) (ret float32) {
 	id := M.MakeStringId(prop)
-	if val, ok := adapt.gobj.GetValue(id).(float32); !ok {
+	if val, ok := adapt.gobj.Value(id).(float32); !ok {
 		adapt.logError(TypeMismatch(prop, "get num"))
 	} else {
 		ret = val
@@ -115,7 +115,7 @@ func (adapt ObjectAdapter) Num(prop string) (ret float32) {
 }
 
 //
-// Change the value of an existing number property.
+// SetNum changes the value of an existing number property.
 //
 func (adapt ObjectAdapter) SetNum(prop string, value float32) {
 	id := M.MakeStringId(prop)
@@ -127,19 +127,19 @@ func (adapt ObjectAdapter) SetNum(prop string, value float32) {
 }
 
 //
-// Return the value of the passed text property ( expanding any templated text. )
+// Text value of the named property ( expanding any templated text. )
 // ( interestingly, inform seems to error when trying to store or manipulate templated text. )
 //
 func (adapt ObjectAdapter) Text(prop string) (ret string) {
 	id := M.MakeStringId(prop)
 	// is adapt text stored as a template?
 	if temp, ok := adapt.gobj.temps[id.String()]; ok {
-		if s, e := runTemplate(temp, adapt.gobj.data); e != nil {
+		if s, e := runTemplate(temp, adapt.gobj.vals); e != nil {
 			adapt.logError(e)
 		} else {
 			ret = s
 		}
-	} else if val, ok := adapt.gobj.GetValue(id).(string); !ok {
+	} else if val, ok := adapt.gobj.Value(id).(string); !ok {
 		adapt.logError(TypeMismatch(prop, "get text"))
 	} else {
 		ret = val
@@ -148,7 +148,7 @@ func (adapt ObjectAdapter) Text(prop string) (ret string) {
 }
 
 //
-// Change the value of an existing text property.
+// SetText changes the value of an existing text property.
 //
 func (adapt ObjectAdapter) SetText(prop string, text string) {
 	id := M.MakeStringId(prop)
@@ -162,21 +162,21 @@ func (adapt ObjectAdapter) SetText(prop string, text string) {
 }
 
 //
-// Return a related object.
+// Object returns a related object.
 //
 func (adapt ObjectAdapter) Object(prop string) (ret G.IObject) {
 	// TBD: should these be logged? its sure nice to have be able to test objects generically for properties
 	var res ident.Id
-	if p, ok := adapt.gobj.inst.Class().FindProperty(prop); ok {
+	if p, ok := adapt.gobj.Class().FindProperty(prop); ok {
 		switch p := p.(type) {
 		case *M.PointerProperty:
-			if val, ok := adapt.gobj.GetValue(p.Id()).(ident.Id); ok {
+			if val, ok := adapt.gobj.Value(p.Id()).(ident.Id); ok {
 				res = val
 			}
 		case *M.RelativeProperty:
 			// TBD: can the relative property changes automatically reflect into the value table
 			// ex. on event?
-			if rel, ok := adapt.gobj.GetValue(p.Id()).(RelativeValue); ok {
+			if rel, ok := adapt.gobj.Value(p.Id()).(RelativeValue); ok {
 				if p.ToMany() {
 					adapt.logError(fmt.Errorf("object requested, but relation is list"))
 				} else {
@@ -197,13 +197,13 @@ func (adapt ObjectAdapter) Object(prop string) (ret G.IObject) {
 }
 
 //
-// Changes a relationship.
+// Set changes an object relationship.
 //
 func (adapt ObjectAdapter) Set(prop string, object G.IObject) {
-	if p, ok := adapt.gobj.inst.Class().FindProperty(prop); ok {
+	if p, ok := adapt.gobj.Class().FindProperty(prop); ok {
 		switch p := p.(type) {
 		default:
-			adapt.logError(TypeMismatch(adapt.Name(), prop))
+			adapt.logError(TypeMismatch(adapt.String(), prop))
 		case *M.PointerProperty:
 			set := false
 			if other, ok := object.(ObjectAdapter); !ok {
@@ -217,7 +217,7 @@ func (adapt ObjectAdapter) Set(prop string, object G.IObject) {
 				adapt.logError(fmt.Errorf("couldnt set value for prop %s", prop))
 			}
 		case *M.RelativeProperty:
-			if rel, ok := adapt.gobj.GetValue(p.Id()).(RelativeValue); ok {
+			if rel, ok := adapt.gobj.Value(p.Id()).(RelativeValue); ok {
 
 				// if the referenced object doesnt exist, we take it to mean they are clearing the reference.
 				if other, ok := object.(ObjectAdapter); !ok {
@@ -244,15 +244,15 @@ func (adapt ObjectAdapter) Set(prop string, object G.IObject) {
 }
 
 //
-// Return a list of related objects.
+// ObjectList returns a list of related objects.
 //
 func (adapt ObjectAdapter) ObjectList(prop string) (ret []G.IObject) {
-	if p, ok := adapt.gobj.inst.Class().FindProperty(prop); ok {
+	if p, ok := adapt.gobj.Class().FindProperty(prop); ok {
 		switch p := p.(type) {
 		default:
-			adapt.logError(TypeMismatch(adapt.Name(), prop))
+			adapt.logError(TypeMismatch(adapt.String(), prop))
 		case *M.RelativeProperty:
-			if rel, ok := adapt.gobj.GetValue(p.Id()).(RelativeValue); ok {
+			if rel, ok := adapt.gobj.Value(p.Id()).(RelativeValue); ok {
 				list := rel.List()
 				ret = make([]G.IObject, len(list))
 				for i, objId := range list {
@@ -269,7 +269,7 @@ func (adapt ObjectAdapter) ObjectList(prop string) (ret []G.IObject) {
 }
 
 //
-// This actor has something to say.
+// Says provides this object with a voice.
 //
 func (adapt ObjectAdapter) Says(text string) {
 	// FIX: share some template love with GameEventAdapter.Say()
@@ -278,17 +278,17 @@ func (adapt ObjectAdapter) Says(text string) {
 }
 
 //
-// Send all the events associated with the action; and,
-// run the default action if appropriate
+// Go sends all the events associated with the named action,
+// and runs the default action if appropriate.
 // @see also: Game.ProcessEventQueue
 //
 func (adapt ObjectAdapter) Go(act string, objects ...G.IObject) {
 	if action, ok := adapt.game.Model.Actions.FindActionByName(act); !ok {
 		adapt.logError(fmt.Errorf("unknown action for Go %s", act))
 	} else {
-		// ugly: we need the props, even tho we already have the objects...
+		// FIX, ugly: we need the props, even tho we already have the objects...
 		nouns := make([]string, len(objects)+1)
-		nouns[0] = adapt.Name()
+		nouns[0] = adapt.Id().String()
 		for i, o := range objects {
 			nouns[i+1] = o.Id().String()
 		}

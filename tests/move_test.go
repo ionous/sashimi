@@ -111,7 +111,7 @@ func testMoves(t *testing.T, g TestGame, moves ...xMove) {
 }
 
 func where(gobj *R.GameObject) (ret ident.Id) {
-	if rel, ok := gobj.GetValue(ident.MakeId("whereabouts")).(R.RelativeValue); ok {
+	if rel, ok := gobj.Value(ident.MakeId("whereabouts")).(R.RelativeValue); ok {
 		for _, v := range rel.List() {
 			ret = v
 			break

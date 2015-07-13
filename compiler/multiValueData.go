@@ -6,7 +6,6 @@ import (
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
-	"github.com/satori/go.uuid"
 )
 
 type MultiValueTable struct {
@@ -68,7 +67,7 @@ func (mvd *MultiValueTable) addRow(instanceFactory *InstanceFactory, code S.Code
 		var name string
 		// build a valid name
 		if val, ok := getByIndex(values, mvd.name-1); !ok {
-			name = uuid.NewV4().String()
+			name = ident.MakeUniqueId().String()
 		} else if str, ok := val.(string); ok {
 			name = str
 		} else {

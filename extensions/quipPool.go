@@ -14,7 +14,7 @@ func GetQuipPool(g G.Play) QuipPool {
 }
 
 func (quips QuipPool) Interlocutor(quip *R.GameObject) (ret ident.Id) {
-	if p, ok := quip.GetValue("Speaker").(ident.Id); ok {
+	if p, ok := quip.Value("Speaker").(ident.Id); ok {
 		ret = p
 	}
 	return ret
@@ -35,11 +35,11 @@ func (qp QuipPool) visitFollowers(follower ident.Id, visit visitQuips) (okay boo
 		// but, only for following quips
 		if isTable := f.Class().CompatibleWith("FollowingQuips"); isTable {
 			// yes, this entry talks about our position relative to some other quip
-			if following, ok := f.GetValue("Following").(ident.Id); ok && following == follower {
+			if following, ok := f.Value("Following").(ident.Id); ok && following == follower {
 				// grab that other quip
-				if leading, ok := f.GetValue("Leading").(ident.Id); ok {
+				if leading, ok := f.Value("Leading").(ident.Id); ok {
 					// call the visitor
-					directly, _ := f.GetValue("DirectlyFollowing").(bool)
+					directly, _ := f.Value("DirectlyFollowing").(bool)
 					if ok := visit(leading, directly); ok {
 						okay = true
 					}
@@ -79,7 +79,7 @@ func (qp QuipPool) FollowsDirectly(qh QuipHistory, follower ident.Id) (follows b
 func (qp QuipPool) Recollects(quip ident.Id) (recollects bool) {
 	for _, r := range qp {
 		if isRecollect := r.Class().CompatibleWith("Recollections"); isRecollect {
-			if r.GetValue("Quip").(ident.Id) == quip {
+			if r.Value("Quip").(ident.Id) == quip {
 				recollects = true
 				break
 			}
@@ -102,12 +102,12 @@ func VisitObjects(objects R.GameObjects, class ident.Id, visit func(*R.GameObjec
 
 func (qp QuipPool) SpeakAfter(qh QuipHistory, newQuip *R.GameObject) (okay bool) {
 	// Filter to quips which have player comments.
-	if newQuip.GetValue("Comment").(string) != "" {
+	if newQuip.Value("Comment").(string) != "" {
 		// Exclude one-time quips, checking the recollection table.
-		repeats, _ := newQuip.GetValue("Repeatable").(bool)
+		repeats, _ := newQuip.Value("Repeatable").(bool)
 		if repeats || !qp.Recollects(newQuip.Id()) {
 			// When following a restrictive quips, limit to those which directly follow.
-			restricts, _ := newQuip.GetValue("Restrictive").(bool)
+			restricts, _ := newQuip.Value("Restrictive").(bool)
 			if restricts && qp.FollowsDirectly(qh, newQuip.Id()) {
 				okay = true
 			} else {

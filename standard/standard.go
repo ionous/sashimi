@@ -67,8 +67,8 @@ func NewStandardGame(model *M.Model, output R.IOutput) (ret StandardStart, err e
 				status := R.NewObjectAdapter(game, statusObject)
 				//
 				core := StandardCore{game, parser, output, story, status}
-				core.SetLeft(story.Name())
-				core.SetRight(fmt.Sprint(story.Name(), "by ", story.Text("author")))
+				core.SetLeft(story.Text("name"))
+				core.SetRight(fmt.Sprint(story.Text("name"), "by ", story.Text("author")))
 				ret = StandardStart{core}
 			}
 		}

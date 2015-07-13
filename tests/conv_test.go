@@ -27,10 +27,10 @@ func xTestTalk(t *testing.T) {
 		npcId := qp.Interlocutor(lastQuip)
 		require.EqualValues(t, npcId, "AlienBoy")
 		//
-		repeats, _ := lastQuip.GetValue("Repeatable").(bool)
+		repeats, _ := lastQuip.Value("Repeatable").(bool)
 		require.False(t, repeats, "repeats")
 		//
-		newrepeats, _ := newQuip.GetValue("Repeatable").(bool)
+		newrepeats, _ := newQuip.Value("Repeatable").(bool)
 		require.True(t, newrepeats, "new repeats")
 		//
 		rank := qp.FollowsRecently(qh, newQuip.Id())
@@ -53,10 +53,10 @@ func xTestVisit(t *testing.T) {
 		repeats := 1
 		VisitObjects(g.Objects, "Quips", func(q *R.GameObject) (done bool) {
 			total--
-			if q.GetValue("Comment").(string) != "" {
+			if q.Value("Comment").(string) != "" {
 				comments--
 			}
-			if r, _ := q.GetValue("Repeatable").(bool); r {
+			if r, _ := q.Value("Repeatable").(bool); r {
 				repeats--
 			}
 			return

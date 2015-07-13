@@ -3,6 +3,7 @@ package runtime
 import (
 	"fmt"
 	G "github.com/ionous/sashimi/game"
+	"github.com/ionous/sashimi/util/ident"
 	"strings"
 )
 
@@ -32,16 +33,25 @@ func (ga *GameEventAdapter) A(name string) G.IObject {
 
 //
 func (ga *GameEventAdapter) Add(data string) (ret G.IObject) {
-	if _, ok := ga.Model.Classes.FindClassBySingular(data); !ok {
+	if cls, ok := ga.Model.Classes.FindClassBySingular(data); !ok {
 		ret = NullObject{}
 	} else {
-
+		id := ident.MakeUniqueId()
+		gobj := &GameObject{id, cls, make(TemplateValues), make(TemplatePool), ga.Game.Model.Tables}
+		for _, prop := range cls.Properties() {
+			if e := gobj.setValue(prop, prop.Zero(cls.Constraints())); e != nil {
+				panic(e)
+			}
+		}
+		ret = NewObjectAdapter(ga.Game, gobj)
+		ga.Game.Objects[id] = gobj
 	}
-	return nil
+	return ret
 }
 
 //
-func (ga *GameEventAdapter) Remove(G.IObject) {
+func (ga *GameEventAdapter) Remove(obj G.IObject) {
+	delete(ga.Game.Objects, obj.Id())
 }
 
 //
@@ -127,7 +137,7 @@ func (ga *GameEventAdapter) GetObject(name string) (obj G.IObject) {
 		if obj == nil {
 			src := ga.data.objs[0]
 			cls, _ := ga.Model.Classes.FindClassBySingular(name)
-			if src.inst.Class().CompatibleWith(cls.Id()) {
+			if src.Class().CompatibleWith(cls.Id()) {
 				obj = ObjectAdapter{ga.Game, src}
 			}
 		}

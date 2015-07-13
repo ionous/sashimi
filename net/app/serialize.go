@@ -39,7 +39,7 @@ func (this *ObjectSerializer) SerializeObject(out resource.IBuildObjects, gobj *
 		//
 		states := []string{}
 		for propId, prop := range gobj.Class().AllProperties() {
-			if val := gobj.GetValue(propId); val != nil {
+			if val := gobj.Value(propId); val != nil {
 				switch prop.(type) {
 				case *M.EnumProperty:
 					choice := val.(ident.Id)
@@ -68,14 +68,3 @@ func (this *ObjectSerializer) AddObjectRef(out resource.IBuildObjects, gobj *R.G
 func (this *ObjectSerializer) NewObject(out resource.IBuildObjects, gobj *R.GameObject) (obj *resource.Object) {
 	return out.NewObject(jsonId(gobj.Id()), jsonId(gobj.Class().Id()))
 }
-
-// //
-// // internal helper for iterating over class hierarchy.
-// //
-// func classList(cls *M.ClassInfo) (ret []*M.ClassInfo) {
-// 	ret = append(ret, cls)
-// 	if par := cls.Parent(); par != nil {
-// 		ret = append(ret, classList(par)...)
-// 	}
-// 	return ret
-// }

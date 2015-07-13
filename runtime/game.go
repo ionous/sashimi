@@ -160,7 +160,7 @@ func (game *Game) FindObject(name string) (ret *GameObject, okay bool) {
 // FIX: TEMP(ish)
 func (game *Game) FindFirstOf(cls *M.ClassInfo, _ ...bool) (ret *GameObject) {
 	for _, o := range game.Objects {
-		if o.inst.Class() == cls {
+		if o.Class() == cls {
 			ret = o
 			break
 		}
@@ -212,7 +212,7 @@ func (game *Game) newRuntimeAction(action *M.ActionInfo, nouns ...string,
 				break
 			}
 			gobj := game.Objects[inst.Id()]
-			values[key] = gobj.data
+			values[key] = gobj.vals
 			objs[i] = gobj
 		}
 		if err == nil {

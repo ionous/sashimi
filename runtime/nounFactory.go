@@ -25,7 +25,7 @@ func NewObjectMatcher(game *Game, source *GameObject, act *M.ActionInfo,
 ) {
 	if source == nil {
 		err = fmt.Errorf("couldnt find command source for %s", act)
-	} else if !source.inst.Class().CompatibleWith(act.Source().Id()) {
+	} else if !source.Class().CompatibleWith(act.Source().Id()) {
 		err = fmt.Errorf("source class for %s doesnt match", act)
 	} else {
 		om := &ObjectMatcher{game, act, nil, make(map[string]TemplateValues)}
@@ -76,12 +76,12 @@ func (om *ObjectMatcher) Matched() (err error) {
 // MatchId is usually called by MatchNoun, public for net sessions :(
 //
 func (om *ObjectMatcher) MatchId(id ident.Id) (okay bool) {
-	if obj, ok := om.game.Objects[id]; ok {
+	if gobj, ok := om.game.Objects[id]; ok {
 		nouns := om.act.NounSlice()
 		if cnt, max := len(om.objects), len(nouns); cnt < max {
 			class := nouns[cnt]
-			if obj.inst.Class().CompatibleWith(class.Id()) {
-				om.addObject(obj)
+			if gobj.Class().CompatibleWith(class.Id()) {
+				om.addObject(gobj)
 				okay = true
 			}
 		}
@@ -94,5 +94,5 @@ func (om *ObjectMatcher) addObject(gobj *GameObject) {
 	keys := []string{"Source", "Target", "Context"}
 	om.objects = append(om.objects, gobj)
 	key := keys[cnt]
-	om.values[key] = gobj.data
+	om.values[key] = gobj.vals
 }

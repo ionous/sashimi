@@ -2,6 +2,7 @@ package ident
 
 import (
 	"bytes"
+	"github.com/satori/go.uuid"
 	"unicode"
 )
 
@@ -23,6 +24,10 @@ func (id Id) Empty() bool {
 
 func Empty() Id {
 	return ""
+}
+
+func MakeUniqueId() Id {
+	return Id(uuid.NewV4().String())
 }
 
 //
