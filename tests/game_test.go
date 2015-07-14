@@ -71,7 +71,7 @@ func TestStartupText(t *testing.T) {
 		room := game.FindFirstOf(game.Model.Classes.FindClass("rooms"))
 		assert.NotNil(t, room, "should have room")
 
-		err = game.SendEvent("starting to play", story.String())
+		err = game.SendEvent("starting to play", story.Id())
 		assert.NoError(t, err, "starting to play")
 
 		expected := []string{

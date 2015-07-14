@@ -49,16 +49,24 @@ func init() {
 		s.The("stories",
 			To("commence", func(g G.Play) {
 				// FIX: duplication with end turn
-				story, room := g.The("story"), g.Any("room")
+				story := g.The("story")
 				if story.Is("scored") {
 					score := story.Num("score")
 					status := fmt.Sprintf("%d/%d", int(score), int(0))
 					g.The("status bar").SetText("right", status)
 				}
-				// FIX: Go() should handle both Name() and ref
+				var room G.IObject
+				found := g.Visit("rooms", func(obj G.IObject) bool {
+					room = obj
+					return true
+				})
+				if !found {
+					panic("story has no rooms")
+				}
 				story.Go("set initial position", g.The("player"), room)
 				story.Go("print the banner") // see: banner.go
 				room = g.The("player").Object("whereabouts")
+				// FIX: Go() should handle both Name() and ref
 				story.Go("describe the first room", room)
 			}))
 

@@ -27,7 +27,7 @@ func (out TestOutput) ScriptSays(lines []string) {
 func (out TestOutput) ActorSays(whose *R.GameObject, lines []string) {
 	name := whose.Value("Name")
 	for _, l := range lines {
-		out.Println(name, ":", l)
+		out.Println(name, ": ", l)
 	}
 }
 

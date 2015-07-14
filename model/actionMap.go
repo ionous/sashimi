@@ -1,7 +1,10 @@
 package model
 
-import "fmt"
-import "github.com/ionous/sashimi/util/ident"
+import (
+	"fmt"
+	"github.com/ionous/sashimi/util/errutil"
+	"github.com/ionous/sashimi/util/ident"
+)
 
 type ActionMap map[ident.Id]*ActionInfo
 
@@ -13,9 +16,8 @@ func (this ActionMap) FindActionByName(name string) (*ActionInfo, bool) {
 }
 
 //
-type ActionNotFound string
-
-//
-func (this ActionNotFound) Error() string {
-	return fmt.Sprintf("unknown action requested %s", this)
+func ActionNotFound(str string) error {
+	return errutil.Func(func() string {
+		return fmt.Sprintf("unknown action requested %s", str)
+	})
 }

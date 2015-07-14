@@ -21,6 +21,7 @@ type ObjectAdapter struct {
 
 //
 // NewObjectAdapter gives the passed game object the IObject interface.
+// Public for testing.
 //
 func NewObjectAdapter(game *Game, gobj *GameObject) ObjectAdapter {
 	return ObjectAdapter{game, gobj}
@@ -38,6 +39,11 @@ func (adapt ObjectAdapter) String() string {
 //
 func (adapt ObjectAdapter) Id() ident.Id {
 	return adapt.gobj.Id()
+}
+
+//
+func (adapt ObjectAdapter) Remove() {
+	delete(adapt.game.Objects, adapt.gobj.Id())
 }
 
 //
@@ -287,10 +293,10 @@ func (adapt ObjectAdapter) Go(act string, objects ...G.IObject) {
 		adapt.logError(fmt.Errorf("unknown action for Go %s", act))
 	} else {
 		// FIX, ugly: we need the props, even tho we already have the objects...
-		nouns := make([]string, len(objects)+1)
-		nouns[0] = adapt.Id().String()
+		nouns := make([]ident.Id, len(objects)+1)
+		nouns[0] = adapt.Id()
 		for i, o := range objects {
-			nouns[i+1] = o.Id().String()
+			nouns[i+1] = o.Id()
 		}
 		if act, e := adapt.game.newRuntimeAction(action, nouns...); e != nil {
 			adapt.logError(e)

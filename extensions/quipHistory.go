@@ -1,27 +1,40 @@
 package extensions
 
 import (
-	"github.com/ionous/sashimi/util/ident"
+	G "github.com/ionous/sashimi/game"
 )
 
 const QuipHistoryDepth = 3
 
-type QuipHistory struct{ r [QuipHistoryDepth]ident.Id }
+type GosNilInterfacesAreAnnoying struct {
+	obj    G.IObject
+	notnil bool
+}
 
-func (qh *QuipHistory) Clear() {
+type QuipHistory struct {
+	r [QuipHistoryDepth]GosNilInterfacesAreAnnoying
+}
+
+func (qh *QuipHistory) ClearQuips() {
 	qh.r = QuipHistory{}.r
 }
-func (qh *QuipHistory) Push(id ident.Id) {
-	qh.r[2], qh.r[1], qh.r[0] = qh.r[1], qh.r[0], id
+func (qh *QuipHistory) PushQuip(next G.IObject) {
+	qh.r[2], qh.r[1], qh.r[0] = qh.r[1], qh.r[0], GosNilInterfacesAreAnnoying{next, true}
 }
-func (qh *QuipHistory) MostRecent() (id ident.Id) {
-	return qh.r[0]
+func (qh *QuipHistory) MostRecent(g G.Play) (andWhereAreTheTernaries G.IObject) {
+	e := qh.r[0]
+	if e.notnil {
+		andWhereAreTheTernaries = e.obj
+	} else {
+		andWhereAreTheTernaries = g.The("")
+	}
+	return andWhereAreTheTernaries
 }
 
 // returns a rank where larger is more recent, and 0 is not recent at all.
-func (qh *QuipHistory) Rank(id ident.Id) (ret int) {
+func (qh *QuipHistory) Rank(which G.IObject) (ret int) {
 	for i, r := range qh.r {
-		if r == id {
+		if r.obj == which {
 			ret = len(qh.r) - i
 			break
 		}

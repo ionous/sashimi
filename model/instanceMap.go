@@ -17,19 +17,6 @@ func (this InstanceMap) FindInstance(name string) (*InstanceInfo, bool) {
 	return ret, okay
 }
 
-func (this InstanceMap) FindInstanceWithClass(name string, class *ClassInfo,
-) (ret *InstanceInfo, err error) {
-	if inst, ok := this.FindInstance(name); !ok {
-		err = InstanceNotFound(name)
-	} else if have := inst.Class(); have.CompatibleWith(class.Id()) {
-		ret = inst
-	} else {
-		err = fmt.Errorf("mismatched noun requested: %s,%s!=%s", name, have.Name(), class.Name())
-	}
-
-	return ret, err
-}
-
 func InstanceNotFound(name string) error {
 	return errutil.Func(func() string {
 		return fmt.Sprintf("instance not found `%s`", name)

@@ -29,6 +29,9 @@ func (null NullObject) Exists() bool {
 	return false
 }
 
+func (null NullObject) Remove() {
+}
+
 //
 func (null NullObject) Class(cls string) bool {
 	return false

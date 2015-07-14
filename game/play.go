@@ -23,16 +23,15 @@ type Play interface {
 	A(noun string) IObject
 	// New an object at runtime; can only be used with "data" classes
 	Add(data string) IObject
-	// Remove a previously new'd data object.
-	Remove(IObject)
 	// Say friendly narrative print.
 	Say(text ...string)
 	// Log a quiet print.
 	Log(text ...string)
-	// Any finds an object by class name.
-	// FUTURE: replace by a more generic query which supports data as well...
-	// A query will either require a cursor/iterator or a list.
-	Any(class string) IObject
+	// Visit finds one or more objects by class name.
+	// Return true from the passed function to terminate the search.
+	// FIX: replace by a query?
+	// ALT: broadcast an event to an optionally query/filtered set of objects.
+	Visit(class string, visits func(IObject) bool) bool
 	//
 	Rules() IGameRules
 	// StopHere.

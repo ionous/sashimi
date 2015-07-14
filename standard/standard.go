@@ -81,7 +81,7 @@ func NewStandardGame(model *M.Model, output R.IOutput) (ret StandardStart, err e
 //
 func (sg *StandardStart) Start() (ret StandardGame, err error) {
 	// FIX: shouldnt the interface be Go("commence")?
-	if e := sg.SendEvent("starting to play", sg.story.String()); e != nil {
+	if e := sg.SendEvent("starting to play", sg.story.Id()); e != nil {
 		err = e
 	} else {
 		// process all existing messages in the queue first
@@ -121,7 +121,7 @@ func (sg *StandardGame) Input(s string) bool {
 
 func (sg *StandardGame) EndTurn() {
 	game := sg.Game
-	game.SendEvent("ending the turn", sg.story.String())
+	game.SendEvent("ending the turn", sg.story.Id())
 	if e := game.ProcessEvents(); e != nil {
 		log.Println(e)
 	} else {

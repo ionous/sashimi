@@ -171,7 +171,7 @@ func (game *Game) FindFirstOf(cls *M.ClassInfo, _ ...bool) (ret *GameObject) {
 //
 // mainly for testing; manual send of an event
 // FIX: merge game with runCommand()
-func (game *Game) SendEvent(event string, nouns ...string,
+func (game *Game) SendEvent(event string, nouns ...ident.Id,
 ) (err error,
 ) {
 	if action, e := game.Model.Events.FindEventByName(event); e != nil {
@@ -190,7 +190,7 @@ func (game *Game) SendEvent(event string, nouns ...string,
 //
 // FIX: merge with runCommand()
 //
-func (game *Game) newRuntimeAction(action *M.ActionInfo, nouns ...string,
+func (game *Game) newRuntimeAction(action *M.ActionInfo, nouns ...ident.Id,
 ) (ret *RuntimeAction, err error,
 ) {
 	types := action.NounSlice()
@@ -206,14 +206,16 @@ func (game *Game) newRuntimeAction(action *M.ActionInfo, nouns ...string,
 
 		for i, class := range types {
 			noun, key := nouns[i], keys[i]
-			inst, e := game.Model.Instances.FindInstanceWithClass(noun, class)
-			if e != nil {
-				err = e
+			if gobj, ok := game.Objects[noun]; !ok {
+				err = M.InstanceNotFound(noun.String())
 				break
+			} else if !gobj.Class().CompatibleWith(class.Id()) {
+				err = TypeMismatch(noun.String(), class.String())
+				break
+			} else {
+				values[key] = gobj.vals
+				objs[i] = gobj
 			}
-			gobj := game.Objects[inst.Id()]
-			values[key] = gobj.vals
-			objs[i] = gobj
 		}
 		if err == nil {
 			ret = &RuntimeAction{game, action, objs, values, nil}

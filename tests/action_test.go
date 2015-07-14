@@ -62,7 +62,7 @@ func TestClassCallback(t *testing.T) {
 		g.PushParserSource(func(g G.Play) G.IObject {
 			return g.The("obj")
 		})
-		if err := g.SendEvent("testing", "obj"); assert.NoError(t, err) {
+		if err := g.SendEvent("testing", "Obj"); assert.NoError(t, err) {
 			if err := g.ProcessEvents(); assert.NoError(t, err) {
 				expected := []string{"it's a trap!"}
 				assert.EqualValues(t, expected, g.FlushOutput())
@@ -88,7 +88,7 @@ func TestCallbackBeforeAfter(t *testing.T) {
 		g.PushParserSource(func(g G.Play) G.IObject {
 			return g.The("obj")
 		})
-		if err := g.SendEvent("testing", "obj"); assert.NoError(t, err) {
+		if err := g.SendEvent("testing", "Obj"); assert.NoError(t, err) {
 			if err := g.ProcessEvents(); assert.NoError(t, err) {
 				expected := []string{"Before", "After"}
 				assert.EqualValues(t, expected, g.FlushOutput())

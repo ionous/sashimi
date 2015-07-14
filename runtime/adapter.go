@@ -17,6 +17,14 @@ type GameEventAdapter struct {
 }
 
 //
+// NewObjectAdapter gives the passed game the IPlay interface
+// Public for testing.
+//
+func NewGameAdapter(game *Game) *GameEventAdapter {
+	return &GameEventAdapter{Game: game}
+}
+
+//
 func (ga *GameEventAdapter) The(name string) G.IObject {
 	return ga.GetObject(name)
 }
@@ -44,26 +52,26 @@ func (ga *GameEventAdapter) Add(data string) (ret G.IObject) {
 			}
 		}
 		ret = NewObjectAdapter(ga.Game, gobj)
-		ga.Game.Objects[id] = gobj
+		ga.Objects[id] = gobj
 	}
 	return ret
 }
 
 //
-func (ga *GameEventAdapter) Remove(obj G.IObject) {
-	delete(ga.Game.Objects, obj.Id())
-}
-
-//
-func (ga *GameEventAdapter) Any(name string) (obj G.IObject) {
-	cls, _ := ga.Model.Classes.FindClassBySingular(name)
-	if gobj := ga.FindFirstOf(cls); gobj != nil {
-		obj = ObjectAdapter{ga.Game, gobj}
+func (ga *GameEventAdapter) Visit(class string, visits func(G.IObject) bool) (okay bool) {
+	if cls, ok := ga.Model.Classes.FindClass(class); !ok {
+		ga.log.Printf("no objects found of type requested `%s`", class)
 	} else {
-		ga.log.Printf("no objects found of type requested `%s`", name)
-		obj = NullObject{}
+		for _, gobj := range ga.Objects {
+			if gobj.Class().CompatibleWith(cls.Id()) {
+				if visits(NewObjectAdapter(ga.Game, gobj)) {
+					okay = true
+					break
+				}
+			}
+		}
 	}
-	return obj
+	return okay
 }
 
 //
@@ -135,10 +143,14 @@ func (ga *GameEventAdapter) GetObject(name string) (obj G.IObject) {
 		}
 		// asking by class name, ex. The("story")
 		if obj == nil {
-			src := ga.data.objs[0]
-			cls, _ := ga.Model.Classes.FindClassBySingular(name)
-			if src.Class().CompatibleWith(cls.Id()) {
-				obj = ObjectAdapter{ga.Game, src}
+			for _, src := range ga.data.objs {
+				cls, _ := ga.Model.Classes.FindClassBySingular(name)
+				if src.Class().CompatibleWith(cls.Id()) {
+					obj = ObjectAdapter{ga.Game, src}
+					if src.Class() == cls {
+						break // best match
+					}
+				}
 			}
 		}
 	}

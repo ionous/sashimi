@@ -2,38 +2,51 @@ package tests
 
 import (
 	. "github.com/ionous/sashimi/extensions"
+	G "github.com/ionous/sashimi/game"
 	R "github.com/ionous/sashimi/runtime"
 	. "github.com/ionous/sashimi/script"
-	"github.com/ionous/sashimi/util/ident"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 //
-func xTestTalk(t *testing.T) {
-	s := InitScripts()
-	Talk(s)
-	if g, err := NewTestGame(t, s); assert.NoError(t, err) {
+func TestDiscuss(t *testing.T) {
+	s := TalkScript()
+	if game, err := NewTestGame(t, s); assert.NoError(t, err) {
+		g := R.NewGameAdapter(game.Game)
+		boy := g.The("alien boy")
+		boy.Go("discuss", boy.Object("greeting"))
+		lines := game.FlushOutput()
+		require.Len(t, lines, 1)
+		require.Equal(t, `The Alien Boy: "You wouldn't happen to have a matter disrupter?"`, lines[0])
+	}
+}
+
+//
+func TestTalk(t *testing.T) {
+	s := TalkScript()
+	if game, err := NewTestGame(t, s); assert.NoError(t, err) {
+		g := R.NewGameAdapter(game.Game)
 		qh := QuipHistory{}
 		// FIX:  saying hello.
-		qh.Push(ident.MakeId("OldBoy # WhatsTheMatter"))
-		qp := QuipPool(g.Objects)
-		newQuip := qp[ident.MakeId("OldBoy # Later")]
+		qh.PushQuip(g.Our("OldBoy # WhatsTheMatter"))
+		qp := GetQuipPool(g)
+		newQuip := g.Our("OldBoy # Later")
 		//
-		lastQuip, ok := qp.MostRecent(qh)
-		require.True(t, ok, "found last quip")
+		lastQuip := qh.MostRecent(g)
+		require.True(t, lastQuip.Exists(), "found last quip")
 		//
-		npcId := qp.Interlocutor(lastQuip)
-		require.EqualValues(t, npcId, "AlienBoy")
+		npc := lastQuip.Object("Speaker")
+		require.EqualValues(t, npc.Id(), "AlienBoy")
 		//
-		repeats, _ := lastQuip.Value("Repeatable").(bool)
-		require.False(t, repeats, "repeats")
+		repeats := lastQuip.Is("one time")
+		require.True(t, repeats, "repeats")
 		//
-		newrepeats, _ := newQuip.Value("Repeatable").(bool)
+		newrepeats := newQuip.Is("repeatable")
 		require.True(t, newrepeats, "new repeats")
 		//
-		rank := qp.FollowsRecently(qh, newQuip.Id())
+		rank := qp.FollowsRecently(qh, newQuip)
 		require.Equal(t, -1, rank, "unrelated")
 		//
 		after := qp.SpeakAfter(qh, newQuip)
@@ -44,19 +57,19 @@ func xTestTalk(t *testing.T) {
 	}
 }
 
-func xTestVisit(t *testing.T) {
-	s := InitScripts()
-	Talk(s)
-	if g, err := NewTestGame(t, s); assert.NoError(t, err) {
+func TestVisit(t *testing.T) {
+	s := TalkScript()
+	if game, err := NewTestGame(t, s); assert.NoError(t, err) {
 		total := 2
 		comments := 1
 		repeats := 1
-		VisitObjects(g.Objects, "Quips", func(q *R.GameObject) (done bool) {
+		g := R.NewGameAdapter(game.Game)
+		g.Visit("quips", func(q G.IObject) (done bool) {
 			total--
-			if q.Value("Comment").(string) != "" {
+			if q.Text("comment") != "" {
 				comments--
 			}
-			if r, _ := q.Value("Repeatable").(bool); r {
+			if q.Is("repeatable") {
 				repeats--
 			}
 			return
@@ -67,15 +80,17 @@ func xTestVisit(t *testing.T) {
 	}
 }
 
-func Talk(s *Script) {
-	s.The("actor", Called("the alien boy"), Exists())
+func TalkScript() *Script {
+	s := InitScripts()
+	s.The("actor", Called("The Alien Boy"), Exists())
 	s.The("alien boy", Has("greeting", "OldBoy # WhatsTheMatter"))
 	s.The("quip", Called("OldBoy # WhatsTheMatter"),
 		Has("speaker", "alien boy"),
-		Has("reply", `"You wouldn't happen to have a matter disrupter?" the Alien Boy asks you.`))
+		Has("reply", `"You wouldn't happen to have a matter disrupter?"`))
 
 	s.The("quip", Called("OldBoy # Later"),
 		Is("repeatable"),
 		Has("speaker", "alien boy"),
 		Has("comment", `"Oh, sorry," Alice says. "I'll be back."`))
+	return s
 }
