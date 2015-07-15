@@ -1,7 +1,5 @@
 package script
 
-//Can("show").And("showing").RequiresOne("actor").AndOne("kind"),
-
 // active verb:
 func Can(verb string) CanDoPhrase {
 	return CanDoPhrase{NewOrigin(1), verb}

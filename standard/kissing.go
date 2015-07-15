@@ -10,7 +10,7 @@ func init() {
 		// kissing
 		s.The("actors",
 			Can("kiss it").And("kissing it").RequiresOne("object"),
-			To("kiss it", actorTarget("kiss")),
+			To("kiss it", ReflectToTarget("report kiss")),
 			//  kissing yourself rule
 			WhenCapturing("kissing it", func(g G.Play) {
 				source, target := g.The("action.Source"), g.The("action.Target")
@@ -22,8 +22,8 @@ func init() {
 		)
 		//  block kissing rule
 		s.The("objects",
-			Can("kiss").And("kissing").RequiresOne("actor"),
-			To("kiss", func(g G.Play) {
+			Can("report kiss").And("reporting kiss").RequiresOne("actor"),
+			To("report kiss", func(g G.Play) {
 				source := g.The("action.Source")
 				g.Say(source.Text("Name"), "might not like that.")
 			}))

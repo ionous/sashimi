@@ -54,7 +54,7 @@ func init() {
 		// we need this in case the npc doesnt have a greeting
 		// ( otherwise: the current quip's speaker could always be used
 		// plus or minus some issues about multiple speakers. )
-		interlocutor := R.NullObject()
+		interlocutor := R.NullObject("interlocutor")
 
 		s.The("actors",
 			Can("greet").And("greeting").RequiresOne("actor"),
@@ -80,7 +80,7 @@ func init() {
 			Can("depart").And("departing").RequiresNothing(),
 			To("depart", func(g G.Play) {
 				qh.ClearQuips()
-				interlocutor = R.NullObject()
+				interlocutor = R.NullObject("interlocutor")
 			}))
 
 		s.The("stories",
@@ -90,7 +90,15 @@ func init() {
 
 		s.The("actors",
 			Can("discuss").And("discussing").RequiresOne("quip"),
-			To("discuss", func(g G.Play) {
+			To("discuss", standard.ReflectToTarget("report discuss")))
+
+		// FIX? This event shifting ... it makes sense in a strict way --
+		// but its also verbose to type, and difficult to follow.
+		// part of the issue is naming convension for sure.
+		// research needed...
+		s.The("quips",
+			Can("report discuss").And("reporting discuss").RequiresOne("actor"),
+			To("report discuss", func(g G.Play) {
 				player, talker, quip := g.The("player"), g.The("actor"), g.The("quip")
 				// the player wants to speak: probably has chosen a line of dialog from the menu
 				if talker == player {
@@ -153,13 +161,5 @@ func init() {
 			// FIX? with pointers, it wouldnt be too difficult to have parts now
 			// an auto-created association.
 			Have("next quip", "next quip"))
-
-		// x. discussing action to choose and execute a line of dialog
-		// x. saying hello to queue an npc greeting
-		// present player choices
-		// inject player choice as discussing
-		// x. move spoken quips to the recollection table.
-		// low: check that every dialog line has an npc
-		// low: check that every npc has a greeting
 	})
 }

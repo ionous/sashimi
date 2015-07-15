@@ -1,8 +1,8 @@
 package runtime
 
 import (
-	"fmt"
 	G "github.com/ionous/sashimi/game"
+	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/util/ident"
 	"strings"
 )
@@ -14,6 +14,7 @@ type GameEventAdapter struct {
 	*Game
 	data      *RuntimeAction
 	cancelled bool
+	hint      *M.ClassInfo
 }
 
 //
@@ -32,7 +33,7 @@ func (ga *GameEventAdapter) NewObjectAdapter(gobj *GameObject) (ret G.IObject) {
 	if gobj != nil {
 		ret = ObjectAdapter{ga, gobj}
 	} else {
-		ret = NullObject()
+		ret = NullObjectSource("", 2)
 	}
 	return ret
 }
@@ -55,7 +56,7 @@ func (ga *GameEventAdapter) A(name string) G.IObject {
 //
 func (ga *GameEventAdapter) Add(data string) (ret G.IObject) {
 	if cls, ok := ga.Model.Classes.FindClassBySingular(data); !ok {
-		ret = NullObject()
+		ret = NullObjectSource(data, 2)
 	} else {
 		id := ident.MakeUniqueId()
 		gobj := &GameObject{id, cls, make(TemplateValues), make(TemplatePool), ga.Game.Model.Tables}
@@ -138,7 +139,7 @@ func (ga *GameEventAdapter) Rules() G.IGameRules {
 //
 // could make a map that implements IObject?
 // could use special keys for $name, $fullname, $game, etc.
-// the point would be, what exactly?
+// FUTURE: use dependency injection instead
 func (ga *GameEventAdapter) GetObject(name string) (obj G.IObject) {
 	// asking by original name
 	if gobj, ok := ga.FindObject(name); ok {
@@ -154,14 +155,32 @@ func (ga *GameEventAdapter) GetObject(name string) (obj G.IObject) {
 				obj = ga.NewObjectAdapter(gobj)
 			}
 		}
-		// asking by class name, ex. The("story")
+
+		// asking by the class name,ex. The("story")
 		if obj == nil {
-			for _, src := range ga.data.objs {
-				cls, _ := ga.Model.Classes.FindClassBySingular(name)
-				if src.Class().CompatibleWith(cls.Id()) {
-					obj = ga.NewObjectAdapter(src)
-					if src.Class() == cls {
-						break // best match
+			if namedCls, ok := ga.Model.Classes.FindClassBySingular(name); ok {
+				index := -1
+				// of the handler, or action parameter
+				if namedCls == ga.hint {
+					index = 0
+				} else {
+					// walk classes of the actions
+					for i, srcCls := range ga.data.action.NounSlice() {
+						if namedCls == srcCls {
+							index = i
+							break
+						}
+					}
+				}
+				if index >= 0 && index < len(ga.data.objs) {
+					obj = ga.NewObjectAdapter(ga.data.objs[index])
+				} else {
+					//backwards compat
+					if obj == nil {
+						src := ga.data.objs[0]
+						if src.Class().CompatibleWith(namedCls.Id()) {
+							obj = ga.NewObjectAdapter(src)
+						}
 					}
 				}
 			}
@@ -169,8 +188,7 @@ func (ga *GameEventAdapter) GetObject(name string) (obj G.IObject) {
 	}
 	// logging and safety
 	if obj == nil {
-		ga.log.Output(3, fmt.Sprintf("unknown object requested `%s`", name))
-		obj = NullObject()
+		obj = NullObjectSource(name, 3)
 	}
 	return obj
 }

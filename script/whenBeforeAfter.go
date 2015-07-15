@@ -48,8 +48,8 @@ func WhenCapturing(event string, cb G.Callback) EventFinalizer {
 }
 
 //
-func (this EventPhrase) Always(cb G.Callback) EventFinalizer {
-	return EventFinalizer{this, cb}
+func (phrase EventPhrase) Always(cb G.Callback) EventFinalizer {
+	return EventFinalizer{phrase, cb}
 }
 
 //
@@ -59,8 +59,8 @@ func (this EventPhrase) Always(cb G.Callback) EventFinalizer {
 // }
 
 //
-func (this EventFinalizer) MakeStatement(b SubjectBlock) error {
-	fields := S.ListenFields{b.subject, this.event, this.cb, this.options}
+func (frag EventFinalizer) MakeStatement(b SubjectBlock) error {
+	fields := S.ListenFields{b.subject, frag.event, frag.cb, frag.options}
 	return b.NewEventHandler(fields, "")
 }
 

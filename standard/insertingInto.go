@@ -25,10 +25,7 @@ func init() {
 		// 1. source
 		s.The("actors",
 			Can("insert it into").And("inserting it into").RequiresOne("container").AndOne("prop"),
-			To("insert it into", func(g G.Play) {
-				actor, container, prop := g.The("action.Source"), g.The("action.Target"), g.The("action.Context")
-				container.Go("insert into", prop, actor)
-			}),
+			To("insert it into", ReflectWithContext("report insert")),
 			//  can't insert clothes being worn
 			WhenCapturing("inserting it into", func(g G.Play) {
 				prop := g.The("action.Context")
@@ -65,15 +62,12 @@ func init() {
 		)
 		// 2. containers
 		s.The("containers",
-			Can("insert into").And("inserting into").RequiresOne("prop").AndOne("actor"),
-			To("insert into", func(g G.Play) {
-				container, prop, actor := g.The("action.Source"), g.The("action.Target"), g.The("action.Context")
-				prop.Go("insert", actor, container)
-			}))
+			Can("report insert").And("reporting insert").RequiresOne("prop").AndOne("actor"),
+			To("report insert", ReflectWithContext("report insertion")))
 		// 3. context
 		s.The("props",
-			Can("insert").And("inserting").RequiresOne("actor").AndOne("container"),
-			To("insert", func(g G.Play) {
+			Can("report insertion").And("reporting insertion").RequiresOne("actor").AndOne("container"),
+			To("report insertion", func(g G.Play) {
 				prop, container := g.The("action.Source"), g.The("action.Context")
 				Assign(prop, "enclosure", container)
 				g.Say("You insert {{action.Source.Name}} into {{action.Context.Name}}.")

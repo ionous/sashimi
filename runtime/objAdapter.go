@@ -273,7 +273,8 @@ func (oa ObjectAdapter) Says(text string) {
 //
 func (oa ObjectAdapter) Go(act string, objects ...G.IObject) {
 	if action, ok := oa.game.Model.Actions.FindActionByName(act); !ok {
-		oa.logError(fmt.Errorf("unknown action for Go %s", act))
+		e := fmt.Errorf("unknown action for Go %s", act)
+		oa.logError(e)
 	} else {
 		// FIX, ugly: we need the props, even tho we already have the objects...
 		nouns := make([]ident.Id, len(objects)+1)
@@ -288,9 +289,9 @@ func (oa ObjectAdapter) Go(act string, objects ...G.IObject) {
 			msg := E.Message{Name: action.Event(), Data: act}
 			// see ProcessEventQueue()
 			path := E.NewPathTo(tgt)
-			//oa.game.log.Output(3, fmt.Sprintf("go %s %s", prop, path))
-			if runDefault, err := msg.Send(path); err != nil {
-				oa.logError(err)
+			// LOGGING: oa.game.log.Output(3, fmt.Sprintf("go %s %s", tgt, path))
+			if runDefault, e := msg.Send(path); e != nil {
+				oa.logError(e)
 			} else if runDefault {
 				act.runDefaultActions()
 			}

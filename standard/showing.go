@@ -18,10 +18,7 @@ func init() {
 		// 1. source
 		s.The("actors",
 			Can("show it to").And("showing it to").RequiresOne("actor").AndOne("prop"),
-			To("show it to", func(g G.Play) {
-				presenter, receiver, prop := g.The("action.Source"), g.The("action.Target"), g.The("action.Context")
-				receiver.Go("show to", prop, presenter)
-			}),
+			To("show it to", ReflectWithContext("report show")),
 			// "you can't show what you haven't got"
 			WhenCapturing("showing it to", func(g G.Play) {
 				presenter, _, prop := g.The("action.Source"), g.The("action.Target"), g.The("action.Context")
@@ -41,15 +38,12 @@ func init() {
 		)
 		// 2. receiver
 		s.The("actors",
-			Can("show to").And("showing to").RequiresOne("prop").AndOne("actor"),
-			To("show to", func(g G.Play) {
-				receiver, prop, presenter := g.The("action.Source"), g.The("action.Target"), g.The("action.Context")
-				prop.Go("show", presenter, receiver)
-			}))
+			Can("report show").And("reporting show").RequiresOne("prop").AndOne("actor"),
+			To("report show", ReflectWithContext("report shown")))
 		// 3. context
 		s.The("props",
-			Can("show").And("showing").RequiresTwo("actor"),
-			To("show", func(g G.Play) {
+			Can("report shown").And("reporting shown").RequiresTwo("actor"),
+			To("report shown", func(g G.Play) {
 				_, _, receiver := g.The("action.Source"), g.The("action.Target"), g.The("action.Context")
 				g.Say(receiver.Text("Name"), "is unimpressed")
 			}))

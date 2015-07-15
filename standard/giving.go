@@ -21,10 +21,7 @@ func init() {
 		// 1. source
 		s.The("actors",
 			Can("give it to").And("giving it to").RequiresOne("actor").AndOne("prop"),
-			To("give it to", func(g G.Play) {
-				presenter, receiver, prop := g.The("action.Source"), g.The("action.Target"), g.The("action.Context")
-				receiver.Go("give to", prop, presenter)
-			}),
+			To("give it to", ReflectWithContext("report give")),
 			// "convert give to yourself to examine"
 			WhenCapturing("giving it to", func(g G.Play) {
 				presenter, receiver := g.The("action.Source"), g.The("action.Target")
@@ -53,15 +50,12 @@ func init() {
 		)
 		// 2. receiver
 		s.The("actors",
-			Can("give to").And("giving to").RequiresOne("prop").AndOne("actor"),
-			To("give to", func(g G.Play) {
-				receiver, prop, presenter := g.The("action.Source"), g.The("action.Target"), g.The("action.Context")
-				prop.Go("give", presenter, receiver)
-			}))
+			Can("report give").And("reporting give").RequiresOne("prop").AndOne("actor"),
+			To("report give", ReflectWithContext("report gave")))
 		// 3. context
 		s.The("props",
-			Can("give").And("giving").RequiresTwo("actor"),
-			To("give", func(g G.Play) {
+			Can("report gave").And("reporting gave").RequiresTwo("actor"),
+			To("report gave", func(g G.Play) {
 				// FIX: should generate a report/response
 				receiver := g.The("action.Context")
 				g.Say(receiver.Text("Name"), "is unimpressed.")

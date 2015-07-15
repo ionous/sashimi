@@ -24,12 +24,12 @@ func init() {
 	AddScript(func(s *Script) {
 		s.The("actors",
 			Can("take it").And("taking it").RequiresOne("prop"),
-			To("take it", actorTarget("take")),
+			To("take it", ReflectToTarget("report take")),
 		)
 
 		s.The("props",
-			Can("take").And("taking").RequiresOne("actor"),
-			To("take", func(g G.Play) {
+			Can("report take").And("reporting take").RequiresOne("actor"),
+			To("report take", func(g G.Play) {
 				prop, actor := g.The("action.Source"), g.The("action.Target")
 				// first, only same room:
 				actorCeiling, _ := Enclosure(actor)

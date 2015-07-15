@@ -128,42 +128,45 @@ func init() {
 
 // reflect to the passed action passing the actors's current whereabouts.
 // will have to become more sophisticated for being inside a box.
-func actorLocation(report string) G.Callback {
+func ReflectToLocation(action string) G.Callback {
 	return func(g G.Play) {
 		actor := g.The("actor")
 		target := actor.Object("whereabouts")
-		target.Go(report, actor)
+		target.Go(action, actor)
 	}
 }
 
-// reflect to the passed action
-func actorTarget(action string) G.Callback {
+// ReflectToTarget runs the passed action, flipping the source and target.
+func ReflectToTarget(action string) G.Callback {
 	return func(g G.Play) {
-		actor := g.The("actor")
+		source := g.The("action.Source")
 		target := g.The("action.Target")
-		target.Go(action, actor)
+		target.Go(action, source)
+	}
+}
+
+// ReflectWithContext runs the passed action, shifting to target, context, source.
+// FIX: i think it'd be better to first use ReflectToTarget, keeping the context as the third parameter
+// and then ReflectToContext, possibly re-swapping source and target.
+func ReflectWithContext(action string) G.Callback {
+	return func(g G.Play) {
+		source := g.The("action.Source")
+		target := g.The("action.Target")
+		context := g.The("action.Context")
+		target.Go(action, context, source)
 	}
 }
 
 func init() {
 	AddScript(func(s *Script) {
-		s.The("actors",
-			Can("jump").And("jumping").RequiresNothing(),
-			To("jump", actorLocation("report jumping")),
-		)
-
-		s.The("actors",
-			Can("listen").And("listening").RequiresNothing(),
-			To("listen", actorLocation("report the sound")),
-
-			Can("listen to").And("listening to").RequiresOne("kind"),
-			To("listen to", actorTarget("report the sound")),
-		)
 
 		// one visible thing, and requring light
 		s.The("actors",
 			Can("look").And("looking").RequiresNothing(),
-			To("look", //actorLocation("report the view")
+			To("look",
+				// ReflectToLocation("report the view")
+				// reflect to location will send the actor as a parameter,
+				// but report the view doesnt expect parameters.
 				func(g G.Play) {
 					actor := g.The("actor")
 					target := actor.Object("whereabouts")
@@ -174,7 +177,7 @@ func init() {
 		// one visible thing and requiring light.
 		s.The("actors",
 			Can("look under it").And("looking under it").RequiresOne("object"),
-			To("look under it", actorTarget("look under")),
+			To("look under it", ReflectToTarget("report look under")),
 		)
 
 		// "taking inventory" in inform
@@ -202,32 +205,18 @@ func init() {
 		// searching: requiring light; FIX: what does searching a room do?
 		s.The("actors",
 			Can("search it").And("searching it").RequiresOne("prop"),
-			To("search it", actorTarget("search")))
+			To("search it", ReflectToTarget("report search")))
 		s.The("props",
 			Can("search").And("searching").RequiresOne("actor"))
 
-		// smelling
-		s.The("actors",
-			Can("smell").And("smelling").RequiresNothing(),
-			To("smell", actorLocation("report the smell")),
-
-			Can("smell it").And("smelling it").RequiresOne("kind"),
-			To("smell it", actorTarget("report the smell")),
-		)
-
 		// WARNING/FIX: multi-word statements must appear before their single word variants
 		// ( or the parser will attempt to match the setcond word as a noun )
-		s.Execute("jump", Matching("jump|skip|hop"))
 		s.Execute("search it", Matching("search {{something}}").
 			Or("look inside|in|into|through {{something}}"))
-		s.Execute("smell it", Matching("smell|sniff {{something}}"))
-		s.Execute("smell", Matching("smell|sniff"))
 		// FIX: for some reason, the order must be biggest match to smallest, the other way doesnt work.
 		s.Execute("report inventory", Matching("inventory|inv|i"))
-		s.Execute("look under it", Matching("look under {{something}}"))
 		s.Execute("look", Matching("look|l"))
-		s.Execute("listen to", Matching("listen to {{something}}").Or("listen {{something}}"))
-		s.Execute("listen", Matching("listen"))
+		s.Execute("look under it", Matching("look under {{something}}"))
 	})
 }
 
@@ -252,19 +241,6 @@ func listContents(g G.Play, header string, obj G.IObject) (printed bool) {
 // System actions
 func init() {
 	AddScript(func(s *Script) {
-		s.The("kinds",
-			Can("report jumping").And("reporting jumping").RequiresOne("actor"),
-			To("report jumping", func(g G.Play) {
-				actor := g.The("action.Target")
-				// FIX? inform often, but not always, tests for trying silently,
-				// "if the action is not silent" ...
-				// seems... strange. why report if if its silent?
-				if g.The("player") == actor {
-					g.Say("You jump on the spot.")
-				} else {
-					g.Say(actor.Text("Name"), "jumps on the spot.")
-				}
-			}))
 
 		// inform has two entries for some actions (looking under as an example, jumping as a counter example):
 		// 1. carry out an actor looking under: if the player
@@ -273,34 +249,13 @@ func init() {
 		// it might be interesting to queue says, if they need to be cancelled or held back.
 		// keep in mind, most of these really want to be animations, and only sometimes voice.
 		s.The("objects",
-			Can("look under").And("looking under").RequiresOne("actor"),
-			To("look under", func(g G.Play) {
+			Can("report look under").And("reporting look under").RequiresOne("actor"),
+			To("report look under", func(g G.Play) {
 				source, actor := g.The("action.Source"), g.The("action.Target")
 				if g.The("player") == actor {
 					g.Say("You find nothing of interest.")
 				} else {
 					g.Say(actor.Text("Name"), "looks under the", source.Text("Name"), ".")
-				}
-			}))
-
-		// kinds, to allow rooms and objects
-		s.The("kinds",
-			Can("report the smell").And("reporting the smell").RequiresOne("actor"),
-			To("report the smell", func(g G.Play) {
-				actor := g.The("action.Target")
-				if g.The("player") == actor {
-					g.Say("You smell nothing unexpected.")
-				} else {
-					g.Say(actor.Text("Name"), "sniffs.")
-				}
-			}),
-			Can("report the sound").And("reporting the sound").RequiresOne("actor"),
-			To("report the sound", func(g G.Play) {
-				actor := g.The("action.Target")
-				if g.The("player") == actor {
-					g.Say("You hear nothing unexpected.")
-				} else {
-					g.Say(actor.Text("Name"), "listens.")
 				}
 			}))
 

@@ -20,13 +20,13 @@ func init() {
 		//
 		s.The("actors",
 			Can("open it").And("opening it").RequiresOne("opener"),
-			To("open it", actorTarget("open")),
+			To("open it", ReflectToTarget("report open")),
 		)
 
 		// "[regarding the noun][They] [aren't] something [we] [can] open."
 		s.The("openers",
-			Can("open").And("opening").RequiresOne("actor"),
-			To("open", func(g G.Play) {
+			Can("report open").And("reporting open").RequiresOne("actor"),
+			To("report open", func(g G.Play) {
 				this, actor := g.The("opener"), g.The("action.Target")
 				if this.Is("openable") {
 					if this.Is("open") {
@@ -59,11 +59,11 @@ func init() {
 		// one visible thing, and requiring light
 		s.The("actors",
 			Can("close it").And("closing it").RequiresOne("opener"),
-			To("close it", actorTarget("close")),
+			To("close it", ReflectToTarget("report close")),
 		)
 		s.The("openers",
-			Can("close").And("closing").RequiresOne("actor"),
-			To("close", func(g G.Play) {
+			Can("report close").And("report closing").RequiresOne("actor"),
+			To("report close", func(g G.Play) {
 				this, actor := g.The("opener"), g.The("action.Target")
 				if this.Is("openable") {
 					// FIX: locked?

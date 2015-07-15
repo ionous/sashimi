@@ -11,14 +11,14 @@ func init() {
 		// examine studio: You can't see any such thing; sad face.
 		s.The("actors",
 			Can("examine it").And("examining it").RequiresOne("object"),
-			To("examine it", actorTarget("examine")),
+			To("examine it", ReflectToTarget("report examine")),
 		)
 		// the default action prints the place holder text
 		// the events system prints the specifics and prevents the defaults as needed
 		// users can override for a particular object the entire thing
 		s.The("objects",
-			Can("examine").And("examining").RequiresOne("actor"),
-			To("examine", func(g G.Play) {
+			Can("report examine").And("reporting examine").RequiresOne("actor"),
+			To("report examine", func(g G.Play) {
 				object := g.The("object")
 				desc := object.Text("description")
 				if desc != "" {
@@ -30,7 +30,7 @@ func init() {
 			}))
 
 		s.The("containers",
-			After("examining").Always(func(g G.Play) {
+			After("reporting examine").Always(func(g G.Play) {
 				this := g.The("action.Source")
 				if this.Is("open") || this.Is("transparent") {
 					listContents(g, "In the", this)
@@ -44,14 +44,10 @@ func init() {
 		//	say "[The actor] [look] closely at [the noun]." (A).
 
 		s.The("supporters",
-			After("examining").Always(func(g G.Play) {
+			After("reporting examine").Always(func(g G.Play) {
 				this := g.The("action.Source")
 				listContents(g, "On the", this)
 			}))
-
-		// s.The("devices",
-		// 	To("examine", func(g G.Play) {
-		// 		}))
 
 		s.Execute("examine it",
 			Matching("examine|x|watch|describe|check {{something}}").

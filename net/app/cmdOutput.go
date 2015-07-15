@@ -141,7 +141,6 @@ func (this *CommandOutput) changedLocation(action *M.ActionInfo, gobjs []*R.Game
 	this.flushPending()
 	who, where := this.serial.NewObjectRef(gobjs[1]), this.serial.NewObjectRef(gobjs[2])
 	this.events.Add("set-initial-position", who.SetMeta("location", where))
-
 }
 
 //

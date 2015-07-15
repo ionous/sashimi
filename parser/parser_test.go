@@ -121,7 +121,7 @@ func TestUnderstandings(t *testing.T) {
 	testCmds := []*TestCmd{
 		{name: "looking"},
 		{name: "examining", expect: []string{"n1"}},
-		{name: "showing", expect: []string{"actor", "prize"}},
+		{name: "reporting shown", expect: []string{"actor", "prize"}},
 		{name: "smelling"},
 		{name: "spacing", expect: []string{"evil fish"}},
 	}
@@ -201,11 +201,11 @@ func TestUnderstandings(t *testing.T) {
 	// assert.NoError(t, testParser("look at n1", "examining"), "look at is examining")
 	// assert.NoError(t, testParser("look	at	n1", "examining"), "ignore spaces")
 	nf.AddNouns("actor", "prize")
-	// assert.NoError(t, testParser("show actor prize", "showing"), "test showing")
-	// assert.NoError(t, testParser("present prize to actor", "showing"), "reverse showing")
-	assert.Error(t, testParser("show prize actor", "showing"), "because the test string expects actor first.")
+	// assert.NoError(t, testParser("show actor prize", "reporting shown"), "test showing")
+	// assert.NoError(t, testParser("present prize to actor", "reporting shown"), "reverse showing")
+	assert.Error(t, testParser("show prize actor", "reporting shown"), "because the test string expects actor first.")
 	nf.AddNouns("evil fish")
 	// assert.NoError(t, testParser("space test evil fish", "spacing"), "spacing in nouns")
 	// assert.NoError(t, testParser("space   test   an    evil   fish  ", "spacing"), "fishy spacing")
-	// assert.NoError(t, testParser("show the actor some prize", "showing"), "give us some nouns")
+	// assert.NoError(t, testParser("show the actor some prize", "reporting shown"), "give us some nouns")
 }

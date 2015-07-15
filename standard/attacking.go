@@ -9,11 +9,11 @@ func init() {
 	AddScript(func(s *Script) {
 		s.The("actors",
 			Can("attack it").And("attacking it").RequiresOne("object"),
-			To("attack it", actorTarget("attack")))
+			To("attack it", ReflectToTarget("report attack")))
 
 		s.The("objects",
-			Can("attack").And("attacking").RequiresOne("actor"),
-			To("attack", func(g G.Play) {
+			Can("report attack").And("reporting attack").RequiresOne("actor"),
+			To("report attack", func(g G.Play) {
 				g.Say("violence isn't the answer")
 			}))
 
