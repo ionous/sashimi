@@ -129,8 +129,10 @@ func TestCallbackParsing(t *testing.T) {
 				return g.The("looker")
 			})
 			str := "look at lookee"
-			expected := []string{"look it's a test!"}
-			assert.EqualValues(t, expected, g.RunInput(str).FlushOutput())
+			if err := g.RunInput(str); assert.NoError(t, err, "handle input") {
+				expected := []string{"look it's a test!"}
+				assert.EqualValues(t, expected, g.FlushOutput())
+			}
 		}
 	}
 }

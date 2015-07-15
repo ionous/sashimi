@@ -95,16 +95,15 @@ func NewGame(model *M.Model, output IOutput) (game *Game, err error) {
 	return game, err
 }
 
-//
-
-//
-// change the user's parent lookup (IObject -> name) into
-// the runtime's parent lookup (GameObject->GameObject)
+// PushParentLookup function into the game's determination of which object is which object's container.
+// Changes the user's parent lookup (IObject -> name) into
+// the runtime's parent lookup (GameObject->GameObject).
+// FIX? move the the adapter??? dont think we should be referencing adapter in game...
 func (game *Game) PushParentLookup(userLookup G.TargetLookup) {
 	game.parentLookup.PushLookup(func(gobj *GameObject) (ret *GameObject) {
 		// setup callback context:
-		play := &GameEventAdapter{Game: game}
-		obj := ObjectAdapter{game, gobj}
+		play := NewGameAdapter(game)
+		obj := play.NewObjectAdapter(gobj)
 		// call the user function
 		res := userLookup(play, obj)
 		// unpack the result

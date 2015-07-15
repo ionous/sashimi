@@ -60,7 +60,7 @@ func (om *ObjectMatcher) MatchNoun(name string, _ string) (err error) {
 //
 // Matches gets called by the parser after succesfully found the command and nouns.
 //
-func (om *ObjectMatcher) Matched() (err error) {
+func (om *ObjectMatcher) OnMatch() (err error) {
 	nouns := om.act.NounSlice()
 	if cnt, max := len(om.objects), len(nouns); cnt != max {
 		err = P.MismatchedNouns("I", max, cnt)

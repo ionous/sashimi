@@ -44,7 +44,7 @@ func (m *TestMatcher) MatchNoun(word string, article string) (err error) {
 	return err
 }
 
-func (m *TestMatcher) Matched() (err error) {
+func (m *TestMatcher) OnMatch() (err error) {
 	m.test.Log(">", m.test.name, m.nouns)
 	if len(m.nouns) != m.test.count {
 		err = fmt.Errorf("mismatched nouns")
@@ -97,9 +97,9 @@ func TestConsoleParser(t *testing.T) {
 	for {
 		if s, ok := c.Readln(); !ok {
 			break
-		} else {
-			if name, e := p.Parse(s); e != nil {
-				t.Fatal(name, e)
+		} else if m, err := p.ParseInput(s); assert.NoError(t, err, s) {
+			if err := m.OnMatch(); assert.NoError(t, err, s) {
+				continue
 			}
 		}
 	}

@@ -15,5 +15,10 @@ type IMatch interface {
 	// ex. "glasses", "the" => "horn-rimmed kryptonian disguise device"
 	MatchNoun(word string, article string) error
 	// Matched gets called after all nouns in an input have been parsed succesfully.
-	Matched() error
+	OnMatch() error
+}
+
+type Matched struct {
+	Pattern *Pattern
+	OnMatch func() error
 }

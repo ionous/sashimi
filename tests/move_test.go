@@ -101,10 +101,12 @@ func testMoves(t *testing.T, g TestGame, moves ...xMove) {
 	if p, ok := g.FindObject("player"); assert.True(t, ok) {
 		for _, move := range moves {
 			t.Logf("%s => %s", move.cmd, move.res)
-			out := g.RunInput(move.cmd).FlushOutput()
-			if !assert.Equal(t, move.res, where(p)) {
-				t.Log(out)
-				break
+			if err := g.RunInput(move.cmd); assert.NoError(t, err, move.cmd) {
+				out := g.FlushOutput()
+				if !assert.Equal(t, move.res, where(p)) {
+					t.Log(out)
+					break
+				}
 			}
 		}
 	}

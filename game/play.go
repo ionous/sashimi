@@ -38,3 +38,12 @@ type Play interface {
 	// FIX: move into the event object, possible via callback parameter injection
 	StopHere()
 }
+
+// Any returns the first compatible class found.
+func Any(g Play, class string) (ret IObject, found bool) {
+	found = g.Visit(class, func(obj IObject) bool {
+		ret = obj
+		return true
+	})
+	return ret, found
+}

@@ -40,7 +40,7 @@ func NewCommandSession(id string, model *M.Model) (ret *CommandSession, err erro
 // Game data associated with a client's particular sessions.
 //
 type CommandSession struct {
-	game       standard.StandardGame
+	game       *standard.StandardGame
 	output     *CommandOutput
 	frameCount int
 	*sync.RWMutex
@@ -120,7 +120,7 @@ func (sess *CommandSession) _handleInput(input CommandInput) (err error) {
 						}
 					}
 					if err == nil {
-						if e := om.Matched(); e != nil {
+						if e := om.OnMatch(); e != nil {
 							err = e
 						} else {
 							sess.game.EndTurn() // game.Input() does sess automatically (dont ask)

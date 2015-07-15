@@ -2,6 +2,7 @@ package extensions
 
 import (
 	G "github.com/ionous/sashimi/game"
+	R "github.com/ionous/sashimi/runtime"
 )
 
 const QuipHistoryDepth = 3
@@ -18,15 +19,15 @@ type QuipHistory struct {
 func (qh *QuipHistory) ClearQuips() {
 	qh.r = QuipHistory{}.r
 }
-func (qh *QuipHistory) PushQuip(next G.IObject) {
-	qh.r[2], qh.r[1], qh.r[0] = qh.r[1], qh.r[0], GosNilInterfacesAreAnnoying{next, true}
+func (qh *QuipHistory) PushQuip(quip G.IObject) {
+	qh.r[2], qh.r[1], qh.r[0] = qh.r[1], qh.r[0], GosNilInterfacesAreAnnoying{quip, true}
 }
 func (qh *QuipHistory) MostRecent(g G.Play) (andWhereAreTheTernaries G.IObject) {
 	e := qh.r[0]
 	if e.notnil {
 		andWhereAreTheTernaries = e.obj
 	} else {
-		andWhereAreTheTernaries = g.The("")
+		andWhereAreTheTernaries = R.NullObject()
 	}
 	return andWhereAreTheTernaries
 }

@@ -55,11 +55,7 @@ func init() {
 					status := fmt.Sprintf("%d/%d", int(score), int(0))
 					g.The("status bar").SetText("right", status)
 				}
-				var room G.IObject
-				found := g.Visit("rooms", func(obj G.IObject) bool {
-					room = obj
-					return true
-				})
+				room, found := G.Any(g, "rooms")
 				if !found {
 					panic("story has no rooms")
 				}

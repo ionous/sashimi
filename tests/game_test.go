@@ -27,12 +27,13 @@ func TestObjectSet(t *testing.T) {
 		Called("test"),
 		Has("amSet", "original"))
 
-	g, err := NewTestGame(t, s)
-	if assert.NoError(t, err) && assert.NotNil(t, g.Model) {
-		if inst, ok := g.Model.Instances.FindInstance("test"); assert.True(t, ok) {
-			gobj, exists := g.Game.Objects[inst.Id()]
+	test, err := NewTestGame(t, s)
+	if assert.NoError(t, err) && assert.NotNil(t, test.Model) {
+		if inst, ok := test.Model.Instances.FindInstance("test"); assert.True(t, ok) {
+			gobj, exists := test.Game.Objects[inst.Id()]
 			if assert.True(t, exists, "test instance should exist") && assert.NotNil(t, gobj) {
-				obj := R.NewObjectAdapter(g.Game, gobj)
+				g := R.NewGameAdapter(test.Game)
+				obj := g.NewObjectAdapter(gobj)
 				assert.Equal(t, "original", obj.Text("amSet"), "should have original value")
 
 				obj.SetText("amSet", "new")

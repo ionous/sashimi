@@ -129,12 +129,11 @@ func TestTableRuntime(t *testing.T) {
 	nameSweets(s)
 	makePeople(s)
 	namePeople(s)
-	if g, err := NewTestGame(t, s); assert.NoError(t, err) {
-		if gobj, ok := g.FindObject("Grace"); assert.True(t, ok) {
-			grace := R.NewObjectAdapter(g.Game, gobj)
+	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
+		g := R.NewGameAdapter(test.Game)
+		if grace := g.Our("Grace"); assert.True(t, grace.Exists()) {
 			if sweet := grace.Object("favorite sweet"); assert.True(t, sweet.Exists(), "grace should have a treat") {
-				if gobj, ok := g.FindObject("Boreo"); assert.True(t, ok) {
-					boreo := R.NewObjectAdapter(g.Game, gobj)
+				if boreo := g.The("Boreo"); assert.True(t, boreo.Exists()) {
 					grace.Set("favorite sweet", boreo)
 					retread := grace.Object("favorite sweet").Text("Name")
 					assert.Equal(t, retread, "Boreo")

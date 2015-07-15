@@ -10,53 +10,7 @@ import (
 	"testing"
 )
 
-//
-func TestDiscuss(t *testing.T) {
-	s := TalkScript()
-	if game, err := NewTestGame(t, s); assert.NoError(t, err) {
-		g := R.NewGameAdapter(game.Game)
-		boy := g.The("alien boy")
-		boy.Go("discuss", boy.Object("greeting"))
-		lines := game.FlushOutput()
-		require.Len(t, lines, 1)
-		require.Equal(t, `The Alien Boy: "You wouldn't happen to have a matter disrupter?"`, lines[0])
-	}
-}
-
-//
-func TestTalk(t *testing.T) {
-	s := TalkScript()
-	if game, err := NewTestGame(t, s); assert.NoError(t, err) {
-		g := R.NewGameAdapter(game.Game)
-		qh := QuipHistory{}
-		// FIX:  saying hello.
-		qh.PushQuip(g.Our("OldBoy # WhatsTheMatter"))
-		qp := GetQuipPool(g)
-		newQuip := g.Our("OldBoy # Later")
-		//
-		lastQuip := qh.MostRecent(g)
-		require.True(t, lastQuip.Exists(), "found last quip")
-		//
-		npc := lastQuip.Object("Speaker")
-		require.EqualValues(t, npc.Id(), "AlienBoy")
-		//
-		repeats := lastQuip.Is("one time")
-		require.True(t, repeats, "repeats")
-		//
-		newrepeats := newQuip.Is("repeatable")
-		require.True(t, newrepeats, "new repeats")
-		//
-		rank := qp.FollowsRecently(qh, newQuip)
-		require.Equal(t, -1, rank, "unrelated")
-		//
-		after := qp.SpeakAfter(qh, newQuip)
-		require.True(t, after, "speak after")
-		//
-		list := qp.GetPlayerQuips(qh)
-		require.Len(t, list, 1)
-	}
-}
-
+// TestVisit to ensure that we can visit the dialog and see their properties.
 func TestVisit(t *testing.T) {
 	s := TalkScript()
 	if game, err := NewTestGame(t, s); assert.NoError(t, err) {
@@ -80,6 +34,103 @@ func TestVisit(t *testing.T) {
 	}
 }
 
+// TestQuipHistory to test history tracking.
+// FIX FIX: add more quips and make sure rank and wrapping work properly.
+func TestQuipHistory(t *testing.T) {
+	s := TalkScript()
+	if game, err := NewTestGame(t, s); assert.NoError(t, err) {
+		g := R.NewGameAdapter(game.Game)
+		qh := QuipHistory{}
+		// FIX:  saying hello.
+		qh.PushQuip(g.Our("OldBoy # WhatsTheMatter"))
+		//
+		lastQuip := qh.MostRecent(g)
+		require.True(t, lastQuip.Exists(), "found last quip")
+		//
+		npc := lastQuip.Object("Speaker")
+		require.EqualValues(t, npc.Id(), "AlienBoy")
+		//
+		repeats := lastQuip.Is("one time")
+		require.True(t, repeats, "repeats")
+	}
+}
+
+// TestDiscuss for the discuss event and the conversation queue.
+func TestDiscuss(t *testing.T) {
+	s := TalkScript()
+	if game, err := NewTestGame(t, s); assert.NoError(t, err) {
+		g := R.NewGameAdapter(game.Game)
+		boy := g.The("alien boy")
+		// push in the queue
+		boy.Go("discuss", boy.Object("greeting"))
+		// talk to the boy
+		Converse(g, QuipHistory{})
+		// clear the test, and make sure the queue is empty.
+		require.Equal(t, ResetQuipQueue(), 0)
+		lines := game.FlushOutput()
+		require.Len(t, lines, 1)
+		require.Equal(t, `The Alien Boy: "You wouldn't happen to have a matter disrupter?"`, lines[0])
+	}
+}
+
+// TestTalkQuips to test player quip generation.
+// FIX: this will only be interesting if there are multiple possiblities
+// both related to the alien boy, but not this convo, and to other npcs
+func TestTalkQuips(t *testing.T) {
+	s := TalkScript()
+	if game, err := NewTestGame(t, s); assert.NoError(t, err) {
+		g := R.NewGameAdapter(game.Game)
+		qh := QuipHistory{}
+		// FIX: saying hello.
+		qh.PushQuip(g.Our("OldBoy # WhatsTheMatter"))
+		qp := GetQuipPool(g)
+		// verify that "later" should show up after "whats the matter".
+		later := g.Our("OldBoy # Later")
+		after := qp.SpeakAfter(qh, later)
+		require.True(t, after, "speak after")
+		// verify it actually does
+		list := qp.GetPlayerQuips(qh, g.Our("Alien Boy"))
+		require.Len(t, list, 1)
+		require.Equal(t, later, list[0])
+	}
+}
+
+// TestTalkChoices to test conversation choice generation.
+func TestTalkChoices(t *testing.T) {
+	s := TalkScript()
+	if game, err := NewTestGame(t, s); assert.NoError(t, err) {
+		g := R.NewGameAdapter(game.Game)
+		if ab := g.The("alien boy"); assert.True(t, ab.Exists(), "found boy") {
+			if player := g.The("player"); assert.True(t, player.Exists(), "found player") {
+				player.Go("print conversation choices", ab)
+				lines := game.FlushOutput()
+				require.Len(t, lines, 1)
+			}
+		}
+	}
+}
+
+// TestTalkChoose for simple testing of the menu choices.
+func TestTalkChoose(t *testing.T) {
+	s := TalkScript()
+	if game, err := NewTestGame(t, s); assert.NoError(t, err) {
+		g := R.NewGameAdapter(game.Game)
+		if ab := g.The("alien boy"); assert.True(t, ab.Exists(), "found boy") {
+			if player := g.The("player"); assert.True(t, player.Exists(), "found player") {
+				player.Go("print conversation choices", ab)
+				lines := game.FlushOutput()
+				require.Len(t, lines, 1)
+				if err := game.RunInput("1"); assert.NoError(t, err, "handling menu") {
+					lines := game.FlushOutput()
+					require.Len(t, lines, 1)
+					require.Equal(t, `player: "Oh, sorry," Alice says. "I'll be back."`, lines[0])
+				}
+			}
+		}
+	}
+}
+
+// TalkScript creates some dialog to test.
 func TalkScript() *Script {
 	s := InitScripts()
 	s.The("actor", Called("The Alien Boy"), Exists())

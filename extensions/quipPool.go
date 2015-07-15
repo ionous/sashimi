@@ -79,9 +79,8 @@ func (qp QuipPool) SpeakAfter(qh QuipHistory, newQuip G.IObject) (okay bool) {
 }
 
 // QuipList returns the possible quips for the player to say.
-func (qp QuipPool) GetPlayerQuips(qh QuipHistory) (ret []G.IObject) {
-	if lastQuip := qh.MostRecent(qp.g); lastQuip.Exists() {
-		npc := lastQuip.Object("speaker")
+func (qp QuipPool) GetPlayerQuips(qh QuipHistory, npc G.IObject) (ret []G.IObject) {
+	if npc.Exists() {
 		qp.g.Visit("quips", func(newQuip G.IObject) bool {
 			// Filter to quips which quip supply the interlocutor.
 			if speaker := newQuip.Object("speaker"); speaker == npc {
@@ -93,6 +92,10 @@ func (qp QuipPool) GetPlayerQuips(qh QuipHistory) (ret []G.IObject) {
 		})
 	}
 	return ret
+}
+
+func GetPlayerQuips(g G.Play, qh QuipHistory, npc G.IObject) []G.IObject {
+	return GetQuipPool(g).GetPlayerQuips(qh, npc)
 }
 
 type quipMemoryMap map[G.IObject]bool
@@ -115,4 +118,10 @@ var quipQueue []G.IObject
 // QueueQuip schedules the passed quip to be spoken in the future.
 func QueueQuip(_ G.Play, quip G.IObject) {
 	quipQueue = append(quipQueue, quip)
+}
+
+func ResetQuipQueue() int {
+	ret := len(quipQueue)
+	quipQueue = nil
+	return ret
 }

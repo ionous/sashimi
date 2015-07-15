@@ -41,18 +41,17 @@ func (p *Parser) NewComprehension(name string, matcher NewMatcher) (
 // Parse the input, and generate a matching command.
 // Returns the command found regardless of error.
 //
-func (p *Parser) Parse(input string) (found *Pattern, err error) {
+func (p *Parser) ParseInput(input string) (ret Matched, err error) {
+	matched := false
 	for _, c := range p.comps {
-		if f, m, e := c.TryParse(input); e == nil || f != nil {
-			if e == nil {
-				e = m.Matched()
-			}
-			found, err = f, e
+		if pattern, matcher, e := c.TryParse(input); e == nil || matcher != nil {
+			ret, err = Matched{pattern, func() error { return matcher.OnMatch() }}, e
+			matched = true
 			break
 		}
 	}
-	if found == nil {
+	if !matched {
 		err = UnknownInput(input)
 	}
-	return found, err
+	return ret, err
 }

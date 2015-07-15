@@ -5,6 +5,7 @@ import (
 	P "github.com/ionous/sashimi/parser"
 	R "github.com/ionous/sashimi/runtime"
 	. "github.com/ionous/sashimi/script"
+	"github.com/ionous/sashimi/standard" // :(
 	"os"
 	"testing"
 )
@@ -43,7 +44,7 @@ func NewTestGame(t *testing.T, s *Script) (ret TestGame, err error) {
 		cons := TestOutput{t, &C.BufferedOutput{}}
 		if game, e := R.NewGame(model, cons); e != nil {
 			err = e
-		} else if parser, e := R.NewParser(game); e != nil {
+		} else if parser, e := standard.NewParser(game); e != nil {
 			err = e
 		} else {
 			ret = TestGame{t, game, cons, parser}
@@ -56,29 +57,22 @@ type TestGame struct {
 	t *testing.T
 	*R.Game
 	out TestOutput
-	*R.ObjectParser
+	//*R.ObjectParser
+	*standard.Parser
 }
 
 //
 // For testing:
 //
-func (test *TestGame) RunInput(s string) *TestGame {
+func (test *TestGame) RunInput(s string) (err error) {
 	if e := test.ProcessEvents(); e != nil {
-		test.out.Println(e)
-	} else if _, e := test.Parse(P.NormalizeInput(s)); e != nil {
-		test.out.Println(e)
+		err = e
+	} else if m, e := test.ParseInput(P.NormalizeInput(s)); e != nil {
+		err = e
+	} else if e := m.OnMatch(); e != nil {
+		err = e
 	}
-	return test
-}
-
-//
-// For testing:
-//
-func (test *TestGame) RunTest(input []string) *TestGame {
-	for _, in := range input {
-		test.RunInput(in)
-	}
-	return test
+	return err
 }
 
 func (test *TestGame) FlushOutput() []string {

@@ -8,37 +8,41 @@ import (
 )
 
 // FIX? generate the implemenation via "go generate"
-type NullObject struct{}
+type _NullObject struct{}
 
-func (null NullObject) println(args ...interface{}) {
-	log.Println(append([]interface{}{"NullObject>"}, args...))
+func NullObject() G.IObject {
+	return _NullObject{}
+}
+
+func (null _NullObject) println(args ...interface{}) {
+	log.Println(append([]interface{}{"_NullObject>"}, args...))
 }
 
 //
-func (null NullObject) String() string {
-	return "NullObject"
+func (null _NullObject) String() string {
+	return "_NullObject"
 }
 
 //
-func (null NullObject) Id() ident.Id {
+func (null _NullObject) Id() ident.Id {
 	return ""
 }
 
 //
-func (null NullObject) Exists() bool {
+func (null _NullObject) Exists() bool {
 	return false
 }
 
-func (null NullObject) Remove() {
+func (null _NullObject) Remove() {
 }
 
 //
-func (null NullObject) Class(cls string) bool {
+func (null _NullObject) Class(cls string) bool {
 	return false
 }
 
 //
-func (null NullObject) Is(c string) (ret bool) {
+func (null _NullObject) Is(c string) (ret bool) {
 	pc, _, _, okay := runtime.Caller(0)
 	if okay {
 		name := runtime.FuncForPC(pc).Name()
@@ -48,7 +52,7 @@ func (null NullObject) Is(c string) (ret bool) {
 }
 
 //
-func (null NullObject) SetIs(c string) {
+func (null _NullObject) SetIs(c string) {
 	pc, _, _, okay := runtime.Caller(0)
 	if okay {
 		name := runtime.FuncForPC(pc).Name()
@@ -57,7 +61,7 @@ func (null NullObject) SetIs(c string) {
 }
 
 //
-func (null NullObject) Num(p string) (ret float32) {
+func (null _NullObject) Num(p string) (ret float32) {
 	pc, _, _, okay := runtime.Caller(0)
 	if okay {
 		name := runtime.FuncForPC(pc).Name()
@@ -67,7 +71,7 @@ func (null NullObject) Num(p string) (ret float32) {
 }
 
 //
-func (null NullObject) SetNum(p string, v float32) {
+func (null _NullObject) SetNum(p string, v float32) {
 	pc, _, _, okay := runtime.Caller(0)
 	if okay {
 		name := runtime.FuncForPC(pc).Name()
@@ -76,7 +80,7 @@ func (null NullObject) SetNum(p string, v float32) {
 }
 
 //
-func (null NullObject) Object(c string) G.IObject {
+func (null _NullObject) Object(c string) G.IObject {
 	pc, _, _, okay := runtime.Caller(0)
 	if okay {
 		name := runtime.FuncForPC(pc).Name()
@@ -86,7 +90,7 @@ func (null NullObject) Object(c string) G.IObject {
 }
 
 //
-func (null NullObject) ObjectList(c string) (ret []G.IObject) {
+func (null _NullObject) ObjectList(c string) (ret []G.IObject) {
 	pc, _, _, okay := runtime.Caller(0)
 	if okay {
 		name := runtime.FuncForPC(pc).Name()
@@ -96,7 +100,7 @@ func (null NullObject) ObjectList(c string) (ret []G.IObject) {
 }
 
 //
-func (null NullObject) Set(c string, _ G.IObject) {
+func (null _NullObject) Set(c string, _ G.IObject) {
 	pc, _, _, okay := runtime.Caller(0)
 	if okay {
 		name := runtime.FuncForPC(pc).Name()
@@ -105,7 +109,7 @@ func (null NullObject) Set(c string, _ G.IObject) {
 }
 
 //
-func (null NullObject) Text(p string) (ret string) {
+func (null _NullObject) Text(p string) (ret string) {
 	pc, _, _, okay := runtime.Caller(0)
 	if okay {
 		name := runtime.FuncForPC(pc).Name()
@@ -115,7 +119,7 @@ func (null NullObject) Text(p string) (ret string) {
 }
 
 //
-func (null NullObject) SetText(p string, v string) {
+func (null _NullObject) SetText(p string, v string) {
 	pc, _, _, okay := runtime.Caller(0)
 	if okay {
 		name := runtime.FuncForPC(pc).Name()
@@ -124,7 +128,7 @@ func (null NullObject) SetText(p string, v string) {
 }
 
 //
-func (null NullObject) Go(s string, _ ...G.IObject) {
+func (null _NullObject) Go(s string, _ ...G.IObject) {
 	pc, _, _, okay := runtime.Caller(0)
 	if okay {
 		name := runtime.FuncForPC(pc).Name()
@@ -133,7 +137,7 @@ func (null NullObject) Go(s string, _ ...G.IObject) {
 }
 
 //
-func (null NullObject) Says(s string) {
+func (null _NullObject) Says(s string) {
 	pc, _, _, okay := runtime.Caller(0)
 	if okay {
 		name := runtime.FuncForPC(pc).Name()

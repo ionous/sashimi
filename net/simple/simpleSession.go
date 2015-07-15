@@ -13,7 +13,7 @@ func NewSimpleSession(model *M.Model) (ret *SimpleSession, err error) {
 	} else if game, e := game.Start(); e != nil {
 		err = e
 	} else {
-		ret = &SimpleSession{&game, out, out.Flush()}
+		ret = &SimpleSession{game, out, out.Flush()}
 	}
 	return ret, err
 }

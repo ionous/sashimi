@@ -17,11 +17,24 @@ type GameEventAdapter struct {
 }
 
 //
-// NewObjectAdapter gives the passed game the IPlay interface
+// NewGameAdapter gives the passed game the IPlay interface
 // Public for testing.
 //
 func NewGameAdapter(game *Game) *GameEventAdapter {
 	return &GameEventAdapter{Game: game}
+}
+
+//
+// NewObjectAdapter gives the passed game object the IObject interface.
+// Public for testing.
+//
+func (ga *GameEventAdapter) NewObjectAdapter(gobj *GameObject) (ret G.IObject) {
+	if gobj != nil {
+		ret = ObjectAdapter{ga, gobj}
+	} else {
+		ret = NullObject()
+	}
+	return ret
 }
 
 //
@@ -42,7 +55,7 @@ func (ga *GameEventAdapter) A(name string) G.IObject {
 //
 func (ga *GameEventAdapter) Add(data string) (ret G.IObject) {
 	if cls, ok := ga.Model.Classes.FindClassBySingular(data); !ok {
-		ret = NullObject{}
+		ret = NullObject()
 	} else {
 		id := ident.MakeUniqueId()
 		gobj := &GameObject{id, cls, make(TemplateValues), make(TemplatePool), ga.Game.Model.Tables}
@@ -51,7 +64,7 @@ func (ga *GameEventAdapter) Add(data string) (ret G.IObject) {
 				panic(e)
 			}
 		}
-		ret = NewObjectAdapter(ga.Game, gobj)
+		ret = ga.NewObjectAdapter(gobj)
 		ga.Objects[id] = gobj
 	}
 	return ret
@@ -64,7 +77,7 @@ func (ga *GameEventAdapter) Visit(class string, visits func(G.IObject) bool) (ok
 	} else {
 		for _, gobj := range ga.Objects {
 			if gobj.Class().CompatibleWith(cls.Id()) {
-				if visits(NewObjectAdapter(ga.Game, gobj)) {
+				if visits(ga.NewObjectAdapter(gobj)) {
 					okay = true
 					break
 				}
@@ -129,7 +142,7 @@ func (ga *GameEventAdapter) Rules() G.IGameRules {
 func (ga *GameEventAdapter) GetObject(name string) (obj G.IObject) {
 	// asking by original name
 	if gobj, ok := ga.FindObject(name); ok {
-		obj = ObjectAdapter{ga.Game, gobj}
+		obj = ga.NewObjectAdapter(gobj)
 	}
 	// testing against data, because sometimes the adapter isnt invoked via an event
 	// use different interfaces perhaps? maybe after injection works?
@@ -138,7 +151,7 @@ func (ga *GameEventAdapter) GetObject(name string) (obj G.IObject) {
 		// asking by action.something
 		if index, okay := ctx[name]; okay {
 			if gobj := ga.data.objs[index]; gobj != nil {
-				obj = ObjectAdapter{ga.Game, gobj}
+				obj = ga.NewObjectAdapter(gobj)
 			}
 		}
 		// asking by class name, ex. The("story")
@@ -146,7 +159,7 @@ func (ga *GameEventAdapter) GetObject(name string) (obj G.IObject) {
 			for _, src := range ga.data.objs {
 				cls, _ := ga.Model.Classes.FindClassBySingular(name)
 				if src.Class().CompatibleWith(cls.Id()) {
-					obj = ObjectAdapter{ga.Game, src}
+					obj = ga.NewObjectAdapter(src)
 					if src.Class() == cls {
 						break // best match
 					}
@@ -157,7 +170,7 @@ func (ga *GameEventAdapter) GetObject(name string) (obj G.IObject) {
 	// logging and safety
 	if obj == nil {
 		ga.log.Output(3, fmt.Sprintf("unknown object requested `%s`", name))
-		obj = NullObject{}
+		obj = NullObject()
 	}
 	return obj
 }

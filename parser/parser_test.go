@@ -81,7 +81,7 @@ func (m *TestMatcher) MatchNoun(word string, article string) (err error) {
 }
 
 // Matched gets called after all nouns in an input have been parsed succesfully.
-func (m *TestMatcher) Matched() (err error) {
+func (m *TestMatcher) OnMatch() (err error) {
 	m.Logf("matched %s, expecting %s", m.nouns, m.expect)
 	if got, want := len(m.nouns), len(m.expect); got != want {
 		err = fmt.Errorf("noun count doesnt match %d(got)!=%d(want)", got, want)
@@ -175,11 +175,13 @@ func TestUnderstandings(t *testing.T) {
 	// ok: parse some commands
 	testParser := func(cmd string, expect string) (err error) {
 		normalizedInput := NormalizeInput(cmd)
-		found, e := p.Parse(normalizedInput)
-		if found != nil && found.Comprehension().Name() != expect {
-			err = fmt.Errorf("Mismatched pattern: %s got %s", expect, found)
-		} else {
+		match, e := p.ParseInput(normalizedInput)
+		if e != nil {
 			err = e
+		} else if match.Pattern != nil && match.Pattern.Comprehension().Name() != expect {
+			err = fmt.Errorf("Mismatched pattern: %s got %s", expect, match.Pattern)
+		} else {
+			err = match.OnMatch()
 		}
 		return err
 	}

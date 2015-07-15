@@ -1,9 +1,11 @@
 package extensions
 
 import (
+	"fmt"
 	G "github.com/ionous/sashimi/game"
+	R "github.com/ionous/sashimi/runtime"
 	. "github.com/ionous/sashimi/script"
-	_ "github.com/ionous/sashimi/standard"
+	"github.com/ionous/sashimi/standard"
 )
 
 func init() {
@@ -41,7 +43,7 @@ func init() {
 			// having the same property as a parent class probably shouldnt be an error
 			Have("summary", "text"))
 
-		// this is overspecification --
+		// this is over-specification --
 		// we've got recollection after all.
 		// FIX: we just need fast sorting.
 		qh := QuipHistory{}
@@ -49,22 +51,27 @@ func init() {
 		s.The("actors",
 			Have("greeting", "quip"))
 
+		// we need this in case the npc doesnt have a greeting
+		// ( otherwise: the current quip's speaker could always be used
+		// plus or minus some issues about multiple speakers. )
+		interlocutor := R.NullObject()
+
 		s.The("actors",
 			Can("greet").And("greeting").RequiresOne("actor"),
 			To("greet", func(g G.Play) {
-				greeter, speaker := g.The("action.Source"), g.The("action.Target")
+				greeter, greeted := g.The("action.Source"), g.The("action.Target")
 				if greeter == g.The("player") {
-					if lastQuip := qh.MostRecent(g); lastQuip.Exists() {
-						if greeting := greeter.Object("greeting"); greeting.Exists() {
+					switch {
+					case !interlocutor.Exists():
+						interlocutor = greeted
+						if greeting := greeted.Object("greeting"); greeting.Exists() {
 							qh.PushQuip(greeting)
 							QueueQuip(g, greeting)
 						}
-					} else {
-						if speaker == lastQuip.Object("speaker") {
-							g.Say("You're already speaking to them!")
-						} else {
-							g.Say("You're already speaking to someone!")
-						}
+					case greeted == interlocutor:
+						g.Say("You're already speaking to them!")
+					default:
+						g.Say("You're already speaking to someone!")
 					}
 				}
 			}))
@@ -73,70 +80,57 @@ func init() {
 			Can("depart").And("departing").RequiresNothing(),
 			To("depart", func(g G.Play) {
 				qh.ClearQuips()
+				interlocutor = R.NullObject()
 			}))
 
 		s.The("stories",
 			When("ending the turn").Always(func(g G.Play) {
-				currentQuip := qh.MostRecent(g)
-				currentRestricts := currentQuip.Is("restrictive")
-				// handle queued conversation, unless the current quip is restrictive.
-				if !currentRestricts {
-					// from slice tricks, this reuses the memory of the quip queue
-					requeue := quipQueue[:0]
-					// determine what to say next
-					// note: queued conversation will never override what an npc already has to say.
-					for _, quip := range quipQueue {
-						npc := quip.Object("Speaker")
-						if npc.Object("next quip").Exists() {
-							requeue = append(requeue, quip)
-						} else {
-							// check to make sure this quip wasn't said in the time since it was queued.
-							if quip.Is("repeatable") || !Recollects(g, quip) {
-								nextQuip := g.Add("next quip")
-								npc.Set("next quip", nextQuip)
-								nextQuip.Set("quip", quip)
-								nextQuip.SetIs("casual")
-							}
-						}
-					}
-					quipQueue = requeue
-				}
-
-				perform := func(actor G.IObject) {
-					if nextQuip := actor.Object("next quip"); nextQuip.Exists() {
-						if !currentRestricts || nextQuip.Is("planned") {
-							quip := nextQuip.Object("quip")
-							actor.Go("discuss", quip)
-						}
-						// this removes the planned conversation which was just said,
-						// and any casual conversation that couldnt be said due to restriction.
-						nextQuip.Remove()
-					}
-				}
-
-				// process the current speaker first:
-				currentInterlocutor := currentQuip.Object("speaker")
-				perform(currentInterlocutor)
-
-				// process anyone else who might have something to say:
-				g.Visit("actors", func(actor G.IObject) (okay bool) {
-					// threaded conversation tests:
-					// repeat with target running through **visible** people who are not the player:
-					if actor != currentInterlocutor {
-						perform(actor)
-					}
-					return okay
-				})
+				Converse(g, qh)
 			}))
 
 		s.The("actors",
 			Can("discuss").And("discussing").RequiresOne("quip"),
 			To("discuss", func(g G.Play) {
-				actor, quip := g.The("actor"), g.The("quip")
-				if quip.Object("speaker") == actor {
-					reply := quip.Text("reply")
-					actor.Says(reply)
-					LearnQuip(g, quip)
+				player, talker, quip := g.The("player"), g.The("actor"), g.The("quip")
+				// the player wants to speak: probably has chosen a line of dialog from the menu
+				if talker == player {
+					comment := quip.Text("comment")
+					player.Says(comment)
+					qh.PushQuip(quip)
+				}
+				// an actor wants to reply to the quip that was discussed.
+				// they will do this at the end of the turn.
+				QueueQuip(g, quip)
+			}))
+
+		var displayedChoices []G.IObject
+		s.The("actors",
+			Can("print conversation choices").And("printing conversation choices").RequiresOne("actor"),
+			To("print conversation choices", func(g G.Play) {
+				player, talker, talkedTo := g.The("player"), g.The("action.Source"), g.The("action.Target")
+				if player == talker {
+					displayedChoices = nil
+					for i, quip := range GetPlayerQuips(g, qh, talkedTo) {
+						// FIX? template instead of fmt
+						text := quip.Text("comment")
+						// FIX FIX: CAN "SAY" TEXT BE SCOPED TO THE EVENT IN THE CMD OUTPUT.
+						g.Say(fmt.Sprintf("%d: %s", i+1, text))
+						displayedChoices = append(displayedChoices, quip)
+					}
+
+					// time to hack the parser
+					standard.TheParser.CaptureInput(func(input string) (err error) {
+						var choice int
+						if _, e := fmt.Sscan(input, &choice); e != nil {
+							err = fmt.Errorf("Please choose a number from the menu; input: %s", input)
+						} else if choice < 1 || choice > len(displayedChoices) {
+							err = fmt.Errorf("Please choose a number from the menu; number: %d of %d", choice, len(displayedChoices))
+						} else {
+							quip := displayedChoices[choice-1]
+							player.Go("discuss", quip)
+						}
+						return err
+					})
 				}
 			}))
 
@@ -161,12 +155,11 @@ func init() {
 			Have("next quip", "next quip"))
 
 		// x. discussing action to choose and execute a line of dialog
-		// saying hello to queue an npc greeting
+		// x. saying hello to queue an npc greeting
 		// present player choices
 		// inject player choice as discussing
 		// x. move spoken quips to the recollection table.
-		// check that every dialog line has an npc
-		// check that every npc has a greeting
-		// perhaps a Requires for Has
+		// low: check that every dialog line has an npc
+		// low: check that every npc has a greeting
 	})
 }
