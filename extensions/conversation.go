@@ -8,6 +8,21 @@ import (
 	"github.com/ionous/sashimi/standard"
 )
 
+func discuss(how, other string) IFragment {
+	return NewFunctionFragment(func(b SubjectBlock) error {
+		b.The("following quips",
+			Table("following", "indirectly-following-property", "leading").Contains(
+				b.Subject(), how, other))
+		return nil
+	})
+}
+func DirectlyFollows(other string) IFragment {
+	return discuss("directly following", other)
+}
+func IndirectlyFollows(other string) IFragment {
+	return discuss("directly following", other)
+}
+
 func init() {
 	AddScript(func(s *Script) {
 		s.The("kinds",
@@ -16,7 +31,7 @@ func init() {
 			//If there is no comment then it is considered “npc-directed”.
 			//For instance, a greeting when the player selects an NPC.
 			Have("comment", "text"),
-			Have("speaker", "actor"),
+			Have("subject", "actor"),
 			Have("reply", "text"),
 			//Have("hook", "text"), // displayed on the menu
 			//performative, informative, questioning: used for ask about, tell about, or simply state the quip name
@@ -34,7 +49,7 @@ func init() {
 		)
 		s.The("kinds",
 			Called("pending quips"),
-			Have("speaker", "actor"),
+			Have("subject", "actor"),
 			AreEither("immediate").Or("postponed"),
 			AreEither("obligatory").Or("optional"),
 		)
@@ -66,7 +81,7 @@ func init() {
 						interlocutor = greeted
 						if greeting := greeted.Object("greeting"); greeting.Exists() {
 							qh.PushQuip(greeting)
-							QueueQuip(g, greeting)
+							QuipQueue.QueueQuip(greeting)
 						}
 					case greeted == interlocutor:
 						g.Say("You're already speaking to them!")
@@ -85,17 +100,21 @@ func init() {
 
 		s.The("stories",
 			When("ending the turn").Always(func(g G.Play) {
-				Converse(g, qh)
+				Converse(g, interlocutor, qh)
 			}))
 
 		s.The("actors",
 			Can("discuss").And("discussing").RequiresOne("quip"),
 			To("discuss", standard.ReflectToTarget("report discuss")))
 
-		// FIX? This event shifting ... it makes sense in a strict way --
-		// but its also verbose to type, and difficult to follow.
-		// part of the issue is naming convension for sure.
-		// research needed...
+		// FIX: should be "data"
+		s.The("kinds",
+			Called("quip requirements"),
+			Have("fact", "fact"),
+			AreEither("permits").Or("prohibits"),
+			Have("quip", "quip"),
+		)
+
 		s.The("quips",
 			Can("report discuss").And("reporting discuss").RequiresOne("actor"),
 			To("report discuss", func(g G.Play) {
@@ -107,8 +126,8 @@ func init() {
 					qh.PushQuip(quip)
 				}
 				// an actor wants to reply to the quip that was discussed.
-				// they will do this at the end of the turn.
-				QueueQuip(g, quip)
+				// they will do this via Converse() at the end of the turn.
+				QuipQueue.QueueQuip(quip)
 			}))
 
 		var displayedChoices []G.IObject

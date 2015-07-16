@@ -62,7 +62,7 @@ func (qp QuipPool) SpeakAfter(qh QuipHistory, newQuip G.IObject) (okay bool) {
 	// Filter to quips which have player comments.
 	if newQuip.Text("comment") != "" {
 		// Exclude one-time quips, checking the recollection table.
-		if newQuip.Is("repeatable") || !Recollects(qp.g, newQuip) {
+		if newQuip.Is("repeatable") || !QuipMemory.Recollects(newQuip) {
 			// When following a restrictive quips, limit to those which directly follow.
 			if newQuip.Is("restrictive") && qp.FollowsDirectly(qh, newQuip) {
 				okay = true
@@ -83,9 +83,12 @@ func (qp QuipPool) GetPlayerQuips(qh QuipHistory, npc G.IObject) (ret []G.IObjec
 	if npc.Exists() {
 		qp.g.Visit("quips", func(newQuip G.IObject) bool {
 			// Filter to quips which quip supply the interlocutor.
-			if speaker := newQuip.Object("speaker"); speaker == npc {
+			if speaker := newQuip.Object("subject"); speaker == npc {
 				if qp.SpeakAfter(qh, newQuip) {
-					ret = append(ret, newQuip)
+					disallowed := IsQuipDisallowed(qp.g, newQuip)
+					if !disallowed {
+						ret = append(ret, newQuip)
+					}
 				}
 			}
 			return false
@@ -94,34 +97,25 @@ func (qp QuipPool) GetPlayerQuips(qh QuipHistory, npc G.IObject) (ret []G.IObjec
 	return ret
 }
 
+// IsQuipDisallowed evaluates the quip requirements and the known facts.
+// A quip requirement can allow or disallow a given quip based on whether the player knows a specific fact.
+func IsQuipDisallowed(g G.Play, quip G.IObject) bool {
+	disallowed := g.Visit("quip requirements",
+		func(req G.IObject) (disallowed bool) {
+			if req.Object("quip") == quip {
+				fact, required := req.Object("fact"), req.Is("permits")
+				recollects := QuipMemory.Recollects(fact)
+				// the opposite behavior of required is to exclude the use of the quip
+				if required != recollects {
+					disallowed = true
+				}
+			}
+			// the first disallowed quip/fact pairing stops the search because returning true stops.
+			return disallowed
+		})
+	return disallowed
+}
+
 func GetPlayerQuips(g G.Play, qh QuipHistory, npc G.IObject) []G.IObject {
 	return GetQuipPool(g).GetPlayerQuips(qh, npc)
-}
-
-type quipMemoryMap map[G.IObject]bool
-
-var quipMemory quipMemoryMap = make(quipMemoryMap)
-
-// LearnQuip causes actors to recollect the passed quip.
-func LearnQuip(_ G.Play, quip G.IObject) {
-	quipMemory[quip] = true
-}
-
-// RecollectsQuip determines if the passed quip has been spoken.
-func Recollects(_ G.Play, quip G.IObject) (recollects bool) {
-	_, recollects = quipMemory[quip]
-	return recollects
-}
-
-var quipQueue []G.IObject
-
-// QueueQuip schedules the passed quip to be spoken in the future.
-func QueueQuip(_ G.Play, quip G.IObject) {
-	quipQueue = append(quipQueue, quip)
-}
-
-func ResetQuipQueue() int {
-	ret := len(quipQueue)
-	quipQueue = nil
-	return ret
 }

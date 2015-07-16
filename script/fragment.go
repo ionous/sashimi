@@ -19,17 +19,27 @@ type SubjectBlock struct {
 	*S.BuildingBlocks
 }
 
-//
-// Respecify the interface as a function, for closures.
-// ex.
-// func SomeStatment(...) IFragment {
-// return FunctionFragment{func(b SubjectBlock) error {return nil}}
-// }
-//
-type FunctionFragment struct {
-	call func(SubjectBlock) error
+func (sb *SubjectBlock) Keyword() string {
+	return sb.theKeyword
 }
 
-func (this FunctionFragment) MakeStatement(b SubjectBlock) error {
-	return this.call(b)
+func (sb *SubjectBlock) Subject() string {
+	return sb.subject
+}
+
+//
+// NewFunctionFragment changes the passed function into an implementation of IFragment.
+//
+func NewFunctionFragment(cb functionFragmentCall) IFragment {
+	return _FunctionFragment{cb}
+}
+
+type functionFragmentCall func(SubjectBlock) error
+
+type _FunctionFragment struct {
+	call functionFragmentCall
+}
+
+func (fcb _FunctionFragment) MakeStatement(b SubjectBlock) error {
+	return fcb.call(b)
 }

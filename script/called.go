@@ -25,10 +25,9 @@ func (frag CalledFragment) WithSingularName(name string) IFragment {
 // The("room", Called("parlor of despair"), Exists())
 //
 func Exists() IFragment {
-	return FunctionFragment{
-		func(b SubjectBlock) error {
-			return nil
-		}}
+	return NewFunctionFragment(func(b SubjectBlock) error {
+		return nil
+	})
 }
 func Exist() IFragment { return Exists() }
 

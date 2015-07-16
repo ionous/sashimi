@@ -15,14 +15,14 @@ func Has(property string, values ...interface{}) (frag IFragment) {
 	case 0:
 		frag = Is(property)
 	case 1:
-		frag = FunctionFragment{func(b SubjectBlock) error {
+		frag = NewFunctionFragment(func(b SubjectBlock) error {
 			fields := S.KeyValueFields{b.subject, property, values[0]}
 			return b.NewKeyValue(fields, origin.Code())
-		}}
+		})
 	default:
-		frag = FunctionFragment{func(SubjectBlock) error {
+		frag = NewFunctionFragment(func(SubjectBlock) error {
 			return fmt.Errorf("too many values specified %s", origin)
-		}}
+		})
 	}
 	return frag
 }

@@ -47,7 +47,7 @@ func TestQuipHistory(t *testing.T) {
 		lastQuip := qh.MostRecent(g)
 		require.True(t, lastQuip.Exists(), "found last quip")
 		//
-		npc := lastQuip.Object("Speaker")
+		npc := lastQuip.Object("subject")
 		require.EqualValues(t, npc.Id(), "AlienBoy")
 		//
 		repeats := lastQuip.Is("one time")
@@ -64,9 +64,9 @@ func TestDiscuss(t *testing.T) {
 		// push in the queue
 		boy.Go("discuss", boy.Object("greeting"))
 		// talk to the boy
-		Converse(g, QuipHistory{})
+		Converse(g, boy, QuipHistory{})
 		// clear the test, and make sure the queue is empty.
-		require.Equal(t, ResetQuipQueue(), 0)
+		require.Equal(t, QuipQueue.ResetQuipQueue(), 0)
 		lines := game.FlushOutput()
 		require.Len(t, lines, 1)
 		require.Equal(t, `The Alien Boy: "You wouldn't happen to have a matter disrupter?"`, lines[0])
@@ -136,12 +136,12 @@ func TalkScript() *Script {
 	s.The("actor", Called("The Alien Boy"), Exists())
 	s.The("alien boy", Has("greeting", "OldBoy # WhatsTheMatter"))
 	s.The("quip", Called("OldBoy # WhatsTheMatter"),
-		Has("speaker", "alien boy"),
+		Has("subject", "alien boy"),
 		Has("reply", `"You wouldn't happen to have a matter disrupter?"`))
 
 	s.The("quip", Called("OldBoy # Later"),
 		Is("repeatable"),
-		Has("speaker", "alien boy"),
+		Has("subject", "alien boy"),
 		Has("comment", `"Oh, sorry," Alice says. "I'll be back."`))
 	return s
 }

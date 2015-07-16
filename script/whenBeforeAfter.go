@@ -8,9 +8,9 @@ import (
 
 // statement to declare an default action handler
 func To(action string, c G.Callback) IFragment {
-	return FunctionFragment{func(b SubjectBlock) error {
+	return NewFunctionFragment(func(b SubjectBlock) error {
 		return b.NewActionHandler(b.subject, action, c, E.TargetPhase)
-	}}
+	})
 }
 
 //
