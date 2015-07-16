@@ -37,6 +37,10 @@ type Play interface {
 	// StopHere.
 	// FIX: move into the event object, possible via callback parameter injection
 	StopHere()
+	// FIX: a hack, mainly for conversations
+	// a system of varient -- and possibly user type -- globals is needed
+	// but many of these could go away if there was a real table implementatioin
+	Global(name string) interface{}
 }
 
 // Any returns the first compatible class found.

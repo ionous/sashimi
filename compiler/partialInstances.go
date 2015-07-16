@@ -10,15 +10,16 @@ import (
 )
 
 type PartialInstances struct {
+	log      *log.Logger
 	tables   M.TableRelations
 	partials PartialMap
 }
 type PartialMap map[ident.Id]*PartialInstance
 
-func newPartialInstances(relations M.RelationMap) PartialInstances {
+func newPartialInstances(log *log.Logger, relations M.RelationMap) PartialInstances {
 	tables := M.NewTableRelations(relations)
 	partials := make(PartialMap)
-	return PartialInstances{tables, partials}
+	return PartialInstances{log, tables, partials}
 }
 
 //
@@ -56,7 +57,7 @@ func (part *PartialInstances) makeData(choices []S.ChoiceStatement, kvs []S.KeyV
 // via makeData(): Add key value data to the targeted instances
 //
 func (part *PartialInstances) _addChoices(choices []S.ChoiceStatement) (err error) {
-	log.Println("adding instance choices")
+	part.log.Println("adding instance choices")
 	for _, choice := range choices {
 		fields := choice.Fields()
 		id := M.MakeStringId(fields.Owner)
@@ -77,7 +78,7 @@ func (part *PartialInstances) _addChoices(choices []S.ChoiceStatement) (err erro
 // via makeData(): Add key value data to the targeted instances
 //
 func (part *PartialInstances) _addKeyValues(kvs []S.KeyValueStatement) (err error) {
-	log.Println("adding instance key values")
+	part.log.Println("adding instance key values")
 	for _, kv := range kvs {
 		fields := kv.Fields()
 		id := M.MakeStringId(fields.Owner)

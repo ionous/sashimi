@@ -5,6 +5,13 @@ import (
 	R "github.com/ionous/sashimi/runtime"
 )
 
+// FIX: we just need fast sorting.
+// this is over-specification --
+// we've got recollection after all.
+type QuipHistory struct {
+	r [QuipHistoryDepth]GosNilInterfacesAreAnnoying
+}
+
 const QuipHistoryDepth = 3
 
 type GosNilInterfacesAreAnnoying struct {
@@ -12,8 +19,15 @@ type GosNilInterfacesAreAnnoying struct {
 	notnil bool
 }
 
-type QuipHistory struct {
-	r [QuipHistoryDepth]GosNilInterfacesAreAnnoying
+func (g GosNilInterfacesAreAnnoying) Get() (G.IObject, bool) {
+	return g.obj, g.notnil && g.obj.Exists()
+}
+func (g *GosNilInterfacesAreAnnoying) Set(obj G.IObject) {
+	g.obj = obj
+	g.notnil = true
+}
+func (g *GosNilInterfacesAreAnnoying) Clear() {
+	g.notnil = false
 }
 
 func (qh *QuipHistory) ClearQuips() {

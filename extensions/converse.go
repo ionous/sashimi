@@ -4,13 +4,15 @@ import (
 	G "github.com/ionous/sashimi/game"
 )
 
-func Converse(g G.Play, interlocutor G.IObject, qh QuipHistory) {
-	if interlocutor.Exists() {
-		currentQuip := qh.MostRecent(g)
+func Converse(g G.Play) {
+	con := g.Global("conversation").(*Conversation)
+	if npc, ok := con.Interlocutor.Get(); ok {
+
+		currentQuip := con.History.MostRecent(g)
 		currentRestricts := currentQuip.Exists() && currentQuip.Is("restrictive")
 		// handle queued conversation, unless the current quip is restrictive.
 		if !currentRestricts {
-			QuipQueue.UpdateNextQuips(g)
+			con.Queue.UpdateNextQuips(g, con.Memory)
 		}
 
 		perform := func(actor G.IObject) {
@@ -21,7 +23,7 @@ func Converse(g G.Play, interlocutor G.IObject, qh QuipHistory) {
 					talker := quip.Object("subject")
 					reply := quip.Text("reply")
 					talker.Says(reply)
-					QuipMemory.Learn(quip)
+					con.Memory.Learn(quip)
 				}
 				// this removes the planned conversation which was just said,
 				// and any casual conversation that couldn't be said due to restriction.
@@ -30,13 +32,13 @@ func Converse(g G.Play, interlocutor G.IObject, qh QuipHistory) {
 		}
 
 		// process the current speaker first:
-		perform(interlocutor)
+		perform(npc)
 
 		// process anyone else who might have something to say:
 		g.Visit("actors", func(actor G.IObject) (okay bool) {
 			// threaded conversation tests:
 			// repeat with target running through **visible** people who are not the player:
-			if actor != interlocutor {
+			if actor != npc {
 				perform(actor)
 			}
 			return okay

@@ -16,4 +16,5 @@ type Model struct {
 	ActionHandlers ActionCallbacks
 	EventListeners ListenerCallbacks
 	Tables         TableRelations
+	Generators     GeneratorMap
 }

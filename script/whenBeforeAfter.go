@@ -53,12 +53,6 @@ func (phrase EventPhrase) Always(cb G.Callback) EventFinalizer {
 }
 
 //
-// func (this EventFinalizer) Instead() IFragment {
-// 	this.style = S.PreventDefault
-// 	return this
-// }
-
-//
 func (frag EventFinalizer) MakeStatement(b SubjectBlock) error {
 	fields := S.ListenFields{b.subject, frag.event, frag.cb, frag.options}
 	return b.NewEventHandler(fields, "")

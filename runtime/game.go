@@ -8,6 +8,7 @@ import (
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 	"log"
+	"reflect"
 )
 
 // FIX: standarize member exports by splitting game into smaller classes and interfaces
@@ -22,6 +23,7 @@ type Game struct {
 	log            *log.Logger
 	Properties     PropertyWatchers
 	parentLookup   ParentLookupStack
+	Globals        Globals
 }
 
 type logAdapter struct {
@@ -36,12 +38,22 @@ func (log logAdapter) Write(p []byte) (n int, err error) {
 // each action can have a chain of default actions
 type DefaultActions map[*M.ActionInfo][]G.Callback
 
+type Globals map[ident.Id]reflect.Value
+
 func NewGame(model *M.Model, output IOutput) (game *Game, err error) {
 	log := log.New(logAdapter{output}, "game: ", log.Lshortfile)
 	dispatchers := NewDispatchers(log)
 	objects, e := CreateGameObjects(model.Instances, model.Tables)
 	if e != nil {
 		return nil, e
+	}
+
+	globals := make(Globals)
+	for k, gen := range model.Generators {
+		globals[k] = reflect.New(gen)
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	game = &Game{
@@ -55,6 +67,7 @@ func NewGame(model *M.Model, output IOutput) (game *Game, err error) {
 		log,
 		PropertyWatchers{},
 		ParentLookupStack{},
+		globals,
 	}
 	for _, handler := range model.ActionHandlers {
 		act, cb := handler.Action(), handler.Callback()
@@ -103,7 +116,7 @@ func (game *Game) PushParentLookup(userLookup G.TargetLookup) {
 	game.parentLookup.PushLookup(func(gobj *GameObject) (ret *GameObject) {
 		// setup callback context:
 		play := NewGameAdapter(game)
-		obj := play.NewObjectAdapter(gobj)
+		obj := NewObjectAdapter(game, gobj)
 		// call the user function
 		res := userLookup(play, obj)
 		// unpack the result

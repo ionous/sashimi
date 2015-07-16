@@ -6,10 +6,11 @@ import (
 
 type QuipPool struct {
 	g G.Play
+	*Conversation
 }
 
 func GetQuipPool(g G.Play) QuipPool {
-	return QuipPool{g}
+	return QuipPool{g, g.Global("conversation").(*Conversation)}
 }
 
 type visitQuips func(G.IObject, bool) bool
@@ -33,10 +34,10 @@ func (qp QuipPool) visitFollowers(follower G.IObject, visit visitQuips) bool {
 	})
 }
 
-func (qp QuipPool) FollowsRecently(qh QuipHistory, follower G.IObject) (ret int) {
+func (qp QuipPool) FollowsRecently(follower G.IObject) (ret int) {
 	isAFollower := false
 	qp.visitFollowers(follower, func(leading G.IObject, directly bool) bool {
-		if idx := qh.Rank(leading); (idx > ret) && (!directly || idx == QuipHistoryDepth) {
+		if idx := qp.History.Rank(leading); (idx > ret) && (!directly || idx == QuipHistoryDepth) {
 			ret = idx
 		}
 		isAFollower = true
@@ -48,8 +49,8 @@ func (qp QuipPool) FollowsRecently(qh QuipHistory, follower G.IObject) (ret int)
 	return ret
 }
 
-func (qp QuipPool) FollowsDirectly(qh QuipHistory, follower G.IObject) (follows bool) {
-	if mostRecent := qh.MostRecent(qp.g); mostRecent.Exists() {
+func (qp QuipPool) FollowsDirectly(follower G.IObject) (follows bool) {
+	if mostRecent := qp.History.MostRecent(qp.g); mostRecent.Exists() {
 		qp.visitFollowers(follower, func(leading G.IObject, directly bool) bool {
 			follows = mostRecent == leading
 			return follows
@@ -58,18 +59,18 @@ func (qp QuipPool) FollowsDirectly(qh QuipHistory, follower G.IObject) (follows 
 	return follows
 }
 
-func (qp QuipPool) SpeakAfter(qh QuipHistory, newQuip G.IObject) (okay bool) {
+func (qp QuipPool) SpeakAfter(newQuip G.IObject) (okay bool) {
 	// Filter to quips which have player comments.
 	if newQuip.Text("comment") != "" {
 		// Exclude one-time quips, checking the recollection table.
-		if newQuip.Is("repeatable") || !QuipMemory.Recollects(newQuip) {
+		if newQuip.Is("repeatable") || !qp.Memory.Recollects(newQuip) {
 			// When following a restrictive quips, limit to those which directly follow.
-			if newQuip.Is("restrictive") && qp.FollowsDirectly(qh, newQuip) {
+			if newQuip.Is("restrictive") && qp.FollowsDirectly(newQuip) {
 				okay = true
 			} else {
 				// Select those which indirect follow recent quips
 				// And those which do not follow anything at all.
-				if rank := qp.FollowsRecently(qh, newQuip); rank != 0 {
+				if rank := qp.FollowsRecently(newQuip); rank != 0 {
 					okay = true
 				}
 			}
@@ -79,13 +80,15 @@ func (qp QuipPool) SpeakAfter(qh QuipHistory, newQuip G.IObject) (okay bool) {
 }
 
 // QuipList returns the possible quips for the player to say.
-func (qp QuipPool) GetPlayerQuips(qh QuipHistory, npc G.IObject) (ret []G.IObject) {
-	if npc.Exists() {
+func (qp QuipPool) GetPlayerQuips() (ret []G.IObject) {
+	if npc, ok := qp.Interlocutor.Get(); ok {
 		qp.g.Visit("quips", func(newQuip G.IObject) bool {
+			speaker := newQuip.Object("subject")
 			// Filter to quips which quip supply the interlocutor.
-			if speaker := newQuip.Object("subject"); speaker == npc {
-				if qp.SpeakAfter(qh, newQuip) {
-					disallowed := IsQuipDisallowed(qp.g, newQuip)
+			if speaker == npc {
+				after := qp.SpeakAfter(newQuip)
+				if after {
+					disallowed := qp.Memory.IsQuipDisallowed(qp.g, newQuip)
 					if !disallowed {
 						ret = append(ret, newQuip)
 					}
@@ -97,25 +100,7 @@ func (qp QuipPool) GetPlayerQuips(qh QuipHistory, npc G.IObject) (ret []G.IObjec
 	return ret
 }
 
-// IsQuipDisallowed evaluates the quip requirements and the known facts.
-// A quip requirement can allow or disallow a given quip based on whether the player knows a specific fact.
-func IsQuipDisallowed(g G.Play, quip G.IObject) bool {
-	disallowed := g.Visit("quip requirements",
-		func(req G.IObject) (disallowed bool) {
-			if req.Object("quip") == quip {
-				fact, required := req.Object("fact"), req.Is("permits")
-				recollects := QuipMemory.Recollects(fact)
-				// the opposite behavior of required is to exclude the use of the quip
-				if required != recollects {
-					disallowed = true
-				}
-			}
-			// the first disallowed quip/fact pairing stops the search because returning true stops.
-			return disallowed
-		})
-	return disallowed
-}
-
-func GetPlayerQuips(g G.Play, qh QuipHistory, npc G.IObject) []G.IObject {
-	return GetQuipPool(g).GetPlayerQuips(qh, npc)
+func GetPlayerQuips(g G.Play) []G.IObject {
+	qp := GetQuipPool(g)
+	return qp.GetPlayerQuips()
 }

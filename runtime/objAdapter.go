@@ -15,7 +15,7 @@ import (
 // it can't implement the interface as a pointer, and it cant have any cached values.
 //
 type ObjectAdapter struct {
-	game *GameEventAdapter // for console, Go(), and relations
+	game *Game // for console, Go(), and relations
 	gobj *GameObject
 }
 
@@ -186,7 +186,7 @@ func (oa ObjectAdapter) Object(prop string) (ret G.IObject) {
 			}
 		}
 	}
-	return oa.game.NewObjectAdapter(oa.game.Objects[res])
+	return NewObjectAdapter(oa.game, oa.game.Objects[res])
 }
 
 //
@@ -249,7 +249,7 @@ func (oa ObjectAdapter) ObjectList(prop string) (ret []G.IObject) {
 				list := rel.List()
 				ret = make([]G.IObject, len(list))
 				for i, objId := range list {
-					ret[i] = oa.game.NewObjectAdapter(oa.game.Objects[objId])
+					ret[i] = NewObjectAdapter(oa.game, oa.game.Objects[objId])
 				}
 			}
 		}
@@ -285,7 +285,7 @@ func (oa ObjectAdapter) Go(act string, objects ...G.IObject) {
 		if act, e := oa.game.newRuntimeAction(action, nouns...); e != nil {
 			oa.logError(e)
 		} else {
-			tgt := ObjectTarget{oa.game.Game, oa.gobj}
+			tgt := ObjectTarget{oa.game, oa.gobj}
 			msg := E.Message{Name: action.Event(), Data: act}
 			// see ProcessEventQueue()
 			path := E.NewPathTo(tgt)

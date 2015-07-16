@@ -29,9 +29,9 @@ func NewGameAdapter(game *Game) *GameEventAdapter {
 // NewObjectAdapter gives the passed game object the IObject interface.
 // Public for testing.
 //
-func (ga *GameEventAdapter) NewObjectAdapter(gobj *GameObject) (ret G.IObject) {
+func NewObjectAdapter(game *Game, gobj *GameObject) (ret G.IObject) {
 	if gobj != nil {
-		ret = ObjectAdapter{ga, gobj}
+		ret = ObjectAdapter{game, gobj}
 	} else {
 		ret = NullObjectSource("", 2)
 	}
@@ -54,6 +54,13 @@ func (ga *GameEventAdapter) A(name string) G.IObject {
 }
 
 //
+func (ga *GameEventAdapter) Global(name string) interface{} {
+	id := M.MakeStringId(name)
+	val := ga.Globals[id]
+	return val.Interface()
+}
+
+//
 func (ga *GameEventAdapter) Add(data string) (ret G.IObject) {
 	if cls, ok := ga.Model.Classes.FindClassBySingular(data); !ok {
 		ret = NullObjectSource(data, 2)
@@ -65,7 +72,7 @@ func (ga *GameEventAdapter) Add(data string) (ret G.IObject) {
 				panic(e)
 			}
 		}
-		ret = ga.NewObjectAdapter(gobj)
+		ret = NewObjectAdapter(ga.Game, gobj)
 		ga.Objects[id] = gobj
 	}
 	return ret
@@ -78,7 +85,7 @@ func (ga *GameEventAdapter) Visit(class string, visits func(G.IObject) bool) (ok
 	} else {
 		for _, gobj := range ga.Objects {
 			if gobj.Class().CompatibleWith(cls.Id()) {
-				if visits(ga.NewObjectAdapter(gobj)) {
+				if visits(NewObjectAdapter(ga.Game, gobj)) {
 					okay = true
 					break
 				}
@@ -143,7 +150,7 @@ func (ga *GameEventAdapter) Rules() G.IGameRules {
 func (ga *GameEventAdapter) GetObject(name string) (obj G.IObject) {
 	// asking by original name
 	if gobj, ok := ga.FindObject(name); ok {
-		obj = ga.NewObjectAdapter(gobj)
+		obj = NewObjectAdapter(ga.Game, gobj)
 	}
 	// testing against data, because sometimes the adapter isnt invoked via an event
 	// use different interfaces perhaps? maybe after injection works?
@@ -152,7 +159,7 @@ func (ga *GameEventAdapter) GetObject(name string) (obj G.IObject) {
 		// asking by action.something
 		if index, okay := ctx[name]; okay {
 			if gobj := ga.data.objs[index]; gobj != nil {
-				obj = ga.NewObjectAdapter(gobj)
+				obj = NewObjectAdapter(ga.Game, gobj)
 			}
 		}
 
@@ -173,13 +180,13 @@ func (ga *GameEventAdapter) GetObject(name string) (obj G.IObject) {
 					}
 				}
 				if index >= 0 && index < len(ga.data.objs) {
-					obj = ga.NewObjectAdapter(ga.data.objs[index])
+					obj = NewObjectAdapter(ga.Game, ga.data.objs[index])
 				} else {
 					//backwards compat
 					if obj == nil {
 						src := ga.data.objs[0]
 						if src.Class().CompatibleWith(namedCls.Id()) {
-							obj = ga.NewObjectAdapter(src)
+							obj = NewObjectAdapter(ga.Game, src)
 						}
 					}
 				}

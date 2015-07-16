@@ -38,7 +38,14 @@ func (sp *Parser) ParseInput(input string) (ret P.Matched, err error) {
 	if capture := sp.capturingInput; capture == nil {
 		ret, err = sp.ObjectParser.ParseInput(input)
 	} else {
-		ret = P.Matched{nil, func() error { return capture(input) }}
+		ret = P.Matched{nil, func() (err error) {
+			if e := capture(input); e != nil {
+				err = e
+			} else {
+				sp.capturingInput = nil
+			}
+			return err
+		}}
 	}
 	return ret, err
 }

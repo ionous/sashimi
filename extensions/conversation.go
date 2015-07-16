@@ -3,10 +3,19 @@ package extensions
 import (
 	"fmt"
 	G "github.com/ionous/sashimi/game"
-	R "github.com/ionous/sashimi/runtime"
 	. "github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/standard"
+	"reflect"
 )
+
+var Debugging bool = true
+
+type Conversation struct {
+	Interlocutor GosNilInterfacesAreAnnoying
+	History      QuipHistory
+	Memory       QuipMemory
+	Queue        QuipQueue
+}
 
 func discuss(how, other string) IFragment {
 	return NewFunctionFragment(func(b SubjectBlock) error {
@@ -53,96 +62,93 @@ func init() {
 			AreEither("immediate").Or("postponed"),
 			AreEither("obligatory").Or("optional"),
 		)
-		s.The("kinds", Called("facts"),
-			// FIX: interestingly, kinds should have names
-			// having the same property as a parent class probably shouldnt be an error
-			Have("summary", "text"))
-
-		// this is over-specification --
-		// we've got recollection after all.
-		// FIX: we just need fast sorting.
-		qh := QuipHistory{}
 
 		s.The("actors",
 			Have("greeting", "quip"))
 
-		// we need this in case the npc doesnt have a greeting
-		// ( otherwise: the current quip's speaker could always be used
-		// plus or minus some issues about multiple speakers. )
-		interlocutor := R.NullObject("interlocutor")
-
 		s.The("actors",
 			Can("greet").And("greeting").RequiresOne("actor"),
 			To("greet", func(g G.Play) {
+				con := g.Global("conversation").(*Conversation)
 				greeter, greeted := g.The("action.Source"), g.The("action.Target")
-				if greeter == g.The("player") {
-					switch {
-					case !interlocutor.Exists():
-						interlocutor = greeted
+				if greeter == g.The("player") && greeted.Exists() {
+					if npc, ok := con.Interlocutor.Get(); !ok {
 						if greeting := greeted.Object("greeting"); greeting.Exists() {
-							qh.PushQuip(greeting)
-							QuipQueue.QueueQuip(greeting)
+							con.Interlocutor.Set(greeted)
+							greeted.Go("discuss", greeting)
+						} else if npc == greeted {
+							g.Say("You're already speaking to them!")
+						} else {
+							g.Say("You're already speaking to someone!")
 						}
-					case greeted == interlocutor:
-						g.Say("You're already speaking to them!")
-					default:
-						g.Say("You're already speaking to someone!")
 					}
 				}
 			}))
+		s.Execute("greet", Matching("talk to {{something}}").Or("t|talk|greet|ask {{something}}"))
+
+		s.Generate("conversation", reflect.TypeOf(Conversation{}))
 
 		s.The("actors",
 			Can("depart").And("departing").RequiresNothing(),
 			To("depart", func(g G.Play) {
-				qh.ClearQuips()
-				interlocutor = R.NullObject("interlocutor")
+				con := g.Global("conversation").(*Conversation)
+				if Debugging {
+					fmt.Println("!", g.The("actor"), "departing", con.Interlocutor)
+				}
+				con.History.ClearQuips()
+				con.Queue.ResetQuipQueue()
+				if npc, ok := con.Interlocutor.Get(); ok {
+					npc.Object("next quip").Remove()
+					con.Interlocutor.Clear()
+				}
 			}))
 
 		s.The("stories",
 			When("ending the turn").Always(func(g G.Play) {
-				Converse(g, interlocutor, qh)
+				con := g.Global("conversation").(*Conversation)
+				if npc, ok := con.Interlocutor.Get(); ok {
+					Converse(g)
+					g.The("player").Go("print conversation choices", npc)
+				}
 			}))
 
 		s.The("actors",
 			Can("discuss").And("discussing").RequiresOne("quip"),
 			To("discuss", standard.ReflectToTarget("report discuss")))
 
-		// FIX: should be "data"
-		s.The("kinds",
-			Called("quip requirements"),
-			Have("fact", "fact"),
-			AreEither("permits").Or("prohibits"),
-			Have("quip", "quip"),
-		)
-
 		s.The("quips",
 			Can("report discuss").And("reporting discuss").RequiresOne("actor"),
 			To("report discuss", func(g G.Play) {
 				player, talker, quip := g.The("player"), g.The("actor"), g.The("quip")
+				if Debugging {
+					fmt.Println("!", talker, "discussing", quip)
+				}
 				// the player wants to speak: probably has chosen a line of dialog from the menu
 				if talker == player {
 					comment := quip.Text("comment")
 					player.Says(comment)
-					qh.PushQuip(quip)
+
 				}
 				// an actor wants to reply to the quip that was discussed.
 				// they will do this via Converse() at the end of the turn.
-				QuipQueue.QueueQuip(quip)
+				con := g.Global("conversation").(*Conversation)
+				con.History.PushQuip(quip) // FIX: when to advance this...?
+				con.Queue.QueueQuip(quip)
 			}))
 
-		var displayedChoices []G.IObject
 		s.The("actors",
 			Can("print conversation choices").And("printing conversation choices").RequiresOne("actor"),
 			To("print conversation choices", func(g G.Play) {
 				player, talker, talkedTo := g.The("player"), g.The("action.Source"), g.The("action.Target")
 				if player == talker {
-					displayedChoices = nil
-					for i, quip := range GetPlayerQuips(g, qh, talkedTo) {
-						// FIX? template instead of fmt
-						text := quip.Text("comment")
-						// FIX FIX: CAN "SAY" TEXT BE SCOPED TO THE EVENT IN THE CMD OUTPUT.
-						g.Say(fmt.Sprintf("%d: %s", i+1, text))
-						displayedChoices = append(displayedChoices, quip)
+					quips := GetPlayerQuips(g)
+					if Debugging {
+						fmt.Println(talker, "printing", talkedTo, quips)
+					}
+					for i, quip := range quips {
+						cmt := quip.Text("comment")
+						text := fmt.Sprintf("%d: %s", i+1, cmt) // FIX? template instead of fmt
+						g.Say(text)                             // FIX FIX: CAN "SAY" TEXT BE SCOPED TO THE EVENT IN THE CMD OUTPUT.
 					}
 
 					// time to hack the parser
@@ -150,10 +156,13 @@ func init() {
 						var choice int
 						if _, e := fmt.Sscan(input, &choice); e != nil {
 							err = fmt.Errorf("Please choose a number from the menu; input: %s", input)
-						} else if choice < 1 || choice > len(displayedChoices) {
-							err = fmt.Errorf("Please choose a number from the menu; number: %d of %d", choice, len(displayedChoices))
+						} else if choice < 1 || choice > len(quips) {
+							err = fmt.Errorf("Please choose a number from the menu; number: %d of %d", choice, len(quips))
 						} else {
-							quip := displayedChoices[choice-1]
+							quip := quips[choice-1]
+							if Debugging {
+								fmt.Println("!", player, "chose", quip)
+							}
 							player.Go("discuss", quip)
 						}
 						return err

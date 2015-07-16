@@ -10,7 +10,7 @@ import (
 
 type MultiValueTable struct {
 	cls   *PendingClass
-	name  int
+	name  int                    // column holding a user-specified name
 	remap map[int]IBuildProperty // column index => property
 	count int
 }
@@ -20,6 +20,8 @@ type MultiValueData struct {
 	instanceId ident.Id
 	values     []interface{}
 }
+
+var userNameColumn ident.Id = ident.MakeId("name")
 
 func makeValueTable(classes *ClassFactory, class string, columns []string) (
 	ret MultiValueTable, err error,
@@ -37,7 +39,8 @@ func makeValueTable(classes *ClassFactory, class string, columns []string) (
 			} else {
 				dupes[name] = 1
 				id, idx := M.MakeStringId(name), idx+1
-				if id == "Name" {
+				// search for a column called "name"
+				if id == userNameColumn {
 					ret.name = idx
 				} else if prop, ok := cls.props.propertyById(id); ok {
 					ret.remap[idx] = prop

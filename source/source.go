@@ -41,6 +41,7 @@ type Statements struct {
 	MultiValues    []MultiValueStatement
 	Properties     []PropertyStatement
 	Relatives      []RelativeStatement
+	Globals        []GeneratorStatement
 }
 
 type BuildingBlocks struct {
@@ -116,6 +117,13 @@ func (blocks *BuildingBlocks) NewEventHandler(fields ListenFields, source Code,
 ) (err error) {
 	statement := ListenStatement{fields, source}
 	blocks.statements.EventHandlers = append(blocks.statements.EventHandlers, statement)
+	return err
+}
+
+func (blocks *BuildingBlocks) NewGlobal(fields GeneratorFields, source Code,
+) (err error) {
+	gs := GeneratorStatement{fields, source}
+	blocks.statements.Globals = append(blocks.statements.Globals, gs)
 	return err
 }
 
