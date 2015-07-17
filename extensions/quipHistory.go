@@ -46,7 +46,7 @@ func (qh *QuipHistory) MostRecent(g G.Play) (andWhereAreTheTernaries G.IObject) 
 	return andWhereAreTheTernaries
 }
 
-// returns a rank where larger is more recent, and 0 is not recent at all.
+// Rank returns a number where larger is more recent, and 0 is not recent at all.
 func (qh *QuipHistory) Rank(which G.IObject) (ret int) {
 	for i, r := range qh.r {
 		if r.obj == which {

@@ -92,35 +92,27 @@ func TestTalkQuips(t *testing.T) {
 				con.Interlocutor.Set(boy)
 
 				con.History.PushQuip(g.Our("WhatsTheMatter"))
-				qp := GetQuipPool(g)
 
-				// verify that "later" should show up after "whats the matter".
 				later := g.Our("Later")
-				require.True(t, qp.SpeakAfter(later))
+				// verify that "later" should show up after "whats the matter".
+				// require.True(t, qp.SpeakAfter(later))
 
 				// verify that "anybody" should show up after "whats the matter".
-				anybody := g.Our("DoesAnybody")
-				require.True(t, qp.SpeakAfter(anybody))
+				// anybody := g.Our("DoesAnybody")
+				// require.True(t, qp.SpeakAfter(anybody))
 
 				// verify it actually does
 				list := GetPlayerQuips(g)
 				require.Len(t, list, 2)
 				require.Contains(t, list, later)
 
-				// remove this one from play
-				// FIX: the real reason for this removal
-				// is so that when we test the menu selection below,
-				// there is only one choice.
-				// better would be selection sorting based on directly-follows (+50) , and no reply ( -50)
-				anybody.Remove()
-
 				// test the actual converation choices printed
 				player.Go("print conversation choices", boy)
 				lines := game.FlushOutput()
-				require.Len(t, lines, 1)
+				require.Len(t, lines, 2)
 
 				// test the selection
-				if err := game.RunInput("1"); assert.NoError(t, err, "handling menu") {
+				if err := game.RunInput("2"); assert.NoError(t, err, "handling menu") {
 					lines := game.FlushOutput()
 					require.Len(t, lines, 1)
 					require.Contains(t, lines, `player: "Oh, sorry," Alice says. "I'll be back."`)

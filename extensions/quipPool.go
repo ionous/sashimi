@@ -4,28 +4,20 @@ import (
 	G "github.com/ionous/sashimi/game"
 )
 
-type QuipPool struct {
-	g G.Play
-	*Conversation
-}
+type followsCb func(leads G.IObject, directly bool) bool
 
-func GetQuipPool(g G.Play) QuipPool {
-	return QuipPool{g, g.Global("conversation").(*Conversation)}
-}
-
-type visitQuips func(G.IObject, bool) bool
-
-//
-func (qp QuipPool) visitFollowers(follower G.IObject, visit visitQuips) bool {
+// evaluate all quips which constrain this clip
+// ex. QuipHelp(x).DirectlyFollows(y) -> visit(x) will call cb(y, true)
+func visitFollowConstraints(g G.Play, follower G.IObject, cb followsCb) bool {
 	// search all following quips
-	return qp.g.Visit("FollowingQuips", func(obj G.IObject) (okay bool) {
+	return g.Visit("FollowingQuips", func(obj G.IObject) (okay bool) {
 		// yes, this entry talks about our position relative to some other quip
-		if following := obj.Object("Following"); following.Exists() && following == follower {
+		if following := obj.Object("following"); following.Exists() && following == follower {
 			// grab that other quip
-			if leading := obj.Object("Leading"); leading.Exists() {
+			if leading := obj.Object("leading"); leading.Exists() {
 				// call the visitor
-				directly := obj.Is("DirectlyFollowing")
-				if ok := visit(leading, directly); ok {
+				directly := obj.Is("directly following")
+				if ok := cb(leading, directly); ok {
 					okay = true
 				}
 			}
@@ -34,73 +26,61 @@ func (qp QuipPool) visitFollowers(follower G.IObject, visit visitQuips) bool {
 	})
 }
 
-func (qp QuipPool) FollowsRecently(follower G.IObject) (ret int) {
+// QuipHelp provides object oriented functions for evaluating quip relations
+type QuipHelp struct {
+	quip G.IObject
+}
+
+// Quip returns QuipHelp
+func Quip(quip G.IObject) QuipHelp {
+	return QuipHelp{quip}
+}
+
+// Follows provides information about the order of quips in a conversation.
+func (q QuipHelp) Follows(leader G.IObject) DirectInfo {
+	return DirectInfo{q.quip, leader}
+}
+
+// Directly returns true if the Quip should only be displayed after Follows
+func (info DirectInfo) Directly(g G.Play) bool {
+	return visitFollowConstraints(g, info.follower, func(leading G.IObject, directly bool) bool {
+		return directly && info.leader == leading
+	})
+}
+
+// Recently provides information about the order of quips in a conversation.
+func (q QuipHelp) Recently(history QuipHistory) RecentInfo {
+	return RecentInfo{q.quip, history}
+}
+
+// Follows ranks the Quip against all recent history.
+// Returns -1 if the passed quip follows no other quip;
+// returns 0 if the passed quip follows something, but not one of the recent quips;
+// otherwise, the higher the number, the more recent the quip that it follows.
+func (info RecentInfo) Follows(g G.Play) (ret int, direct bool) {
 	isAFollower := false
-	qp.visitFollowers(follower, func(leading G.IObject, directly bool) bool {
-		if idx := qp.History.Rank(leading); (idx > ret) && (!directly || idx == QuipHistoryDepth) {
-			ret = idx
+	visitFollowConstraints(g, info.quip, func(leading G.IObject, directly bool) bool {
+		// find the most recent (highest rank) quip.
+		// we only want to consider directly following quips if we are indeed directly following them.
+		if rank := info.qh.Rank(leading); (rank > ret) && (!directly || rank == QuipHistoryDepth) {
+			ret, direct = rank, directly
 		}
 		isAFollower = true
-		return false
+		return false // searches all
 	})
 	if !isAFollower {
 		ret = -1
 	}
-	return ret
+	return ret, direct
 }
 
-func (qp QuipPool) FollowsDirectly(follower G.IObject) (follows bool) {
-	if mostRecent := qp.History.MostRecent(qp.g); mostRecent.Exists() {
-		qp.visitFollowers(follower, func(leading G.IObject, directly bool) bool {
-			follows = mostRecent == leading
-			return follows
-		})
-	}
-	return follows
+// DirectInfo provides object oriented functions for evaluating quip relations
+type DirectInfo struct {
+	follower, leader G.IObject
 }
 
-func (qp QuipPool) SpeakAfter(newQuip G.IObject) (okay bool) {
-	// Filter to quips which have player comments.
-	if newQuip.Text("comment") != "" {
-		// Exclude one-time quips, checking the recollection table.
-		if newQuip.Is("repeatable") || !qp.Memory.Recollects(newQuip) {
-			// When following a restrictive quips, limit to those which directly follow.
-			if newQuip.Is("restrictive") && qp.FollowsDirectly(newQuip) {
-				okay = true
-			} else {
-				// Select those which indirect follow recent quips
-				// And those which do not follow anything at all.
-				if rank := qp.FollowsRecently(newQuip); rank != 0 {
-					okay = true
-				}
-			}
-		}
-	}
-	return okay
-}
-
-// QuipList returns the possible quips for the player to say.
-func (qp QuipPool) GetPlayerQuips() (ret []G.IObject) {
-	if npc, ok := qp.Interlocutor.Get(); ok {
-		qp.g.Visit("quips", func(newQuip G.IObject) bool {
-			speaker := newQuip.Object("subject")
-			// Filter to quips which quip supply the interlocutor.
-			if speaker == npc {
-				after := qp.SpeakAfter(newQuip)
-				if after {
-					disallowed := qp.Memory.IsQuipDisallowed(qp.g, newQuip)
-					if !disallowed {
-						ret = append(ret, newQuip)
-					}
-				}
-			}
-			return false
-		})
-	}
-	return ret
-}
-
-func GetPlayerQuips(g G.Play) []G.IObject {
-	qp := GetQuipPool(g)
-	return qp.GetPlayerQuips()
+// RecentInfo provides object oriented functions for evaluating quip relations
+type RecentInfo struct {
+	quip G.IObject
+	qh   QuipHistory
 }

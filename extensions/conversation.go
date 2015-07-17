@@ -8,7 +8,7 @@ import (
 	"reflect"
 )
 
-var Debugging bool = true
+var Debugging bool = false
 
 type Conversation struct {
 	Interlocutor GosNilInterfacesAreAnnoying
@@ -29,7 +29,7 @@ func DirectlyFollows(other string) IFragment {
 	return discuss("directly following", other)
 }
 func IndirectlyFollows(other string) IFragment {
-	return discuss("directly following", other)
+	return discuss("indirectly following", other)
 }
 
 func init() {
@@ -92,12 +92,12 @@ func init() {
 			Can("depart").And("departing").RequiresNothing(),
 			To("depart", func(g G.Play) {
 				con := g.Global("conversation").(*Conversation)
-				if Debugging {
-					fmt.Println("!", g.The("actor"), "departing", con.Interlocutor)
-				}
-				con.History.ClearQuips()
-				con.Queue.ResetQuipQueue()
 				if npc, ok := con.Interlocutor.Get(); ok {
+					if Debugging {
+						fmt.Println("!", g.The("actor"), "departing", npc)
+					}
+					con.History.ClearQuips()
+					con.Queue.ResetQuipQueue()
 					npc.Object("next quip").Remove()
 					con.Interlocutor.Clear()
 				}
@@ -143,7 +143,7 @@ func init() {
 				if player == talker {
 					quips := GetPlayerQuips(g)
 					if Debugging {
-						fmt.Println(talker, "printing", talkedTo, quips)
+						fmt.Println("!", talker, "printing", talkedTo, quips)
 					}
 					for i, quip := range quips {
 						cmt := quip.Text("comment")
