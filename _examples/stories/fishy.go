@@ -132,7 +132,7 @@ func A_Day_For_Fresh_Sushi(s *Script) {
 	}
 	// [53-57)
 	s.The("cloths",
-		When("searching").Always(giveFood),
+		When("reporting search").Always(giveFood),
 		When("reporting look under").Always(giveFood),
 		// FIX: i like the fact the event filters can
 		When("reporting shown").Always(func(g G.Play) {

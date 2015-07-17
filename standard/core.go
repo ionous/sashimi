@@ -202,17 +202,6 @@ func init() {
 			}),
 		)
 
-		// searching: requiring light; FIX: what does searching a room do?
-		s.The("actors",
-			Can("search it").And("searching it").RequiresOne("prop"),
-			To("search it", ReflectToTarget("report search")))
-		s.The("props",
-			Can("search").And("searching").RequiresOne("actor"))
-
-		// WARNING/FIX: multi-word statements must appear before their single word variants
-		// ( or the parser will attempt to match the setcond word as a noun )
-		s.Execute("search it", Matching("search {{something}}").
-			Or("look inside|in|into|through {{something}}"))
 		// FIX: for some reason, the order must be biggest match to smallest, the other way doesnt work.
 		s.Execute("report inventory", Matching("inventory|inv|i"))
 		s.Execute("look", Matching("look|l"))
