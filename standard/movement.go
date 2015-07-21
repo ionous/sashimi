@@ -9,9 +9,17 @@ import (
 
 var directions []string = []string{"north", "south", "east", "west", "up", "down"}
 
-func Move(actor G.IObject, dest G.IObject) (changed bool) {
-	if ok := actor.Object("whereabouts") != dest; ok {
-		Assign(actor, "whereabouts", dest)
+type MovePhrase struct {
+	actor G.IObject
+}
+
+// FIX: like Learn() convert to a game action: actor.Go("move to", dest)
+func Move(actor G.IObject) MovePhrase {
+	return MovePhrase{actor}
+}
+func (move MovePhrase) To(dest G.IObject) (changed bool) {
+	if ok := move.actor.Object("whereabouts") != dest; ok {
+		Assign(move.actor, "whereabouts", dest)
 		changed = true
 	}
 	return changed
@@ -49,6 +57,7 @@ func init() {
 			// ( we have the default set, but users could add more )
 			s.The("rooms", HaveOne(dir+"-rev-via", "door").
 				Implying("doors", HaveMany("x-rev-via-"+dir, "rooms")))
+			s.The(dir, IsKnownAs(dir[:1]))
 		}
 
 		// Directions:
@@ -101,17 +110,17 @@ func init() {
 					log.Print("couldnt find whereabouts")
 				} else {
 					log.Print("moving ", actor, " to ", room)
-					if Move(actor, room) {
+					if Move(actor).To(room) {
 						// FIX: duplicated in stories describe the first room
 						room.Go("report the view")
-						room.SetIs("visited")
+						room.IsNow("visited")
 						g.The("status bar").SetText("left", strings.Title(room.Text("Name")))
 					}
 				}
 			}))
 		// understandings:
 		// FIX: noun matching: so that >go north; >go door. both work.
-		// FIX: noun aliass: Understand "n" as north.
+		// FIX: noun alias: Understand "n" as north.
 		s.Execute("go to",
 			Matching("go {{something}}"))
 		s.Execute("go through it",

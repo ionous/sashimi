@@ -124,7 +124,7 @@ func A_Day_For_Fresh_Sushi(s *Script) {
 	giveFood := func(g G.Play) {
 		fishFood := g.The("fish food")
 		if !fishFood.Is("found") {
-			fishFood.SetIs("found")
+			fishFood.IsNow("found")
 			standard.Give(g.The("player"), fishFood)
 			g.Say("Poking around the cloths reveals -- ha HA! -- a vehemently orange can of fish food.")
 			g.StopHere()

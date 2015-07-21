@@ -62,12 +62,13 @@ func (part *PartialInstances) _addChoices(choices []S.ChoiceStatement) (err erro
 		fields := choice.Fields()
 		id := M.MakeStringId(fields.Owner)
 		if inst, ok := part.partials[id]; !ok {
-			err = errutil.Append(err, M.InstanceNotFound(fields.Owner))
+			e := M.InstanceNotFound(fields.Owner)
+			err = errutil.Append(err, SourceError(choice.Source(), e))
 		} else if prop, index, ok := inst.class.PropertyByChoice(fields.Choice); !ok {
 			e := fmt.Errorf("no such choice: '%v'", choice)
-			err = errutil.Append(err, e)
+			err = errutil.Append(err, SourceError(choice.Source(), e))
 		} else if e := inst.setKeyValue(prop.Name(), index); e != nil {
-			err = errutil.Append(err, e)
+			err = errutil.Append(err, SourceError(choice.Source(), e))
 		}
 
 	}
@@ -83,9 +84,10 @@ func (part *PartialInstances) _addKeyValues(kvs []S.KeyValueStatement) (err erro
 		fields := kv.Fields()
 		id := M.MakeStringId(fields.Owner)
 		if inst, ok := part.partials[id]; !ok {
-			err = errutil.Append(err, M.InstanceNotFound(fields.Owner))
+			e := M.InstanceNotFound(fields.Owner)
+			err = errutil.Append(err, SourceError(kv.Source(), e))
 		} else if e := inst.setKeyValue(fields.Key, fields.Value); e != nil {
-			err = errutil.Append(err, e)
+			err = errutil.Append(err, SourceError(kv.Source(), e))
 		}
 	}
 	return err

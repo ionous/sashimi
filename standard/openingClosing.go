@@ -6,6 +6,7 @@ import (
 )
 
 func init() {
+	// (note: the action uses props, so that stories can make any prop behave similar to an opener. )
 	AddScript(func(s *Script) {
 		s.The("props",
 			Called("openers"),
@@ -19,23 +20,29 @@ func init() {
 		// Open:
 		//
 		s.The("actors",
-			Can("open it").And("opening it").RequiresOne("opener"),
+			Can("open it").And("opening it").RequiresOne("prop"),
 			To("open it", ReflectToTarget("report open")),
 		)
 
 		// "[regarding the noun][They] [aren't] something [we] [can] open."
-		s.The("openers",
+		s.The("props",
 			Can("report open").And("reporting open").RequiresOne("actor"),
 			To("report open", func(g G.Play) {
-				this, actor := g.The("opener"), g.The("action.Target")
-				if this.Is("openable") {
-					if this.Is("open") {
-						this.Go("report already open", actor)
+				prop, actor := g.The("prop"), g.The("actor")
+				if !prop.Is("openable") {
+					prop.Go("report not openable", actor)
+				} else {
+					if prop.Is("open") {
+						prop.Go("report already open", actor)
 					} else {
-						this.SetIs("open")
-						this.Go("report now open", actor)
+						prop.IsNow("open")
+						prop.Go("report now open", actor)
 					}
 				}
+			}),
+			Can("report not openable").And("reporting not openable").RequiresOne("actor"),
+			To("report not openable", func(g G.Play) {
+				g.Say("That's not something you can open.")
 			}),
 			Can("report already open").And("reporting already opened").RequiresOne("actor"),
 			To("report already open", func(g G.Play) {
@@ -43,12 +50,12 @@ func init() {
 			}),
 			Can("report now open").And("reporting now open").RequiresOne("actor"),
 			To("report now open", func(g G.Play) {
-				this, _ := g.The("opener"), g.The("action.Target")
-				g.Say("Now the", this.Text("Name"), "is open.")
+				opener := g.The("opener")
+				g.Say("Now the", opener.Text("Name"), "is open.")
 				// if the noun doesnt not enclose the actor
 				// list the contents of the noun, as a sentence, tersely, not listing concealed items;
-				if this.Is("opaque") {
-					listContents(g, "In the", this)
+				if opener.Is("opaque") {
+					listContents(g, "In the", opener)
 				}
 			}),
 		)
@@ -58,33 +65,37 @@ func init() {
 		//
 		// one visible thing, and requiring light
 		s.The("actors",
-			Can("close it").And("closing it").RequiresOne("opener"),
+			Can("close it").And("closing it").RequiresOne("prop"),
 			To("close it", ReflectToTarget("report close")),
 		)
-		s.The("openers",
+		s.The("props",
 			Can("report close").And("report closing").RequiresOne("actor"),
 			To("report close", func(g G.Play) {
-				this, actor := g.The("opener"), g.The("action.Target")
-				if this.Is("openable") {
+				prop, actor := g.The("prop"), g.The("actor")
+				if !prop.Is("openable") {
+					prop.Go("report not closeable", actor)
+				} else {
 					// FIX: locked?
-					if this.Is("closed") {
-						this.Go("report already closed", actor)
+					if prop.Is("closed") {
+						prop.Go("report already closed", actor)
 					} else {
-						this.SetIs("closed")
-						this.Go("report now closed", actor)
+						prop.IsNow("closed")
+						prop.Go("report now closed", actor)
 					}
 				}
 			}),
-
+			Can("report not closeable").And("reporting not closeable").RequiresOne("actor"),
+			To("report not closeable", func(g G.Play) {
+				g.Say("That's not something you can close.")
+			}),
 			Can("report already closed").And("reporting already closed").RequiresOne("actor"),
 			To("report already closed", func(g G.Play) {
 				g.Say("It's already closed.") //[regarding the noun]?
 			}),
-
 			Can("report now closed").And("reporting now closed").RequiresOne("actor"),
 			To("report now closed", func(g G.Play) {
-				this, _ := g.The("opener"), g.The("action.Target")
-				g.Say("Now the", this.Text("Name"), "is closed.")
+				prop := g.The("prop")
+				g.Say("Now the", prop.Text("Name"), "is closed.")
 			}),
 		)
 

@@ -41,7 +41,7 @@ func (qh *QuipHistory) MostRecent(g G.Play) (andWhereAreTheTernaries G.IObject) 
 	if e.notnil {
 		andWhereAreTheTernaries = e.obj
 	} else {
-		andWhereAreTheTernaries = R.NullObject("quip history")
+		andWhereAreTheTernaries = R.NullObject("Quip History Most Recent")
 	}
 	return andWhereAreTheTernaries
 }

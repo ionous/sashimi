@@ -28,7 +28,15 @@ func CreateGameObjects(
 		}
 		// turn properties into tables:
 		gobj := &GameObject{inst.Id(), inst.Class(), make(TemplateValues), make(TemplatePool), tables}
-		gobj.setDirect("Name", inst.Name()) // full name?
+		// FIX FIX FIX
+		name := inst.Name()
+		if n, ok := inst.FindValue("printed name"); ok {
+			if n, ok := n.(string); ok && n != "" {
+				name = n
+			}
+		}
+		gobj.setDirect("Name", name)
+
 		for propId, prop := range props {
 			val, _ := inst.Value(propId)
 			if e := gobj.setValue(prop, val); e != nil {

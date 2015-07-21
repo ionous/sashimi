@@ -9,7 +9,23 @@ type QuipQueue struct {
 	quips []G.IObject
 }
 
-// QueueQuip schedules the passed quip to be spoken in the future.
+// SetNextQuip for the associated NPC's next round of conversation.
+// FIX: I wonder if this should be merged with UpdateNextQuips() and GetPlayerQuips()
+// rather than a queue -- a pool of next quips -- and it selects the best of the set.
+// ( though player is technically from all quips... )
+func (q *QuipQueue) SetNextQuip(g G.Play, quip G.IObject) {
+	npc := quip.Object("subject")
+	if old := npc.Object("next quip"); old.Exists() {
+		old.Remove()
+	}
+
+	nextQuip := g.Add("next quip")
+	npc.Set("next quip", nextQuip)
+	nextQuip.Set("quip", quip)
+	nextQuip.IsNow("planned")
+}
+
+// QueueQuip schedules the passed quip to be spoken sometime in the future.
 func (q *QuipQueue) QueueQuip(quip G.IObject) {
 	q.quips = append(q.quips, quip)
 }
@@ -24,7 +40,7 @@ func (q *QuipQueue) Len() int {
 	return len(q.quips)
 }
 
-// SetNextQuips updates the next quip for all npcs who have a queued quip.
+// UpdateNextQuips for all npcs who have a queued quip.
 func (q *QuipQueue) UpdateNextQuips(g G.Play, qm QuipMemory) {
 	if Debugging {
 		fmt.Println(fmt.Sprintf("! updating %d quips", len(q.quips)))
@@ -43,7 +59,7 @@ func (q *QuipQueue) UpdateNextQuips(g G.Play, qm QuipMemory) {
 				nextQuip := g.Add("next quip")
 				npc.Set("next quip", nextQuip)
 				nextQuip.Set("quip", quip)
-				nextQuip.SetIs("casual")
+				nextQuip.IsNow("casual")
 			}
 		}
 	}

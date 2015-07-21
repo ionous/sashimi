@@ -11,7 +11,7 @@ import (
 // * testing which logs all calls
 // FIX: the interface would be easier to use, and easier to provide implementations of,
 // if get and set returned variants -- then the variant values could handle the setting.
-// (except: Is and SetIs are nice )
+// (except: Is and IsNow are nice )
 type IObject interface {
 	Id() ident.Id
 	Exists() bool      // FIX: added for obj.Object() tests, alternatives?
@@ -21,7 +21,7 @@ type IObject interface {
 
 	// property access
 	Is(string) bool
-	SetIs(string)
+	IsNow(string)
 
 	Num(string) float32
 	SetNum(string, float32)

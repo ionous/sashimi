@@ -5,7 +5,6 @@ import (
 	G "github.com/ionous/sashimi/game"
 )
 
-//
 // holds event callbacks
 type RunStatement struct {
 	fields RunFields

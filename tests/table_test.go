@@ -21,11 +21,10 @@ func makeSweets(s *Script) {
 }
 func nameSweets(s *Script) {
 	s.The("sweets",
-		Table("name", "desc", "delicious-property").Contains(
-			"Boreo", "Creme filled wafer things.", "acceptable").And(
-			"Vegan chocolate chip cookies", "The secret is the bacon... err... baking.", "delicious").And(
-			"Sugar coated ants", "A crunchy summer's day snack.", "you can't be serious",
-		),
+		Table("name", "desc", "delicious-property").
+			Has("Boreo", "Creme filled wafer things.", "acceptable").
+			And("Vegan chocolate chip cookies", "The secret is the bacon... err... baking.", "delicious").
+			And("Sugar coated ants", "A crunchy summer's day snack.", "you can't be serious"),
 	)
 }
 
@@ -60,7 +59,7 @@ func TestTableGeneration(t *testing.T) {
 	s := &Script{}
 	makeSweets(s)
 	s.The("sweets",
-		Table("desc", "delicious-property").Contains(
+		Table("desc", "delicious-property").Has(
 			"Creme filled wafer things.", "acceptable").And(
 			"It looks the way poisonous berries smell.", "delicious").And(
 			"A crunchy summer's day snack.", "you can't be serious",
@@ -96,7 +95,7 @@ func makePeople(s *Script) *Script {
 
 func namePeople(s *Script) {
 	s.The("actors",
-		Table("name", "favorite sweet").Contains(
+		Table("name", "favorite sweet").Has(
 			"Marvin", "Sugar coated ants").And(
 			"Allen", "Boreo").And(
 			"Grace", "Vegan chocolate chip cookies",

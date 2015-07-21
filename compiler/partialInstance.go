@@ -26,7 +26,7 @@ type PartialInstance struct {
 func (inst *PartialInstance) setKeyValue(name string, value interface{}) (err error) {
 	id := M.MakeStringId(name)
 	if builder, ok := inst.propertyBuilders.propertyById(id); !ok {
-		err = PropertyNotFound(inst.class.Id(), "builder:"+name)
+		err = PropertyNotFound(inst.class.Id(), name)
 	} else {
 		err = inst.setProperty(builder, value)
 	}

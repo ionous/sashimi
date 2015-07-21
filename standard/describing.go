@@ -5,7 +5,7 @@ import (
 	. "github.com/ionous/sashimi/script"
 )
 
-func Describe(g G.Play, obj G.IObject) {
+func describe(g G.Play, obj G.IObject) {
 	if !obj.Is("scenery") {
 		desc := ""
 		if obj.Is("unhandled") {
@@ -24,7 +24,7 @@ func init() {
 		s.The("objects",
 			Can("print description").And("describing").RequiresNothing(),
 			To("print description", func(g G.Play) {
-				Describe(g, g.The("object"))
+				describe(g, g.The("object"))
 			}))
 
 		// FIX: When() puts the contents after the object
@@ -40,7 +40,7 @@ func init() {
 				//this := g.The("container")
 				this := g.The("action.Source")
 				if this.Is("open") || this.Is("transparent") {
-					Describe(g, this)
+					describe(g, this)
 					listContents(g, "In the", this)
 					g.StopHere()
 				}
@@ -50,7 +50,7 @@ func init() {
 			When("describing").Always(func(g G.Play) {
 				//this := g.The("supporter")
 				this := g.The("action.Source")
-				Describe(g, this)
+				describe(g, this)
 				listContents(g, "On the", this)
 				g.StopHere()
 			}))

@@ -55,9 +55,13 @@ func init() {
 					status := fmt.Sprintf("%d/%d", int(score), int(0))
 					g.The("status bar").SetText("right", status)
 				}
-				room, found := G.Any(g, "rooms")
-				if !found {
-					panic("story has no rooms")
+				room := g.The("player").Object("whereabouts")
+				if !room.Exists() {
+					if r, found := G.Any(g, "rooms"); found {
+						room = r
+					} else {
+						panic("story has no rooms")
+					}
 				}
 				story.Go("set initial position", g.The("player"), room)
 				story.Go("print the banner") // see: banner.go
@@ -70,7 +74,7 @@ func init() {
 			To("end the story", func(g G.Play) {
 				story := g.The("story")
 				g.Say("*** The End ***")
-				story.SetIs("completed")
+				story.IsNow("completed")
 
 				if story.Is("scored") {
 					score, maxScore, turnCount := story.Num("score"), story.Num("maximum score"), story.Num("turn count")
@@ -98,7 +102,7 @@ func init() {
 				room := g.The("action.Target")
 				/// FIX: visited should happen elsewhere
 				room.Go("report the view")
-				room.SetIs("visited")
+				room.IsNow("visited")
 				g.The("status bar").SetText("left", strings.Title(room.Text("Name")))
 			}),
 		)

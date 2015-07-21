@@ -1,34 +1,39 @@
 package script
 
+import (
+	S "github.com/ionous/sashimi/source"
+)
+
 // active verb:
 func Can(verb string) CanDoPhrase {
-	return CanDoPhrase{NewOrigin(1), verb}
+	origin := NewOrigin(3)
+	return CanDoPhrase{origin, verb}
 }
 
 //starts a requirements phrase for deciding how to provide nouns...
-func (this CanDoPhrase) And(doing string) RequiresWhatPhrase {
-	return RequiresWhatPhrase{this, doing}
+func (frag CanDoPhrase) And(doing string) RequiresWhatPhrase {
+	return RequiresWhatPhrase{frag, doing}
 }
 
 // the target will be the same as the source
-func (this RequiresWhatPhrase) RequiresNothing() IFragment {
-	return ActionAssertionFragment{RequiresWhatPhrase: this}
+func (frag RequiresWhatPhrase) RequiresNothing() IFragment {
+	return ActionAssertionFragment{RequiresWhatPhrase: frag}
 }
 
 // the target and the context will be input by the user, and will both be of the passed class
-func (this RequiresWhatPhrase) RequiresTwo(class string) IFragment {
-	return ActionAssertionFragment{RequiresWhatPhrase: this, target: class, context: class}
+func (frag RequiresWhatPhrase) RequiresTwo(class string) IFragment {
+	return ActionAssertionFragment{RequiresWhatPhrase: frag, target: class, context: class}
 }
 
 // the target will be input by the user, and will of the passed class
-func (this RequiresWhatPhrase) RequiresOne(class string) ActionAssertionFragment {
-	return ActionAssertionFragment{RequiresWhatPhrase: this, target: class}
+func (frag RequiresWhatPhrase) RequiresOne(class string) ActionAssertionFragment {
+	return ActionAssertionFragment{RequiresWhatPhrase: frag, target: class}
 }
 
 // the context will be input by the user, and will of the passed class
-func (this ActionAssertionFragment) AndOne(class string) IFragment {
-	this.context = class
-	return this
+func (frag ActionAssertionFragment) AndOne(class string) IFragment {
+	frag.context = class
+	return frag
 }
 
 //
@@ -45,7 +50,8 @@ type ActionAssertionFragment struct {
 	target, context string
 }
 
-func (this ActionAssertionFragment) MakeStatement(b SubjectBlock) error {
-	return b.NewActionAssertion(this.actionName, this.eventName,
-		b.subject, this.target, this.context)
+func (frag ActionAssertionFragment) MakeStatement(b SubjectBlock) error {
+	fields := S.ActionAssertionFields{
+		frag.actionName, frag.eventName, b.subject, frag.target, frag.context}
+	return b.NewActionAssertion(fields, frag.Code())
 }

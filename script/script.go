@@ -25,30 +25,37 @@ func (s *Script) Compile(writer io.Writer) (res *M.Model, err error) {
 }
 
 // The main script function used to asset the existence of a class, instance, property, etc.
-// The("example", s.Has("...") )
-func (s *Script) The(key string, fragments ...IFragment) error {
+// Returns a placeholder variable, and an error -- both of which are intended to help distinguish it from The() used in callbacks.
+// ex. The("example", s.Has("...") )
+func (s *Script) The(key string, fragments ...IFragment) (int, error) {
+	return s.the(key, fragments...)
+}
+
+// A=>The alias
+func (s *Script) A(key string, fragments ...IFragment) (int, error) {
+	return s.the(key, fragments...)
+}
+
+// Our=>The alias
+func (s *Script) Our(key string, fragments ...IFragment) (int, error) {
+	return s.the(key, fragments...)
+}
+
+func (s *Script) the(key string, fragments ...IFragment) (int, error) {
 	b := SubjectBlock{s, key, findSubject(key, fragments), &s.blocks}
 	for _, frag := range fragments {
 		if e := frag.MakeStatement(b); e != nil {
 			s.err = errutil.Append(s.err, e)
 		}
 	}
-	return s.err
-}
-
-// A=>The alias
-func (s *Script) A(key string, fragments ...IFragment) {
-	s.The(key, fragments...)
-}
-
-// Our=>The alias
-func (s *Script) Our(key string, fragments ...IFragment) {
-	s.The(key, fragments...)
+	return 0, s.err
 }
 
 // Execute( action, Matching(regexp).Or(other regexp) )
 func (s *Script) Execute(what string, as Parsing) {
-	s.blocks.NewAlias(what, as.phrases)
+	origin := NewOrigin(1)
+	alias := S.AliasFields{what, as.phrases}
+	s.blocks.NewAlias(alias, origin.Code())
 }
 
 func (s *Script) Generate(what string, gen reflect.Type) {

@@ -85,7 +85,6 @@ func TestTalkQuips(t *testing.T) {
 	s := TalkScript()
 	if game, err := NewTestGame(t, s); assert.NoError(t, err) {
 		g := R.NewGameAdapter(game.Game)
-
 		if boy := g.The("alien boy"); assert.True(t, boy.Exists(), "found boy") {
 			if player := g.The("player"); assert.True(t, player.Exists(), "found player") {
 				con := g.Global("conversation").(*Conversation)
@@ -122,26 +121,75 @@ func TestTalkQuips(t *testing.T) {
 	}
 }
 
+// TestDirectFollows to test player quip generation.
+func TestDirectFollows(t *testing.T) {
+	s := InitScripts()
+	s.The("actor", Called("The Alien Boy"), Exists())
+	s.The("alien boy", Has("greeting", "Don't leave!"))
+
+	s.The("quip", Called("Don't leave!"),
+		Has("subject", "Alien Boy"),
+		Has("reply", "Don't leave me!"),
+		Is("restrictive"))
+
+	s.The("quip", Called("We need help!"),
+		Has("subject", "Alien Boy"),
+		Has("comment", "We've got to go look for help."),
+		Has("reply", "I don't think we should go anywhere."),
+		Is("restrictive"),
+		DirectlyFollows("Don't leave!"))
+
+	s.The("quip", Called("Who else is there?"),
+		Has("subject", "Alien Boy"),
+		Has("comment", "Do you see anyone else?"),
+		Has("reply", "I might... should I?"),
+		Is("restrictive"),
+		DirectlyFollows("We need help!"))
+
+	s.The("quip", Called("Automat Goodbye"),
+		Has("subject", "Alien Boy"),
+		Has("comment", "I'm going to look around some more."))
+
+	if game, err := NewTestGame(t, s); assert.NoError(t, err) {
+		g := R.NewGameAdapter(game.Game)
+		if boy := g.The("alien boy"); assert.True(t, boy.Exists(), "found boy") {
+			if player := g.The("player"); assert.True(t, player.Exists(), "found player") {
+				player.Go("greet", boy)
+
+				con := g.Global("conversation").(*Conversation)
+				latest := con.History.MostRecent(g)
+				require.True(t, latest.Exists(), "should have most recent quip")
+				require.True(t, latest.Is("restrictive"), "should be restrictive")
+
+				if quips := GetPlayerQuips(g); assert.Len(t, quips, 1) {
+					q := quips[0]
+					require.EqualValues(t, "WeNeedHelp", q.Id())
+				}
+			}
+		}
+	}
+}
+
 // TestFactFinding to verify facts and their associated conversation rules.
 func TestFactFinding(t *testing.T) {
 	s := InitScripts()
 
 	s.The("facts",
 		Table("name", "summary").
-			Contains("red", "as rage").
+			Has("red", "as rage").
 			And("blue", "as the sea").
 			And("yellow", "as the sun").
 			And("green", "as fresh spirulina"))
 
 	s.The("quips",
 		Table("name", "reply").
-			Contains("retort", "arg!").
+			Has("retort", "arg!").
 			And("smoothie request", "yes, please!").
 			And("orbital wonder", "what were the skies like when you were young?"))
 
 	s.The("quip requirements",
 		Table("fact", "permitted-property", "quip").
-			Contains("red", "permitted", "retort").
+			Has("red", "permitted", "retort").
 			And("red", "prohibited", "smoothie request").
 			And("green", "permitted", "retort").
 			And("yellow", "prohibited", "retort"))

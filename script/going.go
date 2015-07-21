@@ -80,10 +80,10 @@ func (this GoesToFragment) MakeStatement(b SubjectBlock) (err error) {
 	}
 	// An Exit (has a matching) Entrance
 	if err == nil {
-		if e := b.The(from.door.str, Has("destination", to.door.str)); e != nil {
+		if _, e := b.The(from.door.str, Has("destination", to.door.str)); e != nil {
 			err = e
 		} else if this.twoWay {
-			err = b.The(to.door.str, Has("destination", from.door.str))
+			_, err = b.The(to.door.str, Has("destination", from.door.str))
 		}
 	}
 	// A Room+Travel Direction (has a matching) Exit
@@ -91,12 +91,12 @@ func (this GoesToFragment) MakeStatement(b SubjectBlock) (err error) {
 	if err == nil {
 		dir := xDir{this.from.fromDir}
 		if dir.isSpecified() {
-			if e := dir.makeDir(b); e != nil {
+			if _, e := dir.makeDir(b); e != nil {
 				err = e
-			} else if e := b.The(from.room.str, Has(dir.via(), from.door.str)); e != nil {
+			} else if _, e := b.The(from.room.str, Has(dir.via(), from.door.str)); e != nil {
 				err = e
 			} else if this.twoWay {
-				err = b.The(to.room.str, Has(dir.rev(), from.door.str))
+				_, err = b.The(to.room.str, Has(dir.rev(), from.door.str))
 			}
 		}
 	}
@@ -125,10 +125,10 @@ type xSite struct {
 }
 
 func (this xSite) makeSite(b SubjectBlock) (err error) {
-	if e := b.The("room", Called(this.room.str), Exists()); e != nil {
+	if _, e := b.The("room", Called(this.room.str), Exists()); e != nil {
 		err = e
 	} else {
-		err = b.The("door", Called(this.door.str), In(this.room.str), Exists())
+		_, err = b.The("door", Called(this.door.str), In(this.room.str), Exists())
 	}
 	return err
 }
@@ -149,7 +149,7 @@ func (this xDir) isSpecified() bool {
 	return this.str != ""
 }
 
-func (this xDir) makeDir(b SubjectBlock) error {
+func (this xDir) makeDir(b SubjectBlock) (int, error) {
 	return b.The("direction", Called(this.str), Exists())
 }
 

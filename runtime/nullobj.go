@@ -65,8 +65,8 @@ func (null _Null) Is(c string) (ret bool) {
 }
 
 //
-func (null _Null) SetIs(c string) {
-	null.println("SetIs", c)
+func (null _Null) IsNow(c string) {
+	null.println("IsNow", c)
 }
 
 //

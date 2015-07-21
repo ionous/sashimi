@@ -16,7 +16,7 @@ func Boy_Talk(s *Script) {
 	s.The("alien boy", Has("greeting", "OldBoy: What's The Matter?"))
 
 	s.The("facts",
-		Table("name", "summary").Contains(
+		Table("name", "summary").Has(
 			"envious-phone", "I'm not too young for a phone, am I?").And(
 			"boy-cam", "Camera? I hardly knew him.").And(
 			"aliens-take-alot-of-photos", "Aliens sure take a lot of photos!").And(
@@ -52,7 +52,7 @@ func Boy_Talk(s *Script) {
 
 	s.The("quip requirements",
 		Table("fact", "permitted-property", "quip").
-			Contains("boy-cam", "prohibited", "OldBoy: Later").
+			Has("boy-cam", "prohibited", "OldBoy: Later").
 			And("boy-cam", "permitted", "OldBoy: CameraTime"))
 
 	s.The("quip", Called("OldBoy: Camera"),
@@ -159,7 +159,7 @@ func Boy_Talk(s *Script) {
 
 	s.The("quip requirements",
 		Table("fact", "permitted-property", "quip").
-			Contains("aliens-take-alot-of-photos", "permitted", "OldBoy: Photos"))
+			Has("aliens-take-alot-of-photos", "permitted", "OldBoy: Photos"))
 
 	s.The("quip",
 		Called("OldBoy: Molting"),

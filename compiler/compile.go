@@ -60,8 +60,9 @@ func (ctx *_Compiler) processAssertions(asserts []S.AssertionStatement) (err err
 		// went through a full loop without being able to process anything
 		if !didSomething {
 			for _, pending := range asserts {
-				e := fmt.Errorf("couldn't resolve the assertion for `%v`", pending)
-				err = errutil.Append(err, e)
+				fields, source := pending.Fields(), pending.Source()
+				e := fmt.Errorf("didn't understand how to make a `%s` called `%s`", fields.Owner, fields.Called)
+				err = errutil.Append(err, SourceError(source, e))
 			}
 		}
 	}
@@ -198,7 +199,8 @@ func (ctx *_Compiler) makeActionHandlers(classes M.ClassMap, instances M.Instanc
 		f := statement.Fields()
 		action, ok := actions.FindActionByName(f.Action)
 		if !ok {
-			err = errutil.Append(err, M.ActionNotFound(f.Action))
+			e := M.ActionNotFound(f.Action)
+			err = errutil.Append(err, SourceError(statement.Source(), e))
 			continue
 		}
 		var options M.ListenerOptions
@@ -269,7 +271,8 @@ func (ctx *_Compiler) compileAliases(instances M.InstanceMap, actions M.ActionMa
 
 	// then: add all "is known as"
 	for _, alias := range ctx.src.Aliases {
-		key, phrases := alias.Key(), alias.Phrases()
+		fields := alias.Fields()
+		key, phrases := fields.Key, fields.Phrases
 		if inst, ok := instances.FindInstance(key); ok {
 			id := inst.Id()
 			for _, name := range phrases {
@@ -284,7 +287,7 @@ func (ctx *_Compiler) compileAliases(instances M.InstanceMap, actions M.ActionMa
 				parserActions = append(parserActions, parserAction)
 			} else {
 				e := fmt.Errorf("unknown alias requested %s", key)
-				err = errutil.Append(err, e)
+				err = errutil.Append(err, SourceError(alias.Source(), e))
 			}
 		}
 	}
@@ -333,9 +336,10 @@ func (ctx *_Compiler) compile() (*M.Model, error) {
 	for _, enum := range ctx.src.Enums {
 		fields := enum.Fields()
 		if class, ok := ctx.classes.findByPluralName(fields.Class); !ok {
-			err = errutil.Append(err, ClassNotFound(fields.Class))
+			e := ClassNotFound(fields.Class)
+			err = errutil.Append(err, SourceError(enum.Source(), e))
 		} else if _, e := class.addEnum(fields.Name, fields.Choices, fields.Expects); e != nil {
-			err = errutil.Append(err, e)
+			err = errutil.Append(err, SourceError(enum.Source(), e))
 		}
 	}
 	if err != nil {

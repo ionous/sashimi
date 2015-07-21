@@ -2,8 +2,6 @@ package source
 
 import (
 	"fmt"
-	E "github.com/ionous/sashimi/event"
-	G "github.com/ionous/sashimi/game" // for callbacks
 	"github.com/ionous/sashimi/util/errutil"
 )
 
@@ -54,36 +52,25 @@ func (blocks *BuildingBlocks) GetStatements() Statements {
 
 //
 func (blocks *BuildingBlocks) NewActionAssertion(
-	actionName string,
-	eventName string,
-	source string,
-	target string,
-	context string,
+	fields ActionAssertionFields,
+	source Code,
 ) (err error) {
-	fields := ActionAssertionFields{actionName, eventName, source, target, context}
-	statement := ActionStatement{fields, ""}
+	statement := ActionStatement{fields, source}
 	blocks.statements.Actions = append(blocks.statements.Actions, statement)
 	return err
 }
 
 //
-func (blocks *BuildingBlocks) NewActionHandler(
-	owner string,
-	action string,
-	callback G.Callback,
-	phase E.Phase,
+func (blocks *BuildingBlocks) NewActionHandler(fields RunFields, source Code,
 ) (err error) {
-	fields := RunFields{owner, action, callback, phase}
-	statement := RunStatement{fields, ""}
+	statement := RunStatement{fields, source}
 	blocks.statements.ActionHandlers = append(blocks.statements.ActionHandlers, statement)
 	return err
 }
 
-func (blocks *BuildingBlocks) NewAlias(
-	key string,
-	phrases []string,
+func (blocks *BuildingBlocks) NewAlias(fields AliasFields, source Code,
 ) (err error) {
-	a := AliasStatement{key, phrases, ""}
+	a := AliasStatement{fields, source}
 	blocks.statements.Aliases = append(blocks.statements.Aliases, a)
 	return err
 }

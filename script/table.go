@@ -18,8 +18,8 @@ type TableFragment struct {
 	rows    []S.Row
 }
 
-//
-func (this TableFragment) Contains(values ...interface{}) TableAndFragment {
+// note: was "contains", changed to "Has" to align text with "And" statements
+func (this TableFragment) Has(values ...interface{}) TableAndFragment {
 	this.rows = append(this.rows, values)
 	return TableAndFragment{this}
 }

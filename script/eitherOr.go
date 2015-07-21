@@ -8,7 +8,8 @@ import (
 // Class statement to add a set of enumerated choices for all instances of the class
 // TBD: turn into a function chain?
 func AreOneOf(name string, or string, more string, rest ...string) ClassEnumFragment {
-	return ClassEnumFragment{NewOrigin(1), append([]string{name, or, more}, rest...), nil}
+	origin := NewOrigin(2)
+	return ClassEnumFragment{origin, append([]string{name, or, more}, rest...), nil}
 }
 
 //
@@ -18,8 +19,9 @@ func AreEither(firstChoice string) EitherOrPhrase {
 	return EitherOrPhrase{firstChoice}
 }
 
-func (this EitherOrPhrase) Or(secondChoice string) ClassEnumFragment {
-	return ClassEnumFragment{NewOrigin(1), []string{this.firstChoice, secondChoice}, nil}
+func (phrase EitherOrPhrase) Or(secondChoice string) ClassEnumFragment {
+	origin := NewOrigin(2)
+	return ClassEnumFragment{origin, []string{phrase.firstChoice, secondChoice}, nil}
 }
 
 type EitherOrPhrase struct {
@@ -28,22 +30,22 @@ type EitherOrPhrase struct {
 
 //
 // cascades
-func (this ClassEnumFragment) Usually(choice string) ClassEnumFragment {
+func (frag ClassEnumFragment) Usually(choice string) ClassEnumFragment {
 	// note: its wrong to check for choice in choices: we want to be able to split the declaration
-	this.expects = append(this.expects, S.NewExpectation(S.UsuallyExpect, choice))
-	return this
+	frag.expects = append(frag.expects, S.NewExpectation(S.UsuallyExpect, choice))
+	return frag
 }
-func (this ClassEnumFragment) Always(choice string) ClassEnumFragment {
-	this.expects = append(this.expects, S.NewExpectation(S.AlwaysExpect, choice))
-	return this
+func (frag ClassEnumFragment) Always(choice string) ClassEnumFragment {
+	frag.expects = append(frag.expects, S.NewExpectation(S.AlwaysExpect, choice))
+	return frag
 }
-func (this ClassEnumFragment) Seldom(choice string) ClassEnumFragment {
-	this.expects = append(this.expects, S.NewExpectation(S.SeldomExpect, choice))
-	return this
+func (frag ClassEnumFragment) Seldom(choice string) ClassEnumFragment {
+	frag.expects = append(frag.expects, S.NewExpectation(S.SeldomExpect, choice))
+	return frag
 }
-func (this ClassEnumFragment) Never(choice string) ClassEnumFragment {
-	this.expects = append(this.expects, S.NewExpectation(S.NeverExpect, choice))
-	return this
+func (frag ClassEnumFragment) Never(choice string) ClassEnumFragment {
+	frag.expects = append(frag.expects, S.NewExpectation(S.NeverExpect, choice))
+	return frag
 }
 
 //
@@ -55,8 +57,8 @@ type ClassEnumFragment struct {
 	expects []S.PropertyExpectation
 }
 
-func (this ClassEnumFragment) MakeStatement(b SubjectBlock) error {
-	name := this.choices[0] + "Property"
-	enum := S.EnumFields{b.subject, name, this.choices, this.expects}
-	return b.NewEnumeration(enum, "")
+func (frag ClassEnumFragment) MakeStatement(b SubjectBlock) error {
+	name := frag.choices[0] + "Property"
+	enum := S.EnumFields{b.subject, name, frag.choices, frag.expects}
+	return b.NewEnumeration(enum, frag.origin.Code())
 }

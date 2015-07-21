@@ -2,19 +2,21 @@ package source
 
 //
 type AliasStatement struct {
-	key     string
-	phrases []string
-	source  Code
+	fields AliasFields
+	source Code
+}
+
+type AliasFields struct {
+	Key     string
+	Phrases []string
 }
 
 //
-func (ts AliasStatement) Key() string {
-	return ts.key
-}
-
-//
-func (ts AliasStatement) Phrases() []string {
-	return ts.phrases
+func (ts AliasStatement) Fields() AliasFields {
+	return ts.fields
+	// since we can take the address of a field and write to that address
+	// even key isnt truly read-only, so why worry about arrays?
+	// AliasFields{ts.fields.Key, copy(ts.fields.Phrases)}
 }
 
 //

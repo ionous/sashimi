@@ -32,6 +32,8 @@ func init() {
 		// FIX: IObject and GameObject, ObjectList are confusing versus kind/object
 		// Instance might be better...? or some better name for the class of objects
 		// i tried "subjects" but hated it more.
+		s.The("kinds",
+			Have("printed name", "text"))
 
 		// vs. descriptions in "kind"
 		// it seems to make sense for now to have two separate description fields.
@@ -119,10 +121,6 @@ func init() {
 			Called("supporters"),
 			HaveMany("contents", "objects").
 				Implying("objects", HaveOne("support", "supporter")))
-
-		s.The("props",
-			Called("devices"),
-			AreEither("switched off").Or("switched on"))
 	})
 }
 

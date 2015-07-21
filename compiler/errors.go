@@ -2,9 +2,16 @@ package compiler
 
 import (
 	"fmt"
+	"github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 )
+
+func SourceError(src source.Code, e error) error {
+	return errutil.Func(func() string {
+		return fmt.Sprintf("error! %s @ %s", e.Error(), src)
+	})
+}
 
 //
 // ClassNotFound

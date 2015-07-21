@@ -4,7 +4,7 @@ import (
 	"fmt"
 	C "github.com/ionous/sashimi/console"
 	"github.com/ionous/sashimi/minicon"
-	S "github.com/ionous/sashimi/script"
+	"github.com/ionous/sashimi/script"
 	"io"
 	"io/ioutil"
 	"os"
@@ -22,12 +22,17 @@ func (this MiniConsole) Readln() (string, bool) {
 }
 
 // simplest interface:
-func Run(script S.InitCallback) {
-	S.AddScript(script)
+func Run(scriptCallback script.InitCallback) {
+	script.AddScript(scriptCallback)
 	RunGame(ParseCommandLine())
 }
 
 func RunGame(opt Options) (err error) {
+	script := script.InitScripts()
+	return RunScript(script, opt)
+}
+
+func RunScript(script *script.Script, opt Options) (err error) {
 	// tease out options settings:
 	cons, verbose, dump := opt.cons, opt.verbose, opt.dump
 	if !opt.hasConsole {
@@ -45,7 +50,7 @@ func RunGame(opt Options) (err error) {
 	} else {
 		writer = ioutil.Discard
 	}
-	if model, e := S.InitScripts().Compile(writer); e != nil {
+	if model, e := script.Compile(writer); e != nil {
 		err = e
 	} else {
 		if dump {

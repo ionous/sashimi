@@ -11,7 +11,8 @@ import (
 // The("room", Called("home" )
 // The("kinds", Called("coins").Singular("coin")
 func Called(subject string) CalledFragment {
-	return CalledFragment{NewOrigin(2), subject, ""}
+	origin := NewOrigin(2)
+	return CalledFragment{origin, subject, ""}
 }
 
 //

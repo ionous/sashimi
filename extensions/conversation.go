@@ -6,7 +6,12 @@ import (
 	. "github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/standard"
 	"reflect"
+	"strings"
 )
+
+func Lines(a ...string) string {
+	return strings.Join(a, "\n")
+}
 
 var Debugging bool = false
 
@@ -17,19 +22,48 @@ type Conversation struct {
 	Queue        QuipQueue
 }
 
-func discuss(how, other string) IFragment {
-	return NewFunctionFragment(func(b SubjectBlock) error {
-		b.The("following quips",
-			Table("following", "indirectly-following-property", "leading").Contains(
-				b.Subject(), how, other))
-		return nil
-	})
+// FIX: replace  with player, go learn
+func Learn(g G.Play, fact string) {
+	con := g.Global("conversation").(*Conversation)
+	con.Memory.Learn(g.The(fact))
 }
+
+func PlayerRecollects(g G.Play, fact string) bool {
+	con := g.Global("conversation").(*Conversation)
+	return con.Memory.Recollects(g.The(fact))
+}
+
 func DirectlyFollows(other string) IFragment {
 	return discuss("directly following", other)
 }
 func IndirectlyFollows(other string) IFragment {
 	return discuss("indirectly following", other)
+}
+
+func IsPermittedBy(fact string) IFragment {
+	return requires("permitted", fact)
+}
+
+func IsProhibitedBy(fact string) IFragment {
+	return requires("prohibited", fact)
+}
+
+func discuss(how, other string) IFragment {
+	return NewFunctionFragment(func(b SubjectBlock) error {
+		b.The("following quips",
+			Table("following", "indirectly-following-property", "leading").Has(
+				b.Subject(), how, other))
+		return nil
+	})
+}
+
+func requires(how, fact string) IFragment {
+	return NewFunctionFragment(func(b SubjectBlock) error {
+		b.The("quip requirements",
+			Table("fact", "permitted-property", "quip").
+				Has(fact, how, b.Subject()))
+		return nil
+	})
 }
 
 func init() {
@@ -72,11 +106,20 @@ func init() {
 				con := g.Global("conversation").(*Conversation)
 				greeter, greeted := g.The("action.Source"), g.The("action.Target")
 				if greeter == g.The("player") && greeted.Exists() {
-					if npc, ok := con.Interlocutor.Get(); !ok {
-						if greeting := greeted.Object("greeting"); greeting.Exists() {
-							con.Interlocutor.Set(greeted)
-							greeted.Go("discuss", greeting)
-						} else if npc == greeted {
+					if npc, alreadySpeaking := con.Interlocutor.Get(); !alreadySpeaking {
+						greeting := greeted.Object("greeting")
+						if Debugging {
+							fmt.Println("!", "Now talking to", greeted, "with", greeting)
+						}
+						con.Interlocutor.Set(greeted)
+						if greeting.Exists() {
+							// hrmmm....
+							//greeted.Go("discuss", greeting)
+							con.Queue.SetNextQuip(g, greeting)
+							con.History.PushQuip(greeting)
+						}
+					} else {
+						if npc == greeted {
 							g.Say("You're already speaking to them!")
 						} else {
 							g.Say("You're already speaking to someone!")
@@ -123,17 +166,18 @@ func init() {
 				if Debugging {
 					fmt.Println("!", talker, "discussing", quip)
 				}
+				con := g.Global("conversation").(*Conversation)
 				// the player wants to speak: probably has chosen a line of dialog from the menu
 				if talker == player {
 					comment := quip.Text("comment")
 					player.Says(comment)
-
+					con.Queue.SetNextQuip(g, quip)
+				} else {
+					// an actor wants to reply to the quip that was discussed.
+					// they will do this via Converse() at the end of the turn.
+					con.Queue.QueueQuip(quip)
 				}
-				// an actor wants to reply to the quip that was discussed.
-				// they will do this via Converse() at the end of the turn.
-				con := g.Global("conversation").(*Conversation)
 				con.History.PushQuip(quip) // FIX: when to advance this...?
-				con.Queue.QueueQuip(quip)
 			}))
 
 		s.The("actors",

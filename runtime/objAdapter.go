@@ -77,11 +77,11 @@ func (oa ObjectAdapter) Is(state string) (ret bool) {
 }
 
 //
-// SetIs changes the state of an object.
+// IsNow changes the state of an object.
 //
-func (oa ObjectAdapter) SetIs(state string) {
+func (oa ObjectAdapter) IsNow(state string) {
 	if prop, index, ok := oa.gobj.Class().PropertyByChoice(state); !ok {
-		oa.logError(fmt.Errorf("SetIs: no such choice '%s'.'%s'", oa, state))
+		oa.logError(fmt.Errorf("IsNow: no such choice '%s'.'%s'", oa, state))
 	} else {
 		// get the current choice from the implied property slot
 		if currChoice, ok := oa.gobj.Value(prop.Id()).(ident.Id); !ok {

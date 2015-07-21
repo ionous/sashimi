@@ -1,7 +1,6 @@
 package script
 
 import (
-	"fmt"
 	S "github.com/ionous/sashimi/source"
 )
 
@@ -20,8 +19,9 @@ func Has(property string, values ...interface{}) (frag IFragment) {
 			return b.NewKeyValue(fields, origin.Code())
 		})
 	default:
-		frag = NewFunctionFragment(func(SubjectBlock) error {
-			return fmt.Errorf("too many values specified %s", origin)
+		frag = NewFunctionFragment(func(b SubjectBlock) error {
+			fields := S.KeyValueFields{b.subject, property, values}
+			return b.NewKeyValue(fields, origin.Code())
 		})
 	}
 	return frag
@@ -32,22 +32,24 @@ func Has(property string, values ...interface{}) (frag IFragment) {
 // The enumeration must (eventually) be declared for the class via AreEither(), or AreOneOf()
 //
 func Is(choice string, choices ...string) IsPhrase {
-	return IsPhrase{append(choices, choice)}
+	origin := NewOrigin(2)
+	return IsPhrase{origin, append(choices, choice)}
 }
 
-func (this IsPhrase) And(choice string) IsPhrase {
-	this.choices = append(this.choices, choice)
-	return this
+func (phrase IsPhrase) And(choice string) IsPhrase {
+	phrase.choices = append(phrase.choices, choice)
+	return phrase
 }
 
 type IsPhrase struct {
+	origin  Origin
 	choices []string
 }
 
-func (this IsPhrase) MakeStatement(b SubjectBlock) (err error) {
-	for _, choice := range this.choices {
+func (phrase IsPhrase) MakeStatement(b SubjectBlock) (err error) {
+	for _, choice := range phrase.choices {
 		fields := S.ChoiceFields{b.subject, choice}
-		if e := b.NewChoice(fields, ""); e != nil {
+		if e := b.NewChoice(fields, phrase.origin.Code()); e != nil {
 			err = e
 			break
 		}
