@@ -18,8 +18,7 @@ func DescribeThe(object G.IObject) DescribePhrase {
 }
 
 func (d DescribePhrase) Execute(g G.Play) {
-	obj := g.The(d.object)
-	if !obj.Is("scenery") {
+	if obj := g.The(d.object); obj.Exists() && !obj.Is("scenery") {
 		desc := ""
 		if obj.Is("unhandled") {
 			desc = obj.Text("brief")
@@ -50,21 +49,19 @@ func init() {
 		s.The("containers",
 			//print description
 			When("describing").Always(func(g G.Play) {
-				this := g.The("action.Source")
-				if (this.Is("open") || this.Is("transparent")) && !this.Is("scenery-content") {
-					g.Say(" ")
-					g.Go(DescribeThe(this))
-					listContents(g, "In the", this)
+				container := g.The("action.Source")
+				if (container.Is("open") || container.Is("transparent")) && !container.Is("scenery-content") {
+					g.Go(DescribeThe(container))
+					listContents(g, "In the", container)
 					g.StopHere()
 				}
 			}))
 
 		s.The("supporters",
 			When("describing").Always(func(g G.Play) {
-				this := g.The("supporter")
-				g.Say(" ")
-				g.Go(DescribeThe(this))
-				listContents(g, "On the", this)
+				supporter := g.The("action.Source")
+				g.Go(DescribeThe(supporter))
+				listContents(g, "On the", supporter)
 				g.StopHere()
 			}))
 	})

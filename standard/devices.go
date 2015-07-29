@@ -1,7 +1,6 @@
 package standard
 
 import (
-	"fmt"
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
 )
@@ -17,12 +16,18 @@ func init() {
 		s.The("devices",
 			When("printing name text").
 				Always(func(g G.Play) {
-				device := g.The("device")
-				if device.Is("operable") {
-					text := map[bool]string{true: "switched on", false: "switched off"}
-					g.Say(device.Text("Name"), fmt.Sprint(text[device.Is("switched on")]))
-					g.StopHere()
-				}
+				text := Name(g, "device", func(device G.IObject) (status string) {
+					if device.Is("operable") {
+						if device.Is("switched on") {
+							status = "switched on"
+						} else {
+							status = "switched off"
+						}
+					}
+					return status
+				})
+				g.Say(text)
+				g.StopHere()
 			}))
 
 		//

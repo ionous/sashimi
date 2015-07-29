@@ -82,6 +82,7 @@ func TestStartupText(t *testing.T) {
 			"",
 			"somewhere",
 			"an empty room",
+			"",
 		}
 		assert.Exactly(t, expected, game.FlushOutput())
 	}

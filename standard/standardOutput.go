@@ -27,7 +27,7 @@ func (this StandardOutput) ScriptSays(lines []string) {
 func (this StandardOutput) ActorSays(whose *R.GameObject, lines []string) {
 	if len(lines) > 0 {
 		// in other contexts ActorSays needs R.GameObject for SerializeObject
-		this.console.Println()
+		//this.console.Println()
 		name := whose.Value("Name").(string)
 		this.console.Println(name, ": ", lines[0])
 		for _, l := range lines[1:] {

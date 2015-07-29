@@ -63,15 +63,18 @@ func TestDiscuss(t *testing.T) {
 			if player := g.The("player"); assert.True(t, player.Exists(), "found player") {
 				con := g.Global("conversation").(*Conversation)
 				// hijack the person we are trying to talk to
-				con.Interlocutor.Set(boy)
-				require.Equal(t, 0, con.Queue.Len())
-				// have the boy say something.
-				boy.Go("discuss", boy.Object("greeting"))
-				require.Equal(t, 1, con.Queue.Len())
+				// con.Interlocutor.Set(boy)
+				// require.Equal(t, 0, con.Queue.Len())
+				// // have the boy say something.
+				// boy.Go("discuss", boy.Object("greeting"))
+				//
+				g.Go(Introduce("player").To("alien boy").WithQuip(boy.Object("greeting")))
+				require.Equal(t, boy.Object("next quip").Object("quip"), boy.Object("greeting"))
 				con.Converse(g)
 				// clear the test, and make sure the queue is empty.
 				lines := game.FlushOutput()
-				require.Len(t, lines, 3)
+
+				require.True(t, len(lines) > 1)
 				require.Equal(t, `The Alien Boy: "You wouldn't happen to have a matter disrupter?"`, lines[0])
 			}
 		}
@@ -108,7 +111,7 @@ func TestTalkQuips(t *testing.T) {
 				// test the actual converation choices printed
 				player.Go("print conversation choices", boy)
 				lines := game.FlushOutput()
-				require.Len(t, lines, 2)
+				require.True(t, len(lines) > 2)
 
 				// test the selection
 				if err := game.RunInput("2"); assert.NoError(t, err, "handling menu") {

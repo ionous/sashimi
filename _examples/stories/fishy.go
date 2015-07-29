@@ -31,8 +31,7 @@ func A_Day_For_Fresh_Sushi(s *Script) {
 	// 7
 	s.The("room",
 		Called("studio"),
-		Has("description", `{{if .Visited}}Decorated with Britney's signature flair. It was her innate sense of style that first made you forgive her that ludicrous name. And here it is displayed to the fullest: deep-hued drapes on the walls, the windows flung open with their stunning view of old Vienna, the faint smell of coffee that clings to everything. Her easel stands over by the windows, where the light is brightest.{{else}}This is Britney's studio. You haven't been around here for a while, because of how busy you've been with work, and she's made a few changes -- the aquarium in the corner, for instance. But it still brings back a certain emotional sweetness from the days when you had just met for the first time... when you used to spend hours on the sofa...{{paragraph}}You shake your head. No time for fantasy. Must feed fish.
-				{{end}}`))
+		Has("description", `{{if .Visited}}Decorated with Britney's signature flair. It was her innate sense of style that first made you forgive her that ludicrous name. And here it is displayed to the fullest: deep-hued drapes on the walls, the windows flung open with their stunning view of old Vienna, the faint smell of coffee that clings to everything. Her easel stands over by the windows, where the light is brightest.{{else}}This is Britney's studio. You haven't been around here for a while, because of how busy you've been with work, and she's made a few changes -- the aquarium in the corner, for instance. But it still brings back a certain emotional sweetness from the days when you had just met for the first time... when you used to spend hours on the sofa...{{paragraph}}You shake your head. No time for fantasy. Must feed fish.{{end}}`))
 	//  11
 	s.The("studio",
 		When("reporting smell").Always(func(g G.Play) {
@@ -125,7 +124,7 @@ func A_Day_For_Fresh_Sushi(s *Script) {
 		fishFood := g.The("fish food")
 		if !fishFood.Is("found") {
 			fishFood.IsNow("found")
-			standard.GoGive(g).Prop(fishFood).ToThe("player")
+			g.Go(standard.GiveThe(fishFood).To("the player"))
 			g.Say("Poking around the cloths reveals -- ha HA! -- a vehemently orange can of fish food.")
 			g.StopHere()
 		}
@@ -290,7 +289,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 					g.The("evil fish").Says(`"Oooh," says the fish. "No one ever changes the plant life in HERE. It's the same seaw--"`)
 					g.The("player").Says(`"Cut me a break and cork it," you reply tartly.`)
 					// FIX: report inserted?
-					standard.GoInsert(g).The("bouquet").IntoThe("vase")
+					g.Go(standard.Insert("the bouquet").Into("vase"))
 					g.StopHere()
 				}
 			}
@@ -344,10 +343,10 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 	s.The("aquarium", Contains("gravel"), Contains("seaweed"))
 	// 154a
 	s.The("prop", Called("gravel"), Has("description", "A lot of very small grey rocks."))
-	s.The("gravel", IsKnownAs("little rocks"))
+	s.The("gravel", IsKnownAs("little rocks"), Is("plural-named"))
 	// 154b
 	s.The("prop", Called("seaweed"), Has("description", "Fake plastic seaweed of the kind generally bought in stores for exactly this purpose."))
-	s.The("seaweed", IsKnownAs("weed"))
+	s.The("seaweed", IsKnownAs("weed"), Is("plural-named"))
 	// 156: The examine containers rule does nothing when examining the aquarium.
 	// interestingly, in Inform this completely hides the gravel and the seaweed even from the room description.
 	// I think that's got to be a bug ( maybe a change to inform since the story was written? )

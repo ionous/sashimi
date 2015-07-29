@@ -1,6 +1,7 @@
 package standard
 
 import (
+	"fmt"
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
 	"strings"
@@ -25,9 +26,9 @@ func assignTo(prop G.IObject, rel string, dest G.IObject) {
 
 //var articles = regexp.MustCompile(`^(The|A|An|Our|Some)[[:upper:]]`)
 //http://www.mudconnect.com/SMF/index.php?topic=74725.0
-func sin(s string, set ...string) (ok bool) {
+func startsWith(s string, set ...string) (ok bool) {
 	for _, x := range set {
-		if x == s {
+		if strings.HasPrefix(s, x) {
 			ok = true
 			break
 		}
@@ -37,11 +38,11 @@ func sin(s string, set ...string) (ok bool) {
 
 func startsVowel(str string) (vowelSound bool) {
 	s := strings.ToUpper(str)
-	if sin(s, "A", "E", "I", "O", "U") {
-		if !sin(s, "EU", "EW", "ONCE", "ONE", "OUI", "UBI", "UGAND", "UKRAIN", "UKULELE", "ULYSS", "UNA", "UNESCO", "UNI", "UNUM", "URA", "URE", "URI", "URO", "URU", "USA", "USE", "USI", "USU", "UTA", "UTE", "UTI", "UTO") {
+	if startsWith(s, "A", "E", "I", "O", "U") {
+		if !startsWith(s, "EU", "EW", "ONCE", "ONE", "OUI", "UBI", "UGAND", "UKRAIN", "UKULELE", "ULYSS", "UNA", "UNESCO", "UNI", "UNUM", "URA", "URE", "URI", "URO", "URU", "USA", "USE", "USI", "USU", "UTA", "UTE", "UTI", "UTO") {
 			vowelSound = true
 		}
-	} else if sin(s, "HEIR", "HERB", "HOMAGE", "HONEST", "HONOR", "HONOUR", "HORS", "HOUR") {
+	} else if startsWith(s, "HEIR", "HERB", "HOMAGE", "HONEST", "HONOR", "HONOUR", "HORS", "HOUR") {
 		vowelSound = true
 	}
 	return vowelSound
@@ -242,18 +243,46 @@ func init() {
 func listContents(g G.Play, header string, obj G.IObject) (printed bool) {
 	// if something described which is not scenery is on the noun and something which is not the player is on the noun:
 	// obviously a filterd callback, visitor, would be nice FilterList("contents", func() ... )
-	contents := obj.ObjectList("contents")
 	// FIX: if something has scenery objets, they appear as contents,
 	// but then the list is empty. ( ex. lab coat, but it might happen elsewhere )
 	// we'd maybe need to know if something printed?
-	if len(contents) > 0 {
+	if contents := obj.ObjectList("contents"); len(contents) > 0 {
 		g.Say(header, obj.Text("Name"), "is:")
 		for _, content := range contents {
 			content.Go("print description")
 		}
 		printed = true
+		g.Say(" ")
 	}
 	return printed
+}
+
+func Name(g G.Play, which string, status func(obj G.IObject) string) string {
+	obj := g.The(which)
+	text := obj.Text("Name")
+	if obj.Is("proper-named") {
+		text = strings.Title(text)
+	} else {
+		article := obj.Text("indefinite article")
+		if article == "" {
+			if obj.Is("plural-named") {
+				article = "Some"
+			} else if startsVowel(text) {
+				article = "An"
+			} else {
+				article = "A"
+			}
+		}
+		text = strings.Join([]string{article, strings.ToLower(text)}, " ")
+	}
+	if status == nil {
+		text = text + "."
+	} else if s := status(obj); s != "" {
+		text = fmt.Sprintf("%s (%s)", text, s)
+	} else {
+		text = text + "."
+	}
+	return text
 }
 
 //
@@ -281,22 +310,8 @@ func init() {
 		s.The("objects",
 			Can("print name").And("printing name text").RequiresNothing(),
 			To("print name", func(g G.Play) {
-				obj := g.The("object")
-				text := obj.Text("Name")
-				if obj.Is("proper-named") {
-					text = strings.Title(text)
-				} else {
-					article := obj.Text("indefinite article")
-					if article == "" {
-						if startsVowel(text) {
-							article = "An"
-						} else {
-							article = "A"
-						}
-					}
-					text = strings.Join([]string{article, strings.ToLower(text)}, " ")
-				}
-				g.Say(text + ".")
+				text := Name(g, "object", nil)
+				g.Say(text)
 			}))
 
 		s.The("containers",
@@ -305,28 +320,35 @@ func init() {
 				// FIX: conditional return instead of Always?
 				// or some way ( dependency injection ) to get at the event object
 				// of course, rules producing values and stacks might work too.
-				this := g.The("container")
-				list := this.ObjectList("contents")
 				// FIX: a container is an opener... where do we print the opener status name
 				// put this on doors for now.
-				if this.Is("transparent") && len(list) == 0 {
-					g.Say(this.Text("Name"), "(empty)")
-				} else {
-					g.Say(this.Text("Name"))
-				}
+				text := Name(g, "container", func(obj G.IObject) (status string) {
+					list := obj.ObjectList("contents")
+					if obj.Is("transparent") && len(list) == 0 {
+						status = "empty"
+					}
+					return status
+				})
+				g.Say(text)
 				g.StopHere()
 			}))
 
 		s.The("doors",
 			When("printing name text").
 				Always(func(g G.Play) {
-				this := g.The("door")
-				if this.Is("openable") {
-					x := map[bool]string{true: "(open)", false: "(closed)"}
-					status := x[this.Is("open")]
-					g.Say(this.Text("Name"), status)
-					g.StopHere()
-				}
+				text := Name(g, "door", func(obj G.IObject) (status string) {
+					if obj.Is("openable") {
+						if obj.Is("open") {
+							status = "open"
+						} else {
+							status = "closed"
+						}
+					}
+					return status
+				})
+
+				g.Say(text)
+				g.StopHere()
 			}))
 
 		s.The("rooms",
@@ -335,8 +357,13 @@ func init() {
 				room := g.The("room")
 				g.Say(Lines("", room.Text("Name")))
 				g.Say(Lines(room.Text("description"), ""))
-				if contents := room.ObjectList("contents"); len(contents) > 0 {
+				// FIX? uses 1 to exclude the player....
+				// again, this happens because we dont know if print description actually did anything (re:scenery, etc.)
+				if contents := room.ObjectList("contents"); len(contents) > 1 {
 					g.Say("You can see:")
+					if Debugging {
+						fmt.Println(contents)
+					}
 					for _, obj := range contents {
 						obj.Go("print description")
 					}
