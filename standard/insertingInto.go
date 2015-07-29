@@ -6,6 +6,35 @@ import (
 	. "github.com/ionous/sashimi/script"
 )
 
+// FIX: make like GoMove, etc.
+func GoInsert(g G.Play) InsertPhrase {
+	return InsertPhrase{g: g}
+}
+
+func (insert InsertPhrase) Prop(prop G.IObject) InsertIntoPhrase {
+	insert.prop = prop
+	return InsertIntoPhrase(insert)
+}
+
+func (insert InsertPhrase) The(prop string) InsertIntoPhrase {
+	return insert.Prop(insert.g.The(prop))
+}
+
+func (insert InsertIntoPhrase) Into(container G.IObject) {
+	assignTo(insert.prop, "enclosure", container)
+}
+
+func (insert InsertIntoPhrase) IntoThe(container string) {
+	insert.Into(insert.g.The(container))
+}
+
+type InsertPhrase struct {
+	g    G.Play
+	prop G.IObject
+}
+
+type InsertIntoPhrase InsertPhrase
+
 // from inform:
 // 	"insert applies into two things", doesnt use preferably held. [ possibly a mistake? ]
 //  "convert insert into drop where possible" ( if the second noun is down, or if the actor is in the second noun )
@@ -24,6 +53,7 @@ func init() {
 	AddScript(func(s *Script) {
 		// 1. source
 		s.The("actors",
+			// FIX? word-wise this is wrong ( see tickle-it-with, though it is "correct" )
 			Can("insert it into").And("inserting it into").RequiresOne("container").AndOne("prop"),
 			To("insert it into", ReflectWithContext("report insert")),
 			//  can't insert clothes being worn
@@ -47,7 +77,7 @@ func init() {
 			WhenCapturing("inserting it into", func(g G.Play) {
 				container, prop := g.The("action.Target"), g.The("action.Context")
 				if container == prop {
-					g.Say("can't insert something into itself.")
+					g.Say("You can't insert something into itself.")
 					g.StopHere()
 				}
 			}),
@@ -69,7 +99,7 @@ func init() {
 			Can("report insertion").And("reporting insertion").RequiresOne("actor").AndOne("container"),
 			To("report insertion", func(g G.Play) {
 				prop, container := g.The("action.Source"), g.The("action.Context")
-				Assign(prop, "enclosure", container)
+				GoInsert(g).Prop(prop).Into(container)
 				g.Say("You insert {{action.Source.Name}} into {{action.Context.Name}}.")
 			}))
 		// input: actor, container, prop

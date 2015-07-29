@@ -6,14 +6,7 @@ import (
 	. "github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/standard"
 	"reflect"
-	"strings"
 )
-
-func Lines(a ...string) string {
-	return strings.Join(a, "\n")
-}
-
-var Debugging bool = false
 
 type Conversation struct {
 	Interlocutor GosNilInterfacesAreAnnoying
@@ -23,9 +16,18 @@ type Conversation struct {
 }
 
 // FIX: replace  with player, go learn
-func Learn(g G.Play, fact string) {
+func GoLearn(g G.Play) FactPhrase {
+	return FactPhrase{g}
+}
+
+func (phrase FactPhrase) TheFact(fact string) {
+	g := phrase.g
 	con := g.Global("conversation").(*Conversation)
 	con.Memory.Learn(g.The(fact))
+}
+
+type FactPhrase struct {
+	g G.Play
 }
 
 func PlayerRecollects(g G.Play, fact string) bool {
@@ -49,6 +51,7 @@ func IsProhibitedBy(fact string) IFragment {
 }
 
 func discuss(how, other string) IFragment {
+	// FIX: a way to change the orgin?
 	return NewFunctionFragment(func(b SubjectBlock) error {
 		b.The("following quips",
 			Table("following", "indirectly-following-property", "leading").Has(
@@ -103,29 +106,9 @@ func init() {
 		s.The("actors",
 			Can("greet").And("greeting").RequiresOne("actor"),
 			To("greet", func(g G.Play) {
-				con := g.Global("conversation").(*Conversation)
 				greeter, greeted := g.The("action.Source"), g.The("action.Target")
-				if greeter == g.The("player") && greeted.Exists() {
-					if npc, alreadySpeaking := con.Interlocutor.Get(); !alreadySpeaking {
-						greeting := greeted.Object("greeting")
-						if Debugging {
-							fmt.Println("!", "Now talking to", greeted, "with", greeting)
-						}
-						con.Interlocutor.Set(greeted)
-						if greeting.Exists() {
-							// hrmmm....
-							//greeted.Go("discuss", greeting)
-							con.Queue.SetNextQuip(g, greeting)
-							con.History.PushQuip(greeting)
-						}
-					} else {
-						if npc == greeted {
-							g.Say("You're already speaking to them!")
-						} else {
-							g.Say("You're already speaking to someone!")
-						}
-					}
-				}
+				greeting := greeted.Object("greeting")
+				GoGreet(g).Introducing(greeter).To(greeted).With(greeting)
 			}))
 		s.Execute("greet", Matching("talk to {{something}}").Or("t|talk|greet|ask {{something}}"))
 
@@ -136,7 +119,7 @@ func init() {
 			To("depart", func(g G.Play) {
 				con := g.Global("conversation").(*Conversation)
 				if npc, ok := con.Interlocutor.Get(); ok {
-					if Debugging {
+					if standard.Debugging {
 						fmt.Println("!", g.The("actor"), "departing", npc)
 					}
 					con.History.ClearQuips()
@@ -149,10 +132,7 @@ func init() {
 		s.The("stories",
 			When("ending the turn").Always(func(g G.Play) {
 				con := g.Global("conversation").(*Conversation)
-				if npc, ok := con.Interlocutor.Get(); ok {
-					Converse(g)
-					g.The("player").Go("print conversation choices", npc)
-				}
+				con.Converse(g)
 			}))
 
 		s.The("actors",
@@ -163,7 +143,7 @@ func init() {
 			Can("report discuss").And("reporting discuss").RequiresOne("actor"),
 			To("report discuss", func(g G.Play) {
 				player, talker, quip := g.The("player"), g.The("actor"), g.The("quip")
-				if Debugging {
+				if standard.Debugging {
 					fmt.Println("!", talker, "discussing", quip)
 				}
 				con := g.Global("conversation").(*Conversation)
@@ -186,7 +166,7 @@ func init() {
 				player, talker, talkedTo := g.The("player"), g.The("action.Source"), g.The("action.Target")
 				if player == talker {
 					quips := GetPlayerQuips(g)
-					if Debugging {
+					if standard.Debugging {
 						fmt.Println("!", talker, "printing", talkedTo, quips)
 					}
 					for i, quip := range quips {
@@ -204,7 +184,7 @@ func init() {
 							err = fmt.Errorf("Please choose a number from the menu; number: %d of %d", choice, len(quips))
 						} else {
 							quip := quips[choice-1]
-							if Debugging {
+							if standard.Debugging {
 								fmt.Println("!", player, "chose", quip)
 							}
 							player.Go("discuss", quip)

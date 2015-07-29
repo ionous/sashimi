@@ -2,6 +2,7 @@ package standard
 
 import (
 	. "github.com/ionous/sashimi/game"
+	R "github.com/ionous/sashimi/runtime"
 )
 
 // touchable ceiling, visibility ceiling (visibility level count)
@@ -37,17 +38,24 @@ func Carrier(obj IObject) (carrier IObject, okay bool) {
 	return
 }
 
-//
 // find the location ( the outermost room ) of the passed object
-func Location(obj IObject) (parent IObject, okay bool) {
+func Locate(obj IObject) (where IObject) {
+	if p, ok := _location(obj); ok {
+		where = p
+	} else {
+		where = R.NullObject("location")
+	}
+	return where
+}
+func _location(obj IObject) (parent IObject, okay bool) {
 	if room := obj.Object("whereabouts"); room.Exists() {
 		parent, okay = room, true
 	} else if carrier, ok := Carrier(obj); ok {
-		parent, okay = Location(carrier)
+		parent, okay = _location(carrier)
 	} else if supporter := obj.Object("support"); supporter.Exists() {
-		parent, okay = Location(supporter)
+		parent, okay = _location(supporter)
 	} else if container := obj.Object("enclosure"); container.Exists() {
-		parent, okay = Location(container)
+		parent, okay = _location(container)
 	}
 	return
 }

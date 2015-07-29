@@ -3,6 +3,7 @@ package extensions
 import (
 	"fmt"
 	G "github.com/ionous/sashimi/game"
+	"github.com/ionous/sashimi/standard"
 )
 
 type QuipQueue struct {
@@ -42,7 +43,7 @@ func (q *QuipQueue) Len() int {
 
 // UpdateNextQuips for all npcs who have a queued quip.
 func (q *QuipQueue) UpdateNextQuips(g G.Play, qm QuipMemory) {
-	if Debugging {
+	if standard.Debugging {
 		fmt.Println(fmt.Sprintf("! updating %d quips", len(q.quips)))
 	}
 	// from "slice tricks". this reuses the memory of the quip queue.

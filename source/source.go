@@ -1,31 +1,19 @@
 package source
 
-import (
-	"fmt"
-	"github.com/ionous/sashimi/util/errutil"
-)
-
 //
-// Placeholder for information about the location of definitions
-// the runtime might implement an interface for blocks, or we could use stringer
-// (ex. for handling compile time or run time errors )
+// Code records the origin of statements.
 //
 type Code string
 
-func (code Code) Errorf(format string, a ...interface{}) error {
-	return errutil.Func(func() string {
-		s := fmt.Errorf(format, a...)
-		return fmt.Sprintf("Error (%s): %s", code, s)
-	})
-}
-
+//
+// IStatement provides a uniform way of locating user script code.
 //
 type IStatement interface {
-	Source() Code // placeholder
+	Source() Code
 }
 
 //
-//
+// Statements contains all possible user script code.
 //
 type Statements struct {
 	ActionHandlers []RunStatement
@@ -42,11 +30,15 @@ type Statements struct {
 	Globals        []GeneratorStatement
 }
 
+//
+// BuildingBlocks enables public, one-time-only creation of Statements.
+//
 type BuildingBlocks struct {
 	statements Statements
 }
 
-func (blocks *BuildingBlocks) GetStatements() Statements {
+//
+func (blocks *BuildingBlocks) Statements() Statements {
 	return blocks.statements
 }
 
@@ -68,6 +60,7 @@ func (blocks *BuildingBlocks) NewActionHandler(fields RunFields, source Code,
 	return err
 }
 
+//
 func (blocks *BuildingBlocks) NewAlias(fields AliasFields, source Code,
 ) (err error) {
 	a := AliasStatement{fields, source}

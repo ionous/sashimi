@@ -1,6 +1,8 @@
 package script
 
-import "strings"
+import (
+	"strings"
+)
 
 // FIX: move these into a standard rules extension package?
 
@@ -15,9 +17,9 @@ func Going(direction string) GoingFragment {
 //
 // Causes directional movement to pass through an explicit exit door.
 //
-func (this GoingFragment) Through(door string) GoesFromFragment {
-	this.fromDoor = door
-	return this.GoesFromFragment
+func (goingFrom GoingFragment) Through(door string) GoesFromFragment {
+	goingFrom.fromDoor = door
+	return goingFrom.GoesFromFragment
 }
 
 //
@@ -31,23 +33,23 @@ func Through(door string) GoesFromFragment {
 //
 // Establishes a two-way connection between the room From() and the passed destination.
 //
-func (this GoesFromFragment) ConnectsTo(room string) GoesToFragment {
-	return GoesToFragment{from: this, toRoom: room, twoWay: true}
+func (goesFrom GoesFromFragment) ConnectsTo(room string) GoesToFragment {
+	return GoesToFragment{from: goesFrom, toRoom: room, twoWay: true}
 }
 
 //
 // Establishes a one-way connection between the room From() and the passed destination.
 //
-func (this GoesFromFragment) ArrivesAt(room string) GoesToFragment {
-	return GoesToFragment{from: this, toRoom: room}
+func (goesFrom GoesFromFragment) ArrivesAt(room string) GoesToFragment {
+	return GoesToFragment{from: goesFrom, toRoom: room}
 }
 
 //
 // Optional entrance door in the destination room.
 //
-func (this GoesToFragment) Door(door string) IFragment {
-	this.toDoor = door
-	return this
+func (goesTo GoesToFragment) Door(door string) IFragment {
+	goesTo.toDoor = door
+	return goesTo
 }
 
 type GoingFragment struct {
@@ -68,9 +70,9 @@ type GoesToFragment struct {
 //
 // implements IFragment for use in The()
 //
-func (this GoesToFragment) MakeStatement(b SubjectBlock) (err error) {
-	from := newFromSite(b.subject, this.from.fromDoor, this.from.fromDir)
-	to := newToSite(this.toRoom, this.toDoor, this.from.fromDir)
+func (goesTo GoesToFragment) MakeStatement(b SubjectBlock) (err error) {
+	from := newFromSite(b.subject, goesTo.from.fromDoor, goesTo.from.fromDir)
+	to := newToSite(goesTo.toRoom, goesTo.toDoor, goesTo.from.fromDir)
 
 	// A Room (contains) Doors
 	if e := from.makeSite(b); e != nil {
@@ -82,20 +84,20 @@ func (this GoesToFragment) MakeStatement(b SubjectBlock) (err error) {
 	if err == nil {
 		if _, e := b.The(from.door.str, Has("destination", to.door.str)); e != nil {
 			err = e
-		} else if this.twoWay {
+		} else if goesTo.twoWay {
 			_, err = b.The(to.door.str, Has("destination", from.door.str))
 		}
 	}
 	// A Room+Travel Direction (has a matching) Exit
 	// ( if you do not have an exit, one will be appointed for you. )
 	if err == nil {
-		dir := xDir{this.from.fromDir}
+		dir := xDir{goesTo.from.fromDir}
 		if dir.isSpecified() {
 			if _, e := dir.makeDir(b); e != nil {
 				err = e
 			} else if _, e := b.The(from.room.str, Has(dir.via(), from.door.str)); e != nil {
 				err = e
-			} else if this.twoWay {
+			} else if goesTo.twoWay {
 				_, err = b.The(to.room.str, Has(dir.rev(), from.door.str))
 			}
 		}
@@ -105,18 +107,20 @@ func (this GoesToFragment) MakeStatement(b SubjectBlock) (err error) {
 
 // helper to create exit door if needed
 func newFromSite(room, door, dir string) xSite {
-	if door == "" {
+	gen := door == ""
+	if gen {
 		door = strings.Join([]string{room, "exit", dir}, "-")
 	}
-	return xSite{xRoom{room}, xDoor{door}}
+	return xSite{xRoom{room}, xDoor{door, gen}}
 }
 
 // helper to create entrance door if needed
 func newToSite(room, door, dir string) xSite {
-	if door == "" {
+	gen := door == ""
+	if gen {
 		door = strings.Join([]string{room, "enter", dir}, "-")
 	}
-	return xSite{xRoom{room}, xDoor{door}}
+	return xSite{xRoom{room}, xDoor{door, gen}}
 }
 
 type xSite struct {
@@ -124,11 +128,13 @@ type xSite struct {
 	door xDoor
 }
 
-func (this xSite) makeSite(b SubjectBlock) (err error) {
-	if _, e := b.The("room", Called(this.room.str), Exists()); e != nil {
+func (x xSite) makeSite(b SubjectBlock) (err error) {
+	if _, e := b.The("room", Called(x.room.str), Exists()); e != nil {
 		err = e
-	} else {
-		_, err = b.The("door", Called(this.door.str), In(this.room.str), Exists())
+	} else if _, e = b.The("door", Called(x.door.str), In(x.room.str), Exists()); e != nil {
+		err = e
+	} else if x.door.gen {
+		_, err = b.Our(x.door.str, Is("scenery"))
 	}
 	return err
 }
@@ -139,24 +145,25 @@ type xRoom struct {
 
 type xDoor struct {
 	str string
+	gen bool
 }
 
 type xDir struct {
 	str string
 }
 
-func (this xDir) isSpecified() bool {
-	return this.str != ""
+func (x xDir) isSpecified() bool {
+	return x.str != ""
 }
 
-func (this xDir) makeDir(b SubjectBlock) (int, error) {
-	return b.The("direction", Called(this.str), Exists())
+func (x xDir) makeDir(b SubjectBlock) (int, error) {
+	return b.The("direction", Called(x.str), Exists())
 }
 
-func (this xDir) via() string {
-	return this.str + "-via"
+func (x xDir) via() string {
+	return x.str + "-via"
 }
 
-func (this xDir) rev() string {
-	return this.str + "-rev-via"
+func (x xDir) rev() string {
+	return x.str + "-rev-via"
 }

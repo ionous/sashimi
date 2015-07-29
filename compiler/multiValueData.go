@@ -19,6 +19,7 @@ type MultiValueData struct {
 	table      *MultiValueTable
 	instanceId ident.Id
 	values     []interface{}
+	src        S.Code
 }
 
 var userNameColumn ident.Id = ident.MakeId("name")
@@ -65,7 +66,7 @@ func makeValueTable(classes *ClassFactory, class string, columns []string) (
 func (mvd *MultiValueTable) addRow(instanceFactory *InstanceFactory, code S.Code, values []interface{},
 ) (ret MultiValueData, err error) {
 	if vcount := len(values); vcount != mvd.count {
-		err = code.Errorf("mismatched columns %d values, %d columns", vcount, mvd.count)
+		err = fmt.Errorf("mismatched columns %d values, %d columns", vcount, mvd.count)
 	} else {
 		var name string
 		// build a valid name
@@ -74,13 +75,13 @@ func (mvd *MultiValueTable) addRow(instanceFactory *InstanceFactory, code S.Code
 		} else if str, ok := val.(string); ok {
 			name = str
 		} else {
-			err = code.Errorf("name column doesnt't contain a string %T", val)
+			err = fmt.Errorf("name column doesnt't contain a string %T", val)
 		}
 		// request an instance of that name
 		if inst, e := instanceFactory.addInstanceRef(mvd.cls, name, "", code); e != nil {
 			err = e
 		} else {
-			ret = MultiValueData{mvd, inst.id, values}
+			ret = MultiValueData{mvd, inst.id, values, code}
 		}
 		// values will be merged later...
 	}

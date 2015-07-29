@@ -19,6 +19,9 @@ func init() {
 					g.Say(target.Text("Name"), "=>", relation, parent.Text("Name"))
 				}
 			}))
+		// FIX: sometimes parent of -- matches unexpected objects
+		// >parent of automat
+		//	hall-automat-door => whereabouts main hallway
 
 		s.Execute("print direct parent",
 			Matching("parent of {{something}}"))

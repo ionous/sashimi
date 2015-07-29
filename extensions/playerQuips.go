@@ -3,6 +3,7 @@ package extensions
 import (
 	"fmt"
 	G "github.com/ionous/sashimi/game"
+	"github.com/ionous/sashimi/standard"
 	"sort"
 )
 
@@ -53,7 +54,7 @@ func (qs QuipSort) Sort() []G.IObject {
 	ret := make([]G.IObject, len(qs.quips))
 	for i, s := range qs.quips {
 		ret[i] = s.quip
-		if Debugging {
+		if standard.Debugging {
 			fmt.Println(fmt.Sprintf(
 				"%s replies:%t, repeats:%t, directly:%t, rank:%d",
 				s.quip, s.replies, s.repeats, s.directly, s.rank))

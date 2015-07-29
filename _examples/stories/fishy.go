@@ -125,7 +125,7 @@ func A_Day_For_Fresh_Sushi(s *Script) {
 		fishFood := g.The("fish food")
 		if !fishFood.Is("found") {
 			fishFood.IsNow("found")
-			standard.Give(g.The("player"), fishFood)
+			standard.GoGive(g).Prop(fishFood).ToThe("player")
 			g.Say("Poking around the cloths reveals -- ha HA! -- a vehemently orange can of fish food.")
 			g.StopHere()
 		}
@@ -253,7 +253,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 		}))
 	// [111-112)
 	s.The("supporter", Called("table"), Is("scenery"), In("the studio"))
-	s.The("container", Called("vase"), Is("open").And("unopenable"))
+	s.The("container", Called("vase"), Is("open").And("not openable"))
 	// NOTE: interstingly: because the table is scenery, once we take the vase: it becomes invisible; this is just like the original story.
 	s.The("table", Supports("vase"))
 	// [113-114)
@@ -290,7 +290,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 					g.The("evil fish").Says(`"Oooh," says the fish. "No one ever changes the plant life in HERE. It's the same seaw--"`)
 					g.The("player").Says(`"Cut me a break and cork it," you reply tartly.`)
 					// FIX: report inserted?
-					standard.Assign(g.The("bouquet"), "enclosure", g.The("vase"))
+					standard.GoInsert(g).The("bouquet").IntoThe("vase")
 					g.StopHere()
 				}
 			}
@@ -337,7 +337,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 		Is("transparent").And("open").And("fixed in place"), // note, you can take the aquarium in the original story, but some of the fish lines dont make sense that way.
 		In("the studio"))
 	// 152b
-	s.The("aquarium", Is("unopenable"),
+	s.The("aquarium", Is("not openable"),
 		Has("brief", "In one corner of the room, a large aquarium bubbles in menacing fashion."), Has("description", "A very roomy aquarium, large enough to hold quite a variety of colorful sealife -- if any yet survived."),
 		IsKnownAs("tank"),
 	)

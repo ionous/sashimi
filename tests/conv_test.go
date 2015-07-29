@@ -68,10 +68,10 @@ func TestDiscuss(t *testing.T) {
 				// have the boy say something.
 				boy.Go("discuss", boy.Object("greeting"))
 				require.Equal(t, 1, con.Queue.Len())
-				Converse(g)
+				con.Converse(g)
 				// clear the test, and make sure the queue is empty.
 				lines := game.FlushOutput()
-				require.Len(t, lines, 1)
+				require.Len(t, lines, 3)
 				require.Equal(t, `The Alien Boy: "You wouldn't happen to have a matter disrupter?"`, lines[0])
 			}
 		}
@@ -154,7 +154,7 @@ func TestDirectFollows(t *testing.T) {
 		g := R.NewGameAdapter(game.Game)
 		if boy := g.The("alien boy"); assert.True(t, boy.Exists(), "found boy") {
 			if player := g.The("player"); assert.True(t, player.Exists(), "found player") {
-				player.Go("greet", boy)
+				GoGreet(g).Introducing(player).To(boy).WithDefault()
 
 				con := g.Global("conversation").(*Conversation)
 				latest := con.History.MostRecent(g)

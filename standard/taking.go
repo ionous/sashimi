@@ -61,7 +61,7 @@ func init() {
 							return
 						}
 					}
-					Give(actor, prop)
+					GoGive(g).Prop(prop).To(actor)
 					// separate report action?
 					if actor == g.The("player") {
 						g.Say("You take the {{action.Source.Name}}.")

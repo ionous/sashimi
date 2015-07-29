@@ -11,9 +11,10 @@ func init() {
 		s.The("props",
 			Called("openers"),
 			AreEither("open").Or("closed"),
-			AreEither("openable").Or("unopenable"),
+			// note: unopenable sounds like it cant become open, rather than it cannot be opened (by someone).
+			AreEither("openable").Or("not openable"),
 			AreEither("locakable").Or("not lockable").Usually("not lockable"),
-			AreEither("locked").Or("unlocked").Usually("unlocked"),
+			AreEither("unlocked").Or("locked"),
 		)
 
 		//

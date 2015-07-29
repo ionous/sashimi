@@ -3,24 +3,24 @@ package standard
 import (
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
+	"strings"
 )
 
+// InitStandardLibrary to ensure all standard library scripts are properly created.
 func InitStandardLibrary() *Script {
+	// the side effect of importing the standard library
+	// adds the scripts to the list of those which get initialized.
 	return InitScripts()
 }
 
 // FIX: there's no error testing here and its definitely possible to screw things up.
-func Assign(prop G.IObject, rel string, dest G.IObject) {
+func assignTo(prop G.IObject, rel string, dest G.IObject) {
 	// sure hope there's no errors, would relation by value remove the need for transaction?
 	if _, parentRel := DirectParent(prop); parentRel != "" {
-		// note: an object like the fishFood isnt "in the world", and doesnt have an owner field to clear.
+		// note: an object like the fishFood isnt "in the world", and doest have an owner field to clear.
 		prop.Set(parentRel, nil)
 	}
 	prop.Set(rel, dest)
-}
-
-func Give(actor G.IObject, prop G.IObject) {
-	Assign(prop, "owner", actor)
 }
 
 //
@@ -37,7 +37,7 @@ func init() {
 
 		// vs. descriptions in "kind"
 		// it seems to make sense for now to have two separate description fields.
-		// rooms like to say their description, while objects like to say their brief initial appearence ( or name, if there's none. )
+		// rooms like to say their description, while objects like to say their brief initial appearance ( or name, if there's none. )
 		s.The("rooms",
 			Have("description", "text"))
 
@@ -112,9 +112,9 @@ func init() {
 			HaveMany("contents", "objects").
 				Implying("objects", HaveOne("enclosure", "container")),
 			AreEither("opaque").Or("transparent"),
-		//AreEither("enterable").Or("not enterable"),
-		//AreEither("lockable").Or("unlockable"),
-		//AreEither("locked").Or("unlocked"),
+			//AreEither("enterable").Or("not enterable"),
+			AreEither("lockable").Or("not lockable").Usually("not lockable"),
+			AreEither("locked").Or("unlocked").Usually("unlocked"),
 		)
 
 		s.The("props",
@@ -261,6 +261,8 @@ func init() {
 				// of course, rules producing values and stacks might work too.
 				this := g.The("container")
 				list := this.ObjectList("contents")
+				// FIX: a container is an opener... where do we print the opener status name
+				// put this on doors for now.
 				if this.Is("transparent") && len(list) == 0 {
 					g.Say(this.Text("Name"), "(empty)")
 				} else {
@@ -269,21 +271,30 @@ func init() {
 				g.StopHere()
 			}))
 
+		s.The("doors",
+			When("printing name text").
+				Always(func(g G.Play) {
+				this := g.The("door")
+				if this.Is("openable") {
+					x := map[bool]string{true: "(open)", false: "(closed)"}
+					status := x[this.Is("open")]
+					g.Say(this.Text("Name"), status)
+					g.StopHere()
+				}
+			}))
+
 		s.The("rooms",
-			Can("report the view").And("room describing").RequiresNothing(),
+			Can("report the view").And("reporting the view").RequiresNothing(),
 			To("report the view", func(g G.Play) {
 				room := g.The("room")
 				g.Say(room.Text("Name"))
-				//
-				desc := room.Text("description")
-				if desc == "" {
-					// FIX: this .Text("Name") is confusing: possibly support obj.Text("name") instead?
-					desc = room.Text("Name")
-				}
-				g.Say(desc)
+				g.Say(room.Text("description"))
 				for _, obj := range room.ObjectList("contents") {
 					obj.Go("print description")
 				}
+				// FIX: duplicated in stories describe the first room
+				room.IsNow("visited")
+				g.The("status bar").SetText("left", strings.Title(room.Text("Name")))
 			}))
 	})
 }

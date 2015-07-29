@@ -1,32 +1,49 @@
 package standard
 
 import (
+	"fmt"
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
-	"log"
-	"strings"
 )
 
 var directions []string = []string{"north", "south", "east", "west", "up", "down"}
 
-type MovePhrase struct {
-	actor G.IObject
-}
+var Debugging = false
 
 // FIX: like Learn() convert to a game action: actor.Go("move to", dest)
-func Move(actor G.IObject) MovePhrase {
-	return MovePhrase{actor}
-}
-func (move MovePhrase) To(dest G.IObject) (changed bool) {
-	if ok := move.actor.Object("whereabouts") != dest; ok {
-		Assign(move.actor, "whereabouts", dest)
-		changed = true
-	}
-	return changed
+func GoMove(g G.Play) MovePhrase {
+	return MovePhrase{g: g}
 }
 
+func (move MovePhrase) Object(obj G.IObject) MoveToPhrase {
+	move.actor = obj
+	return MoveToPhrase(move)
+}
+func (move MovePhrase) The(obj string) MoveToPhrase {
+	return move.Object(move.g.The(obj))
+}
+
+func (move MoveToPhrase) To(dest G.IObject) {
+	assignTo(move.actor, "whereabouts", dest)
+}
+func (move MoveToPhrase) ToThe(dest string) {
+	move.To(move.g.The(dest))
+}
+
+func (move MoveToPhrase) OutOfWorld() {
+	assignTo(move.actor, "whereabouts", nil)
+}
+
+type MovePhrase struct {
+	g     G.Play
+	actor G.IObject
+}
+type MoveToPhrase MovePhrase
+
 func TryMove(actor G.IObject, dir G.IObject, exit G.IObject) {
-	log.Printf("moving %s through %s", dir, exit)
+	if Debugging {
+		fmt.Printf("moving %s through %s", dir, exit)
+	}
 	actor.Go("go through it", exit)
 }
 
@@ -92,7 +109,9 @@ func init() {
 							TryMove(actor, dir, sources[0])
 						}
 					} else {
-						log.Printf("couldnt find %s exit", dir)
+						if Debugging {
+							fmt.Printf("couldnt find %s exit", dir)
+						}
 					}
 				}
 			}))
@@ -105,17 +124,21 @@ func init() {
 			To("report pass through", func(g G.Play) {
 				door, actor := g.The("action.Source"), g.The("action.Target")
 				if dest := door.Object("destination"); !dest.Exists() {
-					log.Print("couldnt find destination")
-				} else if room := dest.Object("whereabouts"); !room.Exists() {
-					log.Print("couldnt find whereabouts")
-				} else {
-					log.Print("moving ", actor, " to ", room)
-					if Move(actor).To(room) {
-						// FIX: duplicated in stories describe the first room
-						room.Go("report the view")
-						room.IsNow("visited")
-						g.The("status bar").SetText("left", strings.Title(room.Text("Name")))
+					if Debugging {
+						fmt.Print("couldnt find destination")
 					}
+				} else if room := dest.Object("whereabouts"); !room.Exists() {
+					if Debugging {
+						fmt.Print("couldnt find whereabouts")
+					}
+				} else {
+					if Debugging {
+						fmt.Print("moving ", actor, " to ", room)
+					}
+					// FIX: player property change?
+					// at the very least a move action.
+					GoMove(g).Object(actor).To(room)
+					room.Go("report the view")
 				}
 			}))
 		// understandings:

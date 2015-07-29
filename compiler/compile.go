@@ -87,7 +87,7 @@ func (ctx *_Compiler) processAssertBlock(assert S.AssertionStatement) (processed
 	if class, ok := ctx.classes.findBySingularName(fields.Owner); ok {
 		name, longName := fields.Called, longName
 		if c, e := ctx.instances.addInstanceRef(class, name, longName, source); e != nil {
-			err = e
+			err = SourceError(assert.Source(), e)
 		} else if c != nil {
 			processed = true
 		}
@@ -99,7 +99,7 @@ func (ctx *_Compiler) processAssertBlock(assert S.AssertionStatement) (processed
 			plural, single := longName, fields.GetOption("singular name", "")
 			c, e := ctx.classes.addClassRef(parent, plural, single)
 			if e != nil {
-				err = e
+				err = SourceError(assert.Source(), e)
 			} else if c != nil {
 				processed = true
 			}
@@ -178,8 +178,8 @@ func (ctx *_Compiler) newCallback(
 	action *M.ActionInfo,
 	cb G.Callback,
 	options M.ListenerOptions,
-
-) (ret *M.ListenerCallback, err error,
+) (
+	ret *M.ListenerCallback, err error,
 ) {
 	if cls, _ := classes.FindClass(owner); cls != nil {
 		ret = M.NewClassCallback(cls, action, cb, options)
@@ -212,7 +212,7 @@ func (ctx *_Compiler) makeActionHandlers(classes M.ClassMap, instances M.Instanc
 
 		cb, e := ctx.newCallback(f.Owner, classes, instances, action, f.Callback, options)
 		if e != nil {
-			err = errutil.Append(err, e)
+			err = errutil.Append(err, SourceError(statement.Source(), e))
 			continue
 		}
 		callbacks = append(callbacks, cb)
@@ -228,7 +228,7 @@ func (ctx *_Compiler) makeEventListeners(events M.EventMap, classes M.ClassMap, 
 		r := l.Fields()
 		action, e := events.FindEventByName(r.Event)
 		if e != nil {
-			err = errutil.Append(err, e)
+			err = errutil.Append(err, SourceError(l.Source(), e))
 			continue
 		}
 		var options M.ListenerOptions
@@ -243,7 +243,7 @@ func (ctx *_Compiler) makeEventListeners(events M.EventMap, classes M.ClassMap, 
 		}
 		cb, e := ctx.newCallback(r.Owner, classes, instances, action, r.Callback, options)
 		if e != nil {
-			err = errutil.Append(err, e)
+			err = errutil.Append(err, SourceError(l.Source(), e))
 			continue
 		}
 		callbacks = append(callbacks, cb)
@@ -320,9 +320,11 @@ func (ctx *_Compiler) compile() (*M.Model, error) {
 	for _, prop := range ctx.src.Properties {
 		fields := prop.Fields()
 		if class, ok := ctx.classes.findByPluralName(fields.Class); !ok {
-			err = errutil.Append(err, ClassNotFound(fields.Class))
+			e := SourceError(prop.Source(), ClassNotFound(fields.Class))
+			err = errutil.Append(err, e)
 		} else {
 			if _, e := class.addProperty(prop.Source(), fields); e != nil {
+				e := SourceError(prop.Source(), e)
 				err = errutil.Append(err, e)
 			}
 		}
@@ -387,12 +389,12 @@ func (ctx *_Compiler) compile() (*M.Model, error) {
 		fields := mvs.Fields()
 		// make a table to process the rows of data for this class
 		if table, e := makeValueTable(ctx.classes, fields.Owner, fields.Columns); e != nil {
-			err = errutil.Append(err, e)
+			err = errutil.Append(err, SourceError(mvs.Source(), e))
 		} else {
 			// walk those rows
 			for _, row := range fields.Rows {
 				if data, e := table.addRow(ctx.instances, mvs.Source(), row); e != nil {
-					err = errutil.Append(err, e)
+					err = errutil.Append(err, SourceError(mvs.Source(), e))
 				} else {
 					multiValueData = append(multiValueData, data)
 				}
@@ -411,7 +413,7 @@ func (ctx *_Compiler) compile() (*M.Model, error) {
 	ctx.log.Println("merging instance tables")
 	for _, mvd := range multiValueData {
 		if e := mvd.mergeInto(partials); e != nil {
-			err = errutil.Append(err, e)
+			err = errutil.Append(err, SourceError(mvd.src, e))
 		}
 	}
 	if err != nil {

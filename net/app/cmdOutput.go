@@ -109,7 +109,7 @@ func (this *CommandOutput) ScriptSays(lines []string) {
 
 //
 // Log the passed message locally, doesn't generate a client command.
-//
+// FIX: a log interface -- perhaps as an anonymous member -- then we could have logf, etc.
 func (this *CommandOutput) Log(message string) {
 	os.Stderr.WriteString(message)
 }

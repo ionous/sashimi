@@ -120,15 +120,15 @@ func (cls *PendingClass) addRelative(fields S.RelativeFields, src S.Code,
 	err error,
 ) {
 	if other, isMany, e := cls.classes.findByRelativeName(fields.RelatesTo, fields.Hint); e != nil {
-		err = e
+		err = SourceError(src, e)
 	} else {
 		name := fields.Property
 		if id, e := cls.names.addRef(name, "relation", src); e != nil {
-			err = e
+			err = SourceError(src, e)
 		} else {
 			relatives := cls.classes.relatives
 			if relId, e := relatives.addName(fields.Relation, "relation"); e != nil {
-				err = e
+				err = SourceError(src, e)
 			} else {
 				// create the relative property pointing to the generated relation data
 				rel := M.RelativeFields{
@@ -144,7 +144,8 @@ func (cls *PendingClass) addRelative(fields S.RelativeFields, src S.Code,
 					func(old IBuildProperty) (err error) {
 						if old, existed := old.(RelativeBuilder); existed {
 							if old.fields != rel {
-								err = fmt.Errorf("relation redefined. was %s, now %s", old, rel)
+								e := fmt.Errorf("relation redefined. was %s, now %s", old, rel)
+								err = SourceError(src, e)
 							}
 						}
 						return
