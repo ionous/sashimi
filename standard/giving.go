@@ -5,32 +5,28 @@ import (
 	. "github.com/ionous/sashimi/script"
 )
 
-func GoGive(g G.Play) GivePropPhrase {
-	return GivePropPhrase{g: g}
+func Give(prop string) GivePropPhrase {
+	return GivePropPhrase{prop: prop}
+}
+func GiveThe(prop G.IObject) GivePropPhrase {
+	return GivePropPhrase{prop: prop.Id().String()}
 }
 
-func (give GivePropPhrase) Prop(prop G.IObject) GivePropToPhrase {
-	give.prop = prop
-	return GivePropToPhrase(give)
-}
-func (give GivePropPhrase) The(prop string) GivePropToPhrase {
-	return give.Prop(give.g.The(prop))
+func (give GivePropPhrase) To(actor string) GivingPhrase {
+	give.actor = actor
+	return GivingPhrase(give)
 }
 
-func (give GivePropToPhrase) To(actor G.IObject) {
-	assignTo(give.prop, "owner", actor)
-}
-
-func (give GivePropToPhrase) ToThe(actor string) {
-	give.To(give.g.The(actor))
+func (give GivingPhrase) Execute(g G.Play) {
+	prop, actor := g.The(give.prop), g.The(give.actor)
+	assignTo(prop, "owner", actor)
 }
 
 type givePhraseData struct {
-	g    G.Play
-	prop G.IObject
+	prop, actor string
 }
 type GivePropPhrase givePhraseData
-type GivePropToPhrase givePhraseData
+type GivingPhrase givePhraseData
 
 // all infom giving rules:
 // 	"applies to one carried thing and one visible thing."

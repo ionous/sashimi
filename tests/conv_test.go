@@ -154,7 +154,7 @@ func TestDirectFollows(t *testing.T) {
 		g := R.NewGameAdapter(game.Game)
 		if boy := g.The("alien boy"); assert.True(t, boy.Exists(), "found boy") {
 			if player := g.The("player"); assert.True(t, player.Exists(), "found player") {
-				GoGreet(g).Introducing(player).To(boy).WithDefault()
+				g.Go(Introduce("player").To("alien boy").WithDefault())
 
 				con := g.Global("conversation").(*Conversation)
 				latest := con.History.MostRecent(g)

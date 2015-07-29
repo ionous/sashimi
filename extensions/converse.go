@@ -1,11 +1,16 @@
 package extensions
 
 import (
+	"fmt"
 	G "github.com/ionous/sashimi/game"
+	"github.com/ionous/sashimi/standard"
 )
 
 func (con *Conversation) Converse(g G.Play) {
 	if npc, ok := con.Interlocutor.Get(); ok {
+		if standard.Debugging {
+			fmt.Println("conversing...")
+		}
 		currentQuip := con.History.MostRecent(g)
 		currentRestricts := currentQuip.Exists() && currentQuip.Is("restrictive")
 		// handle queued conversation, unless the current quip is restrictive.
@@ -26,7 +31,10 @@ func (con *Conversation) Converse(g G.Play) {
 			return okay
 		})
 
-		g.The("player").Go("print conversation choices", npc)
+		// we might have changed conversations...
+		if npc, ok := con.Interlocutor.Get(); ok {
+			g.The("player").Go("print conversation choices", npc)
+		}
 	}
 }
 
@@ -36,9 +44,7 @@ func (con *Conversation) perform(actor G.IObject, currentRestricts bool) {
 			quip := nextQuip.Object("quip")
 			//
 			talker := quip.Object("subject")
-			reply := quip.Text("reply")
-			talker.Says(reply)
-			con.Memory.Learn(quip)
+			talker.Go("discuss", quip)
 		}
 		// this removes the planned conversation which was just said,
 		// and any casual conversation that couldn't be said due to restriction.

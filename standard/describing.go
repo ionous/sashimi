@@ -5,14 +5,27 @@ import (
 	. "github.com/ionous/sashimi/script"
 )
 
-func describe(g G.Play, obj G.IObject) {
+type DescribePhrase struct {
+	object string
+}
+
+func Describe(object string) DescribePhrase {
+	return DescribePhrase{object}
+}
+
+func DescribeThe(object G.IObject) DescribePhrase {
+	return DescribePhrase{object.Id().String()}
+}
+
+func (d DescribePhrase) Execute(g G.Play) {
+	obj := g.The(d.object)
 	if !obj.Is("scenery") {
 		desc := ""
 		if obj.Is("unhandled") {
 			desc = obj.Text("brief")
 		}
 		if desc != "" {
-			g.Say(desc, "{{br}}")
+			g.Say(desc)
 		} else {
 			obj.Go("print name")
 		}
@@ -24,7 +37,7 @@ func init() {
 		s.The("objects",
 			Can("print description").And("describing").RequiresNothing(),
 			To("print description", func(g G.Play) {
-				describe(g, g.The("object"))
+				g.Go(Describe("object"))
 			}))
 
 		// FIX: When() puts the contents after the object
@@ -37,10 +50,10 @@ func init() {
 		s.The("containers",
 			//print description
 			When("describing").Always(func(g G.Play) {
-				//this := g.The("container")
 				this := g.The("action.Source")
-				if this.Is("open") || this.Is("transparent") {
-					describe(g, this)
+				if (this.Is("open") || this.Is("transparent")) && !this.Is("scenery-content") {
+					g.Say(" ")
+					g.Go(DescribeThe(this))
 					listContents(g, "In the", this)
 					g.StopHere()
 				}
@@ -48,9 +61,9 @@ func init() {
 
 		s.The("supporters",
 			When("describing").Always(func(g G.Play) {
-				//this := g.The("supporter")
-				this := g.The("action.Source")
-				describe(g, this)
+				this := g.The("supporter")
+				g.Say(" ")
+				g.Go(DescribeThe(this))
 				listContents(g, "On the", this)
 				g.StopHere()
 			}))

@@ -23,6 +23,30 @@ func assignTo(prop G.IObject, rel string, dest G.IObject) {
 	prop.Set(rel, dest)
 }
 
+//var articles = regexp.MustCompile(`^(The|A|An|Our|Some)[[:upper:]]`)
+//http://www.mudconnect.com/SMF/index.php?topic=74725.0
+func sin(s string, set ...string) (ok bool) {
+	for _, x := range set {
+		if x == s {
+			ok = true
+			break
+		}
+	}
+	return ok
+}
+
+func startsVowel(str string) (vowelSound bool) {
+	s := strings.ToUpper(str)
+	if sin(s, "A", "E", "I", "O", "U") {
+		if !sin(s, "EU", "EW", "ONCE", "ONE", "OUI", "UBI", "UGAND", "UKRAIN", "UKULELE", "ULYSS", "UNA", "UNESCO", "UNI", "UNUM", "URA", "URE", "URI", "URO", "URU", "USA", "USE", "USI", "USU", "UTA", "UTE", "UTI", "UTO") {
+			vowelSound = true
+		}
+	} else if sin(s, "HEIR", "HERB", "HOMAGE", "HONEST", "HONOR", "HONOUR", "HORS", "HOUR") {
+		vowelSound = true
+	}
+	return vowelSound
+}
+
 //
 func init() {
 	AddScript(func(s *Script) {
@@ -33,7 +57,13 @@ func init() {
 		// Instance might be better...? or some better name for the class of objects
 		// i tried "subjects" but hated it more.
 		s.The("kinds",
-			Have("printed name", "text"))
+			// printed plural name (text),
+			Have("printed name", "text"),
+			Have("indefinite article", "text"), //
+			AreEither("singular-named").Or("plural-named"),
+			AreEither("common-named").Or("proper-named"), //a name used for an individual person, place, or organization, spelled with initial capital letters, e.g., Larry, Mexico, and Boston Red Sox.
+			//not normally preceded by an article or other limiting modifier, as any or some. Nor are they usually pluralized
+		)
 
 		// vs. descriptions in "kind"
 		// it seems to make sense for now to have two separate description fields.
@@ -185,11 +215,11 @@ func init() {
 			Can("report inventory").And("reporting inventory").RequiresNothing(),
 			To("report inventory", func(g G.Play) {
 				this := g.The("actor")
-				source := []string{"clothing", "inventory"}
+				source := []string{"Clothing", "Inventory"}
 				for _, s := range source {
 					contents := this.ObjectList(s)
 					if len(contents) > 0 {
-						g.Say(s, ":")
+						g.Say(s + ":")
 						for _, obj := range contents {
 							obj.Go("print name")
 						}
@@ -213,12 +243,14 @@ func listContents(g G.Play, header string, obj G.IObject) (printed bool) {
 	// if something described which is not scenery is on the noun and something which is not the player is on the noun:
 	// obviously a filterd callback, visitor, would be nice FilterList("contents", func() ... )
 	contents := obj.ObjectList("contents")
+	// FIX: if something has scenery objets, they appear as contents,
+	// but then the list is empty. ( ex. lab coat, but it might happen elsewhere )
+	// we'd maybe need to know if something printed?
 	if len(contents) > 0 {
 		g.Say(header, obj.Text("Name"), "is:")
 		for _, content := range contents {
 			content.Go("print description")
 		}
-		g.Say("")
 		printed = true
 	}
 	return printed
@@ -250,7 +282,21 @@ func init() {
 			Can("print name").And("printing name text").RequiresNothing(),
 			To("print name", func(g G.Play) {
 				obj := g.The("object")
-				g.Say(obj.Text("Name"))
+				text := obj.Text("Name")
+				if obj.Is("proper-named") {
+					text = strings.Title(text)
+				} else {
+					article := obj.Text("indefinite article")
+					if article == "" {
+						if startsVowel(text) {
+							article = "An"
+						} else {
+							article = "A"
+						}
+					}
+					text = strings.Join([]string{article, strings.ToLower(text)}, " ")
+				}
+				g.Say(text + ".")
 			}))
 
 		s.The("containers",
@@ -287,10 +333,13 @@ func init() {
 			Can("report the view").And("reporting the view").RequiresNothing(),
 			To("report the view", func(g G.Play) {
 				room := g.The("room")
-				g.Say(room.Text("Name"))
-				g.Say(room.Text("description"))
-				for _, obj := range room.ObjectList("contents") {
-					obj.Go("print description")
+				g.Say(Lines("", room.Text("Name")))
+				g.Say(Lines(room.Text("description"), ""))
+				if contents := room.ObjectList("contents"); len(contents) > 0 {
+					g.Say("You can see:")
+					for _, obj := range contents {
+						obj.Go("print description")
+					}
 				}
 				// FIX: duplicated in stories describe the first room
 				room.IsNow("visited")

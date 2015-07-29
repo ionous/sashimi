@@ -30,7 +30,7 @@ func init() {
 		s.The("props",
 			Can("report take").And("reporting take").RequiresOne("actor"),
 			To("report take", func(g G.Play) {
-				prop, actor := g.The("action.Source"), g.The("action.Target")
+				prop, actor := g.The("prop"), g.The("actor")
 				// first, only same room:
 				actorCeiling, _ := Enclosure(actor)
 				targetCeiling, _ := Enclosure(prop)
@@ -61,7 +61,7 @@ func init() {
 							return
 						}
 					}
-					GoGive(g).Prop(prop).To(actor)
+					g.Go(Give("prop").To("actor"))
 					// separate report action?
 					if actor == g.The("player") {
 						g.Say("You take the {{action.Source.Name}}.")

@@ -28,7 +28,7 @@ func The_Lab(s *Script) {
 
 	s.The("prop",
 		Called("the axe"),
-		Has("brief", "a very nice guitar"))
+		Has("brief", "a very nice guitar."))
 
 	s.The("player", Possesses("the axe"))
 
@@ -41,7 +41,7 @@ func The_Lab(s *Script) {
 	s.The("container",
 		Called("the glass jar"),
 		Is("transparent", "closed").And("openable"),
-		Has("brief", "beaker with a lid"),
+		Has("brief", "beaker with a lid."),
 		Contains("the eye dropper"))
 
 	s.The("props",

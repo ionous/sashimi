@@ -16,18 +16,20 @@ type Conversation struct {
 }
 
 // FIX: replace  with player, go learn
-func GoLearn(g G.Play) FactPhrase {
-	return FactPhrase{g}
+// ALSO: if this were in the "fact" package, it could be: fact.Learn
+// and maybe prop.Give?
+func Learn(fact string) FactPhrase {
+	return FactPhrase(fact)
+}
+func LearnThe(fact G.IObject) FactPhrase {
+	return FactPhrase(fact.Id().String())
 }
 
-func (phrase FactPhrase) TheFact(fact string) {
-	g := phrase.g
+type FactPhrase string
+
+func (fact FactPhrase) Execute(g G.Play) {
 	con := g.Global("conversation").(*Conversation)
-	con.Memory.Learn(g.The(fact))
-}
-
-type FactPhrase struct {
-	g G.Play
+	con.Memory.Learn(g.The(string(fact)))
 }
 
 func PlayerRecollects(g G.Play, fact string) bool {
@@ -106,9 +108,7 @@ func init() {
 		s.The("actors",
 			Can("greet").And("greeting").RequiresOne("actor"),
 			To("greet", func(g G.Play) {
-				greeter, greeted := g.The("action.Source"), g.The("action.Target")
-				greeting := greeted.Object("greeting")
-				GoGreet(g).Introducing(greeter).To(greeted).With(greeting)
+				g.Go(Introduce("action.Source").To("action.Target").WithDefault())
 			}))
 		s.Execute("greet", Matching("talk to {{something}}").Or("t|talk|greet|ask {{something}}"))
 
@@ -136,28 +136,40 @@ func init() {
 			}))
 
 		s.The("actors",
+			Can("comment").And("commenting").RequiresOne("quip"),
+			To("comment", standard.ReflectToTarget("report comment")),
 			Can("discuss").And("discussing").RequiresOne("quip"),
-			To("discuss", standard.ReflectToTarget("report discuss")))
+			To("discuss", standard.ReflectToTarget("report discuss")),
+		)
 
 		s.The("quips",
+			Can("report comment").And("reporting comment").RequiresOne("actor"),
+			To("report comment", func(g G.Play) {
+				talker, quip := g.The("actor"), g.The("quip")
+				if standard.Debugging {
+					fmt.Println("!", talker, "commenting", quip)
+				}
+				con := g.Global("conversation").(*Conversation)
+				// the player wants to speak: probably has chosen a line of dialog from the menu
+				comment := quip.Text("comment")
+				talker.Says(comment)
+
+				// an actor will reply to the comment.
+				// they will do this via Converse() at the end of the turn.
+				con.Queue.SetNextQuip(g, quip)
+				con.History.PushQuip(quip) // FIX: when to advance this...?
+			}),
 			Can("report discuss").And("reporting discuss").RequiresOne("actor"),
 			To("report discuss", func(g G.Play) {
-				player, talker, quip := g.The("player"), g.The("actor"), g.The("quip")
+				talker, quip := g.The("actor"), g.The("quip")
 				if standard.Debugging {
 					fmt.Println("!", talker, "discussing", quip)
 				}
 				con := g.Global("conversation").(*Conversation)
-				// the player wants to speak: probably has chosen a line of dialog from the menu
-				if talker == player {
-					comment := quip.Text("comment")
-					player.Says(comment)
-					con.Queue.SetNextQuip(g, quip)
-				} else {
-					// an actor wants to reply to the quip that was discussed.
-					// they will do this via Converse() at the end of the turn.
-					con.Queue.QueueQuip(quip)
+				if reply := quip.Text("reply"); reply != "" {
+					talker.Says(reply)
 				}
-				con.History.PushQuip(quip) // FIX: when to advance this...?
+				con.Memory.Learn(quip)
 			}))
 
 		s.The("actors",
@@ -165,32 +177,37 @@ func init() {
 			To("print conversation choices", func(g G.Play) {
 				player, talker, talkedTo := g.The("player"), g.The("action.Source"), g.The("action.Target")
 				if player == talker {
-					quips := GetPlayerQuips(g)
-					if standard.Debugging {
-						fmt.Println("!", talker, "printing", talkedTo, quips)
-					}
-					for i, quip := range quips {
-						cmt := quip.Text("comment")
-						text := fmt.Sprintf("%d: %s", i+1, cmt) // FIX? template instead of fmt
-						g.Say(text)                             // FIX FIX: CAN "SAY" TEXT BE SCOPED TO THE EVENT IN THE CMD OUTPUT.
-					}
-
-					// time to hack the parser
-					standard.TheParser.CaptureInput(func(input string) (err error) {
-						var choice int
-						if _, e := fmt.Sscan(input, &choice); e != nil {
-							err = fmt.Errorf("Please choose a number from the menu; input: %s", input)
-						} else if choice < 1 || choice > len(quips) {
-							err = fmt.Errorf("Please choose a number from the menu; number: %d of %d", choice, len(quips))
-						} else {
-							quip := quips[choice-1]
-							if standard.Debugging {
-								fmt.Println("!", player, "chose", quip)
-							}
-							player.Go("discuss", quip)
+					if quips := GetPlayerQuips(g); len(quips) == 0 {
+						player.Go("depart") // safety first
+					} else {
+						if standard.Debugging {
+							fmt.Println("!", talker, "printing", talkedTo, quips)
 						}
-						return err
-					})
+						text := fmt.Sprintf("%s: ", player.Text("name"))
+						g.Say(Lines("", text))
+						for i, quip := range quips {
+							cmt := quip.Text("comment")             // FIX: is this good? should it be slug, or name
+							text := fmt.Sprintf("%d: %s", i+1, cmt) // FIX? template instead of fmt
+							g.Say(text)                             // FIX FIX: CAN "SAY" TEXT BE SCOPED TO THE EVENT IN THE CMD OUTPUT.
+						}
+
+						// time to hack the parser
+						standard.TheParser.CaptureInput(func(input string) (err error) {
+							var choice int
+							if _, e := fmt.Sscan(input, &choice); e != nil {
+								err = fmt.Errorf("Please choose a number from the menu; input: %s", input)
+							} else if choice < 1 || choice > len(quips) {
+								err = fmt.Errorf("Please choose a number from the menu; number: %d of %d", choice, len(quips))
+							} else {
+								quip := quips[choice-1]
+								if standard.Debugging {
+									fmt.Println("!", player, "chose", quip)
+								}
+								player.Go("comment", quip)
+							}
+							return err
+						})
+					}
 				}
 			}))
 

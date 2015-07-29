@@ -7,50 +7,53 @@ import (
 )
 
 // GoGreet(g).Introducing(greeter).To(greeted).With(greeting)
-func GoGreet(g G.Play) GreeterPhrase {
-	return GreeterPhrase{g: g}
+// for all the silly things go complains about
+// silently discarding return values is somehow perfectly fine. sigh.
+func Introduce(greeter string) GreeterPhrase {
+	return GreeterPhrase{greeter: greeter}
 }
 
-func (greet GreeterPhrase) Introducing(greeter G.IObject) GreetedPhrase {
-	greet.greeter = greeter
+func (greet GreeterPhrase) To(greeted string) GreetedPhrase {
+	greet.greeted = greeted
 	return GreetedPhrase(greet)
 }
 
-func (greet GreeterPhrase) IntroducingThe(greeter string) GreetedPhrase {
-	return greet.Introducing(greet.g.The(greeter))
+func (greet GreetedPhrase) WithDefault() GreetingPhrase {
+	return greet.With("")
 }
 
-func (greet GreetedPhrase) To(greeted G.IObject) GreetingPhrase {
-	greet.greeted = greeted
+func (greet GreetedPhrase) With(greeting string) GreetingPhrase {
+	greet.greeting = greeting
 	return GreetingPhrase(greet)
 }
 
-func (greet GreetedPhrase) ToThe(greeted string) GreetingPhrase {
-	return greet.To(greet.g.The(greeted))
+func (greet GreetedPhrase) WithQuip(greeting G.IObject) GreetingPhrase {
+	greet.greeting = greeting.Id().String()
+	return GreetingPhrase(greet)
 }
 
-func (greet GreetingPhrase) WithDefault() {
-	greeting := greet.greeted.Object("greeting")
-	greetActor(greet.g, greet.greeter, greet.greeted, greeting)
-}
-
-func (greet GreetingPhrase) With(greeting G.IObject) {
-	greetActor(greet.g, greet.greeter, greet.greeted, greeting)
-}
-
-func (greet GreetingPhrase) WithQuip(greeting string) {
-	greet.With(greet.g.The(greeting))
+func (greet GreetingPhrase) Execute(g G.Play) {
+	greeter, greeted := g.The(greet.greeter), g.The(greet.greeted)
+	var greeting G.IObject
+	if greet.greeting == "" {
+		greeting = greeted.Object("greeting")
+	} else {
+		greeting = g.The(greet.greeting)
+	}
+	greetActor(g, greeter, greeted, greeting)
 }
 
 type greetingData struct {
-	g                G.Play
-	greeter, greeted G.IObject
+	greeter, greeted, greeting string
 }
 type GreeterPhrase greetingData
 type GreetedPhrase greetingData
 type GreetingPhrase greetingData
 
 func greetActor(g G.Play, greeter, greeted, greeting G.IObject) {
+	if standard.Debugging {
+		fmt.Println("!", "Now greeting: introducing", greeter, "to", greeted, "with", greeting)
+	}
 	if greeter == g.The("player") && greeted.Exists() {
 		con := g.Global("conversation").(*Conversation)
 

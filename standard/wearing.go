@@ -5,17 +5,25 @@ import (
 	. "github.com/ionous/sashimi/script"
 )
 
-func Clothe(actor G.IObject) WearPhrase {
-	return WearPhrase{actor}
+func Clothe(actor string) ClothePhrase {
+	return ClothePhrase{actor: actor}
 }
 
-func (clothe WearPhrase) With(prop G.IObject) {
-	assignTo(prop, "wearer", clothe.actor)
+func (p ClothePhrase) With(prop string) WearingPhrase {
+	p.clothing = prop
+	return WearingPhrase(p)
 }
 
-type WearPhrase struct {
-	actor G.IObject
+func (p WearingPhrase) Execute(g G.Play) {
+	actor, clothing := g.The(p.actor), g.The(p.actor)
+	assignTo(clothing, "wearer", actor)
 }
+
+type wearData struct {
+	actor, clothing string
+}
+type ClothePhrase wearData
+type WearingPhrase wearData
 
 func init() {
 	AddScript(func(s *Script) {
@@ -39,7 +47,7 @@ func init() {
 				if prop.Is("not wearable") {
 					g.Say("That's not something you can wear.")
 				} else {
-					Clothe(actor).With(prop)
+					g.Go(Clothe("actor").With("prop"))
 					g.Say("Now", actor.Text("name"), "is wearing the", prop.Text("name"))
 				}
 			}))

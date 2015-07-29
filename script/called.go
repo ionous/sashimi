@@ -8,8 +8,7 @@ import (
 
 //
 // Fragment to assert the existence of a class or instance
-// The("room", Called("home" )
-// The("kinds", Called("coins").Singular("coin")
+// The("room", Called("home"))
 func Called(subject string) CalledFragment {
 	origin := NewOrigin(2)
 	return CalledFragment{origin, subject, ""}

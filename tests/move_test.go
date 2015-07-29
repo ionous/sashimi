@@ -44,8 +44,8 @@ func makeTestRoom() *Script {
 	// FIX: want to map "name" to a property, and if it doesn't exist fall back on split id.
 	// FIX? wonder if you could inject a report of some kind to pull in the description /brief of a door
 	// automatically to match it's other side.
-	s.The("door", Called("curtain"), Has("brief", "A red velvet curtain"))
-	s.The("door", Called("cloakroom-curtain"), Has("brief", "A red velvet curtain"))
+	s.The("door", Called("curtain"), Has("brief", "A red velvet curtain."))
+	s.The("door", Called("cloakroom-curtain"), Has("brief", "A red velvet curtain."))
 	return s
 }
 

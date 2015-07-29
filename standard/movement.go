@@ -11,34 +11,37 @@ var directions []string = []string{"north", "south", "east", "west", "up", "down
 var Debugging = false
 
 // FIX: like Learn() convert to a game action: actor.Go("move to", dest)
-func GoMove(g G.Play) MovePhrase {
-	return MovePhrase{g: g}
+func Move(obj string) MoveToPhrase {
+	return MoveToPhrase{actor: obj}
 }
 
-func (move MovePhrase) Object(obj G.IObject) MoveToPhrase {
-	move.actor = obj
-	return MoveToPhrase(move)
-}
-func (move MovePhrase) The(obj string) MoveToPhrase {
-	return move.Object(move.g.The(obj))
+func MoveThe(obj G.IObject) MoveToPhrase {
+	return Move(obj.Id().String())
 }
 
-func (move MoveToPhrase) To(dest G.IObject) {
-	assignTo(move.actor, "whereabouts", dest)
-}
-func (move MoveToPhrase) ToThe(dest string) {
-	move.To(move.g.The(dest))
+func (move MoveToPhrase) ToThe(dest G.IObject) MovingPhrase {
+	return move.To(dest.Id().String())
 }
 
-func (move MoveToPhrase) OutOfWorld() {
-	assignTo(move.actor, "whereabouts", nil)
+func (move MoveToPhrase) To(dest string) MovingPhrase {
+	move.dest = dest
+	return MovingPhrase(move)
 }
 
-type MovePhrase struct {
-	g     G.Play
-	actor G.IObject
+func (move MoveToPhrase) OutOfWorld() MovingPhrase {
+	return MovingPhrase(move)
 }
-type MoveToPhrase MovePhrase
+
+func (move MovingPhrase) Execute(g G.Play) {
+	actor, dest := g.The(move.actor), g.The(move.dest)
+	assignTo(actor, "whereabouts", dest)
+}
+
+type moveData struct {
+	actor, dest string
+}
+type MoveToPhrase moveData
+type MovingPhrase moveData
 
 func TryMove(actor G.IObject, dir G.IObject, exit G.IObject) {
 	if Debugging {
@@ -137,7 +140,7 @@ func init() {
 					}
 					// FIX: player property change?
 					// at the very least a move action.
-					GoMove(g).Object(actor).To(room)
+					g.Go(MoveThe(actor).ToThe(room))
 					room.Go("report the view")
 				}
 			}))

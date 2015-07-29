@@ -6,34 +6,26 @@ import (
 	. "github.com/ionous/sashimi/script"
 )
 
-// FIX: make like GoMove, etc.
-func GoInsert(g G.Play) InsertPhrase {
-	return InsertPhrase{g: g}
+func Insert(prop string) InsertPhrase {
+	return InsertPhrase{prop: prop}
 }
 
-func (insert InsertPhrase) Prop(prop G.IObject) InsertIntoPhrase {
-	insert.prop = prop
-	return InsertIntoPhrase(insert)
+func (p InsertPhrase) Into(container string) InsertingPhrase {
+	p.container = container
+	return InsertingPhrase(p)
 }
 
-func (insert InsertPhrase) The(prop string) InsertIntoPhrase {
-	return insert.Prop(insert.g.The(prop))
+func (p InsertingPhrase) Execute(g G.Play) {
+	prop, container := g.The(p.prop), g.The(p.container)
+	assignTo(prop, "enclosure", container)
 }
 
-func (insert InsertIntoPhrase) Into(container G.IObject) {
-	assignTo(insert.prop, "enclosure", container)
+type insertData struct {
+	prop, container string
 }
 
-func (insert InsertIntoPhrase) IntoThe(container string) {
-	insert.Into(insert.g.The(container))
-}
-
-type InsertPhrase struct {
-	g    G.Play
-	prop G.IObject
-}
-
-type InsertIntoPhrase InsertPhrase
+type InsertPhrase insertData
+type InsertingPhrase insertData
 
 // from inform:
 // 	"insert applies into two things", doesnt use preferably held. [ possibly a mistake? ]
@@ -98,8 +90,7 @@ func init() {
 		s.The("props",
 			Can("report insertion").And("reporting insertion").RequiresOne("actor").AndOne("container"),
 			To("report insertion", func(g G.Play) {
-				prop, container := g.The("action.Source"), g.The("action.Context")
-				GoInsert(g).Prop(prop).Into(container)
+				g.Go(Insert("action.Source").Into("action.Context"))
 				g.Say("You insert {{action.Source.Name}} into {{action.Context.Name}}.")
 			}))
 		// input: actor, container, prop

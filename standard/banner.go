@@ -19,7 +19,6 @@ func init() {
 {{ $src.Name }}
 {{ if $src.Headline }}{{ $src.Headline }}{{else}}An Interactive fiction{{end}} by {{ $src.Author }}`)
 				g.Say(VersionString)
-				g.Say("")
 			}))
 	})
 }

@@ -41,6 +41,11 @@ type Play interface {
 	// a system of varient -- and possibly user type -- globals is needed
 	// but many of these could go away if there was a real table implementatioin
 	Global(name string) interface{}
+	Go(RuntimePhrase)
+}
+
+type RuntimePhrase interface {
+	Execute(Play)
 }
 
 // Any returns the first compatible class found.

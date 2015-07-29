@@ -53,6 +53,11 @@ func (ga *GameEventAdapter) A(name string) G.IObject {
 	return ga.GetObject(name)
 }
 
+// g.Go( Give(player).ToHe(2) )
+func (ga *GameEventAdapter) Go(phrase G.RuntimePhrase) {
+	phrase.Execute(ga)
+}
+
 //
 func (ga *GameEventAdapter) Global(name string) interface{} {
 	id := M.MakeStringId(name)

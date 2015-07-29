@@ -32,7 +32,7 @@ func init() {
 		s.The("containers",
 			After("reporting examine").Always(func(g G.Play) {
 				this := g.The("action.Source")
-				if this.Is("open") || this.Is("transparent") {
+				if (this.Is("open") || this.Is("transparent")) && !this.Is("scenery-content") {
 					listContents(g, "In the", this)
 				}
 			}))
