@@ -5,37 +5,44 @@ import (
 	C "github.com/ionous/sashimi/console"
 	R "github.com/ionous/sashimi/runtime"
 	"io"
+	"strings"
 )
 
 type StandardOutput struct {
-	console C.IConsole
-	writer  io.Writer
+	console   C.IConsole
+	writer    io.Writer
+	lastEmpty bool // collapse mutliple empty lines
 }
 
-func (this StandardOutput) Println(args ...interface{}) {
-	str := fmt.Sprintln(args...)
-	this.console.Println(str)
-}
-
-func (this StandardOutput) ScriptSays(lines []string) {
-	for _, l := range lines {
-		this.console.Println(l)
+func (out *StandardOutput) Println(args ...interface{}) {
+	str := fmt.Sprint(args...)
+	nowEmpty := len(strings.TrimSpace(str)) == 0
+	if !nowEmpty {
+		if out.lastEmpty {
+			out.console.Println(" ")
+		}
+		out.console.Println(str)
 	}
-	//this.console.Println()
+	out.lastEmpty = nowEmpty
 }
 
-func (this StandardOutput) ActorSays(whose *R.GameObject, lines []string) {
+func (out *StandardOutput) ScriptSays(lines []string) {
+	for _, l := range lines {
+		out.Println(l)
+	}
+}
+
+func (out *StandardOutput) ActorSays(whose *R.GameObject, lines []string) {
 	if len(lines) > 0 {
 		// in other contexts ActorSays needs R.GameObject for SerializeObject
-		//this.console.Println()
 		name := whose.Value("Name").(string)
-		this.console.Println(name, ": ", lines[0])
+		out.console.Println(name, ": ", lines[0])
 		for _, l := range lines[1:] {
-			this.console.Println(l)
+			out.Println(l)
 		}
 	}
 }
 
-func (this StandardOutput) Log(s string) {
-	this.writer.Write([]byte(s))
+func (out *StandardOutput) Log(s string) {
+	out.writer.Write([]byte(s))
 }

@@ -115,6 +115,7 @@ func init() {
 						if Debugging {
 							fmt.Printf("couldnt find %s exit", dir)
 						}
+						g.Say("You can't move that direction.")
 					}
 				}
 			}))

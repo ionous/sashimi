@@ -57,7 +57,7 @@ func RunScript(script *script.Script, opt Options) (err error) {
 			model.PrintModel(func(args ...interface{}) { fmt.Println(args...) })
 			return
 		}
-		if game, e := NewStandardGame(model, StandardOutput{cons, writer}); e != nil {
+		if game, e := NewStandardGame(model, &StandardOutput{cons, writer, false}); e != nil {
 			err = e
 		} else {
 			left, right := game.story.Text("name"), fmt.Sprint("by ", game.story.Text("author"))

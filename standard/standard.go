@@ -18,6 +18,7 @@ type StandardStart struct {
 type StandardGame struct {
 	_StandardCore
 	quit, completed bool
+	lastInput       string
 }
 
 // _StandardCore assists the transformation of a StandardStart into a StandardGame.
@@ -84,10 +85,10 @@ func NewStandardGame(model *M.Model, output R.IOutput) (ret StandardStart, err e
 	return ret, err
 }
 
-// Start sends starting to play, and returns a new StandardGame.
+// Start sends commencing, and returns a new StandardGame.
 func (sg *StandardStart) Start() (ret *StandardGame, err error) {
 	// FIX: shouldnt the interface be Go("commence")?
-	if e := sg.SendEvent("starting to play", sg.story.Id()); e != nil {
+	if e := sg.SendEvent("commencing", sg.story.Id()); e != nil {
 		err = e
 	} else {
 		// process all existing messages in the queue first
@@ -95,7 +96,7 @@ func (sg *StandardStart) Start() (ret *StandardGame, err error) {
 			err = e
 		}
 	}
-	return &StandardGame{sg._StandardCore, false, false}, err
+	return &StandardGame{sg._StandardCore, false, false, ""}, err
 }
 
 // IsQuit when the user has requested to quit the game.
@@ -117,6 +118,11 @@ func (sg *StandardGame) Input(s string) bool {
 		if in == "q" || in == "quit" {
 			sg.quit = true
 		} else {
+			if in == "again" {
+				in = sg.lastInput
+			} else {
+				sg.lastInput = in
+			}
 			if matcher, e := sg.ParseInput(in); e != nil {
 				sg.output.Println(e)
 			} else if e := matcher.OnMatch(); e != nil {

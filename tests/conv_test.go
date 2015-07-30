@@ -63,11 +63,6 @@ func TestDiscuss(t *testing.T) {
 			if player := g.The("player"); assert.True(t, player.Exists(), "found player") {
 				con := g.Global("conversation").(*Conversation)
 				// hijack the person we are trying to talk to
-				// con.Interlocutor.Set(boy)
-				// require.Equal(t, 0, con.Queue.Len())
-				// // have the boy say something.
-				// boy.Go("discuss", boy.Object("greeting"))
-				//
 				g.Go(Introduce("player").To("alien boy").WithQuip(boy.Object("greeting")))
 				require.Equal(t, boy.Object("next quip").Object("quip"), boy.Object("greeting"))
 				con.Converse(g)

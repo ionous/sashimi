@@ -25,7 +25,7 @@ func init() {
 		)
 
 		s.The("stories",
-			Can("commence").And("starting to play").RequiresNothing(),
+			Can("commence").And("commencing").RequiresNothing(),
 			Can("end the story").And("ending the story").RequiresNothing(),
 			Can("end turn").And("ending the turn").RequiresNothing(),
 			Before("ending the turn").Always(func(g G.Play) {

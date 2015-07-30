@@ -22,7 +22,7 @@ func (this *SimpleOutput) ScriptSays(lines []string) {
 
 //
 func (this *SimpleOutput) ActorSays(whose *R.GameObject, lines []string) {
-	fmt.Println("Script says", lines)
+	fmt.Println("Actor says", lines)
 	name := whose.Value("Name")
 	for _, l := range lines {
 		this.Println(name, ": ", l)

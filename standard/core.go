@@ -1,6 +1,7 @@
 package standard
 
 import (
+	"bitbucket.org/pkg/inflect"
 	"fmt"
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
@@ -252,7 +253,6 @@ func listContents(g G.Play, header string, obj G.IObject) (printed bool) {
 			content.Go("print description")
 		}
 		printed = true
-		g.Say(" ")
 	}
 	return printed
 }
@@ -266,21 +266,21 @@ func Name(g G.Play, which string, status func(obj G.IObject) string) string {
 		article := obj.Text("indefinite article")
 		if article == "" {
 			if obj.Is("plural-named") {
-				article = "Some"
+				article = "some"
 			} else if startsVowel(text) {
-				article = "An"
+				article = "an"
 			} else {
-				article = "A"
+				article = "a"
 			}
 		}
 		text = strings.Join([]string{article, strings.ToLower(text)}, " ")
 	}
-	if status == nil {
-		text = text + "."
-	} else if s := status(obj); s != "" {
-		text = fmt.Sprintf("%s (%s)", text, s)
-	} else {
-		text = text + "."
+	if status != nil {
+		if s := status(obj); s != "" {
+			text = fmt.Sprintf("%s (%s)", text, s)
+		} else {
+			text = text + "."
+		}
 	}
 	return text
 }
@@ -310,8 +310,10 @@ func init() {
 		s.The("objects",
 			Can("print name").And("printing name text").RequiresNothing(),
 			To("print name", func(g G.Play) {
-				text := Name(g, "object", nil)
-				g.Say(text)
+				if text := Name(g, "object", func(G.IObject) string { return "" }); len(text) > 0 {
+					text = inflect.Capitalize(text)
+					g.Say(text)
+				}
 			}))
 
 		s.The("containers",
@@ -323,8 +325,9 @@ func init() {
 				// FIX: a container is an opener... where do we print the opener status name
 				// put this on doors for now.
 				text := Name(g, "container", func(obj G.IObject) (status string) {
-					list := obj.ObjectList("contents")
-					if obj.Is("transparent") && len(list) == 0 {
+					if obj.Is("closed") {
+						status = "closed"
+					} else if list := obj.ObjectList("contents"); len(list) == 0 {
 						status = "empty"
 					}
 					return status
@@ -346,7 +349,6 @@ func init() {
 					}
 					return status
 				})
-
 				g.Say(text)
 				g.StopHere()
 			}))
@@ -355,17 +357,17 @@ func init() {
 			Can("report the view").And("reporting the view").RequiresNothing(),
 			To("report the view", func(g G.Play) {
 				room := g.The("room")
+				// sometines a blank like is printed without this
+				// (maybe certain directions? or going through doors?)
+				// not sure why, so leaving this for consistency
 				g.Say(Lines("", room.Text("Name")))
 				g.Say(Lines(room.Text("description"), ""))
 				// FIX? uses 1 to exclude the player....
 				// again, this happens because we dont know if print description actually did anything (re:scenery, etc.)
 				if contents := room.ObjectList("contents"); len(contents) > 1 {
-					g.Say("You can see:")
-					if Debugging {
-						fmt.Println(contents)
-					}
 					for _, obj := range contents {
 						obj.Go("print description")
+						g.Say("")
 					}
 				}
 				// FIX: duplicated in stories describe the first room

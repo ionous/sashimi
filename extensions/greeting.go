@@ -63,8 +63,6 @@ func greetActor(g G.Play, greeter, greeted, greeting G.IObject) {
 			}
 			con.Interlocutor.Set(greeted)
 			if greeting.Exists() {
-				// hrmmm....
-				//greeted.Go("discuss", greeting)
 				if cmt := greeting.Text("comment"); cmt != "" {
 					greeter.Says(cmt)
 				}

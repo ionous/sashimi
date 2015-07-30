@@ -42,7 +42,6 @@ func (con *Conversation) perform(actor G.IObject, currentRestricts bool) {
 	if nextQuip := actor.Object("next quip"); nextQuip.Exists() {
 		if !currentRestricts || nextQuip.Is("planned") {
 			quip := nextQuip.Object("quip")
-			//
 			talker := quip.Object("subject")
 			talker.Go("discuss", quip)
 		}
