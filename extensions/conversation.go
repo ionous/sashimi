@@ -118,14 +118,11 @@ func init() {
 			Can("depart").And("departing").RequiresNothing(),
 			To("depart", func(g G.Play) {
 				con := g.Global("conversation").(*Conversation)
-				if npc, ok := con.Interlocutor.Get(); ok {
+				if npc := con.Depart(); npc.Exists() {
 					if standard.Debugging {
 						fmt.Println("!", g.The("actor"), "departing", npc)
 					}
-					con.History.ClearQuips()
-					con.Queue.ResetQuipQueue()
-					npc.Object("next quip").Remove()
-					con.Interlocutor.Clear()
+					g.Say("(", standard.ArticleName(g, "actor", nil), "says goodbye", ")")
 				}
 			}))
 
@@ -151,13 +148,16 @@ func init() {
 				}
 				con := g.Global("conversation").(*Conversation)
 				// the player wants to speak: probably has chosen a line of dialog from the menu
-				comment := quip.Text("comment")
-				talker.Says(comment)
+				if comment := quip.Text("comment"); comment != "" {
+					talker.Says(comment)
+				}
 
 				// an actor will reply to the comment.
 				// they will do this via Converse() at the end of the turn.
 				con.Queue.SetNextQuip(g, quip)
-				con.History.PushQuip(quip) // FIX: when to advance this...?
+				// moved history push into the npc's discuss
+				// which should happen (right) after this.
+				// the conversation choices are determined by what the npc says...
 			}),
 			Can("report discuss").And("reporting discuss").RequiresOne("actor"),
 			To("report discuss", func(g G.Play) {
@@ -170,6 +170,7 @@ func init() {
 					talker.Says(reply)
 				}
 				con.Memory.Learn(quip)
+				con.History.PushQuip(quip)
 			}))
 
 		s.The("actors",
@@ -178,6 +179,9 @@ func init() {
 				player, talker, talkedTo := g.The("player"), g.The("action.Source"), g.The("action.Target")
 				if player == talker {
 					if quips := GetPlayerQuips(g); len(quips) == 0 {
+						if standard.Debugging {
+							fmt.Println("! no conversation choices !")
+						}
 						player.Go("depart") // safety first
 					} else {
 						if standard.Debugging {

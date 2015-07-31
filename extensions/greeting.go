@@ -52,22 +52,16 @@ type GreetingPhrase greetingData
 
 func greetActor(g G.Play, greeter, greeted, greeting G.IObject) {
 	if standard.Debugging {
-		fmt.Println("!", "Now greeting: introducing", greeter, "to", greeted, "with", greeting)
+		fmt.Println("!", "introducing", greeter, "to", greeted, "with", greeting)
 	}
 	if greeter == g.The("player") && greeted.Exists() {
 		con := g.Global("conversation").(*Conversation)
-
 		if npc, alreadySpeaking := con.Interlocutor.Get(); !alreadySpeaking {
-			if standard.Debugging {
-				fmt.Println("!", "Now talking to", greeted, "with", greeting)
-			}
 			con.Interlocutor.Set(greeted)
+			// it's not necessary to have a greeting if the npc has some latent conversation options.
 			if greeting.Exists() {
-				if cmt := greeting.Text("comment"); cmt != "" {
-					greeter.Says(cmt)
-				}
-				con.Queue.SetNextQuip(g, greeting)
-				con.History.PushQuip(greeting)
+				// FIX: doesnt raise an error of any sor when we say go("mispelling"
+				greeted.Go("comment", greeting)
 			}
 		} else {
 			if npc == greeted {
