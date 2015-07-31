@@ -1,7 +1,6 @@
 package standard
 
 import (
-	"fmt"
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
 )
@@ -47,7 +46,7 @@ func init() {
 			WhenCapturing("putting it onto", func(g G.Play) {
 				actor, prop := g.The("action.Source"), g.The("action.Context")
 				if carrier, ok := Carrier(prop); !ok || carrier != actor {
-					g.Say(fmt.Sprintf("You aren't holding %s.", prop.Text("Name")))
+					g.Say("You aren't holding", ArticleName(g, "action.Context", NameFullStop))
 					g.StopHere()
 				}
 			}),
@@ -63,7 +62,7 @@ func init() {
 			WhenCapturing("putting it onto", func(g G.Play) {
 				supporter := g.The("action.Target")
 				if supporter.Is("closed") {
-					g.Say(fmt.Sprintf("%s is closed.", supporter.Text("Name")))
+					g.Say(ArticleName(g, "action.Target", nil), "is closed.")
 					g.StopHere()
 				}
 			}),
@@ -77,7 +76,7 @@ func init() {
 			Can("report placed").And("reporting placed").RequiresOne("actor").AndOne("supporter"),
 			To("report placed", func(g G.Play) {
 				g.Go(Put("action.Source").Onto("action.Context"))
-				g.Say("You put {{action.Source.Name}} onto {{action.Context.Name}}.")
+				g.Say("You put", ArticleName(g, "action.Source", nil), "onto", ArticleName(g, "action.Context", NameFullStop))
 			}))
 		// x.
 		s.Execute("put it onto",

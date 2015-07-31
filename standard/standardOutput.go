@@ -6,24 +6,32 @@ import (
 	R "github.com/ionous/sashimi/runtime"
 	"io"
 	"strings"
+	"unicode"
 )
 
 type StandardOutput struct {
-	console   C.IConsole
-	writer    io.Writer
-	lastEmpty bool // collapse mutliple empty lines
+	console        C.IConsole
+	writer         io.Writer
+	lastEmpty      bool   // collapse mutliple empty lines
+	lastActor      string // collapse multiple speaker lines
+	multiLineActor bool
 }
 
+func NewStandardOutput(c C.IConsole, w io.Writer) *StandardOutput {
+	return &StandardOutput{console: c, writer: w}
+}
 func (out *StandardOutput) Println(args ...interface{}) {
 	str := fmt.Sprint(args...)
-	nowEmpty := len(strings.TrimSpace(str)) == 0
+	nowEmpty := strings.TrimRightFunc(str, unicode.IsSpace) == ""
 	if !nowEmpty {
-		if out.lastEmpty {
+		if out.lastEmpty || out.multiLineActor {
 			out.console.Println(" ")
 		}
 		out.console.Println(str)
 	}
 	out.lastEmpty = nowEmpty
+	out.lastActor = ""
+	out.multiLineActor = false
 }
 
 func (out *StandardOutput) ScriptSays(lines []string) {
@@ -35,11 +43,22 @@ func (out *StandardOutput) ScriptSays(lines []string) {
 func (out *StandardOutput) ActorSays(whose *R.GameObject, lines []string) {
 	if len(lines) > 0 {
 		// in other contexts ActorSays needs R.GameObject for SerializeObject
+		// FIX: what about proper name?
 		name := whose.Value("Name").(string)
-		out.console.Println(name, ": ", lines[0])
+		if out.lastActor != name {
+			if out.lastActor != "" {
+				out.lastEmpty = true
+			}
+			out.Println(name, ": ", lines[0])
+		} else {
+			out.Println(lines[0])
+		}
 		for _, l := range lines[1:] {
 			out.Println(l)
 		}
+		// tricky hack: since out.println overwrites this, we set it last.
+		out.lastActor = name
+		out.multiLineActor = len(lines) > 1
 	}
 }
 

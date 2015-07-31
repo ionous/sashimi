@@ -16,7 +16,7 @@ func init() {
 		s.The("devices",
 			When("printing name text").
 				Always(func(g G.Play) {
-				text := Name(g, "device", func(device G.IObject) (status string) {
+				text := ArticleName(g, "device", func(device G.IObject) (status string) {
 					if device.Is("operable") {
 						if device.Is("switched on") {
 							status = "switched on"

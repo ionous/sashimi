@@ -1,7 +1,6 @@
 package standard
 
 import (
-	"fmt"
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
 )
@@ -61,7 +60,7 @@ func init() {
 			WhenCapturing("inserting it into", func(g G.Play) {
 				actor, prop := g.The("action.Source"), g.The("action.Context")
 				if carrier, ok := Carrier(prop); !ok || carrier != actor {
-					g.Say(fmt.Sprintf("You aren't holding %s.", prop.Text("Name")))
+					g.Say("You aren't holding", ArticleName(g, "action.Context", NameFullStop))
 					g.StopHere()
 				}
 			}),
@@ -77,7 +76,7 @@ func init() {
 			WhenCapturing("inserting it into", func(g G.Play) {
 				container := g.The("action.Target")
 				if container.Is("closed") {
-					g.Say(fmt.Sprintf("%s is closed.", container.Text("Name")))
+					g.Say(ArticleName(g, "action.Target", nil), "is closed.")
 					g.StopHere()
 				}
 			}),
@@ -91,7 +90,7 @@ func init() {
 			Can("report insertion").And("reporting insertion").RequiresOne("actor").AndOne("container"),
 			To("report insertion", func(g G.Play) {
 				g.Go(Insert("action.Source").Into("action.Context"))
-				g.Say("You insert {{action.Source.Name}} into {{action.Context.Name}}.")
+				g.Say("You insert", ArticleName(g, "action.Source", nil), "into", ArticleName(g, "action.Context", NameFullStop))
 			}))
 		// input: actor, container, prop
 		s.Execute("insert it into",

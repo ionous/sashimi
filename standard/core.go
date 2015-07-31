@@ -257,7 +257,10 @@ func listContents(g G.Play, header string, obj G.IObject) (printed bool) {
 	return printed
 }
 
-func Name(g G.Play, which string, status func(obj G.IObject) string) string {
+func NameFullStop(G.IObject) string {
+	return ""
+}
+func ArticleName(g G.Play, which string, status func(obj G.IObject) string) string {
 	obj := g.The(which)
 	text := obj.Text("Name")
 	if obj.Is("proper-named") {
@@ -310,7 +313,7 @@ func init() {
 		s.The("objects",
 			Can("print name").And("printing name text").RequiresNothing(),
 			To("print name", func(g G.Play) {
-				if text := Name(g, "object", func(G.IObject) string { return "" }); len(text) > 0 {
+				if text := ArticleName(g, "object", NameFullStop); len(text) > 0 {
 					text = inflect.Capitalize(text)
 					g.Say(text)
 				}
@@ -324,7 +327,7 @@ func init() {
 				// of course, rules producing values and stacks might work too.
 				// FIX: a container is an opener... where do we print the opener status name
 				// put this on doors for now.
-				text := Name(g, "container", func(obj G.IObject) (status string) {
+				text := ArticleName(g, "container", func(obj G.IObject) (status string) {
 					if obj.Is("closed") {
 						status = "closed"
 					} else if list := obj.ObjectList("contents"); len(list) == 0 {
@@ -339,7 +342,7 @@ func init() {
 		s.The("doors",
 			When("printing name text").
 				Always(func(g G.Play) {
-				text := Name(g, "door", func(obj G.IObject) (status string) {
+				text := ArticleName(g, "door", func(obj G.IObject) (status string) {
 					if obj.Is("openable") {
 						if obj.Is("open") {
 							status = "open"

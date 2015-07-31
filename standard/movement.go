@@ -8,6 +8,9 @@ import (
 
 var directions []string = []string{"north", "south", "east", "west", "up", "down"}
 
+// FIX: we have the concept floating in other fixes of "function" globals
+// and that might be needed for this, where we really dont want *shared* globals
+// you would want this tied to session, if at all possible.
 var Debugging = false
 
 // FIX: like Learn() convert to a game action: actor.Go("move to", dest)

@@ -56,7 +56,7 @@ func init() {
 							if parent != actor {
 								g.Say("That'd be stealing!")
 							} else {
-								g.Say("{{action.Target.Name}} already has that!")
+								g.Say(ArticleName(g, "action.Target", nil), "already has that!")
 							}
 							return
 						}
@@ -64,9 +64,9 @@ func init() {
 					g.Go(Give("prop").To("actor"))
 					// separate report action?
 					if actor == g.The("player") {
-						g.Say("You take the {{action.Source.Name}}.")
+						g.Say("You take the", ArticleName(g, "action.Source", NameFullStop))
 					} else {
-						g.Say("{{action.Target.Name}} takes the {{action.Source.Name}}.")
+						g.Say(ArticleName(g, "action.Target", nil), "takes", ArticleName(g, "action.Source", NameFullStop))
 					}
 				}
 			}))
