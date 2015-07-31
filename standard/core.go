@@ -260,20 +260,34 @@ func listContents(g G.Play, header string, obj G.IObject) (printed bool) {
 func NameFullStop(G.IObject) string {
 	return ""
 }
-func ArticleName(g G.Play, which string, status func(obj G.IObject) string) string {
+
+type NameStatus func(obj G.IObject) string
+
+func ArticleName(g G.Play, which string, status NameStatus) string {
+	return articleName(g, which, false, status)
+}
+func DefiniteName(g G.Play, which string, status NameStatus) string {
+	return articleName(g, which, true, status)
+}
+func articleName(g G.Play, which string, definite bool, status NameStatus) string {
 	obj := g.The(which)
 	text := obj.Text("Name")
 	if obj.Is("proper-named") {
 		text = strings.Title(text)
 	} else {
-		article := obj.Text("indefinite article")
-		if article == "" {
-			if obj.Is("plural-named") {
-				article = "some"
-			} else if startsVowel(text) {
-				article = "an"
-			} else {
-				article = "a"
+		article := ""
+		if definite {
+			article = "the"
+		} else {
+			article = obj.Text("indefinite article")
+			if article == "" {
+				if obj.Is("plural-named") {
+					article = "some"
+				} else if startsVowel(text) {
+					article = "an"
+				} else {
+					article = "a"
+				}
 			}
 		}
 		text = strings.Join([]string{article, strings.ToLower(text)}, " ")

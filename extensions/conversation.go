@@ -1,6 +1,7 @@
 package extensions
 
 import (
+	"bitbucket.org/pkg/inflect"
 	"fmt"
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
@@ -122,7 +123,7 @@ func init() {
 					if standard.Debugging {
 						fmt.Println("!", g.The("actor"), "departing", npc)
 					}
-					g.Say("(", standard.ArticleName(g, "actor", nil), "says goodbye", ")")
+					g.Say("(", inflect.Capitalize(standard.DefiniteName(g, "actor", nil)), "says goodbye.", ")")
 				}
 			}))
 
