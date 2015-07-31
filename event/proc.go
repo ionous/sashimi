@@ -1,6 +1,6 @@
 package event
 
-// implements IEvent
+// Proc implements IEvent
 type Proc struct {
 	msg           *Message
 	currentTarget ITarget
@@ -13,71 +13,71 @@ type Proc struct {
 }
 
 //
-func (this *Proc) sendToTarget(loc ITarget) (err error) {
-	this.currentTarget = loc
-	return this.currentTarget.Dispatch(this)
+func (evt *Proc) sendToTarget(loc ITarget) (err error) {
+	evt.currentTarget = loc
+	return evt.currentTarget.Dispatch(evt)
 }
 
 //
-func (this *Proc) Name() string {
-	return this.msg.Name
+func (evt *Proc) Name() string {
+	return evt.msg.Name
 }
 
 //
-func (this *Proc) Data() interface{} {
-	return this.msg.Data
+func (evt *Proc) Data() interface{} {
+	return evt.msg.Data
 }
 
 //
-func (this *Proc) Bubbles() bool {
-	return !this.msg.CaptureOnly
+func (evt *Proc) Bubbles() bool {
+	return !evt.msg.CaptureOnly
 }
 
 //
-func (this *Proc) Cancelable() bool {
-	return !this.msg.CantCancel
+func (evt *Proc) Cancelable() bool {
+	return !evt.msg.CantCancel
 }
 
 //
-func (this *Proc) DefaultBlocked() bool {
-	return this.cancelled
+func (evt *Proc) DefaultBlocked() bool {
+	return evt.cancelled
 }
 
 //
-func (this *Proc) Target() ITarget {
-	return this.target
+func (evt *Proc) Target() ITarget {
+	return evt.target
 }
 
 //
-func (this *Proc) Path() PathList {
-	return this.path
+func (evt *Proc) Path() PathList {
+	return evt.path
 }
 
 //
-func (this *Proc) Phase() Phase {
-	return this.phase
+func (evt *Proc) Phase() Phase {
+	return evt.phase
 }
 
 //
-func (this *Proc) CurrentTarget() ITarget {
-	return this.currentTarget
+func (evt *Proc) CurrentTarget() ITarget {
+	return evt.currentTarget
 }
 
 //
-func (this *Proc) PreventDefault() bool {
-	if !this.msg.CantCancel {
-		this.cancelled = true
+func (evt *Proc) PreventDefault() bool {
+	if !evt.msg.CantCancel {
+		evt.cancelled = true
 	}
-	return this.cancelled
+	return evt.cancelled
 }
 
 //
-func (this *Proc) StopPropagation() {
-	this.stopMore = true
+func (evt *Proc) StopPropagation() {
+	evt.stopMore = true
 }
 
 //
-func (this *Proc) StopImmediatePropagation() {
-	this.stopNow = true
-	this.stopMore = true
+func (evt *Proc) StopImmediatePropagation() {
+	evt.stopNow = true
+	evt.stopMore = true
 }

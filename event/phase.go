@@ -9,8 +9,8 @@ const (
 	BubblingPhase
 )
 
-func (this Phase) String() string {
-	switch this {
+func (phase Phase) String() string {
+	switch phase {
 	case CapturingPhase:
 		return "CapturingPhase"
 	case TargetPhase:

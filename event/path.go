@@ -24,17 +24,17 @@ func (PathList) Cast(el *list.Element) ITarget {
 }
 
 //
-func (this *PathList) addPath(n ITarget) {
+func (path *PathList) addPath(n ITarget) {
 	if p, ok := n.Parent(); ok {
-		this.addPath(p)
+		path.addPath(p)
 	}
-	this.PushBack(n)
+	path.PushBack(n)
 }
 
 //
-func (this PathList) String() string {
-	arr := make([]string, 0, this.Len())
-	for it := this.Front(); it != nil; it = it.Next() {
+func (path PathList) String() string {
+	arr := make([]string, 0, path.Len())
+	for it := path.Front(); it != nil; it = it.Next() {
 		arr = append(arr, fmt.Sprintf("`%s`", it.Value))
 	}
 	return "[" + strings.Join(arr, ",") + "]"

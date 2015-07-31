@@ -1,53 +1,59 @@
 package event
 
+import "fmt"
+
 //
-// Subscription management for event handlers.
-// A single dispatcher is "flat", it doesn't itself handle capturing or bubbling.
+// NewDispatcher creates a single "flat" set of event callbacks; it doesn't handle event hierarchy.
 //
 func NewDispatcher() Dispatcher {
-	d := Dispatcher{make(EventListeners), make(EventListeners)}
-	return d
+	return Dispatcher{make(EventListeners), make(EventListeners)}
 }
 
 //
-// The default dispatcher: see NewDispatcher()
+// Dispatcher provides a default event callback system.
 //
 type Dispatcher struct {
 	bubble  EventListeners
 	capture EventListeners
 }
 
-//
-func (this *Dispatcher) Listen(evt string, handler IListen, capture bool) {
-	this.getMap(capture).AddEventListener(evt, handler)
+// Listen requests that the passed handler get called for the named event on the capture (or bubble) dispatch cycle,
+func (d *Dispatcher) Listen(evt string, handler IListen, capture bool) {
+	d.getMap(capture).AddEventListener(evt, handler)
 }
 
-//
-func (this *Dispatcher) Silence(evt string, handler IListen, capture bool) {
-	this.getMap(capture).RemoveEventListener(evt, handler)
+// Silence cancels a previous listen request.
+func (d *Dispatcher) Silence(evt string, handler IListen, capture bool) {
+	d.getMap(capture).RemoveEventListener(evt, handler)
 }
 
-//
-func (this *Dispatcher) Dispatch(evt IEvent) (err error) {
-	phase := evt.Phase()
-	// capturing or targeting? trigger capture listeners
-	if phase != BubblingPhase {
-		err = this.capture.HandleEvents(evt, true)
-	}
-	// bubbling or targeting? trigger bubble listeners
-	if err == nil && phase != CapturingPhase {
-		err = this.bubble.HandleEvents(evt, false)
+// Dispatch triggers either the capturing or the bubbling handlers, depending on the phase of the passed event.
+// The dispatcher can only handle events of "Proc" type
+func (d *Dispatcher) Dispatch(evt IEvent) (err error) {
+	if proc, ok := evt.(*Proc); !ok {
+		err = fmt.Errorf("unknown event type %T", evt)
+	} else {
+
+		phase := evt.Phase()
+		// capturing or targeting? trigger capture listeners
+		if phase != BubblingPhase && !proc.stopMore {
+			err = d.capture.HandleEvents(proc, true)
+		}
+		// bubbling or targeting? trigger bubble listeners
+		if err == nil && phase != CapturingPhase && !proc.stopMore {
+			err = d.bubble.HandleEvents(proc, false)
+		}
 	}
 	// FIX: does dispatch really need an error handling? i, personally, am not so sure.
 	return err
 }
 
 //
-func (this *Dispatcher) getMap(capture bool) (ret EventListeners) {
+func (d *Dispatcher) getMap(capture bool) (ret EventListeners) {
 	if capture {
-		ret = this.capture
+		ret = d.capture
 	} else {
-		ret = this.bubble
+		ret = d.bubble
 	}
 	return ret
 }

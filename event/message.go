@@ -11,12 +11,12 @@ type Message struct {
 
 //
 // returns true if the default action is desired
-func (this *Message) Send(path PathList) (bool, error) {
+func (msg *Message) Send(path PathList) (bool, error) {
 	okay := true
 	if path.Len() > 0 {
 		// data:
 		target := path.Cast(path.Back())
-		proc := &Proc{msg: this, path: path, target: target}
+		proc := &Proc{msg: msg, path: path, target: target}
 
 		// capture, all the way down to, but not including, the target
 		if !proc.stopMore {
