@@ -75,7 +75,6 @@ func TestStartupText(t *testing.T) {
 		assert.NoError(t, err, "commencing")
 
 		expected := []string{
-			"", // FIX: this line shouldnt exist
 			"testing",
 			"extra extra by me",
 			standard.VersionString,

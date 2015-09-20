@@ -62,13 +62,3 @@ func runTemplate(temp *template.Template, data interface{}) (ret string, err err
 	}
 	return ret, err
 }
-
-func reallySlow(text string, data interface{}) (ret string, err error) {
-	temp, e := template.New(text).Funcs(coreFuncs).Parse(text)
-	if e != nil {
-		err = e
-	} else {
-		ret, err = runTemplate(temp, data)
-	}
-	return ret, err
-}

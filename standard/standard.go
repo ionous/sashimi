@@ -120,9 +120,9 @@ func (sg *StandardGame) Input(s string) bool {
 				if matcher, e := sg.ParseInput(in); e != nil {
 					// FIXFIXFIXFIX
 					// change some "report"
-					sg.output.Print(e)
+					sg.output.Println(e)
 				} else if e := matcher.OnMatch(); e != nil {
-					sg.output.Print(e)
+					sg.output.Println(e)
 				} else {
 					sg.EndTurn()
 				}

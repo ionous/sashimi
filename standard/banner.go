@@ -22,9 +22,9 @@ func init() {
 					headline = "An Interactive fiction" // FIX: default for headline in class.
 				}
 				author := story.Text("author")
-				g.Println(name)
-				g.Println(headline, "by", author)
-				g.Println(VersionString)
+				g.Say(name)
+				g.Say(headline, "by", author)
+				g.Say(VersionString)
 			}))
 	})
 }

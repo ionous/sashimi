@@ -103,32 +103,11 @@ func (ga *GameEventAdapter) Visit(class string, visits func(G.IObject) bool) (ok
 //
 func (ga *GameEventAdapter) Say(texts ...string) {
 	if len(texts) > 0 {
-		for i, text := range texts {
-			if strings.Contains(text, "{{") {
-				// FIX? use source text as a cache index?
-				// NOTE: cant easily use caller program counter index, because sub-functions might break that.
-				if text, e := reallySlow(text, ga.data.values); e != nil {
-					ga.log.Println(e)
-				} else {
-					texts[i] = text
-				}
-			}
-		}
-		// join the strings just like print would
 		text := strings.Join(texts, " ")
-		// find the new lines
 		lines := strings.Split(text, "\n")
 		ga.output.ScriptSays(lines)
 	}
 }
-
-//
-// func (ga *GameEventAdapter) Report(texts ...string) {
-// 	if len(texts) > 0 {
-// 		text := strings.Join(texts, " ")
-// 		ga.output.Println(text)
-// 	}
-// }
 
 //
 func (ga *GameEventAdapter) Log(texts ...string) {

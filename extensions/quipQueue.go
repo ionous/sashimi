@@ -10,6 +10,23 @@ type QuipQueue struct {
 	quips []G.IObject
 }
 
+func SetNextQuip(quip string) NextQuipPhrase {
+	return NextQuipPhrase{quip}
+}
+
+func SetTheNextQuip(quip G.IObject) NextQuipPhrase {
+	return SetNextQuip(quip.Id().String())
+}
+
+type NextQuipPhrase struct {
+	quip string
+}
+
+func (p NextQuipPhrase) Execute(g G.Play) {
+	con := g.Global("conversation").(*Conversation)
+	con.Queue.SetNextQuip(g, g.The(p.quip))
+}
+
 // SetNextQuip for the associated NPC's next round of conversation.
 // FIX: I wonder if this should be merged with UpdateNextQuips() and GetPlayerQuips()
 // rather than a queue -- a pool of next quips -- and it selects the best of the set.
