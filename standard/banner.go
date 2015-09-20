@@ -15,10 +15,16 @@ func init() {
 				And("printing the banner").RequiresNothing(),
 
 			To("print the banner", func(g G.Play) {
-				g.Say(`{{ $src := action.Source }}
-{{ $src.Name }}
-{{ if $src.Headline }}{{ $src.Headline }}{{else}}An Interactive fiction{{end}} by {{ $src.Author }}`)
-				g.Say(VersionString)
+				story := g.The("story")
+				name := story.Text("name")
+				headline := story.Text("headline")
+				if headline == "" {
+					headline = "An Interactive fiction" // FIX: default for headline in class.
+				}
+				author := story.Text("author")
+				g.Println(name)
+				g.Println(headline, "by", author)
+				g.Println(VersionString)
 			}))
 	})
 }

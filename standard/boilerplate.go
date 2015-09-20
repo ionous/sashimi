@@ -60,7 +60,7 @@ func RunScript(script *script.Script, opt Options) (err error) {
 		if game, e := NewStandardGame(model, NewStandardOutput(cons, writer)); e != nil {
 			err = e
 		} else {
-			left, right := game.story.Text("name"), fmt.Sprint("by ", game.story.Text("author"))
+			left, right := game.story.Text("name"), fmt.Sprint(" by ", game.story.Text("author"))
 			game.SetLeft(left)
 			game.SetRight(right)
 			if game, e := game.Start(); e != nil {

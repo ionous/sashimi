@@ -14,7 +14,7 @@ func init() {
 		s.The("objects",
 			Can("report attack").And("reporting attack").RequiresOne("actor"),
 			To("report attack", func(g G.Play) {
-				g.Say("violence isn't the answer")
+				g.Say("Violence isn't the answer.")
 			}))
 
 		s.Execute("attack it", Matching("attack|break|smash|hit|fight|torture {{something}}").
