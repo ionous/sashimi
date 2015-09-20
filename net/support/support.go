@@ -3,27 +3,28 @@ package support
 import (
 	"log"
 	"net/http"
-	//	"path/filepath"
 )
 
-type FilePair struct {
-	pattern, dir string
+type FilePattern string
+
+// Dir generates a FilePattern for use with ServeMux
+func Dir(pattern string) FilePattern {
+	return FilePattern(pattern)
 }
 
-func Dir(pattern string) FilePair {
-	return FilePair{pattern, ""}
-}
-
+// ServeMux extends http.ServeMux to provide additional functionality.
 type ServeMux struct {
 	*http.ServeMux
 }
 
+// NewServeMux extends http.NewServeMux to provide additional functionality.
 func NewServeMux() ServeMux {
 	return ServeMux{http.NewServeMux()}
 }
 
-func (this ServeMux) HandleText(pattern, text string) {
-	this.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+// HandleText associates a static block of text with the passed url pattern.
+func (mux ServeMux) HandleText(pattern, text string) {
+	mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != pattern {
 			http.NotFound(w, r)
 		} else {
@@ -32,20 +33,16 @@ func (this ServeMux) HandleText(pattern, text string) {
 	})
 }
 
-func (this ServeMux) HandleFilePatterns(root string, pairs ...FilePair) {
+// HandleFilePatterns creates a http.FileSystem for the passed root path, and associates it with the passed FilePatterns.
+func (mux ServeMux) HandleFilePatterns(root string, filepats ...FilePattern) {
 	fs := http.Dir(root)
-	for _, pair := range pairs {
-		this.HandleFilePattern(fs, pair)
+	for _, filepat := range filepats {
+		mux.HandleFilePattern(fs, filepat)
 	}
 }
 
-func (this ServeMux) HandleFilePattern(fs http.FileSystem, pair FilePair) {
-	if dir := pair.dir; dir == "" {
-		this.Handle(pair.pattern, http.FileServer(fs))
-		log.Println("serving", pair.pattern)
-	} else {
-		//	http.Handle(this.pattern,
-		//		http.StripPrefix(this.pattern, http.FileServer(http.Dir(path))))
-		panic("needs testing")
-	}
+// HandleFilePattern associates the passed file system with the passed FilePattern.
+func (mux ServeMux) HandleFilePattern(fs http.FileSystem, filepat FilePattern) {
+	mux.Handle(string(filepat), http.FileServer(fs))
+	log.Println("serving", filepat)
 }

@@ -1,4 +1,4 @@
 package resource
 
-// json-like serialization
+// Dict provides json-like map serialization.
 type Dict map[string]interface{}
