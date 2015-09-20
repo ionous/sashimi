@@ -50,7 +50,7 @@ func init() {
 			//print description
 			When("describing").Always(func(g G.Play) {
 				container := g.The("action.Source")
-				if (container.Is("open") || container.Is("transparent")) && !container.Is("scenery-content") {
+				if (container.Is("open") || container.Is("transparent")) && !container.Is("scenery") {
 					g.Go(DescribeThe(container))
 					listContents(g, "In the", container)
 					g.StopHere()
