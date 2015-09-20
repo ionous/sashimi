@@ -17,8 +17,8 @@ type StandardStart struct {
 // StandardGame wraps the runtime.Game with the standard rules.
 type StandardGame struct {
 	_StandardCore
-	quit, completed bool
-	lastInput       string
+	started, quit, completed bool
+	lastInput                string
 }
 
 // _StandardCore assists the transformation of a StandardStart into a StandardGame.
@@ -77,7 +77,7 @@ func NewStandardGame(model *M.Model, output R.IOutput) (ret StandardStart, err e
 			} else {
 				core := _StandardCore{game, parser, output, story, status}
 				core.SetLeft(story.Text("name"))
-				core.SetRight(fmt.Sprint(story.Text("name"), "by ", story.Text("author")))
+				core.SetRight(fmt.Sprintf(`"%s" by %s.`, story.Text("name"), story.Text("author")))
 				ret = StandardStart{core}
 			}
 		}
@@ -87,16 +87,7 @@ func NewStandardGame(model *M.Model, output R.IOutput) (ret StandardStart, err e
 
 // Start sends commencing, and returns a new StandardGame.
 func (sg *StandardStart) Start() (ret *StandardGame, err error) {
-	// FIX: shouldnt the interface be Go("commence")?
-	if e := sg.SendEvent("commencing", sg.story.Id()); e != nil {
-		err = e
-	} else {
-		// process all existing messages in the queue first
-		if e := sg.ProcessEvents(); e != nil {
-			err = e
-		}
-	}
-	return &StandardGame{sg._StandardCore, false, false, ""}, err
+	return &StandardGame{_StandardCore: sg._StandardCore}, err
 }
 
 // IsQuit when the user has requested to quit the game.
@@ -118,17 +109,23 @@ func (sg *StandardGame) Input(s string) bool {
 		if in == "q" || in == "quit" {
 			sg.quit = true
 		} else {
-			if in == "again" {
-				in = sg.lastInput
+			if in == "start" && !sg.started {
+				sg.endTurn("commencing")
 			} else {
-				sg.lastInput = in
-			}
-			if matcher, e := sg.ParseInput(in); e != nil {
-				sg.output.Println(e)
-			} else if e := matcher.OnMatch(); e != nil {
-				sg.output.Println(e)
-			} else {
-				sg.EndTurn()
+				if in == "commence" {
+					in = sg.lastInput
+				} else {
+					sg.lastInput = in
+				}
+				if matcher, e := sg.ParseInput(in); e != nil {
+					// FIXFIXFIXFIX
+					// change some "report"
+					sg.output.Print(e)
+				} else if e := matcher.OnMatch(); e != nil {
+					sg.output.Print(e)
+				} else {
+					sg.EndTurn()
+				}
 			}
 		}
 	}
@@ -138,8 +135,11 @@ func (sg *StandardGame) Input(s string) bool {
 // EndTurn finishes the turn for the player.
 // ( This is normally called automatically by Input )
 func (sg *StandardGame) EndTurn() {
+	sg.endTurn("ending the turn")
+}
+func (sg *StandardGame) endTurn(event string) {
 	game := sg.Game
-	game.SendEvent("ending the turn", sg.story.Id())
+	game.SendEvent(event, sg.story.Id())
 	if e := game.ProcessEvents(); e != nil {
 		log.Println(e)
 	} else {
