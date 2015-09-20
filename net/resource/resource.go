@@ -5,7 +5,8 @@ import (
 )
 
 //
-// A rest-ish endpoint.
+// IResource interfaces with a rest-ish endpoint.
+// See also, Wrapper, which provides a function-based adapter.
 //
 type IResource interface {
 	// Return the named sub-resource

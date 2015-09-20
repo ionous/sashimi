@@ -1,4 +1,2 @@
-//
-// A set of rest-ish resources based loosely on http://jsonapi.org
-//
+// Resource rest-ish-ly provides data similar to http://jsonapi.org.
 package resource

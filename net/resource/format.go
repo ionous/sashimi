@@ -1,6 +1,7 @@
 package resource
 
-// document-struct
+// Document provides json-data roughly following the description at http://jsonapi.org/format/#document-structure.
+// DocumentBuilder provides an API for generating these structures properly.
 type Document struct {
 	// data can either be an Object or an array of Objects
 	// (the lack of omitempty vs omitnil is super-annoying.)

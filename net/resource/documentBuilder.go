@@ -2,109 +2,112 @@ package resource
 
 import "fmt"
 
+// DocumentBuilder provides an api for creating json-api document structures.
 type DocumentBuilder struct {
 	doc *Document
 }
 
+//
+// NewDocumentBuilder creates an api-object to hepl populate the passed document.
+//
 func NewDocumentBuilder(doc *Document) DocumentBuilder {
 	return DocumentBuilder{doc}
 }
 
 //
-// Set the document data to the passed object identifier.
-// Return a builder to turn the identifier into a full object.
+// NewObject sets the document data to the passed object identifier.
+// Returns an object builder to populate data about the identified object.
 //
-func (this DocumentBuilder) NewObject(id, class string) *Object {
+func (build DocumentBuilder) NewObject(id, class string) *Object {
 	obj := NewObject(id, class)
-	if this.doc.Data == nil {
-		this.doc.Data = obj
+	if build.doc.Data == nil {
+		build.doc.Data = obj
 	} else {
-		this.AddError(fmt.Errorf("document object specified multiple times."))
+		build.AddError(fmt.Errorf("document object specified multiple times."))
 	}
 	return obj
 }
 
 //
-// Set the document data to an array of objects or object identifiers.
-// Return a builder to add objects to that array.
+// NewObjects returns a builder to add an array of objects ( or object identifiers ) to the document.
 //
-func (this DocumentBuilder) NewObjects() ObjectsBuilder {
-	if this.doc.Data == nil {
+func (build DocumentBuilder) NewObjects() ObjectsBuilder {
+	if build.doc.Data == nil {
 		// a blank placeholder for ObjectsBuilder.NewObject
-		this.doc.Data = []Object{}
+		build.doc.Data = []Object{}
 	} else {
-		this.AddError(fmt.Errorf("document objects specified multiple times."))
+		build.AddError(fmt.Errorf("document objects specified multiple times."))
 	}
-	return ObjectsBuilder{this}
+	return ObjectsBuilder{build}
 }
 
 //
-// Set the document data to an array of objects or object identifiers.
-// Return a builder to add objects to that array.
+// Sets the document data to an existing array of objects or object identifiers.
+// Returns a builder to add objects to that array.
 //
-func (this DocumentBuilder) Sets(objects ObjectList) DocumentBuilder {
-	if this.doc.Data == nil {
+func (build DocumentBuilder) Sets(objects ObjectList) DocumentBuilder {
+	if build.doc.Data == nil {
 		// a blank placeholder for ObjectsBuilder.NewObject
-		this.doc.Data = objects.doc.Included
+		build.doc.Data = objects.doc.Included
 	} else {
-		this.AddError(fmt.Errorf("document objects specified multiple times."))
+		build.AddError(fmt.Errorf("document objects specified multiple times."))
 	}
-	return this
+	return build
 }
 
 //
-// Add metadata to document.
+// SetMeta to add a key-value the document's metadata.
 //
-func (this DocumentBuilder) SetMeta(key string, value interface{}) DocumentBuilder {
-	if this.doc.Meta == nil {
-		this.doc.Meta = Dict{}
+func (build DocumentBuilder) SetMeta(key string, value interface{}) DocumentBuilder {
+	if build.doc.Meta == nil {
+		build.doc.Meta = Dict{}
 	}
-	this.doc.Meta[key] = value
-	return this
+	build.doc.Meta[key] = value
+	return build
 }
 
 //
-// Add a link to the document.
+// SetLink to add the named link to the document's list of links.
 //
-func (this DocumentBuilder) SetLink(key string, link Link) DocumentBuilder {
-	if this.doc.Links == nil {
-		this.doc.Links = make(Links)
+func (build DocumentBuilder) SetLink(key string, link Link) DocumentBuilder {
+	if build.doc.Links == nil {
+		build.doc.Links = make(Links)
 	}
-	this.doc.Links[key] = link
-	return this
+	build.doc.Links[key] = link
+	return build
 }
 
 //
-// Set the document data to an array of objects or object identifiers.
-// Return a builder to add objects to that array.
+// NewIncludes returns a builder which can add objects (or object identifiers) to a compound document.
 //
-func (this DocumentBuilder) NewIncludes() ObjectList {
-	if this.doc.Included == nil {
-		this.doc.Included = []*Object{}
+func (build DocumentBuilder) NewIncludes() ObjectList {
+	if build.doc.Included == nil {
+		build.doc.Included = []*Object{}
 	} else {
-		this.AddError(fmt.Errorf("document objects included multiple times."))
+		build.AddError(fmt.Errorf("document objects included multiple times."))
 	}
-	return ObjectList{this.doc}
+	return ObjectList{build.doc}
 }
 
 //
-// Add additional objects to the document.
-// ( They should be referenced by the primary object in someway. )
+// SetIncluded sets the document's compound/include data to the passed object list.
+// ( To comply with jsonapi, objects in the list should be referenced by the primary object. )
 //
-func (this DocumentBuilder) SetIncluded(objects ObjectList) DocumentBuilder {
-	if this.doc.Included == nil {
-		this.doc.Included = objects.Objects()
+func (build DocumentBuilder) SetIncluded(objects ObjectList) DocumentBuilder {
+	if build.doc.Included == nil {
+		build.doc.Included = objects.Objects()
 	} else {
-		this.AddError(fmt.Errorf("document objects included multiple times."))
+		build.AddError(fmt.Errorf("document objects included multiple times."))
 	}
-	return this
+	return build
 }
 
 //
+// AddError appends an error to the list of errors included by this document.
 // NOTE: if ever needed, could return or take error builder
 // to which the other bits of the jsonapi error structure could be added
 //
-func (this DocumentBuilder) AddError(err error) DocumentBuilder {
-	this.doc.Errors = append(this.doc.Errors, Error{Code: err.Error()})
-	return this
+func (build DocumentBuilder) AddError(err error) DocumentBuilder {
+	build.doc.Errors = append(build.doc.Errors, Error{Code: err.Error()})
+	return build
 }
