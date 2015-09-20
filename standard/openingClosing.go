@@ -55,6 +55,7 @@ func init() {
 				g.Say("Now the", opener.Text("Name"), "is open.")
 				// if the noun doesnt not enclose the actor
 				// list the contents of the noun, as a sentence, tersely, not listing concealed items;
+				// FIX? not all openers are opaque/transparent, and not all openers have contents.
 				if opener.Is("opaque") {
 					listContents(g, "In the", opener)
 				}
