@@ -5,46 +5,50 @@ import (
 	"strings"
 )
 
+// BufferedOutput acts similar to go's fmt.Print and fmt.Println;
+// accumulating output until Flush()
 type BufferedOutput struct {
 	accum []string
 	line  []string
 }
 
-//
-// Accumulate the passed args as text for Results().
-//
-func (this *BufferedOutput) Print(args ...interface{}) {
-	str := fmt.Sprint(args...)
-	this.line = append(this.line, str)
+// Print into the current (pending) line.
+func (buf *BufferedOutput) Print(args ...interface{}) {
+	if len(args) > 0 {
+		str := fmt.Sprint(args...)
+		buf.line = append(buf.line, str)
+	}
 }
 
-//
 // Accumulate the passed args as text for Results().
-//
-func (this *BufferedOutput) Println(args ...interface{}) {
-	this.Print(args...)
-	this.flush()
+func (buf *BufferedOutput) Println(args ...interface{}) {
+	if len(args) > 0 {
+		buf.Print(args...)
+	}
+	buf.flush()
 }
 
-//
-func (this *BufferedOutput) flush() {
-	line := strings.Join(this.line, " ")
-	this.accum = append(this.accum, line)
-	this.line = nil
+// flush generates any recent print statements into a single line.
+func (buf *BufferedOutput) flush() {
+	if len(buf.line) > 0 {
+		line := strings.Join(buf.line, " ")
+		buf.accum = append(buf.accum, line)
+	}
+	buf.line = nil
 }
 
 //
 // Returns an array of all printed text; resets the buffer.
 //
-func (this *BufferedOutput) Flush() (lines []string) {
-	if len(this.line) > 0 {
-		this.flush()
+func (buf *BufferedOutput) Flush() (lines []string) {
+	if len(buf.line) > 0 {
+		buf.flush()
 	}
-	if a := this.accum; a != nil {
+	if a := buf.accum; len(a) != 0 {
 		lines = a
 	} else {
 		lines = []string{}
 	}
-	this.accum = nil
+	buf.accum = nil
 	return lines
 }
