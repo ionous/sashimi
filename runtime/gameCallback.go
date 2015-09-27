@@ -22,10 +22,9 @@ func (cb GameCallback) HandleEvent(evt E.IEvent) (err error) {
 	if act, okay := evt.Data().(*RuntimeAction); !okay {
 		err = fmt.Errorf("unexpected game event data type %T", act)
 	} else {
-		// the callbacks from the scripts can ask to be limited to the "target" phase,
+		// callbacks from scripts can ask to be limited to the "target" phase,
 		// whereas event listeneres are either registered as part of the bubbling or capturing cycle.
-		triggerEvent := !cb.UseTargetOnly() || isTargetPhase(evt)
-		if triggerEvent {
+		if trigger := !cb.UseTargetOnly() || isTargetPhase(evt); trigger {
 			if cb.UseAfterQueue() {
 				act.runAfterDefaults(cb.Callback())
 			} else {

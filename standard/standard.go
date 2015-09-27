@@ -50,8 +50,8 @@ func (sc *_StandardCore) SetRight(status string) {
 }
 
 // NewStandardGame creates a game which is based on the standard rules.
-func NewStandardGame(model *M.Model, output R.IOutput) (ret StandardStart, err error) {
-	if game, e := R.NewGame(model, output); e != nil {
+func NewStandardGame(model *M.Model, frame R.EventFrame, output R.IOutput) (ret StandardStart, err error) {
+	if game, e := R.NewGame(model, frame, output); e != nil {
 		err = e
 	} else if parser, e := NewParser(game); e != nil {
 		err = e

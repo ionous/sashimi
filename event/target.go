@@ -1,5 +1,7 @@
 package event
 
+import "github.com/ionous/sashimi/util/ident"
+
 //
 // Event handler callback.
 // Uses an interface for facilitating add/remove event listeners;
@@ -13,6 +15,8 @@ type IListen interface {
 // Node, for instance, in a DOM.
 //
 type ITarget interface {
+	Id() ident.Id
+	Class() ident.Id
 	Parent() (ITarget, bool)
 	Dispatch(IEvent) error
 }

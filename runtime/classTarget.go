@@ -3,6 +3,7 @@ package runtime
 import (
 	E "github.com/ionous/sashimi/event"
 	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 //
@@ -16,32 +17,42 @@ type ClassTarget struct {
 }
 
 //
-func (this ClassTarget) String() string {
-	return this.class.String()
+func (ct ClassTarget) Id() ident.Id {
+	return ct.class.Id()
+}
+
+//
+func (ct ClassTarget) Class() ident.Id {
+	return ident.MakeId("class")
+}
+
+//
+func (ct ClassTarget) String() string {
+	return ct.class.String()
 }
 
 //
 // Walk up the class hierarchy; when we reach the end, move to the next instance.
 // (from E.ITarget)
 //
-func (this ClassTarget) Parent() (ret E.ITarget, ok bool) {
-	parent := this.class.Parent()
+func (ct ClassTarget) Parent() (ret E.ITarget, ok bool) {
+	parent := ct.class.Parent()
 	if parent != nil {
-		ret = ClassTarget{this.host, parent, this.upObject}
+		ret = ClassTarget{ct.host, parent, ct.upObject}
 		ok = true
-	} else if next := this.upObject; next != nil {
-		ret = ObjectTarget{this.host.game, next}
+	} else if next := ct.upObject; next != nil {
+		ret = ObjectTarget{ct.host.game, next}
 		ok = true
 	}
 	return ret, ok
 }
 
 //
-// Send an event to this target.
+// Send an event to ct target.
 // (from E.ITarget)
 //
-func (this ClassTarget) Dispatch(evt E.IEvent) (err error) {
-	if d, ok := this.host.game.Dispatchers.GetDispatcher(this.class.Id()); ok {
+func (ct ClassTarget) Dispatch(evt E.IEvent) (err error) {
+	if d, ok := ct.host.game.Dispatchers.GetDispatcher(ct.class.Id()); ok {
 		err = d.Dispatch(evt)
 	}
 	return err

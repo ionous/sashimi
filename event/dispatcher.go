@@ -27,13 +27,12 @@ func (d *Dispatcher) Silence(evt string, handler IListen, capture bool) {
 	d.getMap(capture).RemoveEventListener(evt, handler)
 }
 
-// Dispatch triggers either the capturing or the bubbling handlers, depending on the phase of the passed event.
-// The dispatcher can only handle events of "Proc" type
+// Dispatch triggers capturing or bubbling handlers, depending on the phase of the passed event.
+// The dispatcher can only handle events of "Proc" type.
 func (d *Dispatcher) Dispatch(evt IEvent) (err error) {
 	if proc, ok := evt.(*Proc); !ok {
 		err = fmt.Errorf("unknown event type %T", evt)
 	} else {
-
 		phase := evt.Phase()
 		// capturing or targeting? trigger capture listeners
 		if phase != BubblingPhase && !proc.stopMore {

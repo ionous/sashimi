@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	E "github.com/ionous/sashimi/event"
 	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/net/resource"
 	"github.com/ionous/sashimi/net/session"
@@ -17,8 +18,20 @@ import (
 //
 func NewCommandSession(id string, model *M.Model) (ret *CommandSession, err error) {
 	output := NewCommandOutput(id)
+	// event start/end frame
+	frame := func(tgt E.ITarget, msg *E.Message) func() {
+		// msg.Data is RuntimeAction -- theres not really parameters for events right now
+		// other than tgt, src, ctx right now.
+		output.flushPending()
+		//msg.Data == RunTimeAction
+		output.events.PushEvent(msg.Name, tgt, nil)
+		return func() {
+			output.flushPending()
+			output.events.PopEvent()
+		}
+	}
 	// after creating the game, but vefore running it --
-	if game, e := standard.NewStandardGame(model, output); e != nil {
+	if game, e := standard.NewStandardGame(model, frame, output); e != nil {
 		err = e
 	} else {
 		// setup system event callbacks --

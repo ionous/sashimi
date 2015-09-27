@@ -42,7 +42,7 @@ func NewTestGame(t *testing.T, s *Script) (ret TestGame, err error) {
 		err = e
 	} else {
 		cons := TestOutput{t, &C.BufferedOutput{}}
-		if game, e := R.NewGame(model, cons); e != nil {
+		if game, e := R.NewGame(model, nil, cons); e != nil {
 			err = e
 		} else if parser, e := standard.NewParser(game); e != nil {
 			err = e

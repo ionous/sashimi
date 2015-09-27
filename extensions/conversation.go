@@ -144,12 +144,13 @@ func init() {
 			Can("report comment").And("reporting comment").RequiresOne("actor"),
 			To("report comment", func(g G.Play) {
 				talker, quip := g.The("actor"), g.The("quip")
+				comment := quip.Text("comment")
 				if standard.Debugging {
-					fmt.Println("!", talker, "commenting", quip)
+					fmt.Println("!", talker, "commenting", quip, "'"+comment+"'")
 				}
 				con := g.Global("conversation").(*Conversation)
 				// the player wants to speak: probably has chosen a line of dialog from the menu
-				if comment := quip.Text("comment"); comment != "" {
+				if comment != "" {
 					talker.Says(comment)
 				}
 

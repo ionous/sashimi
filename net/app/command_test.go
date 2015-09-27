@@ -16,7 +16,6 @@ import (
 
 //
 func TestNetApp(t *testing.T) {
-
 	stories.Select("lab")
 
 	ts := httptest.NewServer(NewServer())
@@ -28,11 +27,11 @@ func TestNetApp(t *testing.T) {
 			d, err := g.post("start")
 			if assert.NoError(t, err) && assert.Len(t, d.Included, 2, "the player and the room") {
 
-				if changes, ok := d.Data.Attributes["events"]; assert.True(t, ok, "frame has event stream") {
-					changes := changes.([]interface{})
-					assert.True(t, len(changes) > 1)
+				if _, ok := d.Data.Attributes["events"]; assert.True(t, ok, "frame has event stream") {
 
-					assert.EqualValues(t, "game", d.Data.Class)
+					if !assert.EqualValues(t, "game", d.Data.Class) {
+						return
+					}
 					// check the room
 					if contents, err := g.getMany("rooms", "lab", "contents"); assert.NoError(t, err) {
 						assert.Len(t, contents.Data, 3, "the lab should have two objects")

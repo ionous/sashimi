@@ -11,162 +11,156 @@ import (
 )
 
 //
-// Builds commands which get sent to the player/client.
+// CommandOutput records game state changes, gets sent to the player/client.
 //
 type CommandOutput struct {
 	id               string
 	C.BufferedOutput // TEMP: implements Print() and Println()
 	serial           SerialOut
-	events           Events
+	events           *EventStream
 }
 
 //
+// Includes all objects referenced by the CommandOutput.
 //
-//
-type Included map[ident.Id]*R.GameObject
+type Includes map[ident.Id]*R.GameObject
 
-func (this Included) Include(gobj *R.GameObject) {
-	this[gobj.Id()] = gobj
+func (inc Includes) Include(gobj *R.GameObject) {
+	inc[gobj.Id()] = gobj
 }
 
 //
-//
-//
-type Events struct {
-	array []resource.Dict
-}
-
-func (this *Events) Add(name string, value interface{}) {
-	this.array = append(this.array, resource.Dict{name: value})
-}
-
-func (this *Events) Flush() []resource.Dict {
-	ret := this.array
-	this.array = []resource.Dict{}
-	return ret
-}
-
-//
-//
+// SerialOut is used by CommandOuput to track runtime.GameObjects.
 //
 type SerialOut struct {
 	*ObjectSerializer
-	includes Included
+	includes Includes
 }
 
-func (this *SerialOut) TryObjectRef(gobj *R.GameObject) (ret *resource.Object, okay bool) {
-	if this.IsKnown(gobj) {
-		ret = this.NewObjectRef(gobj)
+// TryObjectRef only creates an object ref if the object is already known.
+func (serial *SerialOut) TryObjectRef(gobj *R.GameObject) (ret *resource.Object, okay bool) {
+	if serial.IsKnown(gobj) {
+		ret = serial.NewObjectRef(gobj)
 		okay = true
 	}
 	return
 }
 
-func (this *SerialOut) NewObjectRef(gobj *R.GameObject) *resource.Object {
-	this.includes.Include(gobj)
-	return this.NewObject(resource.ObjectList{}, gobj)
+func (serial *SerialOut) NewObjectRef(gobj *R.GameObject) *resource.Object {
+	serial.includes.Include(gobj)
+	return serial.NewObject(resource.ObjectList{}, gobj)
 }
 
-func (this *SerialOut) Flush() Included {
-	ret := this.includes
-	this.includes = make(Included)
+func (serial *SerialOut) Flush() Includes {
+	ret := serial.includes
+	serial.includes = make(Includes)
 	return ret
 }
 
 //
-//
+// NewCommandOutput
 //
 func NewCommandOutput(id string) *CommandOutput {
-	this := &CommandOutput{
+	out := &CommandOutput{
 		id:     id,
-		serial: SerialOut{NewObjectSerializer(), Included{}},
+		serial: SerialOut{NewObjectSerializer(), Includes{}},
+		events: NewEventStream(),
 	}
-	return this
+	return out
 }
 
 //
-// Add a command for an actor's line of dialog.
+// ActorSays adds a command for an actor's line of dialog.
 //
-func (this *CommandOutput) ActorSays(who *R.GameObject, lines []string) {
-	this.flushPending()
-	//this.events.Add("say", this.serial.NewObjectRef(who).SetAttr("lines", lines))
-	this.events.Add("say",
-		resource.ObjectList{}.
-			NewObject("_display_", "_sys_").
-			SetAttr("lines", lines).
-			SetAttr("speaker", this.serial.NewObjectRef(who)))
+func (out *CommandOutput) ActorSays(who *R.GameObject, lines []string) {
+	out.flushPending()
+	tgt := out.serial.NewObjectRef(who)
+	out.events.AddAction("say", tgt, lines)
 }
 
 //
-// Add a command for passed script lines.
+// ScriptSays add a command for passed script lines.
 // ( The implementation actually consolidates consecutive script says into a single command. )
 //
-func (this *CommandOutput) ScriptSays(lines []string) {
+func (out *CommandOutput) ScriptSays(lines []string) {
 	for _, l := range lines {
-		this.Println(l)
+		out.Println(l)
 	}
 }
 
 //
 // Log the passed message locally, doesn't generate a client command.
 // FIX: a log interface -- perhaps as an anonymous member -- then we could have logf, etc.
-func (this *CommandOutput) Log(message string) {
+func (out *CommandOutput) Log(message string) {
 	os.Stderr.WriteString(message)
 }
 
 //
-// Flush the commands to the passed output.
+// FlushDocument containing all commands to the passed document builder.
 //
-func (this *CommandOutput) FlushDocument(doc resource.DocumentBuilder) {
-	this.flushPending()
+func (out *CommandOutput) FlushDocument(doc resource.DocumentBuilder) {
+	out.flushPending()
 	// techinically, it'd be some sort of 201 location of the new frame url.
-	this.FlushFrame(doc, doc.NewIncludes())
-
+	out.flushFrame(doc, doc.NewIncludes())
 }
 
 //
-// NOTE: Both header and included may be the same list -- as is true of the first frame.
+// FlushFrame NOTE: Both header and included may be the same list -- as is true of the first frame.
 //
-func (this *CommandOutput) FlushFrame(header, included resource.IBuildObjects) {
+func (out *CommandOutput) flushFrame(header, included resource.IBuildObjects) {
 	// create a new frame
-	//include all events for this new frame
-	header.NewObject(this.id, "game").SetAttr("events", this.events.Flush())
+	//include all events for out new frame
+	game := header.NewObject(out.id, "game")
+	if events := out.events.Flush(); len(events) > 0 {
+		game.SetAttr("events", events)
+	}
 	// includes the object once, after all of properties have changed.
-	for _, gobj := range this.serial.Flush() {
-		this.serial.SerializeObject(included, gobj, false)
+	for _, gobj := range out.serial.Flush() {
+		out.serial.SerializeObject(included, gobj, false)
 	}
 }
 
 func (this *CommandOutput) changedLocation(action *M.ActionInfo, gobjs []*R.GameObject) {
 	this.flushPending()
 	who, where := this.serial.NewObjectRef(gobjs[1]), this.serial.NewObjectRef(gobjs[2])
-	this.events.Add("set-initial-position", who.SetMeta("location", where))
+	this.events.AddAction("set-initial-position", who, where)
 }
 
-//
-// via callback via PropertyWatcher, triggered by runtime's Notify()
-//
-func (this *CommandOutput) propertyChanged(game *R.Game, gobj *R.GameObject, prop M.IProperty, prev, next interface{}) {
+// propertyChanged callback via PropertyWatcher, triggered by runtime's Notify()
+func (out *CommandOutput) propertyChanged(game *R.Game, gobj *R.GameObject, prop M.IProperty, prev, next interface{}) {
 	//
 	// property changes dont cause an object to be serialized
 	// some other event or request is required
 	//
 	switch prop := prop.(type) {
 	case *M.NumProperty:
-		if obj, ok := this.serial.TryObjectRef(gobj); ok {
-			this.events.Add("x-num", obj.SetAttr(jsonId(prop.Id()), next))
+		if obj, ok := out.serial.TryObjectRef(gobj); ok {
+			data := struct {
+				Prop  string  `json:"prop"`
+				Value float32 `json:"value"`
+			}{jsonId(prop.Id()), next.(float32)}
+			out.events.AddAction("x-num", obj, data)
 		}
 
 	case *M.TextProperty:
-		if obj, ok := this.serial.TryObjectRef(gobj); ok {
-			this.events.Add("x-txt", obj.SetAttr(jsonId(prop.Id()), next))
+		if obj, ok := out.serial.TryObjectRef(gobj); ok {
+			data := struct {
+				Prop  string `json:"prop"`
+				Value string `json:"value"`
+			}{jsonId(prop.Id()), next.(string)}
+			out.events.AddAction("x-txt", obj, data)
 		}
 
 	case *M.EnumProperty:
-		if obj, ok := this.serial.TryObjectRef(gobj); ok {
-			prev := jsonId(prev.(ident.Id))
-			next := jsonId(next.(ident.Id))
-			this.events.Add("x-set", obj.SetMeta("change-states", []string{prev, next}))
+		if obj, ok := out.serial.TryObjectRef(gobj); ok {
+			data := struct {
+				Prop string `json:"prop"`
+				Prev string `json:"prev"`
+				Next string `json:"next"`
+			}{jsonId(prop.Id()),
+				jsonId(prev.(ident.Id)),
+				jsonId(next.(ident.Id))}
+			out.events.AddAction("x-set", obj, data)
 		}
 
 	case *M.RelativeProperty:
@@ -179,33 +173,55 @@ func (this *CommandOutput) propertyChanged(game *R.Game, gobj *R.GameObject, pro
 			panic(fmt.Sprint("couldnt match", prop, relation))
 		}
 
+		type RelationChange struct {
+			Prop  string           `json:"prop"`
+			Other string           `json:"other"`
+			Prev  *resource.Object `json:"prev,omitempty"`
+			Next  *resource.Object `json:"next,omitempty"`
+		}
+
 		// fire for the original object
-		if obj, ok := this.serial.TryObjectRef(gobj); ok {
-			this.events.Add("x-rel", obj.SetMeta("rel", jsonId(prop.Id())))
-		}
+		if obj, ok := out.serial.TryObjectRef(gobj); ok {
+			relChange := RelationChange{Prop: jsonId(prop.Id()), Other: jsonId(other.Property)}
 
-		// fire for the prev object's relationships
-		if gprev, ok := game.Objects[prev.(ident.Id)]; ok {
-			if obj, ok := this.serial.TryObjectRef(gprev); ok {
-				this.events.Add("x-rel", obj.SetMeta("rel", jsonId(other.Property)))
+			// fire for the prev object's relationships
+			if gprev, ok := game.Objects[prev.(ident.Id)]; ok {
+				if obj, ok := out.serial.TryObjectRef(gprev); ok {
+					relChange.Prev = obj
+				}
 			}
-		}
 
-		// fire for the next object's relationships
-		if gnext, ok := game.Objects[next.(ident.Id)]; ok {
-			if obj, ok := this.serial.TryObjectRef(gnext); ok {
-				this.events.Add("x-rel", obj.SetMeta("rel", jsonId(other.Property)))
+			// fire for the next object's relationships
+			if gnext, ok := game.Objects[next.(ident.Id)]; ok {
+				if obj, ok := out.serial.TryObjectRef(gnext); ok {
+					relChange.Next = obj
+				}
 			}
+
+			out.events.AddAction("x-rel", obj, relChange)
 		}
 	}
 }
 
-//
-// Write buffered lines into the fake $lines object
-//
-func (this *CommandOutput) flushPending() {
-	if lines := this.BufferedOutput.Flush(); len(lines) > 0 {
-		// a queriable resource so that it's reocoverable, pagination?
-		this.events.Add("say", resource.ObjectList{}.NewObject("_display_", "_sys_").SetAttr("lines", lines))
+// flushPending buffered lines into the fake display object.
+func (out *CommandOutput) flushPending() {
+	// only if theres a flush before push and pop.
+	if lines := out.BufferedOutput.Flush(); len(lines) > 0 {
+		// FIXFIXIX: theres some sort of bug in the buffered output or the code that uses it,
+		// leading to empty, and unconsolidated, "say" staements
+		// this can be seen in command_test: after lines": ["", "lab", "an empty room", ""],
+		// are a series of blank says.
+		empty := true
+		for _, l := range lines {
+			if len(l) > 0 {
+				empty = false
+				break
+			}
+		}
+		if !empty {
+			// FIX? a queriable resource so that it's recoverable, pagination?
+			var tgt = resource.ObjectList{}.NewObject("_display_", "_sys_")
+			out.events.AddAction("print", tgt, lines)
+		}
 	}
 }

@@ -4,7 +4,7 @@ import (
 	"github.com/ionous/sashimi/util/ident"
 )
 
-// There might be a few implementations:
+// IObject might have a few implementations:
 // * valid objects
 // * invalid objects while debugging which panics or errors
 // * invalid objects during play which eat all errors

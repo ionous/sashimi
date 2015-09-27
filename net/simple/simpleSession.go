@@ -8,7 +8,7 @@ import (
 
 func NewSimpleSession(model *M.Model) (ret *SimpleSession, err error) {
 	out := &SimpleOutput{}
-	if game, e := standard.NewStandardGame(model, out); e != nil {
+	if game, e := standard.NewStandardGame(model, nil, out); e != nil {
 		err = e
 	} else if game, e := game.Start(); e != nil {
 		err = e

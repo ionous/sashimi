@@ -1,33 +1,33 @@
 package resource
 
 //
-// object creation
+// NewObject creation.
 //
 func NewObject(id, class string) *Object {
 	return &Object{id, class, make(Dict), make(map[string]Relationship), make(Dict)}
 }
 
 //
-// Add an attribute to this object.
+// SetAttr sets the attribute "key" to "value".
 //
-func (this *Object) SetAttr(key string, value interface{}) *Object {
-	this.Attributes[key] = value
-	return this
+func (obj *Object) SetAttr(key string, value interface{}) *Object {
+	obj.Attributes[key] = value
+	return obj
 }
 
 //
-// Add object metadata.
+// SetMeta sets the metada "key" to "value".
 //
-func (this *Object) SetMeta(key string, value interface{}) *Object {
-	this.Meta[key] = value
-	return this
+func (obj *Object) SetMeta(key string, value interface{}) *Object {
+	obj.Meta[key] = value
+	return obj
 }
 
 //
-// Add object relations
+// SetRel adds object relations.
 // FUTURE: use a builder for metadata support, etc.
 //
-func (this *Object) SetRel(key string, data interface{}) *Object {
-	this.Relationships[key] = Relationship{Data: data}
-	return this
+func (obj *Object) SetRel(key string, data interface{}) *Object {
+	obj.Relationships[key] = Relationship{Data: data}
+	return obj
 }

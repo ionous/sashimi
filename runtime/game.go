@@ -11,13 +11,14 @@ import (
 	"reflect"
 )
 
-// FIX: standarize member exports by splitting game into smaller classes and interfaces
+// FIX: standarize member exports by splitting game into smaller classes and interfaces; focus on injecting what game needs, and allowing providers to decorate/instrument what they need.
 type Game struct {
 	Model          *M.Model
 	Objects        GameObjects
 	Dispatchers    Dispatchers
 	output         IOutput
-	queue          *E.Queue
+	queue          EventQueue
+	frame          EventFrame
 	defaultActions DefaultActions
 	SystemActions  SystemActions
 	log            *log.Logger
@@ -40,7 +41,7 @@ type DefaultActions map[*M.ActionInfo][]G.Callback
 
 type Globals map[ident.Id]reflect.Value
 
-func NewGame(model *M.Model, output IOutput) (game *Game, err error) {
+func NewGame(model *M.Model, frame EventFrame, output IOutput) (game *Game, err error) {
 	log := log.New(logAdapter{output}, "game: ", log.Lshortfile)
 	dispatchers := NewDispatchers(log)
 	objects, e := CreateGameObjects(model.Instances, model.Tables)
@@ -55,13 +56,17 @@ func NewGame(model *M.Model, output IOutput) (game *Game, err error) {
 	if err != nil {
 		return nil, err
 	}
+	if frame == nil {
+		frame = DefaultEventFrame
+	}
 
 	game = &Game{
 		model,
 		objects,
 		dispatchers,
 		output,
-		E.NewQueue(),
+		EventQueue{E.NewQueue()},
+		frame,
 		make(DefaultActions),
 		NewSystemActions(),
 		log,
@@ -111,7 +116,10 @@ func NewGame(model *M.Model, output IOutput) (game *Game, err error) {
 // PushParentLookup function into the game's determination of which object is which object's container.
 // Changes the user's parent lookup (IObject -> name) into
 // the runtime's parent lookup (GameObject->GameObject).
-// FIX? move the the adapter??? dont think we should be referencing adapter in game...
+// FIX: inject an interface, via the constructor, which makes this possible
+// possibly inject the game/object adapter factory even.
+// then the caller can have the handle which does the push
+// and game can remain ignorant of the push (or not) process.
 func (game *Game) PushParentLookup(userLookup G.TargetLookup) {
 	game.parentLookup.PushLookup(func(gobj *GameObject) (ret *GameObject) {
 		// setup callback context:
@@ -132,27 +140,14 @@ func (game *Game) PopParentLookup() {
 	game.parentLookup.PopLookup()
 }
 
-//
-//
-// Run the event queue till there's an error
-//
+// ProcessEvents in the event queue till empty, or errored.
 func (game *Game) ProcessEvents() (err error) {
-	for err == nil && !game.queue.Empty() {
+	for !game.queue.Empty() {
 		tgt, msg := game.queue.Pop()
-		// see also: Go()
-		path := E.NewPathTo(tgt)
-		// game.log.Printf("sending `%s` to: %s", msg.Name, path)
-		if runDefault, e := msg.Send(path); e != nil {
+		if e := game.frame.SendMessage(tgt, msg); e != nil {
 			game.log.Println("error", e)
 			err = e
-		} else {
-			if runDefault {
-				if act, ok := msg.Data.(*RuntimeAction); !ok {
-					err = fmt.Errorf("unknown action data %T", msg.Data)
-				} else {
-					act.runDefaultActions()
-				}
-			}
+			break
 		}
 	}
 	return err

@@ -14,13 +14,6 @@ func NewQueue() *Queue {
 }
 
 //
-// helper for creating a message and enqueuing
-func (q Queue) QueueEvent(target ITarget, name string, data interface{}) {
-	msg := Message{Name: name, Data: data}
-	q.Enqueue(target, msg)
-}
-
-//
 func (q Queue) Enqueue(target ITarget, msg Message) {
 	qd := Queued{target, &msg}
 	q.PushBack(qd)

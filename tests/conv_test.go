@@ -5,6 +5,7 @@ import (
 	G "github.com/ionous/sashimi/game"
 	R "github.com/ionous/sashimi/runtime"
 	. "github.com/ionous/sashimi/script"
+	"github.com/ionous/sashimi/standard"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -148,14 +149,18 @@ func TestDirectFollows(t *testing.T) {
 		Has("subject", "Alien Boy"),
 		Has("comment", "I'm going to look around some more."))
 
+	standard.Debugging = true
 	if game, err := NewTestGame(t, s); assert.NoError(t, err) {
 		g := R.NewGameAdapter(game.Game)
 		if boy := g.The("alien boy"); assert.True(t, boy.Exists(), "found boy") {
 			if player := g.The("player"); assert.True(t, player.Exists(), "found player") {
+				//
 				g.Go(Introduce("player").To("alien boy").WithDefault())
-
+				//
 				con := g.Global("conversation").(*Conversation)
+				con.Converse(g)
 				latest := con.History.MostRecent(g)
+
 				require.True(t, latest.Exists(), "should have most recent quip")
 				require.True(t, latest.Is("restrictive"), "should be restrictive")
 

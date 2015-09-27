@@ -286,14 +286,9 @@ func (oa ObjectAdapter) Go(act string, objects ...G.IObject) {
 			oa.logError(e)
 		} else {
 			tgt := ObjectTarget{oa.game, oa.gobj}
-			msg := E.Message{Name: action.Event(), Data: act}
-			// see ProcessEventQueue()
-			path := E.NewPathTo(tgt)
-			// LOGGING: oa.game.log.Output(3, fmt.Sprintf("go %s %s", tgt, path))
-			if runDefault, e := msg.Send(path); e != nil {
+			msg := &E.Message{Name: action.Event(), Data: act}
+			if e := oa.game.frame.SendMessage(tgt, msg); e != nil {
 				oa.logError(e)
-			} else if runDefault {
-				act.runDefaultActions()
 			}
 		}
 	}
