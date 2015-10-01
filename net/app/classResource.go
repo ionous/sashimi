@@ -3,25 +3,24 @@ package app
 import (
 	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/net/resource"
-	"github.com/ionous/sashimi/util/ident"
 )
 
-func ClassResource(model *M.Model) resource.IResource {
+func ClassResource(classes M.ClassMap) resource.IResource {
 	return resource.Wrapper{
 		// list all classes
 		Queries: func(doc resource.DocumentBuilder) {
 			objects := doc.NewObjects()
-			for k, _ := range model.Classes {
+			for k, _ := range classes {
 				objects.NewObject(jsonId(k), "class")
 			}
 		},
 		// find the named class
 		Finds: func(id string) (ret resource.IResource, okay bool) {
-			if cls, ok := model.Classes.FindClass(id); ok {
+			if cls, ok := classes.FindClass(id); ok {
 				okay, ret = true, resource.Wrapper{
 					// return information about the id'd class
 					Queries: func(doc resource.DocumentBuilder) {
-						addClass(model, doc, doc.NewIncludes(), cls)
+						addClass(doc, doc.NewIncludes(), cls)
 					},
 				}
 			}
@@ -37,7 +36,7 @@ func classParents(cls *M.ClassInfo, ar []string) []string {
 	return ar
 }
 
-func addClass(model *M.Model, doc, sub resource.IBuildObjects, cls *M.ClassInfo) {
+func addClass(doc, sub resource.IBuildObjects, cls *M.ClassInfo) {
 	var parent *resource.Object
 	if p := cls.Parent(); p != nil {
 		//addClass(model, sub, sub, p)
@@ -71,19 +70,19 @@ func addClass(model *M.Model, doc, sub resource.IBuildObjects, cls *M.ClassInfo)
 		}
 		props[jsonId(pid)] = typeName
 	}
-	actionRefs := resource.NewObjectList()
-	for _, act := range model.Actions {
-		var dst ident.Id
-		if d := act.Context(); d != nil {
-			dst = d.Id()
-		} else if d := act.Target(); d != nil {
-			dst = d.Id()
-		}
-		if cls.CompatibleWith(dst) {
-			actionRefs.NewObject(jsonId(act.Id()), "action")
-			actionResource(sub, act)
-		}
-	}
+	// actionRefs := resource.NewObjectList()
+	// for _, act := range model.Actions {
+	// 	var dst ident.Id
+	// 	if d := act.Context(); d != nil {
+	// 		dst = d.Id()
+	// 	} else if d := act.Target(); d != nil {
+	// 		dst = d.Id()
+	// 	}
+	// 	if cls.CompatibleWith(dst) {
+	// 		actionRefs.NewObject(jsonId(act.Id()), "action")
+	// 		actionResource(sub, act)
+	// 	}
+	// }
 	out.SetAttr("props", props)
-	out.SetAttr("actions", actionRefs.Objects())
+	// /out.SetAttr("actions", actionRefs.Objects())
 }

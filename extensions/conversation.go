@@ -189,6 +189,7 @@ func init() {
 						if standard.Debugging {
 							fmt.Println("!", talker, "printing", talkedTo, quips)
 						}
+						// FIX: the console should grab this to label the list, and add the header numbers./
 						text := fmt.Sprintf("%s: ", player.Text("name"))
 						g.Say(Lines("", text))
 						for i, quip := range quips {

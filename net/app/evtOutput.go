@@ -59,7 +59,9 @@ func (evs *EventStream) CurrentEvent() (ret *EventBlock) {
 func (evs *EventStream) PushEvent(evt string, tgt E.ITarget, data interface{}) (ret *EventBlock) {
 	parent := evs.CurrentEvent()
 	// create a new event block, and add it ( as the current event )
-	noRef := resource.ObjectList{}.NewObject(tgt.Id().String(), tgt.Class().String())
+	noRef := resource.ObjectList{}.NewObject(
+		jsonId(tgt.Id()),
+		jsonId(tgt.Class()))
 	block := &EventBlock{Evt: evt, Tgt: noRef, Data: data}
 	evs.list.PushBack(block)
 	// link this event into its parent (if any)

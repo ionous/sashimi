@@ -273,12 +273,14 @@ func (ctx *_Compiler) compileAliases(instances M.InstanceMap, actions M.ActionMa
 	for _, alias := range ctx.src.Aliases {
 		fields := alias.Fields()
 		key, phrases := fields.Key, fields.Phrases
+		// alias is a noun:
 		if inst, ok := instances.FindInstance(key); ok {
 			id := inst.Id()
 			for _, name := range phrases {
 				names.AddNameForId(name, id)
 			}
 		} else {
+			// alias is an action:
 			if act, ok := actions.FindActionByName(key); ok {
 				// FUTURE: ensure action Parsings always involve the player object?
 				// but, to know the player... might mean we couldnt run without the standard lib,

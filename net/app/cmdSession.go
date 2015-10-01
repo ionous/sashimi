@@ -69,9 +69,12 @@ func (sess *CommandSession) Find(name string) (ret resource.IResource, okay bool
 		if cls, plural := sess.game.Model.Classes.FindClass(name); plural {
 			ret, okay = ObjectResource(sess.game.Game, cls, sess.output.serial.ObjectSerializer), true
 		}
-	// a request for information about a class?
+	// a request for information about a class:
 	case "class":
-		ret, okay = ClassResource(sess.game.Model), true
+		ret, okay = ClassResource(sess.game.Model.Classes), true
+		// a request for information about a parser input action:
+	case "action":
+		ret, okay = ParserResource(sess.game.Model), true
 	}
 	return ret, okay
 }
