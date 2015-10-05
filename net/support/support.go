@@ -3,13 +3,21 @@ package support
 import (
 	"log"
 	"net/http"
+	"path"
 )
 
-type FilePattern string
+type FilePattern struct {
+	public, dir string
+}
 
 // Dir generates a FilePattern for use with ServeMux
 func Dir(pattern string) FilePattern {
-	return FilePattern(pattern)
+	return FilePattern{pattern, pattern}
+}
+
+// RenameDir generates a FilePattern for use with ServeMux
+func RenameDir(pattern, directory string) FilePattern {
+	return FilePattern{pattern, directory}
 }
 
 // ServeMux extends http.ServeMux to provide additional functionality.
@@ -34,15 +42,17 @@ func (mux ServeMux) HandleText(pattern, text string) {
 }
 
 // HandleFilePatterns creates a http.FileSystem for the passed root path, and associates it with the passed FilePatterns.
-func (mux ServeMux) HandleFilePatterns(root string, filepats ...FilePattern) {
-	fs := http.Dir(root)
-	for _, filepat := range filepats {
-		mux.HandleFilePattern(fs, filepat)
+func (mux ServeMux) HandleFilePatterns(root string, fpats ...FilePattern) {
+	r := http.Dir(root)
+	for _, fpat := range fpats {
+		var handler http.Handler
+		if fpat.public != fpat.dir {
+			handler = http.StripPrefix(fpat.public, http.FileServer(http.Dir(path.Join(root, fpat.dir))))
+			log.Println("serving", fpat.public, "with", fpat.dir)
+		} else {
+			handler = http.FileServer(r)
+			log.Println("serving", fpat.public)
+		}
+		mux.Handle(fpat.public, handler)
 	}
-}
-
-// HandleFilePattern associates the passed file system with the passed FilePattern.
-func (mux ServeMux) HandleFilePattern(fs http.FileSystem, filepat FilePattern) {
-	mux.Handle(string(filepat), http.FileServer(fs))
-	log.Println("serving", filepat)
 }
