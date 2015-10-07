@@ -33,13 +33,21 @@ func init() {
 				if !prop.Is("openable") {
 					prop.Go("report not openable", actor)
 				} else {
-					if prop.Is("open") {
-						prop.Go("report already open", actor)
+					if prop.Is("locked") {
+						prop.Go("report locked", actor)
 					} else {
-						prop.IsNow("open")
-						prop.Go("report now open", actor)
+						if prop.Is("open") {
+							prop.Go("report already open", actor)
+						} else {
+							prop.IsNow("open")
+							prop.Go("report now open", actor)
+						}
 					}
 				}
+			}),
+			Can("report locked").And("reporting locked").RequiresOne("actor"),
+			To("report locked", func(g G.Play) {
+				g.The("actor").Says("It's locked!")
 			}),
 			Can("report not openable").And("reporting not openable").RequiresOne("actor"),
 			To("report not openable", func(g G.Play) {
@@ -52,7 +60,7 @@ func init() {
 			Can("report now open").And("reporting now open").RequiresOne("actor"),
 			To("report now open", func(g G.Play) {
 				opener := g.The("opener")
-				g.Say("Now the", opener.Text("Name"), "is open.")
+				g.Say("The", opener.Text("Name"), "is now open.")
 				// if the noun doesnt not enclose the actor
 				// list the contents of the noun, as a sentence, tersely, not listing concealed items;
 				// FIX? not all openers are opaque/transparent, and not all openers have contents.

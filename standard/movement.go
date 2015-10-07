@@ -129,7 +129,7 @@ func init() {
 		s.The("doors",
 			Can("report pass through").And("reporting pass through").RequiresOne("actor"),
 			To("report pass through", func(g G.Play) {
-				door, actor := g.The("action.Source"), g.The("action.Target")
+				door, actor := g.The("door"), g.The("actor")
 				if dest := door.Object("destination"); !dest.Exists() {
 					if Debugging {
 						fmt.Print("couldnt find destination")
@@ -142,11 +142,24 @@ func init() {
 					if Debugging {
 						fmt.Print("moving ", actor, " to ", room)
 					}
-					// FIX: player property change?
-					// at the very least a move action.
-					g.Go(MoveThe(actor).ToThe(room))
-					room.Go("report the view")
+					if door.Is("locked") {
+						door.Go("report locked", actor)
+					} else if !door.Is("open") {
+						door.Go("report currently closed", actor)
+					} else {
+						// FIX: player property change?
+						// at the very least a move action.
+						g.Go(MoveThe(actor).ToThe(room))
+						room.Go("report the view")
+					}
 				}
+			}),
+			Can("report currently closed").
+				And("reporting currently closed").
+				RequiresOne("actor"),
+			To("report currently closed", func(g G.Play) {
+				actor := g.The("actor")
+				actor.Says("It's closed.")
 			}))
 		// understandings:
 		// FIX: noun matching: so that >go north; >go door. both work.

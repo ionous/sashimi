@@ -20,7 +20,7 @@ func (rel RelativeValue) List() (ret []ident.Id) {
 }
 
 // FIX: where and how to validate table.style?
-// returns list of items cleared
+// returns item removed
 func (rel RelativeValue) ClearReference() (ret ident.Id, err error) {
 	if rel.prop.ToMany() {
 		err = fmt.Errorf("setting an object, but relation is a list")
@@ -42,6 +42,7 @@ func (rel RelativeValue) ClearReference() (ret ident.Id, err error) {
 }
 
 // FIX: table.style: where and how to validate style?
+// returns previous value
 func (rel RelativeValue) SetReference(other *M.InstanceInfo) (removed ident.Id, err error) {
 	if !other.Class().CompatibleWith(rel.prop.Relates()) {
 		err = fmt.Errorf("%s not compatible with %+v", other, rel.prop)
