@@ -211,25 +211,33 @@ func (oa ObjectAdapter) Set(prop string, object G.IObject) {
 			}
 		case *M.RelativeProperty:
 			if rel, ok := oa.gobj.Value(p.Id()).(RelativeValue); ok {
+				var prev, next ident.Id
+				var err error
 
-				// if the referenced object doesnt exist, we take it to mean they are clearing the reference.
+				// if the new object doesnt exist, we take it to mean they are clearing the reference.
 				if other, ok := object.(ObjectAdapter); !ok {
 					if removed, e := rel.ClearReference(); e != nil {
-						oa.logError(e)
+						err = e
 					} else {
-						oa.game.Properties.Notify(oa.gobj.Id(), p.Id(), removed, ident.Empty())
+						prev = removed
 					}
 				} else {
 					// FIX? the impedence b/t IObject and Reference is annoying.
 					other := other.gobj.Id()
 					if ref, ok := oa.game.Model.Instances[other]; !ok {
-						oa.logError(fmt.Errorf("Set: couldnt find object names %s", other))
+						err = fmt.Errorf("Set: couldnt find object names %s", other)
 					} else if removed, e := rel.SetReference(ref); e != nil {
-						oa.logError(e)
+						err = e
 					} else {
-						// removed is probably a single object
-						oa.game.Properties.Notify(oa.gobj.Id(), p.Id(), removed, other)
+						// removed is probably? a single object
+						prev = removed
+						next = other
 					}
+				}
+				if err != nil {
+					oa.logError(err)
+				} else {
+					oa.game.Properties.Notify(oa.gobj.Id(), p.Id(), prev, next)
 				}
 			}
 		}
