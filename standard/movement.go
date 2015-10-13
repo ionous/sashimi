@@ -6,7 +6,7 @@ import (
 	. "github.com/ionous/sashimi/script"
 )
 
-var directions []string = []string{"north", "south", "east", "west", "up", "down"}
+var directions = Directions
 
 // FIX: we have the concept floating in other fixes of "function" globals
 // and that might be needed for this, where we really dont want *shared* globals
@@ -46,11 +46,11 @@ type moveData struct {
 type MoveToPhrase moveData
 type MovingPhrase moveData
 
-func TryMove(actor G.IObject, dir G.IObject, exit G.IObject) {
+func TryMove(actor G.IObject, dir G.IObject, departingDoor G.IObject) {
 	if Debugging {
-		fmt.Printf("moving %s through %s", dir, exit)
+		fmt.Printf("moving %s through %s", dir, departingDoor)
 	}
-	actor.Go("go through it", exit)
+	actor.Go("go through it", departingDoor)
 }
 
 func init() {
@@ -60,7 +60,7 @@ func init() {
 			Called("doors"),
 			Exist())
 
-		// 2. An Exit (has a matching) Entrance
+		// 2. A Departure Door (has a matching) Arrival Door
 		s.The("doors",
 			// exiting using a door leads to one location
 			HaveOne("destination", "door").
@@ -68,28 +68,31 @@ func init() {
 				Implying("doors", HaveMany("sources", "doors")),
 		)
 
-		// 3. A Room+Travel Direction (has a matching) Exit
+		// 3. A Room+Travel Direction (has a matching) Departure door
 		// FIX: without relation by value we have to give each room a set of explict directions
 		// each direction relation points to the matching door
 		for _, dir := range directions {
 			// moving in a direction, takes us to a room's entrance.
 			s.The("rooms", HaveOne(dir+"-via", "door").
-				// FIX: opposite relation shouldnt be required
+				// FIX: the reverse shouldnt be required; something in the compiler.
 				Implying("doors", HaveMany("x-via-"+dir, "rooms")))
-			// the reverse direction is needed because we dont all of the directions at compile time
-			// ( we have the default set, but users could add more )
-			s.The("rooms", HaveOne(dir+"-rev-via", "door").
-				Implying("doors", HaveMany("x-rev-via-"+dir, "rooms")))
+			// FIX? REMOVED dynamic opposite lookup
+			// // the reverse directions are necessary:
+			// // we dont know the set of all directions at compile time
+			// // ( we have the default set, but users could add more ).
+			// s.The("rooms", HaveOne(dir+"-rev-via", "door").
+			// 	Implying("doors", HaveMany("x-rev-via-"+dir, "rooms")))
+
+			// east is known as "e"
 			s.The(dir, IsKnownAs(dir[:1]))
 		}
 
 		// Directions:
 		s.The("kinds", Called("directions"),
 			HaveOne("opposite", "direction").
-				//FIX: the reverse shouldnt be required.
+				//FIX: the reverse shouldnt be required; something in the compiler.
 				Implying("directions", HaveOne("x-opposite", "direction")),
 		)
-
 		for i := 0; i < len(directions)/2; i++ {
 			a, b := directions[2*i], directions[2*i+1]
 			s.The("direction", Called(a), Has("opposite", b))
@@ -103,23 +106,23 @@ func init() {
 				actor, dir := g.The("actor"), g.The("action.Target")
 				from := actor.Object("whereabouts")
 				// try the forward direction:
-				exit := from.Object(dir.Text("Name") + "-via")
-				if exit.Exists() {
-					TryMove(actor, dir, exit)
+				departingDoor := from.Object(dir.Text("Name") + "-via")
+				if departingDoor.Exists() {
+					TryMove(actor, dir, departingDoor)
 				} else {
-					// try a connected link:
-					rev := dir.Object("opposite")
-					exit := from.Object(rev.Text("Name") + "-rev-via")
-					if exit.Exists() {
-						if sources := exit.ObjectList("sources"); len(sources) == 1 {
-							TryMove(actor, dir, sources[0])
-						}
-					} else {
-						if Debugging {
-							fmt.Printf("couldnt find %s exit", dir)
-						}
-						g.Say("You can't move that direction.")
+					// // try the opposite direction link:
+					// rev := dir.Object("opposite")
+					// exit := from.Object(rev.Text("Name") + "-rev-via")
+					// if exit.Exists() {
+					// 	if sources := exit.ObjectList("sources"); len(sources) == 1 {
+					// 		TryMove(actor, dir, sources[0])
+					// 	}
+					//} else {
+					if Debugging {
+						fmt.Printf("couldnt find %s exit", dir)
 					}
+					g.Say("You can't move that direction.")
+					//}
 				}
 			}))
 		s.The("actors",
@@ -129,8 +132,8 @@ func init() {
 		s.The("doors",
 			Can("report pass through").And("reporting pass through").RequiresOne("actor"),
 			To("report pass through", func(g G.Play) {
-				door, actor := g.The("door"), g.The("actor")
-				if dest := door.Object("destination"); !dest.Exists() {
+				departingDoor, actor := g.The("door"), g.The("actor")
+				if dest := departingDoor.Object("destination"); !dest.Exists() {
 					if Debugging {
 						fmt.Print("couldnt find destination")
 					}
@@ -142,10 +145,12 @@ func init() {
 					if Debugging {
 						fmt.Print("moving ", actor, " to ", room)
 					}
-					if door.Is("locked") {
-						door.Go("report locked", actor)
-					} else if !door.Is("open") {
-						door.Go("report currently closed", actor)
+					if departingDoor.Is("closed") {
+						if departingDoor.Is("locked") {
+							departingDoor.Go("report locked", actor)
+						} else {
+							departingDoor.Go("report currently closed", actor)
+						}
 					} else {
 						// FIX: player property change?
 						// at the very least a move action.

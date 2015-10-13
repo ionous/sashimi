@@ -4,7 +4,19 @@ import (
 	"strings"
 )
 
+var Directions = []string{"north", "south", "east", "west", "up", "down"}
+
 // FIX: move these into a standard rules extension package?
+func _makeOpposites() map[string]string {
+	op := make(map[string]string)
+	for i := 0; i < len(Directions)/2; i++ {
+		a, b := Directions[2*i], Directions[2*i+1]
+		op[a], op[b] = b, a
+	}
+	return op
+}
+
+var opposites = _makeOpposites()
 
 //
 // Begin a statement connecting one room to another via a movement direction.
@@ -15,7 +27,7 @@ func Going(direction string) GoingFragment {
 }
 
 //
-// Causes directional movement to pass through an explicit exit door.
+// Causes directional movement to pass through an explicit departure door.
 //
 func (goingFrom GoingFragment) Through(door string) GoesFromFragment {
 	goingFrom.fromDoor = door
@@ -45,7 +57,7 @@ func (goesFrom GoesFromFragment) ArrivesAt(room string) GoesToFragment {
 }
 
 //
-// Optional entrance door in the destination room.
+// Optional door to arrive at in the destination room.
 //
 func (goesTo GoesToFragment) Door(door string) IFragment {
 	goesTo.toDoor = door
@@ -80,7 +92,7 @@ func (goesTo GoesToFragment) MakeStatement(b SubjectBlock) (err error) {
 	} else if e := to.makeSite(b); e != nil {
 		err = e
 	}
-	// An Exit (has a matching) Entrance
+	// A departure door (has a matching) arrival door
 	if err == nil {
 		if _, e := b.The(from.door.str, Has("destination", to.door.str)); e != nil {
 			err = e
@@ -88,8 +100,8 @@ func (goesTo GoesToFragment) MakeStatement(b SubjectBlock) (err error) {
 			_, err = b.The(to.door.str, Has("destination", from.door.str))
 		}
 	}
-	// A Room+Travel Direction (has a matching) Exit
-	// ( if you do not have an exit, one will be appointed for you. )
+	// A Room+Travel Direction (has a matching) departure door
+	// ( if you do not have an deptature door, one will be created for you. )
 	if err == nil {
 		dir := xDir{goesTo.from.fromDir}
 		if dir.isSpecified() {
@@ -98,27 +110,32 @@ func (goesTo GoesToFragment) MakeStatement(b SubjectBlock) (err error) {
 			} else if _, e := b.The(from.room.str, Has(dir.via(), from.door.str)); e != nil {
 				err = e
 			} else if goesTo.twoWay {
-				_, err = b.The(to.room.str, Has(dir.rev(), from.door.str))
+				_, err = b.The(to.room.str, Has(dir.revVia(), to.door.str))
+				// FIX? REMOVED dynamic opposite lookup
+				// needs more thought as to how new directions could be added
+				// perhaps some sort of "dependency injection" where we can add evaluations
+				// -- dynmic compiler generators -- as hooks after ( dependent on ) sets of other instances, classes, etc. so those hooks can use model reflection to generate new, non-conflicting, model data -- this is already similar to the idea of onion skins of visual content, hardpoint hooks, etc.
+				//_, err = b.The(to.room.str, Has(dir.revRev(), from.door.str))
 			}
 		}
 	}
 	return err
 }
 
-// helper to create exit door if needed
+// helper to create departure door if needed
 func newFromSite(room, door, dir string) xSite {
 	gen := door == ""
 	if gen {
-		door = strings.Join([]string{room, "exit", dir}, "-")
+		door = strings.Join([]string{room, "departure", dir}, "-")
 	}
 	return xSite{xRoom{room}, xDoor{door, gen}}
 }
 
-// helper to create entrance door if needed
+// helper to create arrival door if needed
 func newToSite(room, door, dir string) xSite {
 	gen := door == ""
 	if gen {
-		door = strings.Join([]string{room, "enter", dir}, "-")
+		door = strings.Join([]string{room, "arrival", dir}, "-")
 	}
 	return xSite{xRoom{room}, xDoor{door, gen}}
 }
@@ -163,7 +180,15 @@ func (x xDir) makeDir(b SubjectBlock) (int, error) {
 func (x xDir) via() string {
 	return x.str + "-via"
 }
-
-func (x xDir) rev() string {
-	return x.str + "-rev-via"
+func (x xDir) opposite() string {
+	return opposites[x.str]
 }
+
+func (x xDir) revVia() string {
+	return x.opposite() + "-via"
+}
+
+// FIX? REMOVED dynamic opposite lookup ( see comment in MakeStatement )
+// func (x xDir) revVia() string {
+// 	return x.str + "-rev-via"
+// }
