@@ -86,8 +86,13 @@ func NewStandardGame(model *M.Model, frame R.EventFrame, output R.IOutput) (ret 
 }
 
 // Start sends commencing, and returns a new StandardGame.
-func (sg *StandardStart) Start() (ret *StandardGame, err error) {
-	return &StandardGame{_StandardCore: sg._StandardCore}, err
+// FIX: no longer sends commencing, that's done by input "start"
+func (sg *StandardStart) Start(immediate bool) (ret *StandardGame, err error) {
+	ret = &StandardGame{_StandardCore: sg._StandardCore}
+	if immediate {
+		ret.endTurn("commencing")
+	}
+	return ret, err
 }
 
 // IsQuit when the user has requested to quit the game.
@@ -110,6 +115,7 @@ func (sg *StandardGame) Input(s string) bool {
 			sg.quit = true
 		} else {
 			if in == "start" && !sg.started {
+				sg.started = true
 				sg.endTurn("commencing")
 			} else {
 				if in == "commence" {

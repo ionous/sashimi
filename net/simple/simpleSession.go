@@ -10,10 +10,13 @@ func NewSimpleSession(model *M.Model) (ret *SimpleSession, err error) {
 	out := &SimpleOutput{}
 	if game, e := standard.NewStandardGame(model, nil, out); e != nil {
 		err = e
-	} else if game, e := game.Start(); e != nil {
-		err = e
 	} else {
-		ret = &SimpleSession{game, out, out.Flush()}
+		immediate := true
+		if game, e := game.Start(immediate); e != nil {
+			err = e
+		} else {
+			ret = &SimpleSession{game, out, out.Flush()}
+		}
 	}
 	return ret, err
 }

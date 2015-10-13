@@ -131,55 +131,32 @@ func (ga *GameEventAdapter) Rules() G.IGameRules {
 // could make a map that implements IObject?
 // could use special keys for $name, $fullname, $game, etc.
 // FUTURE: use dependency injection instead
-func (ga *GameEventAdapter) GetObject(name string) (obj G.IObject) {
-	// asking by original name
-	if gobj, ok := ga.FindObject(name); ok {
-		obj = NewObjectAdapter(ga.Game, gobj)
+func (ga *GameEventAdapter) GetObject(name string) (ret G.IObject) {
+	if obj, ok := ga.getObject(name); ok {
+		ret = obj
+	} else {
+		ret = NullObjectSource(name, 3)
 	}
-	// testing against data, because sometimes the adapter isnt invoked via an event
-	// use different interfaces perhaps? maybe after injection works?
-	if obj == nil && ga.data != nil {
-		ctx := map[string]int{"action.Source": 0, "action.Target": 1, "action.Context": 2}
-		// asking by action.something
-		if index, okay := ctx[name]; okay {
-			if gobj := ga.data.objs[index]; gobj != nil {
-				obj = NewObjectAdapter(ga.Game, gobj)
-			}
-		}
+	return ret
+}
 
-		// asking by the class name,ex. The("story")
-		if obj == nil {
-			if namedCls, ok := ga.Model.Classes.FindClassBySingular(name); ok {
-				index := -1
-				// of the handler, or action parameter
-				if namedCls == ga.hint {
-					index = 0
-				} else {
-					// walk classes of the actions
-					for i, srcCls := range ga.data.action.NounSlice() {
-						if namedCls == srcCls {
-							index = i
-							break
-						}
-					}
-				}
-				if index >= 0 && index < len(ga.data.objs) {
-					obj = NewObjectAdapter(ga.Game, ga.data.objs[index])
-				} else {
-					//backwards compat
-					if obj == nil {
-						src := ga.data.objs[0]
-						if src.Class().CompatibleWith(namedCls.Id()) {
-							obj = NewObjectAdapter(ga.Game, src)
-						}
-					}
-				}
+func (ga *GameEventAdapter) getObject(name string) (ret G.IObject, okay bool) {
+	// asking by object name
+	if gobj, ok := ga.Game.FindObject(name); ok {
+		ret, okay = NewObjectAdapter(ga.Game, gobj), true
+	} else if ga.data != nil {
+		// testing against ga.data b/c sometimes the adapter isnt invoked via an event.
+		// to fix use different interfaces perhaps?
+		if obj, ok := ga.data.findByParamName(name); ok {
+			ret, okay = obj, true
+		} else if cls, ok := ga.Model.Classes.FindClassBySingular(name); ok {
+			// FIX?hint tries to find targeted class, not sure if its working
+			if cls == ga.hint {
+				ret, okay = ga.data.getObject(0)
+			} else {
+				ret, okay = ga.data.findByClass(cls)
 			}
 		}
 	}
-	// logging and safety
-	if obj == nil {
-		obj = NullObjectSource(name, 3)
-	}
-	return obj
+	return ret, okay
 }

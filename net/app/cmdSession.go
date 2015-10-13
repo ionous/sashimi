@@ -39,7 +39,8 @@ func NewCommandSession(id string, model *M.Model) (ret *CommandSession, err erro
 		// add watchers for property changes --
 		game.Properties.AddWatcher(PropertyChangeHandler{game.Game, output})
 		// now start the game, and start receiving changes --
-		if game, e := game.Start(); e != nil {
+		immediate := false
+		if game, e := game.Start(immediate); e != nil {
 			err = e
 		} else {
 			ret = &CommandSession{game, output, 1, &sync.RWMutex{}}

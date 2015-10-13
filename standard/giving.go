@@ -8,6 +8,7 @@ import (
 func Give(prop string) GivePropPhrase {
 	return GivePropPhrase{prop: prop}
 }
+
 func GiveThe(prop G.IObject) GivePropPhrase {
 	return GivePropPhrase{prop: prop.Id().String()}
 }
@@ -65,7 +66,7 @@ func init() {
 			// "you can't give what you haven't got"
 			WhenCapturing("giving it to", func(g G.Play) {
 				presenter, prop := g.The("action.Source"), g.The("action.Context")
-				if carrier, ok := Carrier(prop); !ok || carrier != presenter {
+				if carrier := Carrier(prop); carrier != presenter {
 					g.Say("You aren't holding", ArticleName(g, "action.Context", NameFullStop))
 					g.StopHere()
 				}
@@ -79,8 +80,7 @@ func init() {
 		s.The("props",
 			Can("report gave").And("reporting gave").RequiresTwo("actor"),
 			To("report gave", func(g G.Play) {
-				// FIX: should generate a report/response
-				g.Say(ArticleName(g, "action.Context", nil), "is unimpressed.")
+				g.The("action.Context").Go("impress")
 			}))
 		// input
 		s.Execute("give it to",

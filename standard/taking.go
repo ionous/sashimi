@@ -32,8 +32,7 @@ func init() {
 			To("report take", func(g G.Play) {
 				prop, actor := g.The("prop"), g.The("actor")
 				// first, only same room:
-				actorCeiling, _ := Enclosure(actor)
-				targetCeiling, _ := Enclosure(prop)
+				actorCeiling, targetCeiling := Enclosure(actor), Enclosure(prop)
 				//
 				if actorCeiling != targetCeiling {
 					g.Say("That isn't available.")
@@ -64,9 +63,10 @@ func init() {
 					g.Go(Give("prop").To("actor"))
 					// separate report action?
 					if actor == g.The("player") {
-						g.Say("You take the", ArticleName(g, "action.Source", NameFullStop))
+						// the kat food.
+						g.Say("You take", DefiniteName(g, "action.Source", NameFullStop))
 					} else {
-						g.Say(ArticleName(g, "action.Target", nil), "takes", ArticleName(g, "action.Source", NameFullStop))
+						g.Say(ArticleName(g, "action.Target", nil), "takes", DefiniteName(g, "action.Source", NameFullStop))
 					}
 				}
 			}))

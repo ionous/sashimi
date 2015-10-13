@@ -42,6 +42,8 @@ type Play interface {
 	// but many of these could go away if there was a real table implementatioin
 	Global(name string) interface{}
 	Go(RuntimePhrase)
+	// return a random number ranging from 0 to n, not including n
+	Random(n int) int
 }
 
 type RuntimePhrase interface {

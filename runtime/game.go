@@ -8,6 +8,7 @@ import (
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 	"log"
+	"math/rand"
 	"reflect"
 )
 
@@ -25,6 +26,7 @@ type Game struct {
 	Properties     PropertyWatchers
 	parentLookup   ParentLookupStack
 	Globals        Globals
+	rand           *rand.Rand
 }
 
 type logAdapter struct {
@@ -41,7 +43,7 @@ type DefaultActions map[*M.ActionInfo][]G.Callback
 
 type Globals map[ident.Id]reflect.Value
 
-func NewGame(model *M.Model, frame EventFrame, output IOutput) (game *Game, err error) {
+func NewGame(model *M.Model, frame EventFrame, output IOutput) (_ *Game, err error) {
 	log := log.New(logAdapter{output}, "game: ", log.Lshortfile)
 	dispatchers := NewDispatchers(log)
 	objects, e := CreateGameObjects(model.Instances, model.Tables)
@@ -53,14 +55,11 @@ func NewGame(model *M.Model, frame EventFrame, output IOutput) (game *Game, err 
 	for k, gen := range model.Generators {
 		globals[k] = reflect.New(gen)
 	}
-	if err != nil {
-		return nil, err
-	}
 	if frame == nil {
 		frame = DefaultEventFrame
 	}
 
-	game = &Game{
+	game := &Game{
 		model,
 		objects,
 		dispatchers,
@@ -73,6 +72,7 @@ func NewGame(model *M.Model, frame EventFrame, output IOutput) (game *Game, err 
 		PropertyWatchers{},
 		ParentLookupStack{},
 		globals,
+		rand.New(rand.NewSource(1)),
 	}
 	for _, handler := range model.ActionHandlers {
 		act, cb := handler.Action(), handler.Callback()
@@ -113,6 +113,10 @@ func NewGame(model *M.Model, frame EventFrame, output IOutput) (game *Game, err 
 	return game, err
 }
 
+func (g *Game) Random(n int) int {
+	return g.rand.Intn(n)
+}
+
 // PushParentLookup function into the game's determination of which object is which object's container.
 // Changes the user's parent lookup (IObject -> name) into
 // the runtime's parent lookup (GameObject->GameObject).
@@ -120,11 +124,11 @@ func NewGame(model *M.Model, frame EventFrame, output IOutput) (game *Game, err 
 // possibly inject the game/object adapter factory even.
 // then the caller can have the handle which does the push
 // and game can remain ignorant of the push (or not) process.
-func (game *Game) PushParentLookup(userLookup G.TargetLookup) {
-	game.parentLookup.PushLookup(func(gobj *GameObject) (ret *GameObject) {
+func (g *Game) PushParentLookup(userLookup G.TargetLookup) {
+	g.parentLookup.PushLookup(func(gobj *GameObject) (ret *GameObject) {
 		// setup callback context:
-		play := NewGameAdapter(game)
-		obj := NewObjectAdapter(game, gobj)
+		play := NewGameAdapter(g)
+		obj := NewObjectAdapter(g, gobj)
 		// call the user function
 		res := userLookup(play, obj)
 		// unpack the result
@@ -136,16 +140,16 @@ func (game *Game) PushParentLookup(userLookup G.TargetLookup) {
 }
 
 //
-func (game *Game) PopParentLookup() {
-	game.parentLookup.PopLookup()
+func (g *Game) PopParentLookup() {
+	g.parentLookup.PopLookup()
 }
 
 // ProcessEvents in the event queue till empty, or errored.
-func (game *Game) ProcessEvents() (err error) {
-	for !game.queue.Empty() {
-		tgt, msg := game.queue.Pop()
-		if e := game.frame.SendMessage(tgt, msg); e != nil {
-			game.log.Println("error", e)
+func (g *Game) ProcessEvents() (err error) {
+	for !g.queue.Empty() {
+		tgt, msg := g.queue.Pop()
+		if e := g.frame.SendMessage(tgt, msg); e != nil {
+			g.log.Println("error", e)
 			err = e
 			break
 		}
@@ -156,17 +160,17 @@ func (game *Game) ProcessEvents() (err error) {
 // FIX: TEMP(ish)
 // it might be better to add a name search (interface) to the model
 // and then use the id in the runtime.
-func (game *Game) FindObject(name string) (ret *GameObject, okay bool) {
-	if info, ok := game.Model.Instances.FindInstance(name); ok {
-		ret = game.Objects[info.Id()]
+func (g *Game) FindObject(name string) (ret *GameObject, okay bool) {
+	if info, ok := g.Model.Instances.FindInstance(name); ok {
+		ret = g.Objects[info.Id()]
 		okay = true
 	}
 	return ret, okay
 }
 
 // FIX: TEMP(ish)
-func (game *Game) FindFirstOf(cls *M.ClassInfo, _ ...bool) (ret *GameObject) {
-	for _, o := range game.Objects {
+func (g *Game) FindFirstOf(cls *M.ClassInfo, _ ...bool) (ret *GameObject) {
+	for _, o := range g.Objects {
 		if o.Class() == cls {
 			ret = o
 			break
@@ -178,17 +182,17 @@ func (game *Game) FindFirstOf(cls *M.ClassInfo, _ ...bool) (ret *GameObject) {
 //
 // mainly for testing; manual send of an event
 // FIX: merge game with runCommand()
-func (game *Game) SendEvent(event string, nouns ...ident.Id,
+func (g *Game) SendEvent(event string, nouns ...ident.Id,
 ) (err error,
 ) {
-	if action, e := game.Model.Events.FindEventByName(event); e != nil {
+	if action, e := g.Model.Events.FindEventByName(event); e != nil {
 		err = e
 	} else {
-		if act, e := game.newRuntimeAction(action, nouns...); e != nil {
+		if act, e := g.newRuntimeAction(action, nouns...); e != nil {
 			err = e
 		} else {
-			tgt := ObjectTarget{game, act.objs[0]}
-			game.queue.QueueEvent(tgt, action.Event(), act)
+			tgt := ObjectTarget{g, act.objs[0]}
+			g.queue.QueueEvent(tgt, action.Event(), act)
 		}
 	}
 	return err
@@ -197,7 +201,7 @@ func (game *Game) SendEvent(event string, nouns ...ident.Id,
 //
 // FIX: merge with runCommand()
 //
-func (game *Game) newRuntimeAction(action *M.ActionInfo, nouns ...ident.Id,
+func (g *Game) newRuntimeAction(action *M.ActionInfo, nouns ...ident.Id,
 ) (ret *RuntimeAction, err error,
 ) {
 	types := action.NounSlice()
@@ -213,7 +217,7 @@ func (game *Game) newRuntimeAction(action *M.ActionInfo, nouns ...ident.Id,
 
 		for i, class := range types {
 			noun, key := nouns[i], keys[i]
-			if gobj, ok := game.Objects[noun]; !ok {
+			if gobj, ok := g.Objects[noun]; !ok {
 				err = M.InstanceNotFound(noun.String())
 				break
 			} else if !gobj.Class().CompatibleWith(class.Id()) {
@@ -225,7 +229,7 @@ func (game *Game) newRuntimeAction(action *M.ActionInfo, nouns ...ident.Id,
 			}
 		}
 		if err == nil {
-			ret = &RuntimeAction{game, action, objs, values, nil}
+			ret = &RuntimeAction{g, action, objs, values, nil}
 		}
 	}
 	return ret, err

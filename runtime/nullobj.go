@@ -6,7 +6,6 @@ import (
 	"github.com/ionous/sashimi/util/ident"
 	"log"
 	"runtime"
-	"strings"
 )
 
 // FIX? generate the implemenation via "go generate"
@@ -37,7 +36,7 @@ func (null _Null) String() string {
 		file, line := f.FileLine(null.pc - 1)
 		str = fmt.Sprintf("(%s:%d)", file, line)
 	}
-	return strings.Join([]string{"NullObject", str, null.name}, " ")
+	return "<NullObject " + null.name + str + ">"
 }
 
 //

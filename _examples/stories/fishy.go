@@ -474,7 +474,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 		// 218:
 		Before("feeding it").Always(func(g G.Play) {
 			player := g.The("player")
-			if c, ok := standard.Carrier(g.The("fish food")); !ok || c != player {
+			if c := standard.Carrier(g.The("fish food")); c != player {
 				g.Say("You need the fish food first!")
 				g.StopHere()
 			}

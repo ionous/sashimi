@@ -3,6 +3,7 @@ package runtime
 import (
 	G "github.com/ionous/sashimi/game"
 	M "github.com/ionous/sashimi/model"
+	"strings"
 )
 
 //
@@ -52,4 +53,58 @@ func (act *RuntimeAction) runDefaultActions() {
 		act.runCallback(after, nil)
 	}
 	act.game.SystemActions.Run(act.action, act.objs)
+}
+
+// fundByParamName: source, target, or context
+func (act *RuntimeAction) findByParamName(name string) (ret G.IObject, okay bool) {
+	for index, src := range []string{"action.Source", "action.Target", "action.Context"} {
+		if strings.EqualFold(name, src) {
+			ret, okay = act.getObject(index)
+			break
+		}
+	}
+	return ret, okay
+}
+
+// findByExactClass; true if found
+func (act *RuntimeAction) findByClass(cls *M.ClassInfo) (ret G.IObject, okay bool) {
+	// these are the classes originally named in the action declaration; not the sub-classes of the event target. ie. s.The("actors", Can("crawl"), not s.The("babies", When("crawling")
+	if obj, ok := act.findByExactClass(cls); ok {
+		ret, okay = obj, true
+	} else {
+		// when all else fails try compatible classes one by one.
+		ret, okay = act.findBySimilarClass(cls)
+	}
+	return ret, okay
+}
+
+// findByExactClass; true if found
+func (act *RuntimeAction) findByExactClass(cls *M.ClassInfo) (ret G.IObject, okay bool) {
+
+	for i, nounClass := range act.action.NounSlice() {
+		if cls == nounClass {
+			ret, okay = act.getObject(i)
+			break
+		}
+	}
+	return
+}
+
+// findBySimilarClass; true if found
+func (act *RuntimeAction) findBySimilarClass(cls *M.ClassInfo) (ret G.IObject, okay bool) {
+	for i, nounClass := range act.action.NounSlice() {
+		if nounClass.CompatibleWith(cls.Id()) {
+			ret, okay = act.getObject(i)
+			break
+		}
+	}
+	return
+}
+
+// getObject returns the index object; true if the index was in range.
+func (act *RuntimeAction) getObject(i int) (ret G.IObject, okay bool) {
+	if i >= 0 && i < len(act.objs) {
+		ret, okay = NewObjectAdapter(act.game, act.objs[i]), true
+	}
+	return
 }

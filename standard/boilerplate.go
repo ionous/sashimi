@@ -63,7 +63,8 @@ func RunScript(script *script.Script, opt Options) (err error) {
 			left, right := game.story.Text("name"), fmt.Sprint(" by ", game.story.Text("author"))
 			game.SetLeft(left)
 			game.SetRight(right)
-			if game, e := game.Start(); e != nil {
+			immediate := true
+			if game, e := game.Start(immediate); e != nil {
 				err = e
 			} else {
 				for {

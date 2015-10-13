@@ -45,7 +45,7 @@ func init() {
 			//  can't put what isn't held
 			WhenCapturing("putting it onto", func(g G.Play) {
 				actor, prop := g.The("action.Source"), g.The("action.Context")
-				if carrier, ok := Carrier(prop); !ok || carrier != actor {
+				if carrier := Carrier(prop); carrier != actor {
 					g.Say("You aren't holding", ArticleName(g, "action.Context", NameFullStop))
 					g.StopHere()
 				}

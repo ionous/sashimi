@@ -13,27 +13,41 @@ func DirectParent(obj IObject) (parent IObject, where string) {
 			break
 		}
 	}
-	return
-}
-
-//
-func CarriedNotWorn(obj IObject) (carrier IObject, okay bool) {
-	for _, wob := range []string{"owner"} {
-		if p := obj.Object(wob); p.Exists() {
-			carrier, okay = p, true
-			break
-		}
+	// so we arent pointing to nil, which cant easily be tested for. thanks go. :(
+	if where == "" {
+		parent = R.NullObject("DirectPointer")
 	}
 	return
 }
 
 //
-func Carrier(obj IObject) (carrier IObject, okay bool) {
-	for _, wob := range []string{"wearer", "owner"} {
+func CarriedNotWorn(obj IObject) (carrier IObject) {
+	carried := false
+	for _, wob := range []string{"owner"} {
 		if p := obj.Object(wob); p.Exists() {
-			carrier, okay = p, true
+			carrier, carried = p, true
 			break
 		}
+	}
+	// so we arent pointing to nil, which cant easily be tested for. thanks go. :(
+	if !carried {
+		carrier = R.NullObject("CarriedNotWorn")
+	}
+	return
+}
+
+//
+func Carrier(obj IObject) (carrier IObject) {
+	carried := false
+	for _, wob := range []string{"wearer", "owner"} {
+		if p := obj.Object(wob); p.Exists() {
+			carrier, carried = p, true
+			break
+		}
+	}
+	// so we arent pointing to nil, which cant easily be tested for. thanks go. :(
+	if !carried {
+		carrier = R.NullObject("Carrier")
 	}
 	return
 }
@@ -50,7 +64,7 @@ func Locate(obj IObject) (where IObject) {
 func _location(obj IObject) (parent IObject, okay bool) {
 	if room := obj.Object("whereabouts"); room.Exists() {
 		parent, okay = room, true
-	} else if carrier, ok := Carrier(obj); ok {
+	} else if carrier := Carrier(obj); carrier.Exists() {
 		parent, okay = _location(carrier)
 	} else if supporter := obj.Object("support"); supporter.Exists() {
 		parent, okay = _location(supporter)
@@ -79,19 +93,21 @@ func _location(obj IObject) (parent IObject, okay bool) {
 
 //
 // find the outermost room or closed container containing the passed object
-func Enclosure(obj IObject) (parent IObject, okay bool) {
+func Enclosure(obj IObject) (parent IObject) {
 	if room := obj.Object("whereabouts"); room.Exists() {
-		parent, okay = room, true
-	} else if carrier, ok := Carrier(obj); ok {
-		parent, okay = Enclosure(carrier)
+		parent = room
+	} else if carrier := Carrier(obj); carrier.Exists() {
+		parent = Enclosure(carrier)
 	} else if supporter := obj.Object("support"); supporter.Exists() {
-		parent, okay = Enclosure(supporter)
+		parent = Enclosure(supporter)
 	} else if container := obj.Object("enclosure"); container.Exists() {
 		if container.Is("open") {
-			parent, okay = Enclosure(container)
+			parent = Enclosure(container)
 		} else {
-			parent, okay = container, true
+			parent = container
 		}
+	} else {
+		parent = R.NullObject("Enclosure")
 	}
 	return
 }

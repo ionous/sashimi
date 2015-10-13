@@ -210,6 +210,13 @@ func init() {
 			To("look under it", ReflectToTarget("report look under")),
 		)
 
+		// FIX: should generate a report/response instead?
+		s.The("actors",
+			Can("impress").And("impressing").RequiresNothing(),
+			To("impress", func(g G.Play) {
+				g.Say(inflect.Capitalize(ArticleName(g, "actor", nil)), "is unimpressed.")
+			}))
+
 		// "taking inventory" in inform
 		// again, as with some other actions: for players this happens in carry out, for npcs in report.
 		// i'm sure that's useful... somehow....
