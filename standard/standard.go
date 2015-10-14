@@ -8,6 +8,11 @@ import (
 	"log"
 )
 
+// FIX: we have the concept floating in other fixes of "function" globals
+// and that might be needed for this, where we really dont want *shared* globals
+// you would want this tied to session, if at all possible.
+var Debugging bool
+
 // StardardStart assists the creation of a standard game.
 // see: NewStandardGame()
 type StandardStart struct {

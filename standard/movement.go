@@ -1,17 +1,11 @@
 package standard
 
 import (
-	"fmt"
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
 )
 
 var directions = Directions
-
-// FIX: we have the concept floating in other fixes of "function" globals
-// and that might be needed for this, where we really dont want *shared* globals
-// you would want this tied to session, if at all possible.
-var Debugging = false
 
 // FIX: like Learn() convert to a game action: actor.Go("move to", dest)
 func Move(obj string) MoveToPhrase {
@@ -47,9 +41,6 @@ type MoveToPhrase moveData
 type MovingPhrase moveData
 
 func TryMove(actor G.IObject, dir G.IObject, departingDoor G.IObject) {
-	if Debugging {
-		fmt.Printf("moving %s through %s", dir, departingDoor)
-	}
 	actor.Go("go through it", departingDoor)
 }
 
@@ -119,7 +110,7 @@ func init() {
 					// 	}
 					//} else {
 					if Debugging {
-						fmt.Printf("couldnt find %s exit", dir)
+						g.Log("couldnt find %s exit", dir)
 					}
 					g.Say("You can't move that direction.")
 					//}
@@ -135,15 +126,15 @@ func init() {
 				departingDoor, actor := g.The("door"), g.The("actor")
 				if dest := departingDoor.Object("destination"); !dest.Exists() {
 					if Debugging {
-						fmt.Print("couldnt find destination")
+						g.Log("couldnt find destination")
 					}
 				} else if room := dest.Object("whereabouts"); !room.Exists() {
 					if Debugging {
-						fmt.Print("couldnt find whereabouts")
+						g.Log("couldnt find whereabouts")
 					}
 				} else {
 					if Debugging {
-						fmt.Print("moving ", actor, " to ", room)
+						g.Log("moving ", actor, " to ", room)
 					}
 					if departingDoor.Is("closed") {
 						if departingDoor.Is("locked") {

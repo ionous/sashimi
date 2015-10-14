@@ -1,7 +1,6 @@
 package extensions
 
 import (
-	"fmt"
 	G "github.com/ionous/sashimi/game"
 	"github.com/ionous/sashimi/standard"
 )
@@ -52,7 +51,7 @@ type GreetingPhrase greetingData
 
 func greetActor(g G.Play, greeter, greeted, greeting G.IObject) {
 	if standard.Debugging {
-		fmt.Println("!", "introducing", greeter, "to", greeted, "with", greeting)
+		g.Log("!", "introducing", greeter, "to", greeted, "with", greeting)
 	}
 	if greeter == g.The("player") && greeted.Exists() {
 		con := g.Global("conversation").(*Conversation)

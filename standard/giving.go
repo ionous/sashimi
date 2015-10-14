@@ -20,7 +20,8 @@ func (give GivePropPhrase) To(actor string) GivingPhrase {
 
 func (give GivingPhrase) Execute(g G.Play) {
 	prop, actor := g.The(give.prop), g.The(give.actor)
-	assignTo(prop, "owner", actor)
+	//added indirection so we can transform props after the rules of taking/giving have run
+	actor.Go("acquire it", prop)
 }
 
 type givePhraseData struct {
@@ -42,6 +43,18 @@ type GivingPhrase givePhraseData
 //  "report an an actor giving something to"
 func init() {
 	AddScript(func(s *Script) {
+		s.The("actors",
+			Can("acquire it").And("acquiring it").RequiresOne("prop"),
+			To("acquire it", ReflectToTarget("be acquired")))
+		s.The("props",
+			Can("be acquired").And("being acquired").RequiresOne("actor"),
+			To("be acquired", func(g G.Play) {
+				actor, prop := g.The("actor"), g.The("prop")
+				if Debugging {
+					g.Log(prop, "assignTo", actor)
+				}
+				assignTo(prop, "owner", actor)
+			}))
 		// 1. source
 		s.The("actors",
 			Can("give it to").And("giving it to").RequiresOne("actor").AndOne("prop"),

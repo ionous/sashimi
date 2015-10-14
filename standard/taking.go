@@ -40,7 +40,7 @@ func init() {
 				} else {
 					if prop.Is("scenery") {
 						g.Say("That isn't available.")
-						g.Log("can't take scenery")
+						g.Log("(You can't take scenery.)")
 						//g.StopHere() // FIX: should be cancel
 						return
 					}

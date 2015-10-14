@@ -26,7 +26,7 @@ type Play interface {
 	// Say friendly narrative print.
 	Say(text ...string)
 	// Log a quiet print.
-	Log(text ...string)
+	Log(text ...interface{})
 	// Visit finds one or more objects by class name.
 	// Return true from the passed function to terminate the search.
 	// FIX: replace by a query?

@@ -356,6 +356,7 @@ func init() {
 					}
 					return status
 				})
+				text = inflect.Capitalize(text)
 				g.Say(text)
 				g.StopHere()
 			}))

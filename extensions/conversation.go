@@ -121,7 +121,7 @@ func init() {
 				con := g.Global("conversation").(*Conversation)
 				if npc := con.Depart(); npc.Exists() {
 					if standard.Debugging {
-						fmt.Println("!", g.The("actor"), "departing", npc)
+						g.Log("!", g.The("actor"), "departing", npc)
 					}
 					g.Say("(", inflect.Capitalize(standard.DefiniteName(g, "actor", nil)), "says goodbye.", ")")
 				}
@@ -146,7 +146,7 @@ func init() {
 				talker, quip := g.The("actor"), g.The("quip")
 				comment := quip.Text("comment")
 				if standard.Debugging {
-					fmt.Println("!", talker, "commenting", quip, "'"+comment+"'")
+					g.Log("!", talker, "commenting", quip, "'"+comment+"'")
 				}
 				con := g.Global("conversation").(*Conversation)
 				// the player wants to speak: probably has chosen a line of dialog from the menu
@@ -165,7 +165,7 @@ func init() {
 			To("report discuss", func(g G.Play) {
 				talker, quip := g.The("actor"), g.The("quip")
 				if standard.Debugging {
-					fmt.Println("!", talker, "discussing", quip)
+					g.Log("!", talker, "discussing", quip)
 				}
 				con := g.Global("conversation").(*Conversation)
 				if reply := quip.Text("reply"); reply != "" {
@@ -182,12 +182,12 @@ func init() {
 				if player == talker {
 					if quips := GetPlayerQuips(g); len(quips) == 0 {
 						if standard.Debugging {
-							fmt.Println("! no conversation choices !")
+							g.Log("! no conversation choices !")
 						}
 						player.Go("depart") // safety first
 					} else {
 						if standard.Debugging {
-							fmt.Println("!", talker, "printing", talkedTo, quips)
+							g.Log("!", talker, "printing", talkedTo, quips)
 						}
 						// FIX: the console should grab this to label the list, and add the header numbers./
 						text := fmt.Sprintf("%s: ", player.Text("name"))
@@ -208,7 +208,7 @@ func init() {
 							} else {
 								quip := quips[choice-1]
 								if standard.Debugging {
-									fmt.Println("!", player, "chose", quip)
+									g.Log("!", player, "chose", quip)
 								}
 								player.Go("comment", quip)
 							}

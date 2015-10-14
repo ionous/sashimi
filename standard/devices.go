@@ -1,6 +1,7 @@
 package standard
 
 import (
+	"bitbucket.org/pkg/inflect"
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
 )
@@ -26,8 +27,14 @@ func init() {
 					}
 					return status
 				})
+				text = inflect.Capitalize(text)
 				g.Say(text)
 				g.StopHere()
+			}))
+
+		s.The("props", Can("report inoperable").And("reporting inoperable").RequiresNothing(),
+			To("report inoperable", func(g G.Play) {
+				g.Say("It's inoperable.")
 			}))
 
 		//
@@ -35,18 +42,20 @@ func init() {
 		//
 		s.The("actors",
 			Can("switch it on").And("switching it on").RequiresOne("prop"),
-			To("switch it on", ReflectToTarget("report switch on")))
+			To("switch it on", ReflectToTarget("report switched on")))
 
 		s.The("devices",
-			Can("report switch on").And("reporting switch on").RequiresNothing(),
-			To("report switch on", func(g G.Play) {
-				prop, actor := g.The("prop"), g.The("actor")
-				if prop.Is("inoperable") {
-					if prop.Is("switched on") {
-						prop.Go("report already on", actor)
+			Can("report switched on").And("reporting switched on").RequiresOne("actor"),
+			To("report switched on", func(g G.Play) {
+				device, actor := g.The("device"), g.The("actor")
+				if device.Is("inoperable") {
+					device.Go("report inoperable")
+				} else {
+					if device.Is("switched on") {
+						device.Go("report already on", actor)
 					} else {
-						prop.IsNow("switched on")
-						prop.Go("report now on", actor)
+						device.IsNow("switched on")
+						device.Go("report now on", actor)
 					}
 				}
 			}),
@@ -56,8 +65,8 @@ func init() {
 			}),
 			Can("report now on").And("reporting now on").RequiresOne("actor"),
 			To("report now on", func(g G.Play) {
-				prop := g.The("owner")
-				g.Say("Now the", prop.Text("Name"), "is on.")
+				device := g.The("device")
+				g.Say("Now the", device.Text("Name"), "is on.")
 			}))
 
 		//
@@ -70,12 +79,12 @@ func init() {
 		s.The("devices",
 			Can("report switch off").And("reporting switch off").RequiresNothing(),
 			To("report switch off", func(g G.Play) {
-				prop, actor := g.The("prop"), g.The("actor")
-				if prop.Is("switched off") {
-					prop.Go("report already off", actor)
+				device, actor := g.The("device"), g.The("actor")
+				if device.Is("switched off") {
+					device.Go("report already off", actor)
 				} else {
-					prop.IsNow("switched off")
-					prop.Go("report now off", actor)
+					device.IsNow("switched off")
+					device.Go("report now off", actor)
 				}
 			}),
 			Can("report already off").And("reporting already off").RequiresOne("actor"),
@@ -84,8 +93,8 @@ func init() {
 			}),
 			Can("report now off").And("reporting now off").RequiresOne("actor"),
 			To("report now off", func(g G.Play) {
-				prop, _ := g.The("owner"), g.The("actor")
-				g.Say("Now the", prop.Text("Name"), "is off.")
+				device, _ := g.The("device"), g.The("actor")
+				g.Say("Now the", device.Text("Name"), "is off.")
 			}))
 
 		// understandings:
@@ -100,6 +109,5 @@ func init() {
 		s.Execute("switch it off",
 			Matching("turn|switch off {{something}}").
 				Or("turn|switch {{something}} off"))
-
 	})
 }

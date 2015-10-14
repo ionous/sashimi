@@ -1,15 +1,14 @@
 package runtime
 
 import (
+	"fmt"
 	G "github.com/ionous/sashimi/game"
 	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/util/ident"
 	"strings"
 )
 
-//
 // GameEventAdapter implements game.Play.
-//
 type GameEventAdapter struct {
 	*Game
 	data      *RuntimeAction
@@ -110,9 +109,9 @@ func (ga *GameEventAdapter) Say(texts ...string) {
 }
 
 //
-func (ga *GameEventAdapter) Log(texts ...string) {
+func (ga *GameEventAdapter) Log(texts ...interface{}) {
 	if len(texts) > 0 {
-		text := strings.Join(texts, " ")
+		text := fmt.Sprintln(texts...)
 		ga.output.Log(text)
 	}
 }
@@ -127,7 +126,8 @@ func (ga *GameEventAdapter) Rules() G.IGameRules {
 	return ga.Game
 }
 
-//
+var DebugGet = false
+
 // could make a map that implements IObject?
 // could use special keys for $name, $fullname, $game, etc.
 // FUTURE: use dependency injection instead
@@ -137,6 +137,7 @@ func (ga *GameEventAdapter) GetObject(name string) (ret G.IObject) {
 	} else {
 		ret = NullObjectSource(name, 3)
 	}
+	DebugGet = false
 	return ret
 }
 
@@ -150,7 +151,10 @@ func (ga *GameEventAdapter) getObject(name string) (ret G.IObject, okay bool) {
 		if obj, ok := ga.data.findByParamName(name); ok {
 			ret, okay = obj, true
 		} else if cls, ok := ga.Model.Classes.FindClassBySingular(name); ok {
-			// FIX?hint tries to find targeted class, not sure if its working
+			// FIX?hint tries to find targeted classln, not sure if its working
+			if DebugGet {
+				ga.Log("DebugGet ", cls, ga.hint)
+			}
 			if cls == ga.hint {
 				ret, okay = ga.data.getObject(0)
 			} else {

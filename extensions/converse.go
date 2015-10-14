@@ -1,7 +1,6 @@
 package extensions
 
 import (
-	"fmt"
 	G "github.com/ionous/sashimi/game"
 	"github.com/ionous/sashimi/standard"
 )
@@ -20,7 +19,7 @@ func (con *Conversation) Depart() (wasTalking G.IObject) {
 func (con *Conversation) Converse(g G.Play) {
 	if npc, ok := con.Interlocutor.Get(); ok {
 		if standard.Debugging {
-			fmt.Println("conversing...")
+			g.Log("conversing...")
 		}
 		currentQuip := con.History.MostRecent(g)
 		currentRestricts := currentQuip.Exists() && currentQuip.Is("restrictive")

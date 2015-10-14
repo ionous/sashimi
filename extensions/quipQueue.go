@@ -61,7 +61,7 @@ func (q *QuipQueue) Len() int {
 // UpdateNextQuips for all npcs who have a queued quip.
 func (q *QuipQueue) UpdateNextQuips(g G.Play, qm QuipMemory) {
 	if standard.Debugging {
-		fmt.Println(fmt.Sprintf("! updating %d quips", len(q.quips)))
+		g.Log(fmt.Sprintf("! updating %d quips", len(q.quips)))
 	}
 	// from "slice tricks". this reuses the memory of the quip queue.
 	requeue := q.quips[:0]

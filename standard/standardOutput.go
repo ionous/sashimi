@@ -11,14 +11,14 @@ import (
 
 type StandardOutput struct {
 	console        C.IConsole
-	writer         io.Writer
+	logger         io.Writer
 	lastEmpty      bool   // collapse mutliple empty lines
 	lastActor      string // collapse multiple speaker lines
 	multiLineActor bool
 }
 
-func NewStandardOutput(c C.IConsole, w io.Writer) *StandardOutput {
-	return &StandardOutput{console: c, writer: w}
+func NewStandardOutput(c C.IConsole, logger io.Writer) *StandardOutput {
+	return &StandardOutput{console: c, logger: logger}
 }
 func (out *StandardOutput) Println(args ...interface{}) {
 	str := fmt.Sprint(args...)
@@ -63,5 +63,5 @@ func (out *StandardOutput) ActorSays(whose *R.GameObject, lines []string) {
 }
 
 func (out *StandardOutput) Log(s string) {
-	out.writer.Write([]byte(s))
+	out.logger.Write([]byte(s))
 }
