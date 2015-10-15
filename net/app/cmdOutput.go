@@ -193,11 +193,9 @@ func (out *CommandOutput) propertyChanged(game *R.Game, gobj *R.GameObject, prop
 
 			// fire for the next object's relationships
 			if gnext, ok := game.Objects[next.(ident.Id)]; ok {
-				if obj, ok := out.serial.TryObjectRef(gnext); ok {
-					relChange.Next = obj
-				}
+				// new instead of try in case we havent heard about the new/next object.
+				relChange.Next = out.serial.NewObjectRef(gnext)
 			}
-
 			out.events.AddAction("x-rel", obj, relChange)
 		}
 	}
