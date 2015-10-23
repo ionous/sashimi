@@ -46,7 +46,7 @@ func init() {
 		s.The("actors",
 			// FIX? word-wise this is wrong ( see tickle-it-with, though it is "correct" )
 			Can("insert it into").And("inserting it into").RequiresOne("container").AndOne("prop"),
-			To("insert it into", ReflectWithContext("report insert")),
+			To("insert it into", ReflectWithContext("receive insertion")),
 			//  can't insert clothes being worn
 			WhenCapturing("inserting it into", func(g G.Play) {
 				prop := g.The("action.Context")
@@ -72,23 +72,30 @@ func init() {
 					g.StopHere()
 				}
 			}),
+		)
+
+		// 2. containers
+		// FIX FIX FIX could this be "receive"? the more shared events the better,
+		// and that would certainly work for any acquisition: actor, supporter,..?
+		// the only problem of course is that "be inserted" using specific reporting
+		// maybe, rather than chaining events 1->2->3 we could do: 1->{2,3}
+		// and check the return result?[the ran default action status of the evt.]
+		s.The("containers",
+			Can("receive insertion").And("receiving insertion").RequiresOne("prop").AndOne("actor"),
 			//  can't insert into closed containers
-			WhenCapturing("inserting it into", func(g G.Play) {
-				container := g.The("action.Target")
+			WhenCapturing("receiving insertion", func(g G.Play) {
+				container := g.The("container")
 				if container.Is("closed") {
-					g.Say(ArticleName(g, "action.Target", nil), "is closed.")
+					g.Say(ArticleName(g, "container", nil), "is closed.")
 					g.StopHere()
 				}
 			}),
-		)
-		// 2. containers
-		s.The("containers",
-			Can("report insert").And("reporting insert").RequiresOne("prop").AndOne("actor"),
-			To("report insert", ReflectWithContext("report insertion")))
+			To("receive insertion", ReflectWithContext("be inserted")))
+
 		// 3. context
 		s.The("props",
-			Can("report insertion").And("reporting insertion").RequiresOne("actor").AndOne("container"),
-			To("report insertion", func(g G.Play) {
+			Can("be inserted").And("being inserted").RequiresOne("actor").AndOne("container"),
+			To("be inserted", func(g G.Play) {
 				g.Go(Insert("action.Source").Into("action.Context"))
 				g.Say("You insert", ArticleName(g, "action.Source", nil), "into", ArticleName(g, "action.Context", NameFullStop))
 			}))

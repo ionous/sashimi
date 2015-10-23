@@ -10,7 +10,7 @@ import (
 //
 func TypeMismatch(name string, kind string) error {
 	return errutil.Func(func() string {
-		return fmt.Sprintf("type mismatch %s %s", name, kind)
+		return fmt.Sprintf("type mismatch %s expected %s", name, kind)
 	})
 }
 

@@ -114,6 +114,12 @@ func init() {
 			Called("doors"),
 			Exist())
 
+		// CAN WE DEFAULT (USUALLY(X)) DOORS TO fixed-in-place???
+		s.The("doors", Before("reporting take").Always(func(g G.Play) {
+			g.Say("It is fixed in place.")
+			g.StopHere()
+		}))
+
 		// nothing special: just a handy name to mirror inform's.
 		s.The("actors",
 			Called("animals"),

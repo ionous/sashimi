@@ -189,7 +189,7 @@ func A_Day_For_Fresh_Sushi(s *Script) {
 	)
 	// [76-78)
 	s.The("fish food",
-		When("reporting insertion").Always(func(g G.Play) {
+		When("being inserted").Always(func(g G.Play) {
 			g.The("evil fish").Says(`"HelLLLOOO," screams the fish. "Whatever happened to FEEDING MEEE?"`)
 			g.StopHere()
 		}),
@@ -278,7 +278,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 	//[123-132)
 	insertedFlowers := false
 	s.The("vase",
-		When("reporting insert").Always(func(g G.Play) {
+		When("receiving insertion").Always(func(g G.Play) {
 			prop := g.The("action.Target")
 			if prop != g.The("bouquet") {
 				g.The("evil fish").Says(`"Okay, so, what were you, raised in a barn? Normal folks like to use that for flowers. Or so I've observed."`)
