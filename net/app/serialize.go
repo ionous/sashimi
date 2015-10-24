@@ -22,8 +22,8 @@ func NewObjectSerializer() *ObjectSerializer {
 }
 
 //
-func (this *ObjectSerializer) IsKnown(gobj *R.GameObject) bool {
-	return this.known[gobj.Id()]
+func (this *ObjectSerializer) IsKnown(id ident.Id) bool {
+	return this.known[id]
 }
 
 //

@@ -39,7 +39,7 @@ type SerialOut struct {
 
 // TryObjectRef only creates an object ref if the object is already known.
 func (serial *SerialOut) TryObjectRef(gobj *R.GameObject) (ret *resource.Object, okay bool) {
-	if serial.IsKnown(gobj) {
+	if serial.IsKnown(gobj.Id()) {
 		ret = serial.NewObjectRef(gobj)
 		okay = true
 	}
@@ -181,19 +181,17 @@ func (out *CommandOutput) propertyChanged(game *R.Game, gobj *R.GameObject, prop
 		}
 
 		// fire for the original object
-		if obj, ok := out.serial.TryObjectRef(gobj); ok {
+		if out.serial.IsKnown(gobj.Id()) || out.serial.IsKnown(prev.(ident.Id)) || out.serial.IsKnown(next.(ident.Id)) {
+			obj := out.serial.NewObjectRef(gobj)
 			relChange := RelationChange{Prop: jsonId(prop.Id()), Other: jsonId(other.Property)}
 
 			// fire for the prev object's relationships
 			if gprev, ok := game.Objects[prev.(ident.Id)]; ok {
-				if obj, ok := out.serial.TryObjectRef(gprev); ok {
-					relChange.Prev = obj
-				}
+				relChange.Prev = out.serial.NewObjectRef(gprev)
 			}
 
 			// fire for the next object's relationships
 			if gnext, ok := game.Objects[next.(ident.Id)]; ok {
-				// new instead of try in case we havent heard about the new/next object.
 				relChange.Next = out.serial.NewObjectRef(gnext)
 			}
 			out.events.AddAction("x-rel", obj, relChange)
