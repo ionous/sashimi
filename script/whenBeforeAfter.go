@@ -23,7 +23,7 @@ func To(action string, c G.Callback) IFragment {
 // ( implemented as a capturing event )
 func Before(event string) EventPhrase {
 	origin := NewOrigin(2)
-	return EventPhrase{event, origin, S.ListenTargetOnly | S.ListenCapture}
+	return EventPhrase{[]string{event}, origin, S.ListenTargetOnly | S.ListenCapture}
 }
 
 // a shortcut for meaning at the target
@@ -32,26 +32,32 @@ func After(event string) EventPhrase {
 	// FIX: I moved this to the capture phase so that closer to the instance is later.
 	// good, bad? control?
 	origin := NewOrigin(2)
-	return EventPhrase{event, origin, S.ListenTargetOnly | S.ListenCapture | S.ListenRunAfter}
+	return EventPhrase{[]string{event}, origin, S.ListenTargetOnly | S.ListenCapture | S.ListenRunAfter}
 }
 
 // a shortcut for meaning at the target
 // ( implemented as a bubbling event )
 func When(event string) EventPhrase {
 	origin := NewOrigin(2)
-	return EventPhrase{event, origin, S.ListenTargetOnly}
+	return EventPhrase{[]string{event}, origin, S.ListenTargetOnly}
 }
 
 //
 func WhenBubbling(event string, cb G.Callback) EventFinalizer {
 	origin := NewOrigin(2)
-	return EventPhrase{event, origin, S.ListenBubble}.Always(cb)
+	return EventPhrase{[]string{event}, origin, S.ListenBubble}.Always(cb)
 }
 
 //
 func WhenCapturing(event string, cb G.Callback) EventFinalizer {
 	origin := NewOrigin(2)
-	return EventPhrase{event, origin, S.ListenCapture}.Always(cb)
+	return EventPhrase{[]string{event}, origin, S.ListenCapture}.Always(cb)
+}
+
+//
+func (phrase EventPhrase) Or(event string) EventPhrase {
+	phrase.events = append(phrase.events, event)
+	return phrase
 }
 
 //
@@ -60,14 +66,20 @@ func (phrase EventPhrase) Always(cb G.Callback) EventFinalizer {
 }
 
 //
-func (frag EventFinalizer) MakeStatement(b SubjectBlock) error {
-	fields := S.ListenFields{b.subject, frag.event, frag.cb, frag.options}
-	return b.NewEventHandler(fields, frag.Code())
+func (frag EventFinalizer) MakeStatement(b SubjectBlock) (err error) {
+	for _, evt := range frag.events {
+		fields := S.ListenFields{b.subject, evt, frag.cb, frag.options}
+		if e := b.NewEventHandler(fields, frag.Code()); e != nil {
+			err = e
+			break
+		}
+	}
+	return err
 }
 
 //
 type EventPhrase struct {
-	event string // name of the event in question
+	events []string // name of the event in question
 	Origin
 	options S.ListenOptions
 }
