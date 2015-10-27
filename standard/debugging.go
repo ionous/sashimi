@@ -22,8 +22,32 @@ func init() {
 		// FIX: sometimes parent of -- matches unexpected objects
 		// >parent of automat
 		//	hall-automat-door => whereabouts main hallway
-
+		s.The("actors",
+			Can("print contents").And("printing contents").RequiresOne("object"),
+			To("print contents", func(g G.Play) {
+				target := g.The("action.Target")
+				contents := target.ObjectList("contents")
+				g.Say("printing contents of", target.Text("name"))
+				for _, v := range contents {
+					g.Say(v.Id().String())
+				}
+			}))
+		s.The("actors",
+			Can("print room contents").And("printing room contents").RequiresNothing(),
+			To("print room contents", func(g G.Play) {
+				room := g.The("player").Object("whereabouts")
+				contents := room.ObjectList("contents")
+				g.Say("printing contents of", room.Text("name"))
+				for _, v := range contents {
+					g.Say(v.Id().String())
+				}
+			}))
 		s.Execute("print direct parent",
 			Matching("parent of {{something}}"))
+		s.Execute("print contents",
+			Matching("contents of {{something}}"))
+
+		s.Execute("print room contents",
+			Matching("contents of room"))
 	})
 }
