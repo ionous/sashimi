@@ -118,11 +118,11 @@ func init() {
 			}))
 		s.The("actors",
 			Can("go through it").And("going through it").RequiresOne("door"),
-			To("go through it", ReflectToTarget("report pass through")),
+			To("go through it", ReflectToTarget("be passed through")),
 		)
 		s.The("doors",
-			Can("report pass through").And("reporting pass through").RequiresOne("actor"),
-			To("report pass through", func(g G.Play) {
+			Can("be passed through").And("being passed through").RequiresOne("actor"),
+			To("be passed through", func(g G.Play) {
 				departingDoor, actor := g.The("door"), g.The("actor")
 				if dest := departingDoor.Object("destination"); !dest.Exists() {
 					if Debugging {

@@ -29,7 +29,7 @@ func Boy_Talk(s *Script) {
 		Has("subject", "alien boy"),
 		// Is("beat-opened"),
 		Has("reply", `"You wouldn't happen to have a matter disrupter?", the Alien Boy asks.`),
-		After("reporting discuss").Always(func(g G.Play) {
+		After("being discussed").Always(func(g G.Play) {
 			g.The("alien boy").Set("greeting", g.The("OldBoy: Hello Again!"))
 		}))
 
@@ -46,7 +46,7 @@ func Boy_Talk(s *Script) {
 		//Has("hook", `I"ll be back.`)
 		Has("comment", `"Oh, sorry," Alice says. "I'll be back."`),
 		// FIFIFIFIFIFIFIX! if this is "discuss" compilation succeeds, even though that's an impossible event.
-		After("reporting discuss").Always(func(g G.Play) {
+		After("being discussed").Always(func(g G.Play) {
 			g.The("player").Go("depart")
 		}))
 
@@ -61,7 +61,7 @@ func Boy_Talk(s *Script) {
 		DirectlyFollows("OldBoy: Photos"),
 		Has("comment", `"Wait," says Alice. "Your parents made you go get the camera?" says Alice.`),
 		Has("reply", `"Amazing, huh?" says the Alien Boy. "You wouldn"t believe--"`),
-		After("reporting discuss").Always(func(g G.Play) {
+		After("being discussed").Always(func(g G.Play) {
 			con := g.Global("conversation").(*Conversation)
 			con.Memory.Learn(g.The("boy-cam"))
 		}))
@@ -91,7 +91,7 @@ func Boy_Talk(s *Script) {
 		//Has("hook",  `Gotta run.`) ,
 		Has("comment", `"Excuse me,"Alice says. "I need to see some parents about a cabin. Err... camera."`),
 		Has("reply", `[beat] "I feel like there's some context I"m missing here..."`),
-		After("reporting discuss").Always(func(g G.Play) {
+		After("being discussed").Always(func(g G.Play) {
 			g.The("actor").Go("depart")
 		}))
 
@@ -193,7 +193,7 @@ func Boy_Talk(s *Script) {
 		//Has("hook",  `Safety in distance.`),
 		Has("comment", `"Ummm....", Alice says. "I"ll just be over here then."`),
 		Has("reply", `[beat]"Was it something I said?"`),
-		After("reporting discuss").Always(func(g G.Play) {
+		After("being discussed").Always(func(g G.Play) {
 			g.The("actor").Go("depart")
 		}))
 }

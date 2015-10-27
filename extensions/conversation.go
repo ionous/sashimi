@@ -137,7 +137,7 @@ func init() {
 			Can("comment").And("commenting").RequiresOne("quip"),
 			To("comment", standard.ReflectToTarget("report comment")),
 			Can("discuss").And("discussing").RequiresOne("quip"),
-			To("discuss", standard.ReflectToTarget("report discuss")),
+			To("discuss", standard.ReflectToTarget("be discussed")),
 		)
 
 		s.The("quips",
@@ -161,8 +161,8 @@ func init() {
 				// which should happen (right) after this.
 				// the conversation choices are determined by what the npc says...
 			}),
-			Can("report discuss").And("reporting discuss").RequiresOne("actor"),
-			To("report discuss", func(g G.Play) {
+			Can("be discussed").And("being discussed").RequiresOne("actor"),
+			To("be discussed", func(g G.Play) {
 				talker, quip := g.The("actor"), g.The("quip")
 				if standard.Debugging {
 					g.Log("!", talker, "discussing", quip)

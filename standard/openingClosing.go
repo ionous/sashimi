@@ -22,13 +22,13 @@ func init() {
 		//
 		s.The("actors",
 			Can("open it").And("opening it").RequiresOne("prop"),
-			To("open it", ReflectToTarget("report open")),
+			To("open it", ReflectToTarget("be opened by")),
 		)
 
 		// "[regarding the noun][They] [aren't] something [we] [can] open."
 		s.The("props",
-			Can("report open").And("reporting open").RequiresOne("actor"),
-			To("report open", func(g G.Play) {
+			Can("be opened by").And("being opened by").RequiresOne("actor"),
+			To("be opened by", func(g G.Play) {
 				prop, actor := g.The("prop"), g.The("actor")
 				if !prop.Is("openable") {
 					prop.Go("report not openable", actor)
@@ -76,11 +76,11 @@ func init() {
 		// one visible thing, and requiring light
 		s.The("actors",
 			Can("close it").And("closing it").RequiresOne("prop"),
-			To("close it", ReflectToTarget("report close")),
+			To("close it", ReflectToTarget("be closed by")),
 		)
 		s.The("props",
-			Can("report close").And("report closing").RequiresOne("actor"),
-			To("report close", func(g G.Play) {
+			Can("be closed by").And("being closed by").RequiresOne("actor"),
+			To("be closed by", func(g G.Play) {
 				prop, actor := g.The("prop"), g.The("actor")
 				if !prop.Is("openable") {
 					prop.Go("report not closeable", actor)

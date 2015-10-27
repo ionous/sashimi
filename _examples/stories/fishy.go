@@ -179,7 +179,7 @@ func A_Day_For_Fresh_Sushi(s *Script) {
 		}))
 	// [69-75)
 	s.The("fish food",
-		When("reporting open").Always(func(g G.Play) {
+		When("being opened by").Always(func(g G.Play) {
 			fish, player := g.The("evil fish"), g.The("player")
 			fish.Says(`"Oh, for--!" The evil fish breaks out in exasperation and hives. "Screw the screwing around with the screwtop. SHE never has to do that."`)
 			player.Says(`"Well, SHE is not here," you reply. "What do you suggest?"`)
