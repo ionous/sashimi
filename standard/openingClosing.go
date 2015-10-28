@@ -11,8 +11,8 @@ func init() {
 		s.The("props",
 			Called("openers"),
 			AreEither("open").Or("closed"),
-			// note: unopenable sounds like it cant become open, rather than it cannot be opened (by someone).
-			AreEither("openable").Or("not openable"),
+			// note: not openable sounds like it cant become open, rather than it cannot be opened (by someone).
+			AreEither("hinged").Or("hingeless"),
 			AreEither("locakable").Or("not lockable").Usually("not lockable"),
 			AreEither("unlocked").Or("locked"),
 		)
@@ -30,8 +30,8 @@ func init() {
 			Can("be opened by").And("being opened by").RequiresOne("actor"),
 			To("be opened by", func(g G.Play) {
 				prop, actor := g.The("prop"), g.The("actor")
-				if !prop.Is("openable") {
-					prop.Go("report not openable", actor)
+				if !prop.Is("hinged") {
+					prop.Go("report unopenable", actor)
 				} else {
 					if prop.Is("locked") {
 						prop.Go("report locked", actor)
@@ -49,8 +49,8 @@ func init() {
 			To("report locked", func(g G.Play) {
 				g.The("actor").Says("It's locked!")
 			}),
-			Can("report not openable").And("reporting not openable").RequiresOne("actor"),
-			To("report not openable", func(g G.Play) {
+			Can("report unopenable").And("reporting unopenable").RequiresOne("actor"),
+			To("report unopenable", func(g G.Play) {
 				g.Say("That's not something you can open.")
 			}),
 			Can("report already open").And("reporting already opened").RequiresOne("actor"),
@@ -82,7 +82,7 @@ func init() {
 			Can("be closed by").And("being closed by").RequiresOne("actor"),
 			To("be closed by", func(g G.Play) {
 				prop, actor := g.The("prop"), g.The("actor")
-				if !prop.Is("openable") {
+				if !prop.Is("hinged") {
 					prop.Go("report not closeable", actor)
 				} else {
 					// FIX: locked?

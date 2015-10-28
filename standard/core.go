@@ -168,6 +168,7 @@ func ReflectToLocation(action string) G.Callback {
 	return func(g G.Play) {
 		actor := g.The("actor")
 		target := actor.Object("whereabouts")
+		//g.Log("reflecting", action, actor, target)
 		target.Go(action, actor)
 	}
 }
@@ -177,6 +178,7 @@ func ReflectToTarget(action string) G.Callback {
 	return func(g G.Play) {
 		source := g.The("action.Source")
 		target := g.The("action.Target")
+		//g.Log("reflecting", action, source, target)
 		target.Go(action, source)
 	}
 }
@@ -189,6 +191,7 @@ func ReflectWithContext(action string) G.Callback {
 		source := g.The("action.Source")
 		target := g.The("action.Target")
 		context := g.The("action.Context")
+		//g.Log("reflecting", action, source, target, context)
 		target.Go(action, context, source)
 	}
 }
@@ -371,7 +374,7 @@ func init() {
 			When("printing name text").
 				Always(func(g G.Play) {
 				text := ArticleName(g, "door", func(obj G.IObject) (status string) {
-					if obj.Is("openable") {
+					if obj.Is("hinged") {
 						if obj.Is("open") {
 							status = "open"
 						} else {

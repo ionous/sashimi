@@ -30,13 +30,14 @@ func init() {
 					//g.Say("You see nothing special about:")
 					object.Go("print name")
 				}
+				object.Go("print contents")
 			}))
 
+		s.The("objects",
+			Can("print contents").And("printing contents").RequiresNothing())
+
 		s.The("containers",
-			After("being examined").Always(func(g G.Play) {
-				//R.DebugGet = true
-				// ??? this had been && !this.Is("scenery") but i dont know why.
-				// if i examine something, dont we always want to se e into it?
+			When("printing contents").Always(func(g G.Play) {
 				if c := g.The("container"); c.Is("open") || c.Is("transparent") {
 					listContents(g, "In the", c)
 				}
@@ -49,8 +50,8 @@ func init() {
 		//	say "[The actor] [look] closely at [the noun]." (A).
 
 		s.The("supporters",
-			After("being examined").Always(func(g G.Play) {
-				this := g.The("action.Source")
+			When("printing contents").Always(func(g G.Play) {
+				this := g.The("supporter")
 				listContents(g, "On the", this)
 			}))
 

@@ -52,7 +52,7 @@ func A_Day_For_Fresh_Sushi(s *Script) {
 	// [22-23)
 	s.The("container",
 		Called("cabinet"), In("studio"),
-		Is("openable", "closed").And("fixed in place"),
+		Is("hinged", "closed").And("fixed in place"),
 		Has("brief", "A huge cabinet, in the guise of an armoire, stands between the windows."),
 		Has("description", "Large, and with a bit of an Art Nouveau theme going on in the shape of the doors."),
 	)
@@ -238,7 +238,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 			g.The("evil fish").Says(`"Yeah? Man. I never knew my mother. Eggs, that's the way to go."`)
 		}))
 	s.The("opener", Called("window"), Is("scenery"), In("the studio"))
-	s.The("window", Is("openable").And("closed"))
+	s.The("window", Is("hinged").And("closed"))
 	s.The("window", Has("description", `{{if .Open}}Through the windows you get a lovely view of the street outside. At the moment, the glass is thrown open, and a light breeze is blowing through.{{else}}Through the windows, you get a lovely view of the street outside -- the little fountain on the corner, the slightly dilapidated but nonetheless magnificent Jugendstil architecture of the facing building. The glass itself is shut, however.{{end}}`))
 	s.The("window", IsKnownAs("windows"))
 	// [108-110)
@@ -253,7 +253,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 		}))
 	// [111-112)
 	s.The("supporter", Called("table"), Is("scenery"), In("the studio"))
-	s.The("container", Called("vase"), Is("open").And("not openable"))
+	s.The("container", Called("vase"), Is("open").And("hingeless"))
 	// NOTE: interstingly: because the table is scenery, once we take the vase: it becomes invisible; this is just like the original story.
 	s.The("table", Supports("vase"))
 	// [113-114)
@@ -337,7 +337,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 		Is("transparent").And("open").And("fixed in place"), // note, you can take the aquarium in the original story, but some of the fish lines dont make sense that way.
 		In("the studio"))
 	// 152b
-	s.The("aquarium", Is("not openable"),
+	s.The("aquarium", Is("hingeless"),
 		Has("brief", "In one corner of the room, a large aquarium bubbles in menacing fashion."), Has("description", "A very roomy aquarium, large enough to hold quite a variety of colorful sealife -- if any yet survived."),
 		IsKnownAs("tank"),
 	)

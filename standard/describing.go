@@ -28,6 +28,7 @@ func (d DescribePhrase) Execute(g G.Play) {
 		} else {
 			obj.Go("print name")
 		}
+		obj.Go("print contents")
 	}
 }
 
@@ -46,23 +47,5 @@ func init() {
 
 		// FIX: After() isnt working well, it goes into the default action
 		// but not all objects are containers, so it errors
-		s.The("containers",
-			//print description
-			When("describing").Always(func(g G.Play) {
-				container := g.The("action.Source")
-				if (container.Is("open") || container.Is("transparent")) && !container.Is("scenery") {
-					g.Go(DescribeThe(container))
-					listContents(g, "In the", container)
-					g.StopHere()
-				}
-			}))
-
-		s.The("supporters",
-			When("describing").Always(func(g G.Play) {
-				supporter := g.The("action.Source")
-				g.Go(DescribeThe(supporter))
-				listContents(g, "On the", supporter)
-				g.StopHere()
-			}))
 	})
 }

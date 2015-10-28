@@ -40,7 +40,7 @@ func The_Lab(s *Script) {
 
 	s.The("container",
 		Called("the glass jar"),
-		Is("transparent", "closed").And("openable"),
+		Is("transparent", "closed").And("hinged"),
 		Has("brief", "beaker with a lid."),
 		Contains("the eye dropper"))
 

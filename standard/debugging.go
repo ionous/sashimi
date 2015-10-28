@@ -9,8 +9,8 @@ func init() {
 	// FIX: a special AddDebugScript? that only gets activated with special command line parameters?
 	AddScript(func(s *Script) {
 		s.The("actors",
-			Can("print direct parent").And("printing direct parent").RequiresOne("object"),
-			To("print direct parent", func(g G.Play) {
+			Can("debug direct parent").And("debugging direct parent").RequiresOne("object"),
+			To("debug direct parent", func(g G.Play) {
 				target := g.The("action.Target")
 				parent, relation := DirectParent(target)
 				if relation == "" {
@@ -23,31 +23,31 @@ func init() {
 		// >parent of automat
 		//	hall-automat-door => whereabouts main hallway
 		s.The("actors",
-			Can("print contents").And("printing contents").RequiresOne("object"),
-			To("print contents", func(g G.Play) {
+			Can("debug contents").And("debugging contents").RequiresOne("object"),
+			To("debug contents", func(g G.Play) {
 				target := g.The("action.Target")
 				contents := target.ObjectList("contents")
-				g.Say("printing contents of", target.Text("name"))
+				g.Say("debugging contents of", target.Text("name"))
 				for _, v := range contents {
 					g.Say(v.Id().String())
 				}
 			}))
 		s.The("actors",
-			Can("print room contents").And("printing room contents").RequiresNothing(),
-			To("print room contents", func(g G.Play) {
+			Can("debug room contents").And("debugging room contents").RequiresNothing(),
+			To("debug room contents", func(g G.Play) {
 				room := g.The("player").Object("whereabouts")
 				contents := room.ObjectList("contents")
-				g.Say("printing contents of", room.Text("name"))
+				g.Say("debugging contents of", room.Text("name"))
 				for _, v := range contents {
 					g.Say(v.Id().String())
 				}
 			}))
-		s.Execute("print direct parent",
+		s.Execute("debug direct parent",
 			Matching("parent of {{something}}"))
-		s.Execute("print contents",
+		s.Execute("debug contents",
 			Matching("contents of {{something}}"))
 
-		s.Execute("print room contents",
+		s.Execute("debug room contents",
 			Matching("contents of room"))
 	})
 }
