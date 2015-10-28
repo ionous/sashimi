@@ -57,7 +57,7 @@ func (oa ObjectAdapter) Exists() bool {
 //
 func (oa ObjectAdapter) Class(class string) (okay bool) {
 	if cls, ok := oa.game.Model.Classes.FindClassBySingular(class); ok {
-		okay = oa.gobj.Class().CompatibleWith(cls.Id())
+		okay = oa.gobj.Class().CompatibleWith(cls.Id)
 	}
 	return okay
 }
@@ -70,7 +70,7 @@ func (oa ObjectAdapter) Is(state string) (ret bool) {
 		oa.logError(fmt.Errorf("is: no such choice '%s'.'%s'", oa, state))
 	} else {
 		testChoice, _ := prop.IndexToChoice(index)
-		currChoice := oa.gobj.Value(prop.Id())
+		currChoice := oa.gobj.Value(prop.GetId())
 		ret = currChoice == testChoice
 	}
 	return ret
@@ -84,16 +84,16 @@ func (oa ObjectAdapter) IsNow(state string) {
 		oa.logError(fmt.Errorf("IsNow: no such choice '%s'.'%s'", oa, state))
 	} else {
 		// get the current choice from the implied property slot
-		if currChoice, ok := oa.gobj.Value(prop.Id()).(ident.Id); !ok {
-			err := TypeMismatch(oa.gobj.Id().String(), prop.Id().String())
+		if currChoice, ok := oa.gobj.Value(prop.GetId()).(ident.Id); !ok {
+			err := TypeMismatch(oa.gobj.Id().String(), prop.GetId().String())
 			oa.logError(err)
 		} else {
 			newChoice, _ := prop.IndexToChoice(index)
 			if currChoice != newChoice {
-				oa.gobj.removeDirect(currChoice)        // delete the old choice's boolean,
-				oa.gobj.setDirect(newChoice, true)      // and set the new
-				oa.gobj.setDirect(prop.Id(), newChoice) // // set the property slot to the new choice
-				oa.game.Properties.Notify(oa.gobj.Id(), prop.Id(), currChoice, newChoice)
+				oa.gobj.removeDirect(currChoice)           // delete the old choice's boolean,
+				oa.gobj.setDirect(newChoice, true)         // and set the new
+				oa.gobj.setDirect(prop.GetId(), newChoice) // // set the property slot to the new choice
+				oa.game.Properties.Notify(oa.gobj.Id(), prop.GetId(), currChoice, newChoice)
 			}
 		}
 	}
@@ -167,15 +167,15 @@ func (oa ObjectAdapter) Object(prop string) (ret G.IObject) {
 	var res ident.Id
 	if p, ok := oa.gobj.Class().FindProperty(prop); ok {
 		switch p := p.(type) {
-		case *M.PointerProperty:
-			if val, ok := oa.gobj.Value(p.Id()).(ident.Id); ok {
+		case M.PointerProperty:
+			if val, ok := oa.gobj.Value(p.GetId()).(ident.Id); ok {
 				res = val
 			}
-		case *M.RelativeProperty:
+		case M.RelativeProperty:
 			// TBD: can the relative property changes automatically reflect into the value table
 			// ex. on event?
-			if rel, ok := oa.gobj.Value(p.Id()).(RelativeValue); ok {
-				if p.ToMany() {
+			if rel, ok := oa.gobj.Value(p.GetId()).(RelativeValue); ok {
+				if p.IsMany {
 					oa.logError(fmt.Errorf("object requested, but relation is list"))
 				} else {
 					list := rel.List()
@@ -197,20 +197,20 @@ func (oa ObjectAdapter) Set(prop string, object G.IObject) {
 		switch p := p.(type) {
 		default:
 			oa.logError(TypeMismatch(oa.String(), prop))
-		case *M.PointerProperty:
+		case M.PointerProperty:
 			set := false
 			if other, ok := object.(ObjectAdapter); !ok {
-				oa.gobj.SetValue(p.Id(), ident.Id(""))
+				oa.gobj.SetValue(p.GetId(), ident.Id(""))
 				set = true
 			} else {
-				oa.gobj.SetValue(p.Id(), other.gobj.Id())
+				oa.gobj.SetValue(p.GetId(), other.gobj.Id())
 				set = true
 			}
 			if !set {
 				oa.logError(fmt.Errorf("couldnt set value for prop %s", prop))
 			}
-		case *M.RelativeProperty:
-			if rel, ok := oa.gobj.Value(p.Id()).(RelativeValue); ok {
+		case M.RelativeProperty:
+			if rel, ok := oa.gobj.Value(p.GetId()).(RelativeValue); ok {
 				var prev, next ident.Id
 				var err error
 
@@ -237,7 +237,7 @@ func (oa ObjectAdapter) Set(prop string, object G.IObject) {
 				if err != nil {
 					oa.logError(err)
 				} else {
-					oa.game.Properties.Notify(oa.gobj.Id(), p.Id(), prev, next)
+					oa.game.Properties.Notify(oa.gobj.Id(), p.GetId(), prev, next)
 				}
 			}
 		}
@@ -252,8 +252,8 @@ func (oa ObjectAdapter) ObjectList(prop string) (ret []G.IObject) {
 		switch p := p.(type) {
 		default:
 			oa.logError(TypeMismatch(oa.String(), prop))
-		case *M.RelativeProperty:
-			if rel, ok := oa.gobj.Value(p.Id()).(RelativeValue); ok {
+		case M.RelativeProperty:
+			if rel, ok := oa.gobj.Value(p.GetId()).(RelativeValue); ok {
 				list := rel.List()
 				ret = make([]G.IObject, len(list))
 				for i, objId := range list {
@@ -294,7 +294,7 @@ func (oa ObjectAdapter) Go(act string, objects ...G.IObject) {
 			oa.logError(e)
 		} else {
 			tgt := ObjectTarget{oa.game, oa.gobj}
-			msg := &E.Message{Name: action.Event(), Data: act}
+			msg := &E.Message{Name: action.EventName, Data: act}
 			if e := oa.game.frame.SendMessage(tgt, msg); e != nil {
 				oa.logError(e)
 			}
@@ -302,8 +302,6 @@ func (oa ObjectAdapter) Go(act string, objects ...G.IObject) {
 	}
 }
 
-//
-//
 //
 func (oa ObjectAdapter) logError(err error) (hadError bool) {
 	if err != nil {

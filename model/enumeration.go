@@ -6,17 +6,12 @@ import (
 	"github.com/ionous/sashimi/util/ident"
 )
 
-//
-//
 // An indexed set of values.
-//
 type Enumeration struct {
-	choices map[ident.Id]int // index + 1, to handle zero/nil
-	values  []StringPair     // 0-based index
+	Choices map[ident.Id]int // index + 1, to handle zero/nil
+	Values  []StringPair     // 0-based index
 }
 
-//
-//
 //
 func NewEnumeration(values []string) Enumeration {
 	choices, outvalues := make(map[ident.Id]int), make([]StringPair, 0, len(values))
@@ -29,16 +24,14 @@ func NewEnumeration(values []string) Enumeration {
 }
 
 //
-//
-//
 func CheckedEnumeration(values []string) (ret Enumeration, err error) {
 	enum := NewEnumeration(values)
 	switch {
-	case enum.choices[""] != 0:
+	case enum.Choices[""] != 0:
 		err = EmptyValueError(values)
-	case len(enum.choices) == 0:
+	case len(enum.Choices) == 0:
 		err = EmptyValueError(values)
-	case len(enum.choices) != len(values):
+	case len(enum.Choices) != len(values):
 		err = MultiplyDefinedError(values)
 	}
 	if err == nil {
@@ -48,27 +41,16 @@ func CheckedEnumeration(values []string) (ret Enumeration, err error) {
 }
 
 //
-//
-//
-func (enum Enumeration) Values() []StringPair {
-	return enum.values
-}
-
-//
-//
-//
 func (enum Enumeration) IndexToValue(index int) (ret StringPair, err error) {
-	inRange := index > 0 && index <= len(enum.values)
+	inRange := index > 0 && index <= len(enum.Values)
 	if inRange {
-		ret = enum.values[index-1]
+		ret = enum.Values[index-1]
 	} else {
 		err = OutOfRangeError(enum, index)
 	}
 	return ret, err
 }
 
-//
-//
 //
 func (enum Enumeration) IndexToChoice(index int) (ret ident.Id, err error) {
 	if value, e := enum.IndexToValue(index); e != nil {
@@ -80,10 +62,8 @@ func (enum Enumeration) IndexToChoice(index int) (ret ident.Id, err error) {
 }
 
 //
-//
-//
 func (enum Enumeration) ChoiceToIndex(choice ident.Id) (ret int, err error) {
-	if idx, ok := enum.choices[choice]; !ok {
+	if idx, ok := enum.Choices[choice]; !ok {
 		err = OutOfRangeError(enum, choice)
 	} else {
 		ret = idx
@@ -92,16 +72,12 @@ func (enum Enumeration) ChoiceToIndex(choice ident.Id) (ret int, err error) {
 }
 
 //
-//
-//
 func MultiplyDefinedError(values []string) error {
 	return errutil.Func(func() string {
 		return fmt.Sprintf("multiple values defined for enum %v", values)
 	})
 }
 
-//
-//
 //
 func EmptyValueError(values []string) error {
 	return errutil.Func(func() string {
@@ -110,16 +86,12 @@ func EmptyValueError(values []string) error {
 }
 
 //
-//
-//
 func OutOfRangeError(enum Enumeration, value interface{}) error {
 	return errutil.Func(func() string {
 		return fmt.Sprintf("%v out of range for %v", value, enum)
 	})
 }
 
-//
-//
 //
 func InvalidChoiceError(enum Enumeration, choice ident.Id) error {
 	return errutil.Func(func() string {

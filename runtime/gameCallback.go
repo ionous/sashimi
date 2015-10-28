@@ -29,7 +29,7 @@ func (cb GameCallback) HandleEvent(evt E.IEvent) (err error) {
 			if cb.UseAfterQueue() {
 				act.runAfterDefaults(cb.call)
 			} else {
-				if !act.runCallback(cb.call, cb.Class()) {
+				if !act.runCallback(cb.call, cb.Class) {
 					evt.StopImmediatePropagation()
 					evt.PreventDefault()
 				}

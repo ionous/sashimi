@@ -3,23 +3,18 @@ package model
 import "github.com/ionous/sashimi/util/ident"
 
 type TextProperty struct {
-	id   ident.Id
-	name string
+	Id   ident.Id `json:"id"`   // property id
+	Name string   `json:"name"` // property name
 }
 
-// FIX?  it might be nicer if the model had a builder with an interface for all such new(s)
-func NewTextProperty(id ident.Id, name string) *TextProperty {
-	return &TextProperty{id, name}
+func (text TextProperty) GetId() ident.Id {
+	return text.Id
 }
 
-func (text *TextProperty) Id() ident.Id {
-	return text.id
+func (text TextProperty) GetName() string {
+	return text.Name
 }
 
-func (text *TextProperty) Name() string {
-	return text.name
-}
-
-func (text *TextProperty) Zero(_ ConstraintSet) interface{} {
+func (text TextProperty) GetZero(_ ConstraintSet) interface{} {
 	return ""
 }

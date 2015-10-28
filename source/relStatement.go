@@ -18,11 +18,11 @@ func (hint RelativeHint) IsReverse() bool {
 
 //
 type RelativeStatement struct {
-	fields RelativeFields
+	fields RelativeProperty
 	source Code
 }
 
-type RelativeFields struct {
+type RelativeProperty struct {
 	Class     string
 	Property  string
 	RelatesTo string
@@ -31,7 +31,7 @@ type RelativeFields struct {
 }
 
 //
-func (ts RelativeStatement) Fields() RelativeFields {
+func (ts RelativeStatement) Fields() RelativeProperty {
 	return ts.fields
 }
 

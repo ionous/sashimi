@@ -10,8 +10,6 @@ type IFragment interface {
 }
 
 //
-//
-//
 type SubjectBlock struct {
 	*Script
 	theKeyword string

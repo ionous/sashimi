@@ -71,8 +71,8 @@ func (ga *GameEventAdapter) Add(data string) (ret G.IObject) {
 	} else {
 		id := ident.MakeUniqueId()
 		gobj := &GameObject{id, cls, make(TemplateValues), make(TemplatePool), ga.Game.Model.Tables}
-		for _, prop := range cls.Properties() {
-			if e := gobj.setValue(prop, prop.Zero(cls.Constraints())); e != nil {
+		for _, prop := range cls.Properties {
+			if e := gobj.setValue(prop, prop.GetZero(cls.Constraints)); e != nil {
 				panic(e)
 			}
 		}
@@ -88,7 +88,7 @@ func (ga *GameEventAdapter) Visit(class string, visits func(G.IObject) bool) (ok
 		ga.log.Printf("no objects found of type requested `%s`", class)
 	} else {
 		for _, gobj := range ga.Objects {
-			if gobj.Class().CompatibleWith(cls.Id()) {
+			if gobj.Class().CompatibleWith(cls.Id) {
 				if visits(NewObjectAdapter(ga.Game, gobj)) {
 					okay = true
 					break

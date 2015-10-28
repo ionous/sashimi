@@ -28,9 +28,9 @@ func TestSimpleRelation(t *testing.T) {
 		model.PrintModel(t.Log)
 		assert.Equal(t, 1, len(model.Relations))
 		for _, v := range model.Relations {
-			assert.EqualValues(t, "Gremlins", v.Source().Class)
-			assert.EqualValues(t, "Rocks", v.Destination().Class)
-			assert.EqualValues(t, M.OneToMany, v.Style())
+			assert.EqualValues(t, "Gremlins", v.Source.Class)
+			assert.EqualValues(t, "Rocks", v.Dest.Class)
+			assert.EqualValues(t, M.OneToMany, v.Style)
 		}
 	}
 }
@@ -58,23 +58,23 @@ func TestSimpleRelates(t *testing.T) {
 		claire, ok := model.Instances.FindInstance("claire")
 		assert.True(t, ok, "found claire")
 
-		pets, ok := claire.Class().FindProperty("pets")
+		pets, ok := claire.Class.FindProperty("pets")
 		assert.True(t, ok)
 
-		petsrel := pets.(*M.RelativeProperty)
-		table, ok := model.Tables.TableById(petsrel.Relation())
+		petsrel := pets.(M.RelativeProperty)
+		table, ok := model.Tables.TableById(petsrel.Relation)
 		assert.True(t, ok, "found table")
 
-		assert.EqualValues(t, []ident.Id{"Loofah"}, table.List(claire.Id(), petsrel.IsRev()))
+		assert.EqualValues(t, []ident.Id{"Loofah"}, table.List(claire.Id, petsrel.IsRev))
 
 		loofah, ok := model.Instances.FindInstance("loofah")
 		assert.True(t, ok, "found loofah")
 
-		revField, ok := loofah.Class().FindProperty("o beneficent one")
+		revField, ok := loofah.Class.FindProperty("o beneficent one")
 		assert.True(t, ok, "rev property")
-		revProp := revField.(*M.RelativeProperty)
+		revProp := revField.(M.RelativeProperty)
 
-		assert.Exactly(t, []ident.Id{"Claire"}, table.List(loofah.Id(), revProp.IsRev()))
+		assert.Exactly(t, []ident.Id{"Claire"}, table.List(loofah.Id, revProp.IsRev))
 
 		model.PrintModel(t.Log)
 	}

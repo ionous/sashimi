@@ -25,7 +25,7 @@ func NewObjectMatcher(game *Game, source *GameObject, act *M.ActionInfo,
 ) {
 	if source == nil {
 		err = fmt.Errorf("couldnt find command source for %s", act)
-	} else if !source.Class().CompatibleWith(act.Source().Id()) {
+	} else if !source.Class().CompatibleWith(act.Source().Id) {
 		err = fmt.Errorf("source class for %s doesnt match", act)
 	} else {
 		om := &ObjectMatcher{game, act, nil, make(map[string]TemplateValues)}
@@ -39,7 +39,7 @@ func NewObjectMatcher(game *Game, source *GameObject, act *M.ActionInfo,
 // MatchNOun to relate the passed name and article to internal objects.
 //
 func (om *ObjectMatcher) MatchNoun(name string, _ string) (err error) {
-	nouns := om.act.NounSlice()
+	nouns := om.act.NounTypes
 	if cnt, max := len(om.objects), len(nouns); cnt >= max {
 		err = fmt.Errorf("You've told me more than I've understood.")
 	} else {
@@ -61,13 +61,13 @@ func (om *ObjectMatcher) MatchNoun(name string, _ string) (err error) {
 // Matches gets called by the parser after succesfully found the command and nouns.
 //
 func (om *ObjectMatcher) OnMatch() (err error) {
-	nouns := om.act.NounSlice()
+	nouns := om.act.NounTypes
 	if cnt, max := len(om.objects), len(nouns); cnt != max {
 		err = P.MismatchedNouns("I", max, cnt)
 	} else {
 		tgt := ObjectTarget{om.game, om.objects[0]}
 		act := &RuntimeAction{om.game, om.act, om.objects, om.values, nil}
-		om.game.queue.QueueEvent(tgt, om.act.Event(), act)
+		om.game.queue.QueueEvent(tgt, om.act.EventName, act)
 	}
 	return err
 }
@@ -77,10 +77,10 @@ func (om *ObjectMatcher) OnMatch() (err error) {
 //
 func (om *ObjectMatcher) MatchId(id ident.Id) (okay bool) {
 	if gobj, ok := om.game.Objects[id]; ok {
-		nouns := om.act.NounSlice()
+		nouns := om.act.NounTypes
 		if cnt, max := len(om.objects), len(nouns); cnt < max {
 			class := nouns[cnt]
-			if gobj.Class().CompatibleWith(class.Id()) {
+			if gobj.Class().CompatibleWith(class.Id) {
 				om.addObject(gobj)
 				okay = true
 			}

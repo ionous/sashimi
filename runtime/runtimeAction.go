@@ -83,7 +83,7 @@ func (act *RuntimeAction) findByClass(cls *M.ClassInfo) (ret G.IObject, okay boo
 
 // findByExactClass; true if found
 func (act *RuntimeAction) findByExactClass(cls *M.ClassInfo) (ret G.IObject, okay bool) {
-	for i, nounClass := range act.action.NounSlice() {
+	for i, nounClass := range act.action.NounTypes {
 		// if DebugGet {
 		//  act.game.Println("exact", i, nounClass)
 		// }
@@ -97,8 +97,8 @@ func (act *RuntimeAction) findByExactClass(cls *M.ClassInfo) (ret G.IObject, oka
 
 // findBySimilarClass; true if found
 func (act *RuntimeAction) findBySimilarClass(cls *M.ClassInfo) (ret G.IObject, okay bool) {
-	for i, nounClass := range act.action.NounSlice() {
-		if similar := cls.CompatibleWith(nounClass.Id()); similar {
+	for i, nounClass := range act.action.NounTypes {
+		if similar := cls.CompatibleWith(nounClass.Id); similar {
 			ret, okay = act.getObject(i)
 			break
 		}

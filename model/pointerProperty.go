@@ -7,37 +7,22 @@ import "github.com/ionous/sashimi/util/ident"
 // Unlike RelativeProperty the referenced instance does not know about the reference.
 //
 type PointerProperty struct {
-	id   ident.Id
-	name string
-	cls  ident.Id
+	Id    ident.Id `json:"id"`    // property id
+	Name  string   `json:"name"`  // property name
+	Class ident.Id `json:"class"` // property id
 }
 
-func NewPointerProperty(id ident.Id, name string, cls ident.Id) *PointerProperty {
-	return &PointerProperty{id, name, cls}
-}
-
-//
 // Id returns the unique id of ptr property.
 // It is usually derived from the property's name.
-//
-func (ptr *PointerProperty) Id() ident.Id {
-	return ptr.id
+func (ptr PointerProperty) GetId() ident.Id {
+	return ptr.Id
 }
 
-//
 // Name returns the property's appelation as specified by the author.
-//
-func (ptr *PointerProperty) Name() string {
-	return ptr.name
+func (ptr PointerProperty) GetName() string {
+	return ptr.Name
 }
 
-//
-// Class returns the id of the kind of class which instances with ptr property point to.
-//
-func (ptr *PointerProperty) Class() ident.Id {
-	return ptr.cls
-}
-
-func (ptr *PointerProperty) Zero(_ ConstraintSet) interface{} {
+func (ptr PointerProperty) GetZero(_ ConstraintSet) interface{} {
 	return ident.Empty()
 }

@@ -12,19 +12,19 @@ func (model *Model) PrintModel(printer printer) {
 	}
 	printer("*** Classes:")
 	for _, class := range model.Classes {
-		printer("\t", class.Name(), class.Singular())
-		cons := class.Constraints()
+		printer("\t", class.Plural, class.Singular)
+		cons := class.Constraints
 		printer("\t\t Constraints:")
 
-		if len(cons.constraints) == 0 {
+		if len(cons.Map) == 0 {
 			printer("\t\t\t (unconstrained)")
 		} else {
-			for field, con := range cons.constraints {
+			for field, con := range cons.Map {
 				printer("\t\t\t", fmt.Sprintf("%v: %T", field, con))
 			}
 		}
 
-		properties := class.Properties()
+		properties := class.Properties
 		printer("\t\t Fields:")
 		if len(properties) == 0 {
 			printer("\t\t\t (empty)")
@@ -32,13 +32,13 @@ func (model *Model) PrintModel(printer printer) {
 			for field, prop := range properties {
 				printer("\t\t\t", fmt.Sprintf("%v: %T", field, prop))
 				switch inner := prop.(type) {
-				case *EnumProperty:
-					printer("\t\t\t ", inner.Values())
+				case EnumProperty:
+					printer("\t\t\t ", inner.Values)
 
-				case *RelativeProperty:
-					rel, _ := model.Relations[inner.Relation()]
-					many := map[bool]string{true: "Many", false: "One"}[inner.ToMany()]
-					printer("\t\t\t ", fmt.Sprintf("%s => '%s' ( '%s' )", many, inner.Relates(), rel.Name()))
+				case RelativeProperty:
+					rel, _ := model.Relations[inner.Relation]
+					many := map[bool]string{true: "Many", false: "One"}[inner.IsMany]
+					printer("\t\t\t ", fmt.Sprintf("%s => '%s' ( '%s' )", many, inner.Relates, rel.Name))
 				}
 			}
 		}
@@ -53,9 +53,9 @@ func (model *Model) PrintModel(printer printer) {
 	printer("*** Instances:")
 	for _, inst := range model.Instances {
 		printer("\t", inst)
-		all := inst.Class().AllProperties()
+		all := inst.Class.AllProperties()
 		for id, _ := range all {
-			v, hadValue := inst.values[id]
+			v, hadValue := inst.Values[id]
 			l := map[bool]string{false: "_", true: ""}[hadValue]
 			printer("\t\t", fmt.Sprintf("%v%v: %s", id, l, v))
 		}
@@ -63,6 +63,6 @@ func (model *Model) PrintModel(printer printer) {
 	printer("*** Actions:")
 	for _, act := range model.Actions {
 		source, target, context := act.Source(), act.Target(), act.Context()
-		printer("\t", act.Action(), act.Event(), source, target, context)
+		printer("\t", act.ActionName, act.EventName, source, target, context)
 	}
 }

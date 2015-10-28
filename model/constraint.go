@@ -14,25 +14,21 @@ type IConstrain interface {
 }
 
 //
-//
-//
 type ConstraintSet struct {
-	parent      *ConstraintSet
-	constraints ConstraintMap
+	Parent *ConstraintSet
+	Map    ConstraintMap
 }
 type ConstraintMap map[ident.Id]IConstrain
 
 func (cons ConstraintSet) ConstraintById(id ident.Id) (ret IConstrain, okay bool) {
-	if c, ok := cons.constraints[id]; ok {
+	if c, ok := cons.Map[id]; ok {
 		ret, okay = c, ok
-	} else if cons.parent != nil {
-		ret, okay = cons.parent.ConstraintById(id)
+	} else if cons.Parent != nil {
+		ret, okay = cons.Parent.ConstraintById(id)
 	}
 	return ret, okay
 }
 
-//
-//
 //
 type UnknownConstraintError struct {
 	prop       IProperty

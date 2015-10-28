@@ -132,7 +132,7 @@ func (blocks *BuildingBlocks) NewProperty(fields PropertyFields, source Code,
 }
 
 //
-func (blocks *BuildingBlocks) NewRelative(fields RelativeFields, source Code,
+func (blocks *BuildingBlocks) NewRelative(fields RelativeProperty, source Code,
 ) (err error) {
 	rel := RelativeStatement{fields, source}
 	blocks.statements.Relatives = append(blocks.statements.Relatives, rel)

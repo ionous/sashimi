@@ -24,8 +24,6 @@ type ClassResults struct {
 }
 
 //
-//
-//
 func newResults(classes PendingClasses, relatives *RelativeFactory) ClassResults {
 	results := make(ClassResultMap)
 	// add a placeholder for the null/root class
@@ -100,7 +98,7 @@ func (this ClassResults) _makeClass(pending *PendingClass,
 				e := fmt.Errorf("rule specified for non-enum field %s", rule.fieldName)
 				err = errutil.Append(err, e)
 
-			case *M.EnumProperty:
+			case M.EnumProperty:
 				// find a constraint for the rule
 				var cons M.IConstrain
 				found := false
@@ -108,7 +106,7 @@ func (this ClassResults) _makeClass(pending *PendingClass,
 					cons = c
 					found = true
 				} else if parent != nil {
-					if p, ok := parent.Constraints().ConstraintById(rule.fieldName); ok {
+					if p, ok := parent.Constraints.ConstraintById(rule.fieldName); ok {
 						cons = p.Copy()
 						constraints[rule.fieldName] = cons
 						found = true
@@ -140,13 +138,18 @@ func (this ClassResults) _makeClass(pending *PendingClass,
 		} // end rule loop
 
 		if err == nil {
-			cls = M.NewClassInfo(
-				parent,
-				pending.id,
-				pending.name,
-				pending.singular,
-				props,
-				constraints)
+			var parentConstraints *M.ConstraintSet
+			if parent != nil {
+				parentConstraints = &parent.Constraints
+			}
+			cls = &M.ClassInfo{
+				Parent:      parent,
+				Id:          pending.id,
+				Plural:      pending.name,
+				Singular:    pending.singular,
+				Properties:  props,
+				Constraints: M.ConstraintSet{parentConstraints, constraints},
+			}
 		}
 	}
 	return cls, err

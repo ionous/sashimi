@@ -20,12 +20,12 @@ func testField(
 ) (err error) {
 	if inst, ok := res.Instances.FindInstance(instName); !ok {
 		err = M.InstanceNotFound(instName)
-	} else if prop, ok := inst.Class().FindProperty(fieldName); !ok {
+	} else if prop, ok := inst.Class.FindProperty(fieldName); !ok {
 		err = fmt.Errorf("'%s.%v' missing field", instName, fieldName)
-	} else if val, ok := inst.Value(prop.Id()); !ok {
+	} else if val, ok := inst.Value(prop.GetId()); !ok {
 		err = fmt.Errorf("'%s.%v' missing value", instName, fieldName)
 	} else {
-		if enum, ok := prop.(*M.EnumProperty); ok {
+		if enum, ok := prop.(M.EnumProperty); ok {
 			val, _ = enum.IndexToChoice(val.(int))
 		}
 		if !assert.ObjectsAreEqualValues(val, value) {
@@ -69,7 +69,7 @@ func TestClass(t *testing.T) {
 	if stories == nil {
 		t.Fatal("expected stories", res.Classes)
 	}
-	if stories.Singular() != "story" {
+	if stories.Singular != "story" {
 		t.Fatal("singular/plural problem", stories)
 	}
 }
@@ -108,7 +108,7 @@ func TestClassProperty(t *testing.T) {
 	if objs == nil {
 		t.Fatal("missing objs", res)
 	}
-	props := objs.Properties()
+	props := objs.Properties
 	if props == nil {
 		t.Fatal("missing props", objs)
 	}
@@ -119,7 +119,7 @@ func TestClassProperty(t *testing.T) {
 	if text == nil {
 		t.Fatal("missing text", props)
 	}
-	_, isText := text.(*M.TextProperty)
+	_, isText := text.(M.TextProperty)
 	if !isText {
 		t.Errorf("unexpected property type %T", text)
 	}
@@ -127,7 +127,7 @@ func TestClassProperty(t *testing.T) {
 	if num == nil {
 		t.Fatal("missing num", props)
 	}
-	_, isNum := num.(*M.NumProperty)
+	_, isNum := num.(M.NumProperty)
 	if !isNum {
 		t.Errorf("unexpected property type %T", num)
 	}

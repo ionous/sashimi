@@ -41,7 +41,7 @@ func (this *ObjectSerializer) SerializeObject(out resource.IBuildObjects, gobj *
 		for propId, prop := range gobj.Class().AllProperties() {
 			if val := gobj.Value(propId); val != nil {
 				switch prop.(type) {
-				case *M.EnumProperty:
+				case M.EnumProperty:
 					choice := val.(ident.Id)
 					states = append(states, jsonId(choice))
 				default:
@@ -66,5 +66,5 @@ func (this *ObjectSerializer) AddObjectRef(out resource.IBuildObjects, gobj *R.G
 }
 
 func (this *ObjectSerializer) NewObject(out resource.IBuildObjects, gobj *R.GameObject) (obj *resource.Object) {
-	return out.NewObject(jsonId(gobj.Id()), jsonId(gobj.Class().Id()))
+	return out.NewObject(jsonId(gobj.Id()), jsonId(gobj.Class().Id))
 }

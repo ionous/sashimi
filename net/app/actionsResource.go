@@ -21,9 +21,9 @@ import (
 // }
 
 func actionResource(out resource.IBuildObjects, act *M.ActionInfo) {
-	out.NewObject(jsonId(act.Id()), "action").
-		SetAttr("act", act.Action()).
-		SetAttr("evt", act.Event()).
+	out.NewObject(jsonId(act.Id), "action").
+		SetAttr("act", act.ActionName).
+		SetAttr("evt", act.EventName).
 		SetAttr("src", classToId(act.Source())).
 		SetAttr("tgt", classToId(act.Target())).
 		SetAttr("ctx", classToId(act.Context()))
@@ -31,7 +31,7 @@ func actionResource(out resource.IBuildObjects, act *M.ActionInfo) {
 
 func classToId(cls *M.ClassInfo) (ret string) {
 	if cls != nil {
-		ret = jsonId(cls.Id())
+		ret = jsonId(cls.Id)
 	}
 	return ret
 }

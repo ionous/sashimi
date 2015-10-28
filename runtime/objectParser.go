@@ -35,15 +35,15 @@ func NewParser(game *Game,
 	op := &ObjectParser{game, parser, &ParserSourceStack{}}
 	// pre-compile the parser statements ( ex. to catch errors. )
 	for _, p := range model.ParserActions {
-		act := p.Action()
-		name := act.Action()
+		act := p.Action
+		name := act.ActionName
 		if comp, e := parser.NewComprehension(name,
 			func() (P.IMatch, error) {
 				return op.NewObjectMatcher(act)
 			}); e != nil {
 			err = errutil.Append(err, e)
 		} else {
-			for _, learn := range p.Commands() {
+			for _, learn := range p.Commands {
 				if _, e := comp.LearnPattern(learn); e != nil {
 					err = errutil.Append(err, e)
 				}

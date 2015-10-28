@@ -18,7 +18,7 @@ type ClassTarget struct {
 
 //
 func (ct ClassTarget) Id() ident.Id {
-	return ct.class.Id()
+	return ct.class.Id
 }
 
 //
@@ -36,7 +36,7 @@ func (ct ClassTarget) String() string {
 // (from E.ITarget)
 //
 func (ct ClassTarget) Parent() (ret E.ITarget, ok bool) {
-	parent := ct.class.Parent()
+	parent := ct.class.Parent
 	if parent != nil {
 		ret = ClassTarget{ct.host, parent, ct.upObject}
 		ok = true
@@ -52,7 +52,7 @@ func (ct ClassTarget) Parent() (ret E.ITarget, ok bool) {
 // (from E.ITarget)
 //
 func (ct ClassTarget) Dispatch(evt E.IEvent) (err error) {
-	if d, ok := ct.host.game.Dispatchers.GetDispatcher(ct.class.Id()); ok {
+	if d, ok := ct.host.game.Dispatchers.GetDispatcher(ct.class.Id); ok {
 		err = d.Dispatch(evt)
 	}
 	return err

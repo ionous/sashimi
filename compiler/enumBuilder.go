@@ -18,7 +18,7 @@ func NewEnumBuilder(
 	if enum, e := M.CheckedEnumeration(choices); e != nil {
 		err = e
 	} else {
-		prop := M.NewEnumProperty(id, name, enum)
+		prop := M.EnumProperty{id, name, enum}
 		ret = EnumBuilder{id, enum, prop}
 	}
 	return ret, err
@@ -27,7 +27,7 @@ func NewEnumBuilder(
 type EnumBuilder struct {
 	id      ident.Id
 	choices M.Enumeration
-	prop    *M.EnumProperty
+	prop    M.EnumProperty
 }
 
 func (enum EnumBuilder) BuildProperty() (M.IProperty, error) {
@@ -37,7 +37,7 @@ func (enum EnumBuilder) BuildProperty() (M.IProperty, error) {
 func (enum EnumBuilder) SetProperty(ctx PropertyContext) (err error) {
 
 	var constraints M.IConstrain
-	if c, ok := ctx.class.Constraints().ConstraintById(enum.id); ok {
+	if c, ok := ctx.class.Constraints.ConstraintById(enum.id); ok {
 		constraints = c
 	} else {
 		constraints = M.NewConstraint(enum.choices)

@@ -22,7 +22,7 @@ func (this *SystemActions) Capture(event string, cb SystemCallback) *SystemActio
 }
 
 func (this *SystemActions) Run(action *M.ActionInfo, obj []*GameObject) {
-	if arr, ok := this.actions[action.Event()]; ok {
+	if arr, ok := this.actions[action.EventName]; ok {
 		for _, cb := range arr {
 			cb(action, obj)
 		}

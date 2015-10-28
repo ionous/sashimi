@@ -10,7 +10,7 @@ func ParserResource(m *M.Model) resource.IResource {
 		Queries: func(doc resource.DocumentBuilder) {
 			objects := doc.NewObjects()
 			for _, act := range m.ParserActions {
-				k := act.Action().Id()
+				k := act.Action.Id
 				objects.NewObject(jsonId(k), "action")
 			}
 		},

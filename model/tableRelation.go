@@ -7,8 +7,8 @@ import (
 
 //
 type TableRelations struct {
-	relation RelationMap // FIX: a little weird this is here when it's also in the model itself
-	tables   map[ident.Id]*TableRelation
+	RelationMap RelationMap // FIX: a little weird this is here when it's also in the model itself
+	Tables      map[ident.Id]*TableRelation
 }
 
 //
@@ -29,6 +29,6 @@ func NewTableRelations(rels RelationMap) TableRelations {
 
 //
 func (this TableRelations) TableById(id ident.Id) (ret *TableRelation, ok bool) {
-	ret, ok = this.tables[id]
+	ret, ok = this.Tables[id]
 	return ret, ok
 }

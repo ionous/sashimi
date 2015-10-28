@@ -19,8 +19,6 @@ type ClassFactory struct {
 }
 
 //
-//
-//
 func newClassFactory(names NameSource, rel *RelativeFactory) *ClassFactory {
 	res := &ClassFactory{names, rel, make(PendingClasses), make(SingleToPlural)}
 	res.addClassRef(nil, "kinds", "kind")
@@ -48,8 +46,6 @@ func (fac *ClassFactory) findByPluralName(plural string,
 	return ret, okay
 }
 
-//
-//
 //
 func (fac *ClassFactory) findByRelativeName(kind string, hint S.RelativeHint,
 ) (class *PendingClass, pluralized bool, err error) {
@@ -86,8 +82,6 @@ func (fac *ClassFactory) makeClasses(relatives *RelativeFactory) (
 	return cr.finalizeClasses()
 }
 
-//
-//
 //
 func (fac *ClassFactory) addClassRef(parent *PendingClass, plural, single string,
 ) (class *PendingClass, err error,

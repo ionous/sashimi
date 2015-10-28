@@ -11,7 +11,7 @@ import (
 //
 type PendingRelation struct {
 	name     string
-	src, dst *M.RelativeFields // copied from the class after verifying the two sides are compatible
+	src, dst *M.RelativeProperty // copied from the class after verifying the two sides are compatible
 }
 
 //
@@ -23,7 +23,7 @@ type PendingRelations map[ident.Id]PendingRelation
 // Assign a relative to the relation.
 // There can be at most two relatives per relation, and both sides must relate to each other without conflict.
 //
-func (this *PendingRelation) setRelative(name string, pending M.RelativeFields) (err error) {
+func (this *PendingRelation) setRelative(name string, pending M.RelativeProperty) (err error) {
 	// setup name:
 	if this.name == "" {
 		this.name = name
@@ -70,14 +70,14 @@ func (this PendingRelation) makeRelation(id ident.Id) (rel M.Relation, err error
 // deduce the relationship style based on how how many dst are pointed to by src, and vice versa
 //
 func (this PendingRelation) style() (style M.RelationStyle) {
-	if this.src.ToMany {
-		if this.dst.ToMany {
+	if this.src.IsMany {
+		if this.dst.IsMany {
 			style = M.ManyToMany
 		} else {
 			style = M.OneToMany // been drinking again, eh?
 		}
 	} else {
-		if this.dst.ToMany {
+		if this.dst.IsMany {
 			style = M.ManyToOne
 		} else {
 			style = M.OneToOne

@@ -15,7 +15,7 @@ func (this ClassMap) FindClass(name string) (ret *ClassInfo, okay bool) {
 // FIX could be made faster
 func (this ClassMap) FindClassBySingular(name string) (ret *ClassInfo, okay bool) {
 	for _, cls := range this {
-		if cls.singular == name {
+		if cls.Singular == name {
 			ret, okay = cls, true
 			break
 		}

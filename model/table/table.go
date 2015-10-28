@@ -3,7 +3,7 @@ package table
 import "github.com/ionous/sashimi/util/ident"
 
 type Table struct {
-	table []Pair
+	Pairs []Pair
 }
 
 func NewTable() *Table {
@@ -20,14 +20,14 @@ type Pair struct {
 func (this *Table) Add(x, y ident.Id) (index int) {
 	index = this.Find(x, y)
 	if index == 0 {
-		this.table = append(this.table, Pair{x, y})
-		index = len(this.table)
+		this.Pairs = append(this.Pairs, Pair{x, y})
+		index = len(this.Pairs)
 	}
 	return index
 }
 
 func (this *Table) Find(x, y ident.Id) (index int) {
-	for i, pair := range this.table {
+	for i, pair := range this.Pairs {
 		if pair.x == x && pair.y == y {
 			index = i + 1
 			break
@@ -37,7 +37,7 @@ func (this *Table) Find(x, y ident.Id) (index int) {
 }
 
 func (this *Table) list(x ident.Id) (ret []ident.Id) {
-	for _, pair := range this.table {
+	for _, pair := range this.Pairs {
 		if pair.x == x {
 			ret = append(ret, pair.y)
 		}
@@ -46,7 +46,7 @@ func (this *Table) list(x ident.Id) (ret []ident.Id) {
 }
 
 func (this *Table) listRev(y ident.Id) (ret []ident.Id) {
-	for _, pair := range this.table {
+	for _, pair := range this.Pairs {
 		if pair.y == y {
 			ret = append(ret, pair.x)
 		}
@@ -66,7 +66,7 @@ func (this *Table) List(x ident.Id, rev bool) (ret []ident.Id) {
 type pairTest func(x, y ident.Id) bool
 
 func (this *Table) Remove(pairTest pairTest) (removed int) {
-	t := this.table
+	t := this.Pairs
 	for i := 0; i < len(t); i++ {
 		pair := &t[i]
 		if pairTest(pair.x, pair.y) {
@@ -76,6 +76,6 @@ func (this *Table) Remove(pairTest pairTest) (removed int) {
 			removed = removed + 1
 		}
 	}
-	this.table = t
+	this.Pairs = t
 	return removed
 }

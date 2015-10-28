@@ -9,19 +9,19 @@ import (
 // NewTextBuilder returns an interface which can generate a text property
 //
 func NewTextBuilder(id ident.Id, name string) (IBuildProperty, error) {
-	prop := M.NewTextProperty(id, name)
+	prop := M.TextProperty{id, name}
 	return TextBuilder{prop}, nil
 }
 
 type TextBuilder struct {
-	prop *M.TextProperty
+	M.TextProperty
 }
 
 func (txt TextBuilder) BuildProperty() (M.IProperty, error) {
-	return txt.prop, nil
+	return txt.TextProperty, nil
 }
 
 func (txt TextBuilder) SetProperty(ctx PropertyContext) (err error) {
 	nilVal := ""
-	return ctx.values.lockSet(ctx.inst, txt.prop.Id(), nilVal, ctx.value)
+	return ctx.values.lockSet(ctx.inst, txt.Id, nilVal, ctx.value)
 }

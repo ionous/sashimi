@@ -74,33 +74,33 @@ func (gobj *GameObject) removeDirect(id ident.Id) {
 // set the property value.
 func (gobj *GameObject) setValue(prop M.IProperty, val interface{}) (err error) {
 	switch prop := prop.(type) {
-	case *M.EnumProperty:
+	case M.EnumProperty:
 		if choice, e := prop.IndexToChoice(val.(int)); e != nil {
 			err = e
 		} else {
-			gobj.setDirect(prop.Id(), choice)
+			gobj.setDirect(prop.GetId(), choice)
 			gobj.setDirect(choice, true)
 		}
 
-	case *M.NumProperty:
-		gobj.setDirect(prop.Id(), val)
+	case M.NumProperty:
+		gobj.setDirect(prop.GetId(), val)
 
-	case *M.PointerProperty:
-		gobj.setDirect(prop.Id(), val)
+	case M.PointerProperty:
+		gobj.setDirect(prop.GetId(), val)
 
-	case *M.RelativeProperty:
-		if table, ok := gobj.tables.TableById(prop.Relation()); !ok {
-			err = fmt.Errorf("couldn't find table", prop.Relation())
+	case M.RelativeProperty:
+		if table, ok := gobj.tables.TableById(prop.Relation); !ok {
+			err = fmt.Errorf("couldn't find table", prop.Relation)
 		} else {
 			rel := RelativeValue{gobj.Id(), prop, table}
-			gobj.setDirect(prop.Id(), rel)
+			gobj.setDirect(prop.GetId(), rel)
 		}
 
-	case *M.TextProperty:
-		gobj.setDirect(prop.Id(), val)
+	case M.TextProperty:
+		gobj.setDirect(prop.GetId(), val)
 		// TBD: when to parse this? maybe options? here for early errors.
 		str := val.(string)
-		if e := gobj.temps.New(prop.Id().String(), str); e != nil {
+		if e := gobj.temps.New(prop.GetId().String(), str); e != nil {
 			err = e
 		}
 

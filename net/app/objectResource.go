@@ -21,7 +21,7 @@ func ObjectResource(game *R.Game, cls *M.ClassInfo, serial *ObjectSerializer) re
 					Finds: func(propertyName string) (ret resource.IResource, okay bool) {
 						// FIX: relations are stored in the model
 						if prop, ok := gobj.Class().FindProperty(propertyName); ok {
-							if rel, ok := gobj.Value(prop.Id()).(R.RelativeValue); ok {
+							if rel, ok := gobj.Value(prop.GetId()).(R.RelativeValue); ok {
 								okay, ret = true, resource.Wrapper{
 									// Return the list of related objects:
 									Queries: func(doc resource.DocumentBuilder) {

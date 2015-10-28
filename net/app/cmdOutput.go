@@ -133,42 +133,42 @@ func (out *CommandOutput) propertyChanged(game *R.Game, gobj *R.GameObject, prop
 	// some other event or request is required
 	//
 	switch prop := prop.(type) {
-	case *M.NumProperty:
+	case M.NumProperty:
 		if obj, ok := out.serial.TryObjectRef(gobj); ok {
 			data := struct {
 				Prop  string  `json:"prop"`
 				Value float32 `json:"value"`
-			}{jsonId(prop.Id()), next.(float32)}
+			}{jsonId(prop.GetId()), next.(float32)}
 			out.events.AddAction("x-num", obj, data)
 		}
 
-	case *M.TextProperty:
+	case M.TextProperty:
 		if obj, ok := out.serial.TryObjectRef(gobj); ok {
 			data := struct {
 				Prop  string `json:"prop"`
 				Value string `json:"value"`
-			}{jsonId(prop.Id()), next.(string)}
+			}{jsonId(prop.GetId()), next.(string)}
 			out.events.AddAction("x-txt", obj, data)
 		}
 
-	case *M.EnumProperty:
+	case M.EnumProperty:
 		if obj, ok := out.serial.TryObjectRef(gobj); ok {
 			data := struct {
 				Prop string `json:"prop"`
 				Prev string `json:"prev"`
 				Next string `json:"next"`
-			}{jsonId(prop.Id()),
+			}{jsonId(prop.GetId()),
 				jsonId(prev.(ident.Id)),
 				jsonId(next.(ident.Id))}
 			out.events.AddAction("x-set", obj, data)
 		}
 
-	case *M.RelativeProperty:
+	case M.RelativeProperty:
 		// get the relation
-		relation := game.Model.Relations[prop.Relation()]
+		relation := game.Model.Relations[prop.Relation]
 
 		// get the reverse property
-		other, foundOther := relation.Other(prop.Class(), prop.Id())
+		other, foundOther := relation.GetOther(prop.Class, prop.GetId())
 		if !foundOther {
 			panic(fmt.Sprint("couldnt match", prop, relation))
 		}
@@ -183,7 +183,7 @@ func (out *CommandOutput) propertyChanged(game *R.Game, gobj *R.GameObject, prop
 		// fire for the original object
 		if out.serial.IsKnown(gobj.Id()) || out.serial.IsKnown(prev.(ident.Id)) || out.serial.IsKnown(next.(ident.Id)) {
 			obj := out.serial.NewObjectRef(gobj)
-			relChange := RelationChange{Prop: jsonId(prop.Id()), Other: jsonId(other.Property)}
+			relChange := RelationChange{Prop: jsonId(prop.GetId()), Other: jsonId(other.Property)}
 
 			// fire for the prev object's relationships
 			if gprev, ok := game.Objects[prev.(ident.Id)]; ok {

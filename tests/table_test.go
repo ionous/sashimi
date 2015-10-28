@@ -42,9 +42,9 @@ func TestTableDecl(t *testing.T) {
 				}
 			}
 			//
-			if prop, ok := inst.Class().FindProperty("delicious-property"); assert.True(t, ok, "find deliciousness") {
-				if val, ok := inst.Value(prop.Id()); assert.True(t, ok, "find value") {
-					val, _ := prop.(*M.EnumProperty).IndexToChoice(val.(int))
+			if prop, ok := inst.Class.FindProperty("delicious-property"); assert.True(t, ok, "find deliciousness") {
+				if val, ok := inst.Value(prop.GetId()); assert.True(t, ok, "find value") {
+					val, _ := prop.(M.EnumProperty).IndexToChoice(val.(int))
 					assert.EqualValues(t, val, M.MakeStringId("acceptable"))
 				}
 			}

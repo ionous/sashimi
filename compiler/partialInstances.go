@@ -46,7 +46,7 @@ func (part *PartialInstances) makeData(choices []S.ChoiceStatement, kvs []S.KeyV
 	tables = part.tables
 	instances = make(M.InstanceMap)
 	for id, p := range part.partials {
-		instance := M.NewInstanceInfo(p.id, p.class, p.name, p.longName, p.values)
+		instance := &M.InstanceInfo{p.id, p.class, p.name, p.values}
 		instances[id] = instance
 	}
 
@@ -67,7 +67,7 @@ func (part *PartialInstances) _addChoices(choices []S.ChoiceStatement) (err erro
 		} else if prop, index, ok := inst.class.PropertyByChoice(fields.Choice); !ok {
 			e := fmt.Errorf("no such choice: '%v'", choice)
 			err = errutil.Append(err, SourceError(choice.Source(), e))
-		} else if e := inst.setKeyValue(prop.Name(), index); e != nil {
+		} else if e := inst.setKeyValue(prop.GetName(), index); e != nil {
 			err = errutil.Append(err, SourceError(choice.Source(), e))
 		}
 

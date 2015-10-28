@@ -37,8 +37,6 @@ func (this ClassRelationFragment) Implying(kind string, dst ClassRelationFragmen
 }
 
 //
-//
-//
 type ClassPropertyFragment struct {
 	origin Origin
 	name   string // property,field name
@@ -71,11 +69,11 @@ func (this ClassRelationFragment) MakeStatement(b SubjectBlock) (err error) {
 	// uses the subject, ex. gremlins, and the field, ex. pets
 	via := strings.Join([]string{b.subject, src.name, "relation"}, "-")
 
-	srel := S.RelativeFields{b.subject, src.name, src.kind, via, src.hint | S.RelativeSource}
+	srel := S.RelativeProperty{b.subject, src.name, src.kind, via, src.hint | S.RelativeSource}
 	if e := b.NewRelative(srel, this.src.origin.Code()); e != nil {
 		err = e
 	} else if this.reverseClass != "" {
-		drel := S.RelativeFields{this.reverseClass, dst.name, dst.kind, via, dst.hint}
+		drel := S.RelativeProperty{this.reverseClass, dst.name, dst.kind, via, dst.hint}
 		err = b.NewRelative(drel, this.dst.origin.Code())
 	}
 	return err

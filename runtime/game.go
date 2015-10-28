@@ -81,12 +81,12 @@ func (cfg Config) NewGame(model *M.Model) (_ *Game, err error) {
 		rand.New(rand.NewSource(1)),
 	}
 	for _, handler := range model.ActionHandlers {
-		src := handler.Callback()
+		src := handler.Callback
 		if cb := cfg.Calls.Lookup(src); cb == nil {
 			err = errutil.Append(err, fmt.Errorf("couldnt find callback for action", handler))
 		} else {
 			cb := CallbackPair{src, cb}
-			act := handler.Action()
+			act := handler.Action
 			arr := game.defaultActions[act]
 			// FIX: for now treating target as bubble,
 			// really the compiler should hand off a sorted flat list based on three separate groups
@@ -107,25 +107,25 @@ func (cfg Config) NewGame(model *M.Model) (_ *Game, err error) {
 
 	// FUTURE: move into scenes, with a handle for removal
 	for _, listener := range model.EventListeners {
-		src := listener.Callback()
+		src := listener.Callback
 		if cb := cfg.Calls.Lookup(src); cb == nil {
 			err = errutil.Append(err, fmt.Errorf("couldnt find callback for listener", listener))
 		} else {
-			act := listener.Action()
+			act := listener.Action
 			callback := GameCallback{game, listener, CallbackPair{src, cb}}
 
 			var id ident.Id
-			if inst := listener.Instance(); inst != nil {
-				id = inst.Id()
-			} else if cls := listener.Class(); cls != nil {
-				id = cls.Id()
+			if inst := listener.Instance; inst != nil {
+				id = inst.Id
+			} else if cls := listener.Class; cls != nil {
+				id = cls.Id
 			} else {
 				e := fmt.Errorf("couldnt create listener %v", listener)
 				err = errutil.Append(err, e)
 				continue
 			}
 			dispatch := dispatchers.CreateDispatcher(id)
-			dispatch.Listen(act.Event(), callback, listener.UseCapture())
+			dispatch.Listen(act.EventName, callback, listener.UseCapture())
 		}
 	}
 	if err != nil {
@@ -183,7 +183,7 @@ func (g *Game) ProcessEvents() (err error) {
 // and then use the id in the runtime.
 func (g *Game) FindObject(name string) (ret *GameObject, okay bool) {
 	if info, ok := g.Model.Instances.FindInstance(name); ok {
-		ret = g.Objects[info.Id()]
+		ret = g.Objects[info.Id]
 		okay = true
 	}
 	return ret, okay
@@ -213,7 +213,7 @@ func (g *Game) SendEvent(event string, nouns ...ident.Id,
 			err = e
 		} else {
 			tgt := ObjectTarget{g, act.objs[0]}
-			g.queue.QueueEvent(tgt, action.Event(), act)
+			g.queue.QueueEvent(tgt, action.EventName, act)
 		}
 	}
 	return err
@@ -225,7 +225,7 @@ func (g *Game) SendEvent(event string, nouns ...ident.Id,
 func (g *Game) newRuntimeAction(action *M.ActionInfo, nouns ...ident.Id,
 ) (ret *RuntimeAction, err error,
 ) {
-	types := action.NounSlice()
+	types := action.NounTypes
 	switch diff := len(nouns) - len(types); {
 	case diff < 0:
 		err = fmt.Errorf("too few nouns specified for '%s', %d", action, diff)
@@ -241,7 +241,7 @@ func (g *Game) newRuntimeAction(action *M.ActionInfo, nouns ...ident.Id,
 			if gobj, ok := g.Objects[noun]; !ok {
 				err = M.InstanceNotFound(noun.String())
 				break
-			} else if !gobj.Class().CompatibleWith(class.Id()) {
+			} else if !gobj.Class().CompatibleWith(class.Id) {
 				err = TypeMismatch(noun.String(), class.String())
 				break
 			} else {

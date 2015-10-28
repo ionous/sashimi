@@ -1,7 +1,5 @@
 package parser
 
-//
-//
 // Match helps input parsing, returned by TryParse().
 //
 type Match struct {

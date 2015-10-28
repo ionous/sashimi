@@ -20,16 +20,16 @@ func CreateGameObjects(
 
 	for _, inst := range src {
 		// create property sets for this instance's class
-		class := inst.Class()
+		class := inst.Class
 		props, had := allProps[class]
 		if !had {
 			props = class.AllProperties()
 			allProps[class] = props
 		}
 		// turn properties into tables:
-		gobj := &GameObject{inst.Id(), inst.Class(), make(TemplateValues), make(TemplatePool), tables}
+		gobj := &GameObject{inst.Id, inst.Class, make(TemplateValues), make(TemplatePool), tables}
 		// FIX FIX FIX
-		name := inst.Name()
+		name := inst.Name
 		if n, ok := inst.FindValue("printed name"); ok {
 			if n, ok := n.(string); ok && n != "" {
 				name = n
@@ -43,7 +43,7 @@ func CreateGameObjects(
 				err = errutil.Append(err, e)
 			}
 		}
-		ret[inst.Id()] = gobj
+		ret[inst.Id] = gobj
 	}
 	return ret, err
 }

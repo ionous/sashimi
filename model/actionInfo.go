@@ -6,9 +6,9 @@ import (
 )
 
 type ActionInfo struct {
-	id            ident.Id
-	action, event string
-	nounTypes     []*ClassInfo
+	Id                    ident.Id
+	ActionName, EventName string
+	NounTypes             []*ClassInfo
 }
 
 func NewAction(id ident.Id, action, event string, classes ...*ClassInfo) (ret *ActionInfo, err error) {
@@ -33,24 +33,9 @@ func NewAction(id ident.Id, action, event string, classes ...*ClassInfo) (ret *A
 	return ret, err
 }
 
-// based on the action name
-func (this *ActionInfo) Id() ident.Id {
-	return this.id
-}
-
 // baed on id
 func (this *ActionInfo) String() string {
-	return this.id.String()
-}
-
-// action name
-func (this *ActionInfo) Action() string {
-	return this.action
-}
-
-// event name
-func (this *ActionInfo) Event() string {
-	return this.event
+	return this.Id.String()
 }
 
 //
@@ -70,18 +55,13 @@ func (this *ActionInfo) Context() *ClassInfo {
 
 //
 func (this *ActionInfo) neverSimple(i int) (ret *ClassInfo) {
-	if i < len(this.nounTypes) {
-		ret = this.nounTypes[i]
+	if i < len(this.NounTypes) {
+		ret = this.NounTypes[i]
 	}
 	return ret
 }
 
 //
-func (this *ActionInfo) NounSlice() (ret []*ClassInfo) {
-	return this.nounTypes
-}
-
-//
 func (this *ActionInfo) NumNouns() (ret int) {
-	return len(this.nounTypes)
+	return len(this.NounTypes)
 }

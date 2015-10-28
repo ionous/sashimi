@@ -30,24 +30,24 @@ func ClassResource(classes M.ClassMap) resource.IResource {
 }
 
 func classParents(cls *M.ClassInfo, ar []string) []string {
-	if p := cls.Parent(); p != nil {
-		ar = append(classParents(p, ar), jsonId(p.Id()))
+	if p := cls.Parent; p != nil {
+		ar = append(classParents(p, ar), jsonId(p.Id))
 	}
 	return ar
 }
 
 func addClass(doc, sub resource.IBuildObjects, cls *M.ClassInfo) {
 	var parent *resource.Object
-	if p := cls.Parent(); p != nil {
+	if p := cls.Parent; p != nil {
 		//addClass(model, sub, sub, p)
 		// disabling recursion
-		parent = resource.NewObject(jsonId(p.Id()), "class")
+		parent = resource.NewObject(jsonId(p.Id), "class")
 	}
-	id := jsonId(cls.Id())
+	id := jsonId(cls.Id)
 	out := doc.NewObject(id, "class")
 	out.SetAttr("parent", parent)
-	out.SetAttr("name", cls.Name())
-	out.SetAttr("singular", cls.Singular())
+	out.SetAttr("name", cls.Plural)
+	out.SetAttr("singular", cls.Singular)
 	a := append(classParents(cls, nil), id)
 	// reverse
 	for i := len(a)/2 - 1; i >= 0; i-- {
@@ -56,16 +56,16 @@ func addClass(doc, sub resource.IBuildObjects, cls *M.ClassInfo) {
 	}
 	out.SetMeta("classes", a)
 	props := resource.Dict{}
-	for pid, prop := range cls.Properties() {
+	for pid, prop := range cls.Properties {
 		typeName := "unknown"
 		switch prop.(type) {
-		case *M.RelativeProperty:
+		case M.RelativeProperty:
 			typeName = "rel"
-		case *M.TextProperty:
+		case M.TextProperty:
 			typeName = "text"
-		case *M.NumProperty:
+		case M.NumProperty:
 			typeName = "num"
-		case *M.EnumProperty:
+		case M.EnumProperty:
 			typeName = "enum"
 		}
 		props[jsonId(pid)] = typeName

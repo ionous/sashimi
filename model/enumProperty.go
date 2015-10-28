@@ -3,26 +3,22 @@ package model
 import "github.com/ionous/sashimi/util/ident"
 
 type EnumProperty struct {
-	id   ident.Id
-	name string
+	Id   ident.Id `json:"id"`   // property id
+	Name string   `json:"name"` // property name
 	Enumeration
 }
 
-func NewEnumProperty(id ident.Id, name string, src Enumeration) *EnumProperty {
-	return &EnumProperty{id, name, src}
+func (enum EnumProperty) GetId() ident.Id {
+	return enum.Id
 }
 
-func (enum *EnumProperty) Id() ident.Id {
-	return enum.id
+func (enum EnumProperty) GetName() string {
+	return enum.Name
 }
 
-func (enum *EnumProperty) Name() string {
-	return enum.name
-}
-
-func (enum *EnumProperty) Zero(cons ConstraintSet) interface{} {
+func (enum EnumProperty) GetZero(cons ConstraintSet) interface{} {
 	index := 1 // enum indices are 1-based.
-	if cons, ok := cons.ConstraintById(enum.id); ok {
+	if cons, ok := cons.ConstraintById(enum.Id); ok {
 		if cons, ok := cons.(*EnumConstraint); ok {
 			index = cons.BestIndex()
 		}

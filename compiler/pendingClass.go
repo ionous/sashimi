@@ -69,7 +69,7 @@ func (cls *PendingClass) addProperty(src S.Code, fields S.PropertyFields,
 				ret, err = cls.props.make(id,
 					func(old IBuildProperty) (err error) {
 						ptr, existed := old.(PointerBuilder)
-						if !existed || ptr.class != other.id {
+						if !existed || ptr.Class != other.id {
 							err = fmt.Errorf("pointer redefined. was %s, now %s", old, other)
 						}
 						return
@@ -115,7 +115,7 @@ func (cls *PendingClass) addEnum(name string,
 //
 // Add a relative property to cls class.
 //
-func (cls *PendingClass) addRelative(fields S.RelativeFields, src S.Code,
+func (cls *PendingClass) addRelative(fields S.RelativeProperty, src S.Code,
 ) (ret IBuildProperty,
 	err error,
 ) {
@@ -131,10 +131,10 @@ func (cls *PendingClass) addRelative(fields S.RelativeFields, src S.Code,
 				err = SourceError(src, e)
 			} else {
 				// create the relative property pointing to the generated relation data
-				rel := M.RelativeFields{
+				rel := M.RelativeProperty{
+					id,   // property id in cls
+					name, // original property name
 					cls.id,
-					id,       // property id in cls
-					name,     // original property name
 					other.id, // the other side of the relation
 					relId,    // the id of the relation pair
 					fields.Hint.IsReverse(),

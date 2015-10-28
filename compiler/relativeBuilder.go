@@ -12,7 +12,7 @@ type RelativeBuilder struct {
 	id        ident.Id
 	name      string
 	src       S.Code
-	fields    M.RelativeFields
+	fields    M.RelativeProperty
 	relations PendingRelations
 }
 
@@ -21,7 +21,7 @@ func NewRelativeBuilder(
 	cls, id ident.Id,
 	name string,
 	src S.Code,
-	fields M.RelativeFields,
+	fields M.RelativeProperty,
 ) (
 	IBuildProperty,
 	error,
@@ -42,7 +42,7 @@ func (rel RelativeBuilder) BuildProperty() (ret M.IProperty, err error) {
 		// write merged data back
 		rel.relations[relationId] = relation
 		// return the property
-		ret = M.NewRelativeProperty(rel.fields)
+		ret = rel.fields
 	}
 	return ret, err
 }
