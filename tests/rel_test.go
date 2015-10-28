@@ -3,10 +3,8 @@ package tests
 import (
 	M "github.com/ionous/sashimi/model"
 	. "github.com/ionous/sashimi/script"
-
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/stretchr/testify/assert"
-	"os"
 	"testing"
 )
 
@@ -25,7 +23,7 @@ func TestSimpleRelation(t *testing.T) {
 			Implying("rocks", HaveOne("o beneficent one", "gremlin")),
 	)
 	s.The("kinds", Called("rocks"), Exist())
-	model, err := s.Compile(os.Stderr)
+	model, err := s.Compile(Log(t))
 	if assert.NoError(t, err) {
 		model.PrintModel(t.Log)
 		assert.Equal(t, 1, len(model.Relations))
@@ -53,7 +51,7 @@ func TestSimpleRelates(t *testing.T) {
 	s.The("rock", Called("Loofah"), Exists())
 
 	//
-	model, err := s.Compile(os.Stderr)
+	model, err := s.Compile(Log(t))
 	if assert.NoError(t, err, "compile") {
 		assert.Equal(t, 2, len(model.Instances), "two instances")
 

@@ -39,12 +39,17 @@ func (log logAdapter) Write(p []byte) (n int, err error) {
 }
 
 // each action can have a chain of default actions
-type DefaultActions map[*M.ActionInfo][]G.Callback
+type CallbackPair struct {
+	src  M.Callback
+	call G.Callback
+}
+
+type DefaultActions map[*M.ActionInfo][]CallbackPair
 
 type Globals map[ident.Id]reflect.Value
 
-func NewGame(model *M.Model, frame EventFrame, output IOutput) (_ *Game, err error) {
-	log := log.New(logAdapter{output}, "game: ", log.Lshortfile)
+func (cfg Config) NewGame(model *M.Model) (_ *Game, err error) {
+	log := log.New(logAdapter{cfg.Output}, "game: ", log.Lshortfile)
 	dispatchers := NewDispatchers(log)
 	objects, e := CreateGameObjects(model.Instances, model.Tables)
 	if e != nil {
@@ -55,6 +60,7 @@ func NewGame(model *M.Model, frame EventFrame, output IOutput) (_ *Game, err err
 	for k, gen := range model.Generators {
 		globals[k] = reflect.New(gen)
 	}
+	frame := cfg.Frame
 	if frame == nil {
 		frame = DefaultEventFrame
 	}
@@ -63,7 +69,7 @@ func NewGame(model *M.Model, frame EventFrame, output IOutput) (_ *Game, err err
 		model,
 		objects,
 		dispatchers,
-		output,
+		cfg.Output,
 		EventQueue{E.NewQueue()},
 		frame,
 		make(DefaultActions),
@@ -75,37 +81,52 @@ func NewGame(model *M.Model, frame EventFrame, output IOutput) (_ *Game, err err
 		rand.New(rand.NewSource(1)),
 	}
 	for _, handler := range model.ActionHandlers {
-		act, cb := handler.Action(), handler.Callback()
-		arr := game.defaultActions[act]
-		// FIX: for now treating target as bubble,
-		// really the compiler should hand off a sorted flat list based on three separate groups
-		// target growing in the same direction as after, but distinctly in the middle of things.
-		if !handler.UseCapture() {
-			arr = append(arr, cb)
+		src := handler.Callback()
+		if cb := cfg.Calls.Lookup(src); cb == nil {
+			err = errutil.Append(err, fmt.Errorf("couldnt find callback for action", handler))
 		} else {
-			// prepend:
-			arr = append([]G.Callback{cb}, arr...)
+			cb := CallbackPair{src, cb}
+			act := handler.Action()
+			arr := game.defaultActions[act]
+			// FIX: for now treating target as bubble,
+			// really the compiler should hand off a sorted flat list based on three separate groups
+			// target growing in the same direction as after, but distinctly in the middle of things.
+			if !handler.UseCapture() {
+				arr = append(arr, cb)
+			} else {
+				// prepend:
+				arr = append([]CallbackPair{cb}, arr...)
+			}
+			game.defaultActions[act] = arr
 		}
-		game.defaultActions[act] = arr
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	// FUTURE: move into scenes, with a handle for removal
 	for _, listener := range model.EventListeners {
-		act := listener.Action()
-		callback := GameCallback{game, listener}
-
-		var id ident.Id
-		if inst := listener.Instance(); inst != nil {
-			id = inst.Id()
-		} else if cls := listener.Class(); cls != nil {
-			id = cls.Id()
+		src := listener.Callback()
+		if cb := cfg.Calls.Lookup(src); cb == nil {
+			err = errutil.Append(err, fmt.Errorf("couldnt find callback for listener", listener))
 		} else {
-			e := fmt.Errorf("couldnt create listener %v", listener)
-			err = errutil.Append(err, e)
-			continue
+			act := listener.Action()
+			callback := GameCallback{game, listener, CallbackPair{src, cb}}
+
+			var id ident.Id
+			if inst := listener.Instance(); inst != nil {
+				id = inst.Id()
+			} else if cls := listener.Class(); cls != nil {
+				id = cls.Id()
+			} else {
+				e := fmt.Errorf("couldnt create listener %v", listener)
+				err = errutil.Append(err, e)
+				continue
+			}
+			dispatch := dispatchers.CreateDispatcher(id)
+			dispatch.Listen(act.Event(), callback, listener.UseCapture())
 		}
-		dispatch := dispatchers.CreateDispatcher(id)
-		dispatch.Listen(act.Event(), callback, listener.UseCapture())
 	}
 	if err != nil {
 		return nil, err

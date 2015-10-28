@@ -2,10 +2,10 @@ package tests
 
 import (
 	"fmt"
+	C "github.com/ionous/sashimi/compiler"
 	M "github.com/ionous/sashimi/model"
 	. "github.com/ionous/sashimi/script"
 	"github.com/stretchr/testify/assert"
-	"os"
 	"testing"
 )
 
@@ -13,7 +13,7 @@ import (
 // test whether the instance has the value or not
 //
 func testField(
-	res *M.Model,
+	res C.MemoryResult,
 	instName string,
 	fieldName string,
 	value interface{},
@@ -39,7 +39,7 @@ func testField(
 // compile nothing succesfully
 func TestEmpty(t *testing.T) {
 	s := Script{}
-	c, err := s.Compile(os.Stderr)
+	c, err := s.Compile(Log(t))
 	if err != nil {
 		t.Error(err)
 	}
@@ -56,7 +56,7 @@ func TestClass(t *testing.T) {
 	s.The("kinds",
 		Called("stories").WithSingularName("story"),
 	)
-	res, err := s.Compile(os.Stderr)
+	res, err := s.Compile(Log(t))
 	// no expected errors
 	if err != nil {
 		t.Error(err)
@@ -83,7 +83,7 @@ func TestDoubledClass(t *testing.T) {
 	)
 	s.The("kinds",
 		Called("stories"))
-	_, err := s.Compile(os.Stderr)
+	_, err := s.Compile(Log(t))
 	if err != nil {
 		t.Error(err)
 	}
@@ -99,7 +99,7 @@ func TestClassProperty(t *testing.T) {
 		Have("text", "text"),
 		Have("num", "num"),
 	)
-	res, err := s.Compile(os.Stderr)
+	res, err := s.Compile(Log(t))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,7 +138,7 @@ func TestClassProperty(t *testing.T) {
 func TestInst(t *testing.T) {
 	s := Script{}
 	s.The("kind", Called("test"), Exists())
-	res, err := s.Compile(os.Stderr)
+	res, err := s.Compile(Log(t))
 	if err != nil {
 		t.Error(err)
 	}
@@ -164,7 +164,7 @@ func TestTextProperties(t *testing.T) {
 		Called("test"),
 		Has("author", "any mouse"),
 	)
-	res, err := s.Compile(os.Stderr)
+	res, err := s.Compile(Log(t))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -188,7 +188,7 @@ func TestNumProperties(t *testing.T) {
 		Has("int", 5))
 	s.The("test",
 		Has("float", 3.25))
-	res, err := s.Compile(os.Stderr)
+	res, err := s.Compile(Log(t))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -233,7 +233,7 @@ func TestEitherOr(t *testing.T) {
 		Called("unscored"),
 		Is("unscored"),
 	)
-	res, err := s.Compile(os.Stderr)
+	res, err := s.Compile(Log(t))
 	if err != nil {
 		t.Log(err)
 	}
@@ -271,7 +271,7 @@ func TestEitherError(t *testing.T) {
 		Is("this is meant to report an issue"),
 	)
 
-	res, err := s.Compile(os.Stderr)
+	res, err := s.Compile(Log(t))
 	if err == nil {
 		res.PrintModel(t.Log)
 		t.Fatal("expected unscored story to report an issue")

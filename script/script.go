@@ -2,6 +2,7 @@ package script
 
 import (
 	C "github.com/ionous/sashimi/compiler"
+	"github.com/ionous/sashimi/compiler/call"
 	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
@@ -14,12 +15,22 @@ type Script struct {
 	err    error
 }
 
-// Compile the current script into a model which can be used by the runtime.
-func (s *Script) Compile(writer io.Writer) (res *M.Model, err error) {
+func (s *Script) Compile(writer io.Writer) (res C.MemoryResult, err error) {
 	if s.err != nil {
 		err = s.err
 	} else {
 		res, err = C.Compile(writer, s.blocks.Statements())
+	}
+	return
+}
+
+// Compile the current script into a model which can be used by the runtime.
+func (s *Script) CompileCalls(writer io.Writer, calls call.Compiler) (res *M.Model, err error) {
+	if s.err != nil {
+		err = s.err
+	} else {
+		cfg := C.Config{Calls: calls, Output: writer}
+		res, err = cfg.Compile(s.blocks.Statements())
 	}
 	return res, err
 }

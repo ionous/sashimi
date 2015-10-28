@@ -13,6 +13,7 @@ import (
 type GameCallback struct {
 	game *Game
 	*M.ListenerCallback
+	call CallbackPair
 }
 
 //
@@ -26,9 +27,9 @@ func (cb GameCallback) HandleEvent(evt E.IEvent) (err error) {
 		// whereas event listeneres are either registered as part of the bubbling or capturing cycle.
 		if trigger := !cb.UseTargetOnly() || isTargetPhase(evt); trigger {
 			if cb.UseAfterQueue() {
-				act.runAfterDefaults(cb.Callback())
+				act.runAfterDefaults(cb.call)
 			} else {
-				if !act.runCallback(cb.Callback(), cb.Class()) {
+				if !act.runCallback(cb.call, cb.Class()) {
 					evt.StopImmediatePropagation()
 					evt.PreventDefault()
 				}

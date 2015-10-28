@@ -3,7 +3,6 @@ package game
 type SourceLookup func(Play) IObject
 type TargetLookup func(Play, IObject) IObject
 type ContextLookup func(Play, IObject, IObject) IObject
-type Callback func(Play)
 
 type IGameRules interface {
 	PushParentLookup(TargetLookup)

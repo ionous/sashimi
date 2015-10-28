@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"fmt"
+	"github.com/ionous/sashimi/compiler/call"
 	E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game"
 	M "github.com/ionous/sashimi/model"
@@ -13,17 +14,34 @@ import (
 	"strings"
 )
 
+type MemoryResult struct {
+	*M.Model
+	Calls call.MemoryStorage
+}
+
+func Compile(out io.Writer, src S.Statements) (res MemoryResult, err error) {
+	calls := call.MakeMemoryStorage()
+	cfg := Config{calls, out}
+	if m, e := cfg.Compile(src); e != nil {
+		err = e
+	} else {
+		res = MemoryResult{m, calls}
+	}
+	return
+}
+
 // Compile script statements into a "model", a form usable by the runtime.
-func Compile(out io.Writer, src S.Statements) (*M.Model, error) {
+func (cfg Config) Compile(src S.Statements) (*M.Model, error) {
 	names := NewNameSource()
 	rel := newRelativeFactory(names.newScope(nil))
-	log := log.New(out, "compling: ", log.Lshortfile)
+	log := log.New(cfg.Output, "compling: ", log.Lshortfile)
 	ctx := &_Compiler{
 		src, names.newScope(nil),
 		newClassFactory(names, rel),
 		newInstanceFactory(names, log),
 		rel,
 		log,
+		cfg.Calls,
 	}
 	return ctx.compile()
 }
@@ -36,6 +54,7 @@ type _Compiler struct {
 	instances *InstanceFactory
 	relatives *RelativeFactory
 	log       *log.Logger
+	calls     call.Compiler
 }
 
 // processAssertions generates classes and instances from the assertions.
@@ -176,15 +195,17 @@ func (ctx *_Compiler) newCallback(
 	classes M.ClassMap,
 	instances M.InstanceMap,
 	action *M.ActionInfo,
-	cb G.Callback,
+	callback G.Callback,
 	options M.ListenerOptions,
 ) (
 	ret *M.ListenerCallback, err error,
 ) {
-	if cls, _ := classes.FindClass(owner); cls != nil {
-		ret = M.NewClassCallback(cls, action, cb, options)
+	if cb, e := ctx.calls.Compile(callback); e != nil {
+		err = errutil.Append(e, fmt.Errorf("couldn't compile callback for `%s(%s)`", owner, action))
+	} else if cls, _ := classes.FindClass(owner); cls != nil {
+		ret = M.NewClassCallback(cls, action, cb.Callback, options)
 	} else if inst, ok := instances.FindInstance(owner); ok {
-		ret = M.NewInstanceCallback(inst, action, cb, options)
+		ret = M.NewInstanceCallback(inst, action, cb.Callback, options)
 	} else {
 		err = fmt.Errorf("unknown listener requested `%s(%s)`", owner, action)
 	}

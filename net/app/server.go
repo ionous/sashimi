@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/ionous/sashimi/compiler/call"
 	"github.com/ionous/sashimi/net/resource"
 	"github.com/ionous/sashimi/net/session"
 	"github.com/ionous/sashimi/net/support"
@@ -21,16 +22,17 @@ import (
 //
 func NewServer() *support.ServeMux {
 	handler := support.NewServeMux()
+	calls := call.MakeMemoryStorage()
 
 	// game session command:
 	sessions := session.NewSessions(
 		func(id string) (ret session.SessionData, err error) {
 			// FIX: it's very silly to have to init and compile each time.
 			// the reason is because relations change the original model.
-			if m, e := script.InitScripts().Compile(ioutil.Discard); e != nil {
+			if m, e := script.InitScripts().CompileCalls(ioutil.Discard, calls); e != nil {
 				err = e
 			} else {
-				ret, err = NewCommandSession(id, m)
+				ret, err = NewCommandSession(id, m, calls)
 			}
 			return ret, err
 		})

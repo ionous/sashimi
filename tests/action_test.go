@@ -4,35 +4,34 @@ import (
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
 	"github.com/stretchr/testify/assert"
-	"os"
 	"testing"
 )
 
 //
-func TestUnknownAction(t *testing.T) {
+func TestActionUnknown(t *testing.T) {
 	s := &Script{}
 	s.The("kinds",
 		When("this does not exists").Always(func(g G.Play) {
 		}),
 	)
-	if model, err := s.Compile(os.Stderr); !assert.Error(t, err, "expected failure") {
+	if model, err := s.Compile(Log(t)); !assert.Error(t, err, "expected failure") {
 		model.PrintModel(t.Log)
 	}
 }
 
 //
-func TestKnownAction(t *testing.T) {
+func TestActionKnown(t *testing.T) {
 	s := &Script{}
 	s.The("kinds",
 		When("this exists").Always(func(g G.Play) {}),
 		Can("exist").And("this exists").RequiresNothing())
-	if model, err := s.Compile(os.Stderr); assert.NoError(t, err) {
+	if model, err := s.Compile(Log(t)); assert.NoError(t, err) {
 		model.PrintModel(t.Log)
 	}
 }
 
 //
-func TestClassCallback(t *testing.T) {
+func TestActionClassCallback(t *testing.T) {
 	s := &Script{}
 	s.The("kinds",
 		Have("description", "text"),
@@ -72,7 +71,7 @@ func TestClassCallback(t *testing.T) {
 }
 
 //
-func TestCallbackBeforeAfter(t *testing.T) {
+func TestActionCallbackBeforeAfter(t *testing.T) {
 	s := &Script{}
 	s.The("kinds",
 		Can("test").And("testing").RequiresNothing(),
@@ -98,7 +97,7 @@ func TestCallbackBeforeAfter(t *testing.T) {
 }
 
 //
-func TestCallbackParsing(t *testing.T) {
+func TestActionCallbackParsing(t *testing.T) {
 	s := &Script{}
 
 	s.The("kinds",

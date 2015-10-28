@@ -4,6 +4,7 @@ import (
 	"fmt"
 	C "github.com/ionous/sashimi/console"
 	"github.com/ionous/sashimi/minicon"
+	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/script"
 	"io"
 	"io/ioutil"
@@ -57,7 +58,10 @@ func RunScript(script *script.Script, opt Options) (err error) {
 			model.PrintModel(func(args ...interface{}) { fmt.Println(args...) })
 			return
 		}
-		if game, e := NewStandardGame(model, nil, NewStandardOutput(cons, writer)); e != nil {
+		cfg := R.Config{Calls: model.Calls, Output: NewStandardOutput(cons, writer)}
+		if game, e := cfg.NewGame(model.Model); e != nil {
+			err = e
+		} else if game, e := NewStandardGame(game); e != nil {
 			err = e
 		} else {
 			left, right := game.story.Text("name"), fmt.Sprint(" by ", game.story.Text("author"))
@@ -90,7 +94,9 @@ func RunScript(script *script.Script, opt Options) (err error) {
 							mini.Println(">", s)
 						}
 
-						if !game.Input(s) {
+						if e := game.Input(s); e != nil {
+							cons.Println(e.Error())
+						} else if game.IsFinished() {
 							if useMini && !game.IsQuit() {
 								mini.Update()
 							}

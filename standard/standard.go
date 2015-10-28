@@ -3,7 +3,6 @@ package standard
 import (
 	"fmt"
 	G "github.com/ionous/sashimi/game"
-	M "github.com/ionous/sashimi/model"
 	R "github.com/ionous/sashimi/runtime"
 	"log"
 )
@@ -30,7 +29,6 @@ type StandardGame struct {
 type _StandardCore struct {
 	*R.Game
 	*Parser
-	output        R.IOutput
 	story, status G.IObject
 }
 
@@ -55,10 +53,8 @@ func (sc *_StandardCore) SetRight(status string) {
 }
 
 // NewStandardGame creates a game which is based on the standard rules.
-func NewStandardGame(model *M.Model, frame R.EventFrame, output R.IOutput) (ret StandardStart, err error) {
-	if game, e := R.NewGame(model, frame, output); e != nil {
-		err = e
-	} else if parser, e := NewParser(game); e != nil {
+func NewStandardGame(game *R.Game) (ret StandardStart, err error) {
+	if parser, e := NewParser(game); e != nil {
 		err = e
 	} else {
 		g := R.NewGameAdapter(game)
@@ -80,7 +76,7 @@ func NewStandardGame(model *M.Model, frame R.EventFrame, output R.IOutput) (ret 
 			if status, found := G.Any(g, "status bar instances"); !found {
 				err = fmt.Errorf("couldn't find status bar")
 			} else {
-				core := _StandardCore{game, parser, output, story, status}
+				core := _StandardCore{game, parser, story, status}
 				core.SetLeft(story.Text("name"))
 				core.SetRight(fmt.Sprintf(`"%s" by %s.`, story.Text("name"), story.Text("author")))
 				ret = StandardStart{core}
@@ -111,9 +107,8 @@ func (sg *StandardGame) IsFinished() bool {
 }
 
 // Input turns the passed user input to a game command.
-// Returns false if the game IsFinished.
 // (automatically ends the turn )
-func (sg *StandardGame) Input(s string) bool {
+func (sg *StandardGame) Input(s string) (err error) {
 	if !sg.IsFinished() {
 		in := sg.NormalizeInput(s)
 		if in == "q" || in == "quit" {
@@ -129,18 +124,17 @@ func (sg *StandardGame) Input(s string) bool {
 					sg.lastInput = in
 				}
 				if matcher, e := sg.ParseInput(in); e != nil {
-					// FIXFIXFIXFIX
-					// change some "report"
-					sg.output.Println(e)
+					err = e
+
 				} else if e := matcher.OnMatch(); e != nil {
-					sg.output.Println(e)
+					err = e
 				} else {
 					sg.EndTurn()
 				}
 			}
 		}
 	}
-	return !sg.IsFinished()
+	return err
 }
 
 // EndTurn finishes the turn for the player.

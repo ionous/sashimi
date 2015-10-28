@@ -7,6 +7,7 @@ import (
 	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/net/resource"
 	"github.com/ionous/sashimi/net/session"
+	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/standard"
 	"io"
 	"log"
@@ -16,7 +17,7 @@ import (
 //
 // Create a session.
 //
-func NewCommandSession(id string, model *M.Model) (ret *CommandSession, err error) {
+func NewCommandSession(id string, model *M.Model, calls R.Callbacks) (ret *CommandSession, err error) {
 	output := NewCommandOutput(id)
 	// event start/end frame
 	frame := func(tgt E.ITarget, msg *E.Message) func() {
@@ -30,20 +31,24 @@ func NewCommandSession(id string, model *M.Model) (ret *CommandSession, err erro
 			output.events.PopEvent()
 		}
 	}
-	// after creating the game, but vefore running it --
-	if game, e := standard.NewStandardGame(model, frame, output); e != nil {
-		err = e
+	cfg := R.Config{Calls: calls, Frame: frame, Output: output}
+	if game, e := cfg.NewGame(model); e != nil {
 	} else {
-		// setup system event callbacks --
-		game.SystemActions.Capture("setting initial position", output.changedLocation)
-		// add watchers for property changes --
-		game.Properties.AddWatcher(PropertyChangeHandler{game.Game, output})
-		// now start the game, and start receiving changes --
-		immediate := false
-		if game, e := game.Start(immediate); e != nil {
+		// after creating the game, but vefore running it --
+		if game, e := standard.NewStandardGame(game); e != nil {
 			err = e
 		} else {
-			ret = &CommandSession{game, output, 1, &sync.RWMutex{}}
+			// setup system event callbacks --
+			game.SystemActions.Capture("setting initial position", output.changedLocation)
+			// add watchers for property changes --
+			game.Properties.AddWatcher(PropertyChangeHandler{game.Game, output})
+			// now start the game, and start receiving changes --
+			immediate := false
+			if game, e := game.Start(immediate); e != nil {
+				err = e
+			} else {
+				ret = &CommandSession{game, output, 1, &sync.RWMutex{}}
+			}
 		}
 	}
 	return ret, err

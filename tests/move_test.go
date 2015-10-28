@@ -7,7 +7,6 @@ import (
 	"github.com/ionous/sashimi/standard"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/stretchr/testify/assert"
-	"os"
 	"testing"
 )
 
@@ -54,7 +53,7 @@ func makeTestRoom() *Script {
 //
 func TestMoveConstruction(t *testing.T) {
 	s := makeTestRoom()
-	m, err := s.Compile(os.Stderr)
+	m, err := s.Compile(Log(t))
 	if assert.NoError(t, err) {
 		m.PrintModel(t.Log)
 	}

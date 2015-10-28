@@ -2,7 +2,6 @@ package model
 
 import (
 	"fmt"
-	G "github.com/ionous/sashimi/game"
 )
 
 // List of event listeners and their callbacks.
@@ -22,7 +21,7 @@ type ListenerCallback struct {
 	inst     *InstanceInfo
 	class    *ClassInfo
 	action   *ActionInfo
-	callback G.Callback
+	callback Callback
 	options  ListenerOptions
 }
 
@@ -41,7 +40,7 @@ const (
 func NewClassCallback(
 	cls *ClassInfo,
 	action *ActionInfo,
-	callback G.Callback,
+	callback Callback,
 	options ListenerOptions,
 ) *ListenerCallback {
 	return &ListenerCallback{nil, cls, action, callback, options}
@@ -53,7 +52,7 @@ func NewClassCallback(
 func NewInstanceCallback(
 	inst *InstanceInfo,
 	action *ActionInfo,
-	callback G.Callback,
+	callback Callback,
 	options ListenerOptions,
 ) *ListenerCallback {
 	return &ListenerCallback{inst, inst.class, action, callback, options}
@@ -96,7 +95,7 @@ func (this *ListenerCallback) Action() *ActionInfo {
 //
 // Game callback triggered by this listener.
 //
-func (this *ListenerCallback) Callback() G.Callback {
+func (this *ListenerCallback) Callback() Callback {
 	return this.callback
 }
 

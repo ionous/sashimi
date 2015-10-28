@@ -2,6 +2,7 @@ package simple
 
 import (
 	"fmt"
+	"github.com/ionous/sashimi/compiler/call"
 	"github.com/ionous/sashimi/net/session"
 	"github.com/ionous/sashimi/net/support"
 	"github.com/ionous/sashimi/script"
@@ -12,13 +13,14 @@ import (
 )
 
 func NewSimpleServer() *http.ServeMux {
+	calls := call.MakeMemoryStorage()
 	sessions := session.NewSessions(
 		func(string) (ret session.SessionData, err error) {
 			// FIX: it's very silly to have to init and compile each time.
-			if model, e := script.InitScripts().Compile(ioutil.Discard); e != nil {
+			if model, e := script.InitScripts().CompileCalls(ioutil.Discard, calls); e != nil {
 				err = e
 			} else {
-				ret, err = NewSimpleSession(model)
+				ret, err = NewSimpleSession(calls, model)
 			}
 			return ret, err
 		})

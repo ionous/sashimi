@@ -14,26 +14,28 @@ type RuntimeAction struct {
 	action *M.ActionInfo
 	objs   []*GameObject
 	values map[string]TemplateValues
-	after  []G.Callback
+	after  []CallbackPair
 }
 
 // queue for running after the default actions
-func (act *RuntimeAction) runAfterDefaults(cb G.Callback) {
+func (act *RuntimeAction) runAfterDefaults(cb CallbackPair) {
 	act.after = append(act.after, cb)
 }
 
 // Run the passed game callback.
 // This creates the game event adapter, sets up the necessary template context, etc.
 // Returns the results of the callback.
-func (act *RuntimeAction) runCallback(cb G.Callback, cls *M.ClassInfo) bool {
+func (act *RuntimeAction) runCallback(cb CallbackPair, cls *M.ClassInfo) bool {
 	// FIX: it might be cooler to make act some sort of API...
 	// then we could have the callback object: callback.run( IPlay, Data ) maybe...
+	act.game.log.Println("calling:", act.action, cb.src)
+
 	adapter := NewGameAdapter(act.game)
 	adapter.data = act
 	adapter.hint = cls
 	templateValueStack.pushValues(act.values)
 	defer templateValueStack.pop()
-	cb(adapter)
+	cb.call(adapter)
 	return !adapter.cancelled
 }
 
@@ -41,6 +43,7 @@ func (act *RuntimeAction) runCallback(cb G.Callback, cls *M.ClassInfo) bool {
 // Default actions occur after event processing assuming that they have not been cancelled.
 //
 func (act *RuntimeAction) runDefaultActions() {
+	//act.game.log.Println("default action:", act.action)
 	// FIX: assign defaults at initialization?
 	// it'd be even better if act didn't need game --
 	// the main reason it does it to share code b/t Go() and the ProcessEventLoop

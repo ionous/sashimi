@@ -3,12 +3,16 @@ package simple
 import (
 	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/net/session"
+	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/standard"
 )
 
-func NewSimpleSession(model *M.Model) (ret *SimpleSession, err error) {
+func NewSimpleSession(calls R.Callbacks, model *M.Model) (ret *SimpleSession, err error) {
 	out := &SimpleOutput{}
-	if game, e := standard.NewStandardGame(model, nil, out); e != nil {
+	cfg := R.Config{Calls: calls, Frame: nil, Output: out}
+	if game, e := cfg.NewGame(model); e != nil {
+		err = e
+	} else if game, e := standard.NewStandardGame(game); e != nil {
 		err = e
 	} else {
 		immediate := true
