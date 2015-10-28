@@ -23,3 +23,7 @@ func InitScripts() *Script {
 	}
 	return s
 }
+
+func ScriptCount() int {
+	return len(allInits)
+}

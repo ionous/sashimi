@@ -1,11 +1,10 @@
 package stories
 
 import (
+	. "github.com/ionous/sashimi/extensions"
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
-	"github.com/ionous/sashimi/standard"
-	"math/rand"
-	"strings"
+	. "github.com/ionous/sashimi/standard"
 )
 
 //
@@ -59,34 +58,29 @@ func A_Day_For_Fresh_Sushi(s *Script) {
 	// [24-25):
 	s.The("cabinet", IsKnownAs("armoire"))
 	// [26-28)
-	lookedUnderCabinet := false // FIX: first time filter; see notes...
 	s.The("cabinet",
 		When("reporting look under").Always(func(g G.Play) {
-			if !lookedUnderCabinet {
+			if PlayerLearns(g, "lookedUnderCabinet") {
 				g.The("evil fish").Says(`"Dustbunnies," predicts the fish, with telling accuracy. It executes what for all the world looks like a fishy shudder. "Lemme tell you, one time I accidentally flopped outta the tank, and I was TWO HOURS on the floor with those things STARING ME IN THE NOSE. It was frightening."`)
 				g.StopHere()
-				lookedUnderCabinet = true
 			}
 		}))
 	// [29-31) ">open cabinet":
 	// 1st time. "There ya go," says the fish. "The girl is getting WARMER.”
 	// 2nd time. "You open the cabinet, revealing some paints and a heap of cloths."
-	openedCabinet, closedCabinet := false, false
 	s.The("cabinet",
 		When("reporting now open").Always(func(g G.Play) {
-			if !openedCabinet {
+			if PlayerLearns(g, "openedCabinet") {
 				g.The("evil fish").Says(`"There ya go," says the fish. "The girl is getting WARMER."`)
 				g.StopHere()
-				openedCabinet = true
 			}
 		}))
 	// [32-34)
 	s.The("cabinet",
 		When("reporting now closed").Always(func(g G.Play) {
-			if !closedCabinet && !g.The("fish food").Is("found") {
+			if PlayerLearns(g, "closedCabinet") && !g.The("fish food").Is("found") {
 				g.The("evil fish").Says(`"Ooh, what do you think, Bob? I think we're going to have to dock the girl a few points. HAVE ANOTHER LOOK, sweetcakes, there's a doll."`)
 				g.StopHere()
-				closedCabinet = true
 			}
 		}))
 	// 35a
@@ -97,21 +91,17 @@ func A_Day_For_Fresh_Sushi(s *Script) {
 	s.The("prop", Called("paints"),
 		Has("description", "A bunch of tubes of oil paint, most of them in some state of grunginess, some with the tops twisted partway off."))
 	// [37-39)
-	tookPaints := false
 	s.The("paints",
 		When("reporting take").Always(func(g G.Play) {
-			if !tookPaints {
+			if PlayerLearns(g, "tookPaints") {
 				g.The("evil fish").Says(`"Boy," says the fish, apparently to himself, "I sure hope that's some food she's finding for me in there. You know, the yummy food in the ORANGE CAN."`)
-				tookPaints = true
 			}
 		}))
 	// [40-42)
-	examinedPaints := false
 	s.The("paints",
 		After("being examined").Always(func(g G.Play) {
-			if !examinedPaints {
+			if PlayerLearns(g, "examinedPaints") {
 				g.The("evil fish").Says(`"Tons of useful stuff in there," hollers in the fish, in a syncopated burble.`)
-				examinedPaints = true
 			}
 		}))
 	// [43-45]
@@ -121,19 +111,19 @@ func A_Day_For_Fresh_Sushi(s *Script) {
 	)
 	// 46: **** The indefinite article of the cloths is "a heap of".
 	// [47-52)
-	giveFood := func(g G.Play) {
-		fishFood := g.The("fish food")
-		if !fishFood.Is("found") {
-			fishFood.IsNow("found")
-			g.Go(standard.GiveThe(fishFood).To("the player"))
-			g.Say("Poking around the cloths reveals -- ha HA! -- a vehemently orange can of fish food.")
-			g.StopHere()
-		}
-	}
 	// [53-57)
 	s.The("cloths",
-		When("reporting search").Always(giveFood),
-		When("reporting look under").Always(giveFood),
+		When("reporting search").
+			Or("reporting look under").
+			Always(func(g G.Play) {
+			fishFood := g.The("fish food")
+			if !fishFood.Is("found") {
+				fishFood.IsNow("found")
+				g.Go(GiveThe(fishFood).To("the player"))
+				g.Say("Poking around the cloths reveals -- ha HA! -- a vehemently orange can of fish food.")
+				g.StopHere()
+			}
+		}),
 		// FIX: i like the fact the event filters can
 		When("reporting shown").Always(func(g G.Play) {
 			fish := g.The("evil fish")
@@ -146,12 +136,10 @@ func A_Day_For_Fresh_Sushi(s *Script) {
 		}),
 	)
 	// [58-60)
-	examinedCloths := false
 	s.The("cloths",
 		After("being examined").Always(func(g G.Play) {
-			if !examinedCloths {
+			if PlayerLearns(g, "examinedCloths") {
 				g.The("evil fish").Says("Whatcha looking at? I can't see through the doors, you know.")
-				examinedCloths = true
 				g.StopHere()
 			}
 		}))
@@ -216,13 +204,11 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 			g.StopHere()
 		}))
 	//[91-98)
-	examinedPainting := false
 	s.The("painting",
 		Before("being examined").Always(func(g G.Play) {
-			if !examinedPainting {
+			if PlayerLearns(g, "examinedPainting") {
 				g.The("evil fish").Says(`A ferocious banging from the aquarium attracts your attention as you go to look at the painting. "Hey!" screams the fish. "She doesn't like strangers looking at her paintings before they're DOONNNE!"`)
 				g.The("player").Says(`"Shut up, you," you reply casually. "I'm not a stranger." But the fish puts you off a little bit, and your heart is already in your mouth before you see the painting itself...`)
-				examinedPainting = true
 			} else {
 				g.Say("Once is really enough. It's pretty much embedded in your consciousness now.")
 				g.StopHere()
@@ -242,11 +228,9 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 	s.The("window", Has("description", `{{if .Open}}Through the windows you get a lovely view of the street outside. At the moment, the glass is thrown open, and a light breeze is blowing through.{{else}}Through the windows, you get a lovely view of the street outside -- the little fountain on the corner, the slightly dilapidated but nonetheless magnificent Jugendstil architecture of the facing building. The glass itself is shut, however.{{end}}`))
 	s.The("window", IsKnownAs("windows"))
 	// [108-110)
-	openedWindow := false
 	s.The("window",
 		When("reporting now open").Always(func(g G.Play) {
-			if !openedWindow {
-				openedWindow = true
+			if PlayerLearns(g, "openedWindow") {
 				g.The("evil fish").Says(`"Thank god some air," says the fish. "Man, it was getting hard to breathe in here." Two beats pass. "Oh wait."`)
 				g.StopHere()
 			}
@@ -261,11 +245,9 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 	// [115-116)
 	s.The("vase", Has("description", "A huge vase -- what you saw once described in a Regency romance as an epergne, maybe -- something so big that it would block someone sitting at the table from seeing anyone else also sitting at the table. But it does function nicely as a receptacle for hugeass bouquets of flowers."))
 	// [117-
-	lookedUnderTable := false
 	s.The("table",
 		When("reporting look under").Always(func(g G.Play) {
-			if !lookedUnderTable {
-				lookedUnderTable = true
+			if PlayerLearns(g, "lookedUnderTable") {
 				g.The("evil fish").Says(`"You're not going to find anything down there," whines the fish. "I mean, c'mon. It's the fricking floor. Please tell me you can see that. I can see that. I'm a myopic fish in a tank ten feet away and I can tell you there is nothing there but floor."`)
 				g.StopHere()
 			}
@@ -276,7 +258,6 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 			g.The("evil fish").Says(`"That there is MY PA," says the fish, pointing at the scaley triton figure with one fin.`)
 		}))
 	//[123-132)
-	insertedFlowers := false
 	s.The("vase",
 		When("receiving insertion").Always(func(g G.Play) {
 			prop := g.The("action.Target")
@@ -284,13 +265,12 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 				g.The("evil fish").Says(`"Okay, so, what were you, raised in a barn? Normal folks like to use that for flowers. Or so I've observed."`)
 				g.StopHere()
 			} else {
-				if !insertedFlowers {
-					insertedFlowers = true
+				if PlayerLearns(g, "insertedFlowers") {
 					g.Say("You settle the flowers into the vase and arrange them so that they look sprightly.")
 					g.The("evil fish").Says(`"Oooh," says the fish. "No one ever changes the plant life in HERE. It's the same seaw--"`)
 					g.The("player").Says(`"Cut me a break and cork it," you reply tartly.`)
 					// FIX: report inserted?
-					g.Go(standard.Insert("the bouquet").Into("vase"))
+					g.Go(Insert("the bouquet").Into("vase"))
 					g.StopHere()
 				}
 			}
@@ -304,14 +284,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 	// 135
 	s.The("telegram", Has("description", "A telegram, apparently. And dated three days ago. TRIUMPH OURS STOP BACK SOON STOP BE SURE TO FEED FISH STOP"))
 	s.The("telegram", IsKnownAs("yellow paper"))
-	examinedTelegraph := false
 	// [144-149)
-	fishComments := []string{
-		//Table of Insulting Fish Comments
-		`"Yeah, yeah," says the fish. "You having some trouble with the message, there? Confused? Something I could clear up for you?"`,
-		`"Oookay, genius kid has some troubles in the reading comprehension department." The fish taps his head meaningfully against the side of the tank. "I'm so hungry I could eat my way out, you get my meaning?"`,
-		`"I'll translate for you," screams the fish in toothy fury. "It says GIVE FOOD TO FISH!! How much more HELP do you NEED???"`,
-	}
 	// [140-143);
 	// NOTE: the original script says:
 	//   1. "After examining the telegram for the first time:" and,
@@ -319,11 +292,16 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 	// It appears -- unexpectedly to me  -- Inform's rules of specificity cause the second phrase only happens when the first phrase does not.
 	s.The("telegram",
 		After("being examined").Always(func(g G.Play) {
-			if !examinedTelegraph {
-				examinedTelegraph = true
+			if PlayerLearns(g, "examinedTelegraph") {
 				g.The("evil fish").Says(`"So," blubs the evil fish. "How about it? Little food over here?"`)
 			} else {
-				i := rand.Intn(len(fishComments))
+				fishComments := []string{
+					//Table of Insulting Fish Comments
+					`"Yeah, yeah," says the fish. "You having some trouble with the message, there? Confused? Something I could clear up for you?"`,
+					`"Oookay, genius kid has some troubles in the reading comprehension department." The fish taps his head meaningfully against the side of the tank. "I'm so hungry I could eat my way out, you get my meaning?"`,
+					`"I'll translate for you," screams the fish in toothy fury. "It says GIVE FOOD TO FISH!! How much more HELP do you NEED???"`,
+				}
+				i := g.Random(len(fishComments))
 				comment := fishComments[i]
 				g.The("evil fish").Says(comment)
 			}
@@ -358,20 +336,16 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 			g.StopHere()
 		}))
 	// [158-160)
-	examinedGravel := false
 	s.The("gravel",
 		After("being examined").Always(func(g G.Play) {
-			if !examinedGravel {
-				examinedGravel = true
+			if PlayerLearns(g, "examinedGravel") {
 				g.Say("The fish notices your gaze; makes a pathetic mime of trying to find little flakes of remaining food amongst the gravel.")
 			}
 		}))
 	// [161-163)
-	examinedSeaweed := false
 	s.The("seaweed",
 		After("being examined").Always(func(g G.Play) {
-			if !examinedSeaweed {
-				examinedSeaweed = true
+			if PlayerLearns(g, "examinedSeaweed") {
 				g.The("evil fish").Says(`"Nice, hunh?" blubs the fish, taking a stabbing bite out of one just by way of demonstration. "Look so good I could eat it."`)
 			}
 		}))
@@ -395,13 +369,11 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 		g.Say("You're saving all your lovin for someone a lot cuddlier.")
 		g.StopHere()
 	}))
-	examinedFishCount := 0
 	s.The("evil fish",
 		After("being examined").Always(func(g G.Play) {
-			examinedFishCount++
-			if examinedFishCount == 1 {
+			if PlayerLearns(g, "examinedFishOnce") {
 				g.Say("The fish glares at you, as though to underline this point.")
-			} else if examinedFishCount == 2 {
+			} else if PlayerLearns(g, "examinedFishTwice") {
 				g.The("evil fish").Says(`"If you're looking for signs of malnutrition," says the fish, "LOOK NO FURTHER!!" And it sucks in its gills until you can see its ribcage.`)
 			}
 		}))
@@ -419,9 +391,9 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 				"The evil fish is swimming around the tank in lazy circles.",
 				"The evil fish begins to butt his pointy nose against the glass walls of the tank.",
 			}
-			i := rand.Intn(len(banter))
+			i := g.Random(len(banter))
 			comment := banter[i]
-			if strings.ContainsRune(comment, '"') {
+			if i == 0 {
 				g.The("evil fish").Says(comment)
 			} else {
 				g.Say(comment)
@@ -431,34 +403,28 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 	s.The("bouquet", Has("description", "Okay, so it's silly and sentimental and no doubt a waste of money, of which there is never really enough, but: you miss her. You've missed her since ten seconds after she stepped aboard the shuttle to Luna Prime, and when you saw these -- her favorites, pure golden tulips like springtime -- you had to have them."),
 		IsKnownAs("flowers").And("tulip").And("tulips"))
 	// 195:
-	examinedBouquet := false
 	s.The("bouquet", After("being examined").Always(func(g G.Play) {
-		if !examinedBouquet {
-			examinedBouquet = true
+		if PlayerLearns(g, "examinedBouquet") {
 			g.The("evil fish").Says(`"Oh, you shouldn't have," says the fish. "For me??"`)
 			g.Say("You just respond with a livid glare.")
 		}
 	}))
-	smelledBouquet := false
 	s.The("bouquet",
 		When("reporting smell").Always(func(g G.Play) {
-			if !smelledBouquet {
-				smelledBouquet = true
+			if PlayerLearns(g, "smelledBouquet") {
 				g.The("evil fish").Says(`"Mmm-mm," says the fish . Damn, I sure wish I had olfactory abilities. Hey, if I did, I might be even better at noticing the presence or absence of FOOD."`)
 				g.StopHere()
 			}
 		}))
 	s.The("lingerie bag", Has("description", "You grant yourself the satisfaction of a little peek inside. You went with a pale, silky ivory this time -- it has that kind of sophisticated innocence, and it goes well with the purple of your skin. A small smirk of anticipation crosses your lips."))
 	// 204-
-	examinedBagCount := 0
 	s.The("lingerie bag",
 		After("being examined").Always(func(g G.Play) {
-			examinedBagCount++
-			if examinedBagCount == 1 {
+			if PlayerLearns(g, "examinedBagOnce") {
 				//204-208
 				g.The("evil fish").Says(`"What's in THERE?" asks the fish. "Didja bring me take-out? I don't mind Chinese. They eat a lot of carp, but what do I care? I'm not a carp. Live and let live is what I s--"`)
 				g.The("player").Says(`"It's NOT take-out." You stare the fish down and for once he actually backstrokes a stroke or two. "It's PRIVATE."`)
-			} else if examinedBagCount == 2 {
+			} else if PlayerLearns(g, "examinedBagTwice") {
 				// 209-211
 				g.The("evil fish").Says(`"If it's not take-out, I don't see the relevance!" shouts the fish. "Food is what you want in this situation. Food for MEEEE."`)
 			}
@@ -474,7 +440,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 		// 218:
 		Before("feeding it").Always(func(g G.Play) {
 			player := g.The("player")
-			if c := standard.Carrier(g.The("fish food")); c != player {
+			if c := Carrier(g.The("fish food")); c != player {
 				g.Say("You need the fish food first!")
 				g.StopHere()
 			}
@@ -512,6 +478,27 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 		}),
 		Has("maximum score", 1),
 	)
+	// need first, x-times filter for events.
+	s.The("facts", Table("name").
+		Has("lookedUnderCabinet").
+		And("openedCabinet").
+		And("closedCabinet").
+		And("tookPaints").
+		And("examinedPaints").
+		And("examinedCloths").
+		And("examinedPainting").
+		And("openedWindow").
+		And("lookedUnderTable").
+		And("insertedFlowers").
+		And("examinedTelegraph").
+		And("examinedGravel").
+		And("examinedSeaweed").
+		And("examinedFishOnce").
+		And("examinedFishTwice").
+		And("examinedBouquet").
+		And("smelledBouquet").
+		And("examinedBagOnce").
+		And("examinedBagTwice"))
 }
 
 func init() {

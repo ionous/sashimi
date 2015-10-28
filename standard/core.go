@@ -16,7 +16,7 @@ func InitStandardLibrary() *Script {
 }
 
 // FIX: there's no error testing here and its definitely possible to screw things up.
-func assignTo(prop G.IObject, rel string, dest G.IObject) {
+func AssignTo(prop G.IObject, rel string, dest G.IObject) {
 	// sure hope there's no errors, would relation by value remove the need for transaction?
 	if _, parentRel := DirectParent(prop); parentRel != "" {
 		// note: an object like the fishFood isnt "in the world", and doest have an owner field to clear.
@@ -164,36 +164,31 @@ func init() {
 
 // reflect to the passed action passing the actors's current whereabouts.
 // will have to become more sophisticated for being inside a box.
-func ReflectToLocation(action string) G.Callback {
-	return func(g G.Play) {
-		actor := g.The("actor")
-		target := actor.Object("whereabouts")
-		//g.Log("reflecting", action, actor, target)
-		target.Go(action, actor)
-	}
+func ReflectToLocation(g G.Play, action string) {
+	actor := g.The("actor")
+	target := actor.Object("whereabouts")
+	//g.Log("reflecting", action, actor, target)
+	target.Go(action, actor)
 }
 
 // ReflectToTarget runs the passed action, flipping the source and target.
-func ReflectToTarget(action string) G.Callback {
-	return func(g G.Play) {
-		source := g.The("action.Source")
-		target := g.The("action.Target")
-		//g.Log("reflecting", action, source, target)
-		target.Go(action, source)
-	}
+func ReflectToTarget(g G.Play, action string) {
+	source := g.The("action.Source")
+	target := g.The("action.Target")
+	//g.Log("reflecting", action, source, target)
+	target.Go(action, source)
+
 }
 
 // ReflectWithContext runs the passed action, shifting to target, context, source.
 // FIX: i think it'd be better to first use ReflectToTarget, keeping the context as the third parameter
 // and then ReflectToContext, possibly re-swapping source and target.
-func ReflectWithContext(action string) G.Callback {
-	return func(g G.Play) {
-		source := g.The("action.Source")
-		target := g.The("action.Target")
-		context := g.The("action.Context")
-		//g.Log("reflecting", action, source, target, context)
-		target.Go(action, context, source)
-	}
+func ReflectWithContext(g G.Play, action string) {
+	source := g.The("action.Source")
+	target := g.The("action.Target")
+	context := g.The("action.Context")
+	//g.Log("reflecting", action, source, target, context)
+	target.Go(action, context, source)
 }
 
 func init() {
@@ -203,7 +198,7 @@ func init() {
 		s.The("actors",
 			Can("look").And("looking").RequiresNothing(),
 			To("look",
-				// ReflectToLocation("report the view")
+				// func( g G.Play) { ReflectToLocation(g,"report the view") }
 				// reflect to location will send the actor as a parameter,
 				// but report the view doesnt expect parameters.
 				func(g G.Play) {
@@ -216,7 +211,7 @@ func init() {
 		// one visible thing and requiring light.
 		s.The("actors",
 			Can("look under it").And("looking under it").RequiresOne("object"),
-			To("look under it", ReflectToTarget("report look under")),
+			To("look under it", func(g G.Play) { ReflectToTarget(g, "report look under") }),
 		)
 
 		// FIX: should generate a report/response instead?
@@ -257,7 +252,7 @@ func init() {
 
 //
 // when is the right time for functions versus callbacks?
-func listContents(g G.Play, header string, obj G.IObject) (printed bool) {
+func ListContents(g G.Play, header string, obj G.IObject) (printed bool) {
 	// if something described which is not scenery is on the noun and something which is not the player is on the noun:
 	// obviously a filterd callback, visitor, would be nice FilterList("contents", func() ... )
 	// FIX: if something has scenery objets, they appear as contents,

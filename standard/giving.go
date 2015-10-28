@@ -45,20 +45,20 @@ func init() {
 	AddScript(func(s *Script) {
 		s.The("actors",
 			Can("acquire it").And("acquiring it").RequiresOne("prop"),
-			To("acquire it", ReflectToTarget("be acquired")))
+			To("acquire it", func(g G.Play) { ReflectToTarget(g, "be acquired") }))
 		s.The("props",
 			Can("be acquired").And("being acquired").RequiresOne("actor"),
 			To("be acquired", func(g G.Play) {
 				actor, prop := g.The("actor"), g.The("prop")
 				if Debugging {
-					g.Log(prop, "assignTo", actor)
+					g.Log(prop, "AssignTo", actor)
 				}
-				assignTo(prop, "owner", actor)
+				AssignTo(prop, "owner", actor)
 			}))
 		// 1. source
 		s.The("actors",
 			Can("give it to").And("giving it to").RequiresOne("actor").AndOne("prop"),
-			To("give it to", ReflectWithContext("report give")),
+			To("give it to", func(g G.Play) { ReflectWithContext(g, "report give") }),
 			// "convert give to yourself to examine"
 			WhenCapturing("giving it to", func(g G.Play) {
 				presenter, receiver := g.The("action.Source"), g.The("action.Target")
@@ -88,7 +88,7 @@ func init() {
 		// 2. receiver
 		s.The("actors",
 			Can("report give").And("reporting give").RequiresOne("prop").AndOne("actor"),
-			To("report give", ReflectWithContext("report gave")))
+			To("report give", func(g G.Play) { ReflectWithContext(g, "report gave") }))
 		// 3. context
 		s.The("props",
 			Can("report gave").And("reporting gave").RequiresTwo("actor"),

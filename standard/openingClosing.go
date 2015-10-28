@@ -22,7 +22,7 @@ func init() {
 		//
 		s.The("actors",
 			Can("open it").And("opening it").RequiresOne("prop"),
-			To("open it", ReflectToTarget("be opened by")),
+			To("open it", func(g G.Play) { ReflectToTarget(g, "be opened by") }),
 		)
 
 		// "[regarding the noun][They] [aren't] something [we] [can] open."
@@ -65,7 +65,7 @@ func init() {
 				// list the contents of the noun, as a sentence, tersely, not listing concealed items;
 				// FIX? not all openers are opaque/transparent, and not all openers have contents.
 				if opener.Is("opaque") {
-					listContents(g, "In the", opener)
+					ListContents(g, "In the", opener)
 				}
 			}),
 		)
@@ -76,7 +76,7 @@ func init() {
 		// one visible thing, and requiring light
 		s.The("actors",
 			Can("close it").And("closing it").RequiresOne("prop"),
-			To("close it", ReflectToTarget("be closed by")),
+			To("close it", func(g G.Play) { ReflectToTarget(g, "be closed by") }),
 		)
 		s.The("props",
 			Can("be closed by").And("being closed by").RequiresOne("actor"),

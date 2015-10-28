@@ -24,7 +24,7 @@ func init() {
 	AddScript(func(s *Script) {
 		s.The("actors",
 			Can("take it").And("taking it").RequiresOne("prop"),
-			To("take it", ReflectToTarget("report take")),
+			To("take it", func(g G.Play) { ReflectToTarget(g, "report take") }),
 		)
 
 		s.The("props",

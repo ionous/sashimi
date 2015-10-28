@@ -5,7 +5,7 @@ import (
 	"fmt"
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
-	"github.com/ionous/sashimi/standard"
+	. "github.com/ionous/sashimi/standard"
 	"reflect"
 )
 
@@ -31,6 +31,16 @@ type FactPhrase string
 func (fact FactPhrase) Execute(g G.Play) {
 	con := g.Global("conversation").(*Conversation)
 	con.Memory.Learn(g.The(string(fact)))
+}
+
+func PlayerLearns(g G.Play, fact string) (newlyLearned bool) {
+	con := g.Global("conversation").(*Conversation)
+	quip := g.The(string(fact))
+	if recollects := con.Memory.Recollects(quip); !recollects {
+		con.Memory.Learn(quip)
+		newlyLearned = true
+	}
+	return newlyLearned
 }
 
 func PlayerRecollects(g G.Play, fact string) bool {
@@ -120,10 +130,10 @@ func init() {
 			To("depart", func(g G.Play) {
 				con := g.Global("conversation").(*Conversation)
 				if npc := con.Depart(); npc.Exists() {
-					if standard.Debugging {
+					if Debugging {
 						g.Log("!", g.The("actor"), "departing", npc)
 					}
-					g.Say("(", inflect.Capitalize(standard.DefiniteName(g, "actor", nil)), "says goodbye.", ")")
+					g.Say("(", inflect.Capitalize(DefiniteName(g, "actor", nil)), "says goodbye.", ")")
 				}
 			}))
 
@@ -135,9 +145,9 @@ func init() {
 
 		s.The("actors",
 			Can("comment").And("commenting").RequiresOne("quip"),
-			To("comment", standard.ReflectToTarget("report comment")),
+			To("comment", func(g G.Play) { ReflectToTarget(g, "report comment") }),
 			Can("discuss").And("discussing").RequiresOne("quip"),
-			To("discuss", standard.ReflectToTarget("be discussed")),
+			To("discuss", func(g G.Play) { ReflectToTarget(g, "be discussed") }),
 		)
 
 		s.The("quips",
@@ -145,7 +155,7 @@ func init() {
 			To("report comment", func(g G.Play) {
 				talker, quip := g.The("actor"), g.The("quip")
 				comment := quip.Text("comment")
-				if standard.Debugging {
+				if Debugging {
 					g.Log("!", talker, "commenting", quip, "'"+comment+"'")
 				}
 				con := g.Global("conversation").(*Conversation)
@@ -164,7 +174,7 @@ func init() {
 			Can("be discussed").And("being discussed").RequiresOne("actor"),
 			To("be discussed", func(g G.Play) {
 				talker, quip := g.The("actor"), g.The("quip")
-				if standard.Debugging {
+				if Debugging {
 					g.Log("!", talker, "discussing", quip)
 				}
 				con := g.Global("conversation").(*Conversation)
@@ -181,12 +191,12 @@ func init() {
 				player, talker, talkedTo := g.The("player"), g.The("action.Source"), g.The("action.Target")
 				if player == talker {
 					if quips := GetPlayerQuips(g); len(quips) == 0 {
-						if standard.Debugging {
+						if Debugging {
 							g.Log("! no conversation choices !")
 						}
 						player.Go("depart") // safety first
 					} else {
-						if standard.Debugging {
+						if Debugging {
 							g.Log("!", talker, "printing", talkedTo, quips)
 						}
 						// FIX: the console should grab this to label the list, and add the header numbers./
@@ -199,7 +209,7 @@ func init() {
 						}
 
 						// time to hack the parser
-						standard.TheParser.CaptureInput(func(input string) (err error) {
+						TheParser.CaptureInput(func(input string) (err error) {
 							var choice int
 							if _, e := fmt.Sscan(input, &choice); e != nil {
 								err = fmt.Errorf("Please choose a number from the menu; input: %s", input)
@@ -207,7 +217,7 @@ func init() {
 								err = fmt.Errorf("Please choose a number from the menu; number: %d of %d", choice, len(quips))
 							} else {
 								quip := quips[choice-1]
-								if standard.Debugging {
+								if Debugging {
 									g.Log("!", player, "chose", quip)
 								}
 								player.Go("comment", quip)

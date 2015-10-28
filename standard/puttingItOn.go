@@ -16,7 +16,7 @@ func (p PutPhrase) Onto(supporter string) PutingPhrase {
 
 func (p PutingPhrase) Execute(g G.Play) {
 	prop, supporter := g.The(p.prop), g.The(p.supporter)
-	assignTo(prop, "enclosure", supporter)
+	AssignTo(prop, "enclosure", supporter)
 }
 
 type putData struct {
@@ -32,7 +32,7 @@ func init() {
 		s.The("actors",
 			// FIX? word-wise this is wrong ( see tickle-it-with, though it is "correct" )
 			Can("put it onto").And("putting it onto").RequiresOne("supporter").AndOne("prop"),
-			To("put it onto", ReflectWithContext("report put")),
+			To("put it onto", func(g G.Play) { ReflectWithContext(g, "report put") }),
 			//  can't put clothes being worn
 			WhenCapturing("putting it onto", func(g G.Play) {
 				prop := g.The("action.Context")
@@ -70,7 +70,7 @@ func init() {
 		// 2. supporters
 		s.The("supporters",
 			Can("report put").And("reporting put").RequiresOne("prop").AndOne("actor"),
-			To("report put", ReflectWithContext("report placed")))
+			To("report put", func(g G.Play) { ReflectWithContext(g, "report placed") }))
 		// 3. context
 		s.The("props",
 			Can("report placed").And("reporting placed").RequiresOne("actor").AndOne("supporter"),

@@ -33,3 +33,7 @@ _examples/webone
 _examples/webtwo
 
 _examples/webapp
+
+_examples/compile
+
+_examples/$gen/gen.go

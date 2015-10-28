@@ -16,7 +16,7 @@ func (p InsertPhrase) Into(container string) InsertingPhrase {
 
 func (p InsertingPhrase) Execute(g G.Play) {
 	prop, container := g.The(p.prop), g.The(p.container)
-	assignTo(prop, "enclosure", container)
+	AssignTo(prop, "enclosure", container)
 }
 
 type insertData struct {
@@ -46,7 +46,7 @@ func init() {
 		s.The("actors",
 			// FIX? word-wise this is wrong ( see tickle-it-with, though it is "correct" )
 			Can("insert it into").And("inserting it into").RequiresOne("container").AndOne("prop"),
-			To("insert it into", ReflectWithContext("receive insertion")),
+			To("insert it into", func(g G.Play) { ReflectWithContext(g, "receive insertion") }),
 			//  can't insert clothes being worn
 			WhenCapturing("inserting it into", func(g G.Play) {
 				prop := g.The("action.Context")
@@ -90,7 +90,7 @@ func init() {
 					g.StopHere()
 				}
 			}),
-			To("receive insertion", ReflectWithContext("be inserted")))
+			To("receive insertion", func(g G.Play) { ReflectWithContext(g, "be inserted") }))
 
 		// 3. context
 		s.The("props",

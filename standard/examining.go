@@ -14,7 +14,7 @@ func init() {
 		// examine studio: You can't see any such thing; sad face.
 		s.The("actors",
 			Can("examine it").And("examining it").RequiresOne("object"),
-			To("examine it", ReflectToTarget("be examined")),
+			To("examine it", func(g G.Play) { ReflectToTarget(g, "be examined") }),
 		)
 		// the default action prints the place holder text
 		// the events system prints the specifics and prevents the defaults as needed
@@ -39,7 +39,7 @@ func init() {
 		s.The("containers",
 			When("printing contents").Always(func(g G.Play) {
 				if c := g.The("container"); c.Is("open") || c.Is("transparent") {
-					listContents(g, "In the", c)
+					ListContents(g, "In the", c)
 				}
 			}))
 
@@ -52,7 +52,7 @@ func init() {
 		s.The("supporters",
 			When("printing contents").Always(func(g G.Play) {
 				this := g.The("supporter")
-				listContents(g, "On the", this)
+				ListContents(g, "On the", this)
 			}))
 
 		s.Execute("examine it",

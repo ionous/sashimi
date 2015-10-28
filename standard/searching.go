@@ -10,7 +10,7 @@ func init() {
 		// searching: requiring light; FIX: what does searching a room do?
 		s.The("actors",
 			Can("search it").And("searching it").RequiresOne("prop"),
-			To("search it", ReflectToTarget("report search")))
+			To("search it", func(g G.Play) { ReflectToTarget(g, "report search") }))
 		s.The("props",
 			Can("report search").And("reporting search").RequiresOne("actor"),
 			To("report search", func(g G.Play) {

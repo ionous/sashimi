@@ -9,10 +9,10 @@ func init() {
 	AddScript(func(s *Script) {
 		s.The("actors",
 			Can("smell").And("smelling").RequiresNothing(),
-			To("smell", ReflectToLocation("report smell")),
+			To("smell", func(g G.Play) { ReflectToLocation(g, "report smell") }),
 
 			Can("smell it").And("smelling it").RequiresOne("kind"),
-			To("smell it", ReflectToTarget("report smell")),
+			To("smell it", func(g G.Play) { ReflectToTarget(g, "report smell") }),
 		)
 
 		// kinds, to allow rooms and objects

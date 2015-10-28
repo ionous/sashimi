@@ -18,7 +18,7 @@ func init() {
 		// 1. source
 		s.The("actors",
 			Can("show it to").And("showing it to").RequiresOne("actor").AndOne("prop"),
-			To("show it to", ReflectWithContext("report show")),
+			To("show it to", func(g G.Play) { ReflectWithContext(g, "report show") }),
 			// "you can't show what you haven't got"
 			WhenCapturing("showing it to", func(g G.Play) {
 				presenter, _, prop := g.The("action.Source"), g.The("action.Target"), g.The("action.Context")
@@ -39,7 +39,7 @@ func init() {
 		// 2. receiver
 		s.The("actors",
 			Can("report show").And("reporting show").RequiresOne("prop").AndOne("actor"),
-			To("report show", ReflectWithContext("report shown")))
+			To("report show", func(g G.Play) { ReflectWithContext(g, "report shown") }))
 
 		// 3. context
 		s.The("props",

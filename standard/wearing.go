@@ -16,7 +16,7 @@ func (p ClothePhrase) With(prop string) WearingPhrase {
 
 func (p WearingPhrase) Execute(g G.Play) {
 	actor, clothing := g.The(p.actor), g.The(p.actor)
-	assignTo(clothing, "wearer", actor)
+	AssignTo(clothing, "wearer", actor)
 }
 
 type wearData struct {
@@ -34,7 +34,7 @@ func init() {
 		// you could start by fixing this internally, and then come back to change the requires interface.
 		s.The("actors",
 			Can("wear it").And("wearing it").RequiresOne("prop"),
-			To("wear it", ReflectToTarget("report wear")),
+			To("wear it", func(g G.Play) { ReflectToTarget(g, "report wear") }),
 		)
 
 		s.The("props",

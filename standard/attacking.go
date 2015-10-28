@@ -9,7 +9,7 @@ func init() {
 	AddScript(func(s *Script) {
 		s.The("actors",
 			Can("attack it").And("attacking it").RequiresOne("object"),
-			To("attack it", ReflectToTarget("report attack")))
+			To("attack it", func(g G.Play) { ReflectToTarget(g, "report attack") }))
 
 		s.The("objects",
 			Can("report attack").And("reporting attack").RequiresOne("actor"),

@@ -31,7 +31,7 @@ func (move MoveToPhrase) OutOfWorld() MovingPhrase {
 
 func (move MovingPhrase) Execute(g G.Play) {
 	actor, dest := g.The(move.actor), g.The(move.dest)
-	assignTo(actor, "whereabouts", dest)
+	AssignTo(actor, "whereabouts", dest)
 }
 
 type moveData struct {
@@ -118,7 +118,7 @@ func init() {
 			}))
 		s.The("actors",
 			Can("go through it").And("going through it").RequiresOne("door"),
-			To("go through it", ReflectToTarget("be passed through")),
+			To("go through it", func(g G.Play) { ReflectToTarget(g, "be passed through") }),
 		)
 		s.The("doors",
 			Can("be passed through").And("being passed through").RequiresOne("actor"),

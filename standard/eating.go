@@ -9,7 +9,7 @@ func init() {
 	AddScript(func(s *Script) {
 		s.The("actors",
 			Can("eat it").And("eating it").RequiresOne("prop"),
-			To("eat it", ReflectToTarget("report eat")),
+			To("eat it", func(g G.Play) { ReflectToTarget(g, "report eat") }),
 		)
 
 		s.The("props",

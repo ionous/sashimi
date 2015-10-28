@@ -9,7 +9,7 @@ func init() {
 	AddScript(func(s *Script) {
 		s.The("actors",
 			Can("jump").And("jumping").RequiresNothing(),
-			To("jump", ReflectToLocation("report jump")),
+			To("jump", func(g G.Play) { ReflectToLocation(g, "report jump") }),
 		)
 
 		// kinds, to allow rooms and objects

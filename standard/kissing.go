@@ -10,7 +10,7 @@ func init() {
 		// kissing
 		s.The("actors",
 			Can("kiss it").And("kissing it").RequiresOne("object"),
-			To("kiss it", ReflectToTarget("report kiss")),
+			To("kiss it", func(g G.Play) { ReflectToTarget(g, "report kiss") }),
 			//  kissing yourself rule
 			WhenCapturing("kissing it", func(g G.Play) {
 				source, target := g.The("action.Source"), g.The("action.Target")
