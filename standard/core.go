@@ -284,7 +284,7 @@ func articleName(g G.Play, which string, definite bool, status NameStatus) strin
 	obj := g.The(which)
 	text := obj.Text("Name")
 	if obj.Is("proper-named") {
-		text = strings.Title(text)
+		text = inflect.Titleize(text)
 	} else {
 		article := ""
 		if definite {
@@ -402,7 +402,7 @@ func init() {
 				}
 				// FIX: duplicated in stories describe the first room
 				room.IsNow("visited")
-				g.The("status bar").SetText("left", strings.Title(room.Text("Name")))
+				g.The("status bar").SetText("left", inflect.Titleize(room.Text("Name")))
 			}))
 	})
 }
