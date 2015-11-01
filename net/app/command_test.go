@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/ionous/sashimi/_examples/stories"
+	"github.com/ionous/sashimi/compiler/call"
 	"github.com/ionous/sashimi/net/resource"
+	"github.com/ionous/sashimi/net/session"
+	"github.com/ionous/sashimi/script"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
@@ -18,7 +21,22 @@ import (
 func TestNetApp(t *testing.T) {
 	stories.Select("lab")
 
-	ts := httptest.NewServer(NewServer())
+	calls := call.MakeMemoryStorage()
+	sessions := session.NewSessions(
+		func(id string) (ret session.SessionData, err error) {
+			// FIX: it's very silly to have to init and compile each time.
+			// the reason is because relations change the original model.
+			if m, e := script.InitScripts().CompileCalls(ioutil.Discard, calls); e != nil {
+				err = e
+			} else {
+				ret, err = NewCommandSession(id, m, calls)
+			}
+			return ret, err
+		})
+
+	handler := http.NewServeMux()
+	handler.HandleFunc("/game/", NewGameHandler(sessions))
+	ts := httptest.NewServer(handler)
 	defer ts.Close()
 
 	g := &Helper{ts, "new"}

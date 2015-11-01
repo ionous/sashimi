@@ -1,12 +1,8 @@
 package app
 
 import (
-	"github.com/ionous/sashimi/compiler/call"
 	"github.com/ionous/sashimi/net/resource"
 	"github.com/ionous/sashimi/net/session"
-	"github.com/ionous/sashimi/net/support"
-	"github.com/ionous/sashimi/script"
-	"io/ioutil"
 	"log"
 	"net/http"
 )
@@ -20,25 +16,10 @@ import (
 // 	 GET /game/<session>/rooms/<name>/contains, list of objects
 // 	 GET /game/<session>/classes/rooms/actions
 //
-func NewServer() *support.ServeMux {
-	handler := support.NewServeMux()
-	calls := call.MakeMemoryStorage()
-
-	// game session command:
-	sessions := session.NewSessions(
-		func(id string) (ret session.SessionData, err error) {
-			// FIX: it's very silly to have to init and compile each time.
-			// the reason is because relations change the original model.
-			if m, e := script.InitScripts().CompileCalls(ioutil.Discard, calls); e != nil {
-				err = e
-			} else {
-				ret, err = NewCommandSession(id, m, calls)
-			}
-			return ret, err
-		})
+func NewGameHandler(sessions *session.Sessions) http.HandlerFunc {
 	rootGame := GameResource(sessions)
 
-	handler.HandleFunc("/game/", func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("handling", r.URL.Path, r.Method)
 		if res, err := resource.FindResource(rootGame, r.URL.Path[1:]); err != nil {
 			log.Println(err)
@@ -47,14 +28,13 @@ func NewServer() *support.ServeMux {
 			http.Error(w, r.Method, http.StatusMethodNotAllowed)
 		} else {
 			if r.Method == "GET" {
-				support.Encode(w, r, res.Query())
+				Encode(w, r, res.Query())
 			} else if doc, e := res.Post(r.Body); e != nil {
 				log.Println(e.Error())
 				http.Error(w, e.Error(), http.StatusInternalServerError)
 			} else {
-				support.Encode(w, r, doc)
+				Encode(w, r, doc)
 			}
 		}
-	})
-	return &handler
+	}
 }

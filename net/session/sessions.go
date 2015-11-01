@@ -33,18 +33,24 @@ type Sessions struct {
 	mutex    *sync.Mutex // for sessions
 }
 
+func (s *Sessions) NumSessions() int {
+	defer s.mutex.Unlock()
+	s.mutex.Lock()
+	return len(s.sessions)
+}
+
 //
 // Create a new game session, return its id.
 //
-func (this *Sessions) NewSession() (newId string, newData SessionData, err error) {
+func (s *Sessions) NewSession() (newId string, newData SessionData, err error) {
 	id := strings.TrimRight(base64.URLEncoding.EncodeToString(uuid.NewV4().Bytes()), "=")
-	if sessionData, e := this.factory(id); e != nil {
+	if sessionData, e := s.factory(id); e != nil {
 		err = e
 	} else {
 		//s := //(&Session{id: id, session: sess}).Serve()
-		defer this.mutex.Unlock()
-		this.mutex.Lock()
-		this.sessions[id] = sessionData
+		defer s.mutex.Unlock()
+		s.mutex.Lock()
+		s.sessions[id] = sessionData
 		newId, newData = id, sessionData
 	}
 	return newId, newData, err
@@ -53,11 +59,11 @@ func (this *Sessions) NewSession() (newId string, newData SessionData, err error
 //
 // Return an existing session.
 //
-func (this *Sessions) Session(id string) (ret SessionData, okay bool) {
+func (s *Sessions) Session(id string) (ret SessionData, okay bool) {
 	if id != "" {
-		defer this.mutex.Unlock()
-		this.mutex.Lock()
-		ret, okay = this.sessions[id]
+		defer s.mutex.Unlock()
+		s.mutex.Lock()
+		ret, okay = s.sessions[id]
 	}
 	return ret, okay
 }

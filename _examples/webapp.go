@@ -28,7 +28,22 @@ func main() {
 		}
 	} else {
 		fmt.Println("listening on http://localhost:8080")
-		handler := app.NewServer()
+		handler := support.NewServeMux()
+		calls := call.MakeMemoryStorage()
+
+		sessions := session.NewSessions(
+			func(id string) (ret session.SessionData, err error) {
+				// FIX: it's very silly to have to init and compile each time.
+				// the reason is because relations change the original model.
+				if m, e := script.InitScripts().CompileCalls(ioutil.Discard, calls); e != nil {
+					err = e
+				} else {
+					ret, err = NewCommandSession(id, m, calls)
+				}
+				return ret, err
+			})
+
+		handler.HandleFunc("/game/", app.NewGameHandler(sessions))
 		handler.HandleFilePatterns(root,
 			support.Dir("/app/"),
 			support.Dir("/bower_components/"),
