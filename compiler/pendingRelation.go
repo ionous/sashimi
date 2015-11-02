@@ -6,78 +6,76 @@ import (
 	"github.com/ionous/sashimi/util/ident"
 )
 
-//
-// A property-pair declaration which generates a model.Relation.
-//
+// PendingRelation: a property-pair declaration which generates a model.Relation.
 type PendingRelation struct {
 	name     string
-	src, dst *M.RelativeProperty // copied from the class after verifying the two sides are compatible
+	src, dst PendingRelative
 }
 
-//
+// PendingRelative: copied from the class after verifying the two sides are compatible
+type PendingRelative struct {
+	Class ident.Id
+	M.RelativeProperty
+}
+
+func (r PendingRelative) Empty() bool {
+	return r.Class.Empty()
+}
+
 // PendingRelations maps relation-id to a pending relation.
-//
 type PendingRelations map[ident.Id]PendingRelation
 
-//
-// Assign a relative to the relation.
+// setRelative assigns the side ( src/ dst ) of a relation.
 // There can be at most two relatives per relation, and both sides must relate to each other without conflict.
-//
-func (this *PendingRelation) setRelative(name string, pending M.RelativeProperty) (err error) {
+func (p *PendingRelation) setRelative(name string, pending PendingRelative) (err error) {
 	// setup name:
-	if this.name == "" {
-		this.name = name
-	} else if this.name != name {
-		err = fmt.Errorf("relation names don't match %s(old) %s(new)", this.name, name)
+	if p.name == "" {
+		p.name = name
+	} else if p.name != name {
+		err = fmt.Errorf("relation names don't match %s(old) %s(new)", p.name, name)
 	}
-
 	// setup relations:
 	if !pending.IsRev {
-		if this.src != nil {
-			err = fmt.Errorf("src already set %s %+v %+v", name, this.src, pending)
-		} else if this.dst != nil && this.dst.Relates != pending.Class {
-			err = fmt.Errorf("src doesn't match dst '%s' '%s' in '%s'", this.src, pending, name)
-		} else {
-			this.src = &pending
-		}
+		err = setRelative(&p.src, name, p.dst, pending)
 	} else {
-		if this.dst != nil {
-			err = fmt.Errorf("dst already set %s %s", this.dst, pending)
-		} else if this.src != nil && this.src.Relates != pending.Class {
-			err = fmt.Errorf("dst doesn't match src '%s' '%s' in '%s'", this.dst, pending, name)
-		} else {
-			this.dst = &pending
-		}
+		err = setRelative(&p.dst, name, p.src, pending)
 	}
 	return err
 }
 
-//
-// Generate the model Relation from this PendingRelation.
-//
-func (this PendingRelation) makeRelation(id ident.Id) (rel M.Relation, err error) {
-	if this.src == nil || this.dst == nil {
-		err = fmt.Errorf("missing half of relation %v", this)
+func setRelative(src *PendingRelative, name string, dst, pending PendingRelative) (err error) {
+	if !src.Empty() {
+		err = fmt.Errorf("src already set %s %+v %+v", name, src, pending)
+	} else if !dst.Empty() && dst.Relates != pending.Class {
+		err = fmt.Errorf("src doesn't match dst '%s' '%s' in '%s'", src, pending, name)
 	} else {
-		src := M.HalfRelation{this.src.Class, this.src.Id}
-		dst := M.HalfRelation{this.dst.Class, this.dst.Id}
-		rel = M.NewRelation(id, this.name, src, dst, this.style())
+		*src = pending
+	}
+	return err
+}
+
+// makeRelation generates the model Relation from p PendingRelation.
+func (p PendingRelation) makeRelation(id ident.Id) (rel M.Relation, err error) {
+	if p.src.Empty() || p.dst.Empty() {
+		err = fmt.Errorf("missing half of relation %v", p)
+	} else {
+		src := M.HalfRelation{p.src.Class, p.src.Id}
+		dst := M.HalfRelation{p.dst.Class, p.dst.Id}
+		rel = M.NewRelation(id, p.name, src, dst, p.style())
 	}
 	return rel, err
 }
 
-//
-// deduce the relationship style based on how how many dst are pointed to by src, and vice versa
-//
-func (this PendingRelation) style() (style M.RelationStyle) {
-	if this.src.IsMany {
-		if this.dst.IsMany {
+// style deduces RelationStyle based on how how many dst are pointed to by src, and vice versa
+func (p PendingRelation) style() (style M.RelationStyle) {
+	if p.src.IsMany {
+		if p.dst.IsMany {
 			style = M.ManyToMany
 		} else {
 			style = M.OneToMany // been drinking again, eh?
 		}
 	} else {
-		if this.dst.IsMany {
+		if p.dst.IsMany {
 			style = M.ManyToOne
 		} else {
 			style = M.OneToOne

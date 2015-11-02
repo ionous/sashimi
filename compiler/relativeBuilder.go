@@ -36,7 +36,8 @@ func (rel RelativeBuilder) BuildProperty() (ret M.IProperty, err error) {
 	// splitting them into their class halves at class creation time
 	relationId := rel.fields.Relation
 	relation := rel.relations[relationId]
-	if e := relation.setRelative(rel.name, rel.fields); e != nil {
+	relative := PendingRelative{rel.cls, rel.fields}
+	if e := relation.setRelative(rel.name, relative); e != nil {
 		err = e
 	} else {
 		// write merged data back

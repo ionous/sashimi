@@ -66,7 +66,7 @@ func (this ClassPropertyFragment) MakeStatement(b SubjectBlock) error {
 //
 func (this ClassRelationFragment) MakeStatement(b SubjectBlock) (err error) {
 	src, dst := this.src, this.dst
-	// uses the subject, ex. gremlins, and the field, ex. pets
+	// uses the subject, ex. gremlins, and the field, ex. pets: gremlins-pets-relation
 	via := strings.Join([]string{b.subject, src.name, "relation"}, "-")
 
 	srel := S.RelativeProperty{b.subject, src.name, src.kind, via, src.hint | S.RelativeSource}

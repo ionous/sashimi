@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	C "github.com/ionous/sashimi/console"
 	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/net/resource"
@@ -168,10 +167,7 @@ func (out *CommandOutput) propertyChanged(game *R.Game, gobj *R.GameObject, prop
 		relation := game.Model.Relations[prop.Relation]
 
 		// get the reverse property
-		other, foundOther := relation.GetOther(prop.Class, prop.GetId())
-		if !foundOther {
-			panic(fmt.Sprint("couldnt match", prop, relation))
-		}
+		other := relation.GetOther(prop.IsRev)
 
 		type RelationChange struct {
 			Prop  string           `json:"prop"`

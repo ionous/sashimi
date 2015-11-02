@@ -132,13 +132,12 @@ func (cls *PendingClass) addRelative(fields S.RelativeProperty, src S.Code,
 			} else {
 				// create the relative property pointing to the generated relation data
 				rel := M.RelativeProperty{
-					id,   // property id in cls
-					name, // original property name
-					cls.id,
-					other.id, // the other side of the relation
-					relId,    // the id of the relation pair
-					fields.Hint.IsReverse(),
-					isMany}
+					Id:       id,       // property id in cls
+					Name:     name,     // original property name
+					Relates:  other.id, // the other side of the relation
+					Relation: relId,    // the id of the relation pair
+					IsRev:    fields.Hint.IsReverse(),
+					IsMany:   isMany}
 				// .......
 				ret, err = cls.props.make(id,
 					func(old IBuildProperty) (err error) {

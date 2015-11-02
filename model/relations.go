@@ -33,14 +33,11 @@ type HalfRelation struct {
 
 type RelationMap map[ident.Id]Relation
 
-func (this Relation) GetOther(class ident.Id, property ident.Id) (other HalfRelation, okay bool) {
-	relative := HalfRelation{class, property}
-	if relative == this.Source {
-		other = this.Dest
-		okay = true
-	} else if relative == this.Dest {
-		other = this.Source
-		okay = true
+func (r Relation) GetOther(isRev bool) (other HalfRelation) {
+	if isRev {
+		other = r.Source
+	} else {
+		other = r.Dest
 	}
 	return
 }
