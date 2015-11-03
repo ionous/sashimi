@@ -3,9 +3,9 @@ package compiler
 import (
 	"fmt"
 	"github.com/ionous/sashimi/compiler/call"
+	M "github.com/ionous/sashimi/compiler/model"
 	E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game"
-	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"

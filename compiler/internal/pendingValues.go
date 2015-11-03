@@ -1,7 +1,7 @@
 package compiler
 
 import (
-	M "github.com/ionous/sashimi/model"
+	M "github.com/ionous/sashimi/compiler/model"
 	"github.com/ionous/sashimi/util/ident"
 	"reflect" // for type checking
 )

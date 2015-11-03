@@ -3,7 +3,7 @@ package compiler
 import (
 	"bitbucket.org/pkg/inflect"
 	"fmt"
-	M "github.com/ionous/sashimi/model"
+	M "github.com/ionous/sashimi/compiler/model"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/ident"
 )

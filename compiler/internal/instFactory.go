@@ -1,7 +1,7 @@
 package compiler
 
 import (
-	M "github.com/ionous/sashimi/model"
+	M "github.com/ionous/sashimi/compiler/model"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
