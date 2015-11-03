@@ -2,6 +2,7 @@ package runtime
 
 import (
 	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/model/table"
 	"github.com/ionous/sashimi/util/errutil"
 )
 
@@ -10,7 +11,7 @@ import (
 //
 func CreateGameObjects(
 	src M.InstanceMap,
-	tables M.TableRelations,
+	tables table.Tables,
 ) (
 	ret GameObjects,
 	err error,
@@ -27,7 +28,7 @@ func CreateGameObjects(
 			allProps[class] = props
 		}
 		// turn properties into tables:
-		gobj := &GameObject{inst.Id, inst.Class, make(TemplateValues), make(TemplatePool), tables}
+		gobj := &GameObject{inst.Id, inst.Class, make(TemplateValues), make(TemplatePool), tables.Clone()}
 		// FIX FIX FIX
 		name := inst.Name
 		if n, ok := inst.FindValue("printed name"); ok {

@@ -3,17 +3,18 @@ package runtime
 import (
 	"fmt"
 	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/model/table"
 	"github.com/ionous/sashimi/util/ident"
 	"reflect"
 )
 
 // GameObject
 type GameObject struct {
-	id     ident.Id         // unique id, matches instance info's ids.
-	cls    *M.ClassInfo     // for property set, etc. access
-	vals   TemplateValues   // runtime gobj are key'd by string for go's templates
-	temps  TemplatePool     // FIX? cache for templates.... probably should nix this.
-	tables M.TableRelations // helper to access relation vals
+	id     ident.Id       // unique id, matches instance info's ids.
+	cls    *M.ClassInfo   // for property set, etc. access
+	vals   TemplateValues // runtime gobj are key'd by string for go's templates
+	temps  TemplatePool   // FIX? cache for templates.... probably should nix this.
+	tables table.Tables
 }
 
 //
@@ -89,7 +90,7 @@ func (gobj *GameObject) setValue(prop M.IProperty, val interface{}) (err error) 
 		gobj.setDirect(prop.GetId(), val)
 
 	case M.RelativeProperty:
-		if table, ok := gobj.tables.TableById(prop.Relation); !ok {
+		if table, ok := gobj.tables[prop.Relation]; !ok {
 			err = fmt.Errorf("couldn't find table", prop.Relation)
 		} else {
 			rel := RelativeValue{gobj.Id(), prop, table}

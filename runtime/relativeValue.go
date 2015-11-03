@@ -3,6 +3,7 @@ package runtime
 import (
 	"fmt"
 	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/model/table"
 	"github.com/ionous/sashimi/util/ident"
 )
 
@@ -11,7 +12,7 @@ import (
 type RelativeValue struct {
 	inst  ident.Id
 	prop  M.RelativeProperty
-	table *M.TableRelation
+	table table.Table
 }
 
 // return a list of referenced instances

@@ -46,7 +46,7 @@ func (model *Model) PrintModel(printer printer) {
 	printer("*** Relations:")
 	for id, rel := range model.Relations {
 		printer("\t", rel)
-		if table, ok := model.Tables.TableById(id); ok {
+		if table, ok := model.Tables[id]; ok {
 			printer("\t", table)
 		}
 	}
