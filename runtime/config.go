@@ -2,7 +2,7 @@ package runtime
 
 import (
 	G "github.com/ionous/sashimi/game"
-	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 type Config struct {
@@ -13,5 +13,5 @@ type Config struct {
 
 type Callbacks interface {
 	// Lookup returns nil if not found.
-	Lookup(M.Callback) G.Callback
+	Lookup(ident.Id) G.Callback
 }

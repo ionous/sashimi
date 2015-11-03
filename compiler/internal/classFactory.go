@@ -19,7 +19,7 @@ type ClassFactory struct {
 }
 
 //
-func newClassFactory(names NameSource, rel *RelativeFactory) *ClassFactory {
+func NewClassFactory(names NameSource, rel *RelativeFactory) *ClassFactory {
 	res := &ClassFactory{names, rel, make(PendingClasses), make(SingleToPlural)}
 	res.addClassRef(nil, "kinds", "kind")
 	res.addClassRef(nil, "data", "data")
@@ -104,7 +104,7 @@ func (fac *ClassFactory) addClassRef(parent *PendingClass, plural, single string
 		}
 		class = &PendingClass{
 			fac, parent, id, plural, singular,
-			fac.allNames.newScope(plural),
+			fac.allNames.NewScope(plural),
 			NewProperties(parentProps),
 			make(PendingRules, 0),
 		}

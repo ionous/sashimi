@@ -1,7 +1,7 @@
 package script
 
 import (
-	C "github.com/ionous/sashimi/compiler"
+	"github.com/ionous/sashimi/compiler"
 	"github.com/ionous/sashimi/compiler/call"
 	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
@@ -15,11 +15,11 @@ type Script struct {
 	err    error
 }
 
-func (s *Script) Compile(writer io.Writer) (res C.MemoryResult, err error) {
+func (s *Script) Compile(writer io.Writer) (res compiler.MemoryResult, err error) {
 	if s.err != nil {
 		err = s.err
 	} else {
-		res, err = C.Compile(writer, s.blocks.Statements())
+		res, err = compiler.Compile(writer, s.blocks.Statements())
 	}
 	return
 }
@@ -29,7 +29,7 @@ func (s *Script) CompileCalls(writer io.Writer, calls call.Compiler) (res *M.Mod
 	if s.err != nil {
 		err = s.err
 	} else {
-		cfg := C.Config{Calls: calls, Output: writer}
+		cfg := compiler.Config{Calls: calls, Output: writer}
 		res, err = cfg.Compile(s.blocks.Statements())
 	}
 	return res, err

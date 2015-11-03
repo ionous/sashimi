@@ -40,7 +40,7 @@ func (log logAdapter) Write(p []byte) (n int, err error) {
 
 // each action can have a chain of default actions
 type CallbackPair struct {
-	src  M.Callback
+	src  ident.Id
 	call G.Callback
 }
 

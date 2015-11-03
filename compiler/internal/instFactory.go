@@ -15,7 +15,7 @@ type InstanceFactory struct {
 }
 type PendingInstances map[ident.Id]*PendingInstance
 
-func newInstanceFactory(names NameSource, log *log.Logger) *InstanceFactory {
+func NewInstanceFactory(names NameSource, log *log.Logger) *InstanceFactory {
 	return &InstanceFactory{names, log, make(PendingInstances)}
 }
 

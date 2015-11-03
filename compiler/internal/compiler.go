@@ -9,58 +9,25 @@ import (
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
-	"io"
 	"log"
 	"strings"
 )
 
-type MemoryResult struct {
-	*M.Model
-	Calls call.MemoryStorage
-}
-
-func Compile(out io.Writer, src S.Statements) (res MemoryResult, err error) {
-	calls := call.MakeMemoryStorage()
-	cfg := Config{calls, out}
-	if m, e := cfg.Compile(src); e != nil {
-		err = e
-	} else {
-		res = MemoryResult{m, calls}
-	}
-	return
-}
-
-// Compile script statements into a "model", a form usable by the runtime.
-func (cfg Config) Compile(src S.Statements) (*M.Model, error) {
-	names := NewNameSource()
-	rel := newRelativeFactory(names.newScope(nil))
-	log := log.New(cfg.Output, "compling: ", log.Lshortfile)
-	ctx := &_Compiler{
-		src, names.newScope(nil),
-		newClassFactory(names, rel),
-		newInstanceFactory(names, log),
-		rel,
-		log,
-		cfg.Calls,
-	}
-	return ctx.compile()
-}
-
-// _Compiler compiles scripts
-type _Compiler struct {
-	src       S.Statements
-	names     NameScope
-	classes   *ClassFactory
-	instances *InstanceFactory
-	relatives *RelativeFactory
-	log       *log.Logger
-	calls     call.Compiler
+// Compiler compiles scripts
+type Compiler struct {
+	Source    S.Statements
+	Names     NameScope
+	Classes   *ClassFactory
+	Instances *InstanceFactory
+	Relatives *RelativeFactory
+	Log       *log.Logger
+	Calls     call.Compiler
 }
 
 // processAssertions generates classes and instances from the assertions.
 // adds to the instance and class maps
 // adds to the pending instance and classes lists
-func (ctx *_Compiler) processAssertions(asserts []S.AssertionStatement) (err error) {
+func (ctx *Compiler) processAssertions(asserts []S.AssertionStatement) (err error) {
 	for err == nil && len(asserts) > 0 {
 		didSomething := false
 		for i := 0; i < len(asserts); i++ {
@@ -92,7 +59,7 @@ func (ctx *_Compiler) processAssertions(asserts []S.AssertionStatement) (err err
 // Changes assert blocks into class and instance blocks.
 // ( the caller keeps processing the same blocks over and over until all are resolved. )
 //
-func (ctx *_Compiler) processAssertBlock(assert S.AssertionStatement) (processed bool, err error) {
+func (ctx *Compiler) processAssertBlock(assert S.AssertionStatement) (processed bool, err error) {
 	fields, source := assert.Fields(), assert.Source()
 
 	//
@@ -103,9 +70,9 @@ func (ctx *_Compiler) processAssertBlock(assert S.AssertionStatement) (processed
 
 	// a possible class instancing?
 	// we dont mind if we dont find the owner class. it might resolve later.
-	if class, ok := ctx.classes.findBySingularName(fields.Owner); ok {
+	if class, ok := ctx.Classes.findBySingularName(fields.Owner); ok {
 		name, longName := fields.Called, longName
-		if c, e := ctx.instances.addInstanceRef(class, name, longName, source); e != nil {
+		if c, e := ctx.Instances.addInstanceRef(class, name, longName, source); e != nil {
 			err = SourceError(assert.Source(), e)
 		} else if c != nil {
 			processed = true
@@ -114,9 +81,9 @@ func (ctx *_Compiler) processAssertBlock(assert S.AssertionStatement) (processed
 		// a possible class derivation?
 		// classFactory seeds itself with the root type "kinds".
 		// ultimately all classes are built as some derivation from that.
-		if parent, ok := ctx.classes.findByPluralName(fields.Owner); ok {
+		if parent, ok := ctx.Classes.findByPluralName(fields.Owner); ok {
 			plural, single := longName, fields.GetOption("singular name", "")
-			c, e := ctx.classes.addClassRef(parent, plural, single)
+			c, e := ctx.Classes.addClassRef(parent, plural, single)
 			if e != nil {
 				err = SourceError(assert.Source(), e)
 			} else if c != nil {
@@ -128,17 +95,17 @@ func (ctx *_Compiler) processAssertBlock(assert S.AssertionStatement) (processed
 }
 
 //
-func (ctx *_Compiler) compileActions(classes M.ClassMap,
+func (ctx *Compiler) compileActions(classes M.ClassMap,
 ) (actions M.ActionMap, events M.EventMap, err error) {
 	actions, events = make(M.ActionMap), make(M.EventMap)
 	//
-	for _, act := range ctx.src.Actions {
+	for _, act := range ctx.Source.Actions {
 		fields := act.Fields()
 		if actionId, source, target, context, e := ctx.resolveAction(classes, fields); e != nil {
 			err = errutil.Append(err, e)
 		} else {
 			// and the name of event...
-			eventId, e := ctx.names.addName(fields.Event, actionId.String())
+			eventId, e := ctx.Names.addName(fields.Event, actionId.String())
 			if e != nil {
 				err = errutil.Append(err, e)
 				continue
@@ -161,7 +128,7 @@ func (ctx *_Compiler) compileActions(classes M.ClassMap,
 	return actions, events, err
 }
 
-func (ctx *_Compiler) resolveAction(classes M.ClassMap, fields S.ActionAssertionFields,
+func (ctx *Compiler) resolveAction(classes M.ClassMap, fields S.ActionAssertionFields,
 ) (actionId ident.Id, owner, target, context *M.ClassInfo, err error) {
 	// find the primary class
 	if cls, ok := classes.FindClass(fields.Source); !ok {
@@ -169,12 +136,12 @@ func (ctx *_Compiler) resolveAction(classes M.ClassMap, fields S.ActionAssertion
 		err = errutil.Append(err, e)
 	} else {
 		// and the other two optional ones
-		target, ok = classes[ctx.classes.singleToPlural[fields.Target]]
+		target, ok = classes[ctx.Classes.singleToPlural[fields.Target]]
 		if !ok && fields.Target != "" {
 			e := fmt.Errorf("couldn't find class for noun %s", fields.Target)
 			err = errutil.Append(err, e)
 		}
-		context, ok = classes[ctx.classes.singleToPlural[fields.Context]]
+		context, ok = classes[ctx.Classes.singleToPlural[fields.Context]]
 		if !ok && fields.Context != "" {
 			e := fmt.Errorf("couldn't find class for noun %s", fields.Context)
 			err = errutil.Append(err, e)
@@ -183,14 +150,14 @@ func (ctx *_Compiler) resolveAction(classes M.ClassMap, fields S.ActionAssertion
 			// make sure these names are unique
 			owner = cls
 			uniquifer := strings.Join([]string{"action", fields.Source, fields.Target, fields.Context}, "+")
-			actionId, err = ctx.names.addName(fields.Action, uniquifer)
+			actionId, err = ctx.Names.addName(fields.Action, uniquifer)
 		}
 	}
 	return actionId, owner, target, context, err
 }
 
 //
-func (ctx *_Compiler) newCallback(
+func (ctx *Compiler) newCallback(
 	owner string,
 	classes M.ClassMap,
 	instances M.InstanceMap,
@@ -200,12 +167,12 @@ func (ctx *_Compiler) newCallback(
 ) (
 	ret *M.ListenerCallback, err error,
 ) {
-	if cb, e := ctx.calls.Compile(callback); e != nil {
+	if cb, e := ctx.Calls.CompileCallback(callback); e != nil {
 		err = errutil.Append(e, fmt.Errorf("couldn't compile callback for `%s(%s)`", owner, action))
 	} else if cls, _ := classes.FindClass(owner); cls != nil {
-		ret = M.NewClassCallback(cls, action, cb.Callback, options)
+		ret = M.NewClassCallback(cls, action, cb, options)
 	} else if inst, ok := instances.FindInstance(owner); ok {
-		ret = M.NewInstanceCallback(inst, action, cb.Callback, options)
+		ret = M.NewInstanceCallback(inst, action, cb, options)
 	} else {
 		err = fmt.Errorf("unknown listener requested `%s(%s)`", owner, action)
 	}
@@ -213,10 +180,10 @@ func (ctx *_Compiler) newCallback(
 }
 
 //
-func (ctx *_Compiler) makeActionHandlers(classes M.ClassMap, instances M.InstanceMap, actions M.ActionMap,
+func (ctx *Compiler) makeActionHandlers(classes M.ClassMap, instances M.InstanceMap, actions M.ActionMap,
 ) (callbacks M.ActionCallbacks, err error,
 ) {
-	for _, statement := range ctx.src.ActionHandlers {
+	for _, statement := range ctx.Source.ActionHandlers {
 		f := statement.Fields()
 		action, ok := actions.FindActionByName(f.Action)
 		if !ok {
@@ -242,10 +209,10 @@ func (ctx *_Compiler) makeActionHandlers(classes M.ClassMap, instances M.Instanc
 }
 
 //
-func (ctx *_Compiler) makeEventListeners(events M.EventMap, classes M.ClassMap, instances M.InstanceMap,
+func (ctx *Compiler) makeEventListeners(events M.EventMap, classes M.ClassMap, instances M.InstanceMap,
 ) (callbacks M.ListenerCallbacks, err error,
 ) {
-	for _, l := range ctx.src.EventHandlers {
+	for _, l := range ctx.Source.EventHandlers {
 		r := l.Fields()
 		action, e := events.FindEventByName(r.Event)
 		if e != nil {
@@ -276,7 +243,7 @@ func (ctx *_Compiler) makeEventListeners(events M.EventMap, classes M.ClassMap, 
 // Turn object and action aliases into noun name and parser action mappings
 // FIX: instance names should go in declaration order
 //
-func (ctx *_Compiler) compileAliases(instances M.InstanceMap, actions M.ActionMap) (
+func (ctx *Compiler) compileAliases(instances M.InstanceMap, actions M.ActionMap) (
 	names M.NounNames,
 	parserActions []M.ParserAction,
 	err error,
@@ -291,7 +258,7 @@ func (ctx *_Compiler) compileAliases(instances M.InstanceMap, actions M.ActionMa
 	}
 
 	// then: add all "is known as"
-	for _, alias := range ctx.src.Aliases {
+	for _, alias := range ctx.Source.Aliases {
 		fields := alias.Fields()
 		key, phrases := fields.Key, fields.Phrases
 		// alias is a noun:
@@ -329,20 +296,20 @@ func (ctx *_Compiler) compileAliases(instances M.InstanceMap, actions M.ActionMa
 }
 
 //
-func (ctx *_Compiler) compile() (*M.Model, error) {
+func (ctx *Compiler) Compile() (*M.Model, error) {
 	// create empty classes,instances,tables,actions from their assertions
-	ctx.log.Println("reading assertions")
-	err := ctx.processAssertions(ctx.src.Asserts)
+	ctx.Log.Println("reading assertions")
+	err := ctx.processAssertions(ctx.Source.Asserts)
 	if err != nil {
 		return nil, err
 	}
 
 	// add class primitive values;
 	// queuing any we types we cant immediately resolve.
-	ctx.log.Println("adding class properties")
-	for _, prop := range ctx.src.Properties {
+	ctx.Log.Println("adding class properties")
+	for _, prop := range ctx.Source.Properties {
 		fields := prop.Fields()
-		if class, ok := ctx.classes.findByPluralName(fields.Class); !ok {
+		if class, ok := ctx.Classes.findByPluralName(fields.Class); !ok {
 			e := SourceError(prop.Source(), ClassNotFound(fields.Class))
 			err = errutil.Append(err, e)
 		} else {
@@ -357,10 +324,10 @@ func (ctx *_Compiler) compile() (*M.Model, error) {
 	}
 
 	// add class enumerations
-	ctx.log.Println("adding enums")
-	for _, enum := range ctx.src.Enums {
+	ctx.Log.Println("adding enums")
+	for _, enum := range ctx.Source.Enums {
 		fields := enum.Fields()
-		if class, ok := ctx.classes.findByPluralName(fields.Class); !ok {
+		if class, ok := ctx.Classes.findByPluralName(fields.Class); !ok {
 			e := ClassNotFound(fields.Class)
 			err = errutil.Append(err, SourceError(enum.Source(), e))
 		} else if _, e := class.addEnum(fields.Name, fields.Choices, fields.Expects); e != nil {
@@ -372,10 +339,10 @@ func (ctx *_Compiler) compile() (*M.Model, error) {
 	}
 
 	// add class relatives
-	ctx.log.Println("adding class relatives")
-	for _, rel := range ctx.src.Relatives {
+	ctx.Log.Println("adding class relatives")
+	for _, rel := range ctx.Source.Relatives {
 		fields := rel.Fields()
-		if class, ok := ctx.classes.findByPluralName(fields.Class); !ok {
+		if class, ok := ctx.Classes.findByPluralName(fields.Class); !ok {
 			err = errutil.Append(err, ClassNotFound(fields.Class))
 		} else if _, e := class.addRelative(fields, rel.Source()); e != nil {
 			err = errutil.Append(err, e)
@@ -386,16 +353,16 @@ func (ctx *_Compiler) compile() (*M.Model, error) {
 	}
 
 	// make classes
-	ctx.log.Println("making classes")
-	classes, err := ctx.classes.makeClasses(ctx.relatives)
+	ctx.Log.Println("making classes")
+	classes, err := ctx.Classes.makeClasses(ctx.Relatives)
 	if err != nil {
 		return nil, err
 	}
 
 	// make instances
-	ctx.log.Println("compiling relations")
+	ctx.Log.Println("compiling relations")
 	relations := make(M.RelationMap)
-	for id, rel := range ctx.relatives.relations {
+	for id, rel := range ctx.Relatives.relations {
 		if rel, e := rel.makeRelation(id); e != nil {
 			err = errutil.Append(err, e)
 		} else {
@@ -407,16 +374,16 @@ func (ctx *_Compiler) compile() (*M.Model, error) {
 	}
 
 	multiValueData := []MultiValueData{}
-	ctx.log.Println("parsing tables")
-	for _, mvs := range ctx.src.MultiValues {
+	ctx.Log.Println("parsing tables")
+	for _, mvs := range ctx.Source.MultiValues {
 		fields := mvs.Fields()
 		// make a table to process the rows of data for this class
-		if table, e := makeValueTable(ctx.classes, fields.Owner, fields.Columns); e != nil {
+		if table, e := makeValueTable(ctx.Classes, fields.Owner, fields.Columns); e != nil {
 			err = errutil.Append(err, SourceError(mvs.Source(), e))
 		} else {
 			// walk those rows
 			for _, row := range fields.Rows {
-				if data, e := table.addRow(ctx.instances, mvs.Source(), row); e != nil {
+				if data, e := table.addRow(ctx.Instances, mvs.Source(), row); e != nil {
 					err = errutil.Append(err, SourceError(mvs.Source(), e))
 				} else {
 					multiValueData = append(multiValueData, data)
@@ -426,14 +393,14 @@ func (ctx *_Compiler) compile() (*M.Model, error) {
 	}
 
 	// make instances
-	ctx.log.Println("making instances")
-	partials, err := ctx.instances.makeInstances(classes, relations)
+	ctx.Log.Println("making instances")
+	partials, err := ctx.Instances.makeInstances(classes, relations)
 	if err != nil {
 		return nil, err
 	}
 
 	// merges instance table data
-	ctx.log.Println("merging instance tables")
+	ctx.Log.Println("merging instance tables")
 	for _, mvd := range multiValueData {
 		if e := mvd.mergeInto(partials); e != nil {
 			err = errutil.Append(err, SourceError(mvd.src, e))
@@ -443,42 +410,42 @@ func (ctx *_Compiler) compile() (*M.Model, error) {
 		return nil, err
 	}
 	// fills out the instance properties
-	ctx.log.Println("setting instance properties")
-	instances, tables, err := partials.makeData(ctx.src.Choices, ctx.src.KeyValues)
+	ctx.Log.Println("setting instance properties")
+	instances, tables, err := partials.makeData(ctx.Source.Choices, ctx.Source.KeyValues)
 	if err != nil {
 		return nil, err
 	}
 
 	// make actions and events
-	ctx.log.Println("compiling actions")
+	ctx.Log.Println("compiling actions")
 	actions, events, err := ctx.compileActions(classes)
 	if err != nil {
 		return nil, err
 	}
 
-	ctx.log.Println("making action handlers")
+	ctx.Log.Println("making action handlers")
 	actHandlers, err := ctx.makeActionHandlers(classes, instances, actions)
 	if err != nil {
 		return nil, err
 	}
 
 	// make events listeners( in order of original declaration )
-	ctx.log.Println("making event listeners")
+	ctx.Log.Println("making event listeners")
 	evtListeners, err := ctx.makeEventListeners(events, classes, instances)
 	if err != nil {
 		return nil, err
 	}
 
 	// create parser actions
-	ctx.log.Println("compiling aliases")
+	ctx.Log.Println("compiling aliases")
 	names, parserActions, err := ctx.compileAliases(instances, actions)
 	if err != nil {
 		return nil, err
 	}
 
-	ctx.log.Println("compiling globals")
+	ctx.Log.Println("compiling globals")
 	generators := make(M.GeneratorMap)
-	for _, gen := range ctx.src.Globals {
+	for _, gen := range ctx.Source.Globals {
 		gf := gen.Fields()
 		id := ident.MakeId(gf.Name)
 		if _, exists := generators[id]; exists {
@@ -490,7 +457,7 @@ func (ctx *_Compiler) compile() (*M.Model, error) {
 	}
 
 	// return the results with no error
-	ctx.log.Println("compile finished")
+	ctx.Log.Println("compile finished")
 	res := &M.Model{
 		classes,
 		relations,

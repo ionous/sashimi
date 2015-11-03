@@ -1,7 +1,7 @@
 package compiler
 
 //
-func newRelativeFactory(names NameScope) *RelativeFactory {
+func NewRelativeFactory(names NameScope) *RelativeFactory {
 	return &RelativeFactory{names, make(PendingRelations)}
 }
 

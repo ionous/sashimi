@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 // List of event listeners and their callbacks.
@@ -20,7 +21,7 @@ type ListenerCallback struct {
 	Class    *ClassInfo    // Always valid.
 	Action   *ActionInfo   // For the sake of sharing: Even though we listen to events, we point to the action.
 
-	Callback Callback // Game callback triggered by this listener.
+	Callback ident.Id // Game callback triggered by this listener.
 	Options  ListenerOptions
 }
 
@@ -37,7 +38,7 @@ const (
 func NewClassCallback(
 	cls *ClassInfo,
 	action *ActionInfo,
-	callback Callback,
+	callback ident.Id,
 	options ListenerOptions,
 ) *ListenerCallback {
 	return &ListenerCallback{nil, cls, action, callback, options}
@@ -47,7 +48,7 @@ func NewClassCallback(
 func NewInstanceCallback(
 	inst *InstanceInfo,
 	action *ActionInfo,
-	callback Callback,
+	callback ident.Id,
 	options ListenerOptions,
 ) *ListenerCallback {
 	return &ListenerCallback{inst, inst.Class, action, callback, options}

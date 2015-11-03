@@ -40,7 +40,7 @@ func (this NameScope) addRef(name string, value string, src source.Code) (curr i
 
 //
 // wrap the name source in a scope
-func (this NameSource) newScope(scope interface{}) NameScope {
+func (this NameSource) NewScope(scope interface{}) NameScope {
 	ret := NameScope{this, scope}
 	ret.addName("", "empty string")
 	return ret
