@@ -1,17 +1,21 @@
 package runtime
 
 import (
+	"fmt"
 	G "github.com/ionous/sashimi/game"
 	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/util/ident"
 	"strings"
 )
+
+var _ = fmt.Println
 
 //
 // Event data for event handlers and actions.
 //
 type RuntimeAction struct {
 	game   *Game
-	action *M.ActionInfo
+	action ident.Id
 	objs   []*GameObject
 	after  []CallbackPair
 }
@@ -31,7 +35,9 @@ func (act *RuntimeAction) runCallback(cb CallbackPair, cls *M.ClassInfo) bool {
 
 	adapter := NewGameAdapter(act.game)
 	adapter.data = act
-	adapter.hint = cls
+	if cls != nil {
+		adapter.hint = cls.Id
+	}
 	cb.call(adapter)
 	return !adapter.cancelled
 }
@@ -80,13 +86,12 @@ func (act *RuntimeAction) findByClass(cls *M.ClassInfo) (ret G.IObject, okay boo
 
 // findByExactClass; true if found
 func (act *RuntimeAction) findByExactClass(cls *M.ClassInfo) (ret G.IObject, okay bool) {
-	for i, nounClass := range act.action.NounTypes {
-		// if DebugGet {
-		//  act.game.Println("exact", i, nounClass)
-		// }
-		if cls == nounClass {
-			ret, okay = act.getObject(i)
-			break
+	if a, ok := act.game.ModelApi.GetAction(act.action); ok {
+		for i, nounClass := range a.GetNouns() {
+			if cls.Id == nounClass {
+				ret, okay = act.getObject(i)
+				break
+			}
 		}
 	}
 	return
@@ -94,10 +99,12 @@ func (act *RuntimeAction) findByExactClass(cls *M.ClassInfo) (ret G.IObject, oka
 
 // findBySimilarClass; true if found
 func (act *RuntimeAction) findBySimilarClass(cls *M.ClassInfo) (ret G.IObject, okay bool) {
-	for i, nounClass := range act.action.NounTypes {
-		if similar := cls.CompatibleWith(nounClass.Id); similar {
-			ret, okay = act.getObject(i)
-			break
+	if a, ok := act.game.ModelApi.GetAction(act.action); ok {
+		for i, nounClass := range a.GetNouns() {
+			if similar := cls.CompatibleWith(nounClass); similar {
+				ret, okay = act.getObject(i)
+				break
+			}
 		}
 	}
 	return

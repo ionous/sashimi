@@ -33,35 +33,6 @@ func NewAction(id ident.Id, action, event string, classes ...*ClassInfo) (ret *A
 	return ret, err
 }
 
-// baed on id
-func (this *ActionInfo) String() string {
-	return this.Id.String()
-}
-
-//
-func (this *ActionInfo) Source() *ClassInfo {
-	return this.neverSimple(0)
-}
-
-//
-func (this *ActionInfo) Target() *ClassInfo {
-	return this.neverSimple(1)
-}
-
-//
-func (this *ActionInfo) Context() *ClassInfo {
-	return this.neverSimple(2)
-}
-
-//
-func (this *ActionInfo) neverSimple(i int) (ret *ClassInfo) {
-	if i < len(this.NounTypes) {
-		ret = this.NounTypes[i]
-	}
-	return ret
-}
-
-//
-func (this *ActionInfo) NumNouns() (ret int) {
-	return len(this.NounTypes)
+func (a *ActionInfo) String() string {
+	return a.Id.String()
 }

@@ -6,6 +6,8 @@ import (
 	G "github.com/ionous/sashimi/game"
 	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/model/table"
+	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/runtime/memory"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 	"log"
@@ -16,6 +18,7 @@ import (
 // FIX: standarize member exports by splitting game into smaller classes and interfaces; focus on injecting what game needs, and allowing providers to decorate/instrument what they need.
 type Game struct {
 	Model          *M.Model
+	ModelApi       api.Model
 	Objects        GameObjects
 	Dispatchers    Dispatchers
 	output         IOutput
@@ -51,7 +54,8 @@ func (f CallbackPair) String() string {
 	return fmt.Sprint(f.call)
 }
 
-type DefaultActions map[*M.ActionInfo][]CallbackPair
+// indexed by action id
+type DefaultActions map[ident.Id][]CallbackPair
 
 type Globals map[ident.Id]reflect.Value
 
@@ -76,13 +80,14 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 
 	game := &Game{
 		model,
+		memory.NewMemoryModel(model),
 		objects,
 		dispatchers,
 		cfg.Output,
 		EventQueue{E.NewQueue()},
 		frame,
 		make(DefaultActions),
-		NewSystemActions(),
+		make(SystemActions),
 		log,
 		PropertyWatchers{},
 		ParentLookupStack{},
@@ -97,7 +102,7 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 		} else {
 			cb := CallbackPair{src, cb}
 			act := handler.Action
-			arr := game.defaultActions[act]
+			arr := game.defaultActions[act.Id]
 			// FIX: for now treating target as bubble,
 			// really the compiler should hand off a sorted flat list based on three separate groups
 			// target growing in the same direction as after, but distinctly in the middle of things.
@@ -107,7 +112,7 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 				// prepend:
 				arr = append([]CallbackPair{cb}, arr...)
 			}
-			game.defaultActions[act] = arr
+			game.defaultActions[act.Id] = arr
 		}
 	}
 
@@ -218,13 +223,11 @@ func (g *Game) SendEvent(event string, nouns ...ident.Id,
 ) {
 	if action, e := g.Model.Events.FindEventByName(event); e != nil {
 		err = e
+	} else if act, e := g.newRuntimeAction(action, nouns...); e != nil {
+		err = e
 	} else {
-		if act, e := g.newRuntimeAction(action, nouns...); e != nil {
-			err = e
-		} else {
-			tgt := ObjectTarget{g, act.objs[0]}
-			g.queue.QueueEvent(tgt, action.EventName, act)
-		}
+		tgt := ObjectTarget{g, act.objs[0]}
+		g.queue.QueueEvent(tgt, action.EventName, act)
 	}
 	return err
 }
@@ -243,7 +246,6 @@ func (g *Game) newRuntimeAction(action *M.ActionInfo, nouns ...ident.Id,
 		err = fmt.Errorf("too many nouns specified for '%s', +%d", action, diff)
 	default:
 		objs := make([]*GameObject, len(types))
-
 		for i, class := range types {
 			noun := nouns[i]
 			if gobj, ok := g.Objects[noun]; !ok {
@@ -257,7 +259,7 @@ func (g *Game) newRuntimeAction(action *M.ActionInfo, nouns ...ident.Id,
 			}
 		}
 		if err == nil {
-			ret = &RuntimeAction{g, action, objs, nil}
+			ret = &RuntimeAction{g, action.Id, objs, nil}
 		}
 	}
 	return ret, err

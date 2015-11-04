@@ -9,6 +9,7 @@ import (
 	"github.com/ionous/sashimi/net/session"
 	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/standard"
+	"github.com/ionous/sashimi/util/ident"
 	"io"
 	"log"
 	"sync"
@@ -39,15 +40,20 @@ func NewCommandSession(id string, model *M.Model, calls R.Callbacks) (ret *Comma
 			err = e
 		} else {
 			// setup system event callbacks --
-			game.SystemActions.Capture("setting initial position", output.changedLocation)
-			// add watchers for property changes --
-			game.Properties.AddWatcher(output)
-			// now start the game, and start receiving changes --
-			immediate := false
-			if game, e := game.Start(immediate); e != nil {
-				err = e
+			if act, ok := model.Actions.FindActionByName("set initial position"); !ok {
+				err = fmt.Errorf("couldnt find initial position")
 			} else {
-				ret = &CommandSession{game, output, 1, &sync.RWMutex{}}
+				// STORE-FIX: can this be removed? why is it needed?
+				game.SystemActions.Capture(act.Id, output.changedLocation)
+				// add watchers for property changes --
+				game.Properties.AddWatcher(output)
+				// now start the game, and start receiving changes --
+				immediate := false
+				if game, e := game.Start(immediate); e != nil {
+					err = e
+				} else {
+					ret = &CommandSession{game, output, 1, &sync.RWMutex{}}
+				}
 			}
 		}
 	}
@@ -79,7 +85,7 @@ func (sess *CommandSession) Find(name string) (ret resource.IResource, okay bool
 		ret, okay = ClassResource(sess.game.Model.Classes), true
 		// a request for information about a parser input action:
 	case "action":
-		ret, okay = ParserResource(sess.game.Model), true
+		ret, okay = ParserResource(sess.game.ModelApi), true
 	}
 	return ret, okay
 }
@@ -126,11 +132,12 @@ func (sess *CommandSession) _handleInput(input CommandInput) (err error) {
 			sess.game.Input(input.Input)
 		} else {
 			// Run json'd clicky action:
-			if act, ok := sess.game.Model.Actions[M.MakeStringId(input.Action)]; !ok {
+			id := ident.MakeId(input.Action)
+			if act, ok := sess.game.ModelApi.GetAction(id); !ok {
 				err = fmt.Errorf("unknown action %s", input.Action)
 				//FIX? RunActions injects the player, that works out well, but is a little strange.
 			} else {
-				if om, e := sess.game.NewObjectMatcher(act); e != nil {
+				if om, e := sess.game.StandardParser.ObjectParser.GetObjectMatcher(act); e != nil {
 					err = e
 				} else {
 					for _, n := range input.Nouns() {

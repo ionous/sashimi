@@ -2,7 +2,6 @@ package app
 
 import (
 	C "github.com/ionous/sashimi/console"
-	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/net/resource"
 	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/util/ident"
@@ -119,7 +118,7 @@ func (out *CommandOutput) flushFrame(header, included resource.IBuildObjects) {
 	}
 }
 
-func (this *CommandOutput) changedLocation(action *M.ActionInfo, gobjs []*R.GameObject) {
+func (this *CommandOutput) changedLocation(gobjs []*R.GameObject) {
 	this.flushPending()
 	who, where := this.serial.NewObjectRef(gobjs[1]), this.serial.NewObjectRef(gobjs[2])
 	this.events.AddAction("set-initial-position", who, where)

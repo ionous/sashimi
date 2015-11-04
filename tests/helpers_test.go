@@ -1,15 +1,18 @@
 package tests
 
 import (
+	"fmt"
 	"github.com/ionous/sashimi/compiler/call"
 	C "github.com/ionous/sashimi/console"
-	P "github.com/ionous/sashimi/parser"
+	"github.com/ionous/sashimi/parser"
 	R "github.com/ionous/sashimi/runtime"
 	. "github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/standard" // :(
 	"strings"
 	"testing"
 )
+
+var _ = fmt.Print
 
 type LogOutput struct {
 	t *testing.T
@@ -59,7 +62,7 @@ func NewTestGame(t *testing.T, s *Script) (ret TestGame, err error) {
 		cfg := R.RuntimeConfig{Calls: model.Calls, Output: cons}
 		if game, e := cfg.NewGame(model.Model); e != nil {
 			err = e
-		} else if parser, e := standard.NewParser(game); e != nil {
+		} else if parser, e := standard.NewStandardParser(game); e != nil {
 			err = e
 		} else {
 			ret = TestGame{t, game, cons, parser, model.Calls}
@@ -71,10 +74,9 @@ func NewTestGame(t *testing.T, s *Script) (ret TestGame, err error) {
 type TestGame struct {
 	t *testing.T
 	*R.Game
-	out TestOutput
-	//*R.ObjectParser
-	*standard.Parser
-	call call.MemoryStorage
+	out            TestOutput
+	StandardParser *standard.StandardParser
+	call           call.MemoryStorage
 }
 
 //
@@ -83,10 +85,15 @@ type TestGame struct {
 func (test *TestGame) RunInput(s string) (err error) {
 	if e := test.ProcessEvents(); e != nil {
 		err = e
-	} else if m, e := test.ParseInput(P.NormalizeInput(s)); e != nil {
-		err = e
-	} else if e := m.OnMatch(); e != nil {
-		err = e
+	} else {
+		in := parser.NormalizeInput(s)
+		if m, e := test.StandardParser.ParseInput(in); e != nil {
+			test.out.Log(fmt.Sprintf("RunInput: failed parse: %v orig: '%s' in: '%s' e: '%s'", m, s, in, e))
+			err = e
+		} else if e := m.OnMatch(); e != nil {
+			test.out.Log(fmt.Sprint("RunInput: no match: ", s, e))
+			err = e
+		}
 	}
 	return err
 }

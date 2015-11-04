@@ -1,27 +1,22 @@
 package parser
 
-//
+import "github.com/ionous/sashimi/util/ident"
+
 // Comprehension contains a set of patterns against which user input gets matched.
 // Comprehensions are created via NewComprehension() and expanded via LearnPattern().
-//
 type Comprehension struct {
-	parser     *Parser
-	name       string
+	id         ident.Id
 	newMatcher NewMatcher
 	patterns   []Pattern
 }
 
-//
 // Name of this pattern set.
-//
-func (c *Comprehension) Name() string {
-	return c.name
+func (c *Comprehension) Id() ident.Id {
+	return c.id
 }
 
-//
 // LearnPattern adds a new pattern to this pattern set.
 // Patterns are tried successively to match a user's input.
-//
 func (c *Comprehension) LearnPattern(pattern string) (p Pattern, err error) {
 	// split the pattern into groups separated by tags
 	groups, tags := tokenize(pattern)
@@ -34,19 +29,15 @@ func (c *Comprehension) LearnPattern(pattern string) (p Pattern, err error) {
 	return p, err
 }
 
-//
 // Patterns used by this pattern set.
 // Note, it's not a copy because pattern objects are not modifiable by the caller.
-//
 func (c *Comprehension) Patterns() []Pattern {
 	return c.patterns
 }
 
-//
 // Parse the paseed input, trying each of the known patterns in turn.
 // If one of the patterns matched, found will contain that pattern --
 // even if the nouns from that pattern failed to match.
-//
 func (c *Comprehension) TryParse(input string) (found *Pattern, matched IMatch, err error) {
 	// for all patterns in those sets:
 	for _, p := range c.patterns {

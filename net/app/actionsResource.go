@@ -1,37 +1,16 @@
 package app
 
 import (
-	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/net/resource"
+	"github.com/ionous/sashimi/runtime/api"
 )
 
-// func ActionsResource(model *M.Model) resource.IResource {
-// 	return resource.Wrapper{
-// 		Finds: func(name string) (ret resource.IResource, okay bool) {
-// 			if act, e := model.Actions.FindActionByName(name); e == nil {
-// 				okay, ret = true, resource.Wrapper{
-// 					// action data:
-// 					Queries: func(doc resource.DocumentBuilder) {
-// 						actionResource(doc, act)
-// 					},
-// 				}
-// 			}
-// 			return ret, okay
-// 		}}
-// }
-
-func actionResource(out resource.IBuildObjects, act *M.ActionInfo) {
-	out.NewObject(jsonId(act.Id), "action").
-		SetAttr("act", act.ActionName).
-		SetAttr("evt", act.EventName).
-		SetAttr("src", classToId(act.Source())).
-		SetAttr("tgt", classToId(act.Target())).
-		SetAttr("ctx", classToId(act.Context()))
-}
-
-func classToId(cls *M.ClassInfo) (ret string) {
-	if cls != nil {
-		ret = jsonId(cls.Id)
-	}
-	return ret
+func actionResource(out resource.IBuildObjects, act api.Action) {
+	nouns := act.GetNouns()
+	out.NewObject(jsonId(act.GetId()), "action").
+		SetAttr("act", act.GetActionName()).
+		SetAttr("evt", act.GetEventName()).
+		SetAttr("src", jsonId(nouns.Get(api.SourceNoun))).
+		SetAttr("tgt", jsonId(nouns.Get(api.TargetNoun))).
+		SetAttr("ctx", jsonId(nouns.Get(api.ContextNoun)))
 }

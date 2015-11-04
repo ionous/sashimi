@@ -5,6 +5,7 @@ import (
 	"github.com/ionous/sashimi/console"
 	"github.com/ionous/sashimi/parser"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -54,7 +55,6 @@ func (m *TestMatcher) OnMatch() (err error) {
 
 //
 func TestConsoleParser(t *testing.T) {
-
 	Look := "look|l"
 	Examine := "examine|x|watch|describe|check {{something}}"
 	LookThing := `look|l {{something}}`
@@ -64,23 +64,27 @@ func TestConsoleParser(t *testing.T) {
 
 	// commands
 	p := parser.NewParser()
-	looking, _ := p.NewComprehension("looking", TestComprehension{t, "l", 0}.NewMatcher)
-	examining, _ := p.NewComprehension("examining it", TestComprehension{t, "x", 1}.NewMatcher)
-	showingItTo, _ := p.NewComprehension("showing to it", TestComprehension{t, "s", 2}.NewMatcher)
+	looking, e := p.NewComprehension("looking", TestComprehension{t, "l", 0}.NewMatcher)
+	require.NoError(t, e)
+	examining, e := p.NewComprehension("examining it", TestComprehension{t, "x", 1}.NewMatcher)
+	require.NoError(t, e)
+	showingItTo, e := p.NewComprehension("showing to it", TestComprehension{t, "s", 2}.NewMatcher)
+	require.NoError(t, e)
+	require.Len(t, p, 3)
 
 	// grammar
-	_, e := looking.LearnPattern(Look)
-	assert.NoError(t, e)
+	_, e = looking.LearnPattern(Look)
+	require.NoError(t, e)
 	_, e = examining.LearnPattern(Examine)
-	assert.NoError(t, e)
+	require.NoError(t, e)
 	_, e = examining.LearnPattern(LookThing)
-	assert.NoError(t, e)
+	require.NoError(t, e)
 	_, e = examining.LearnPattern(LookAt)
-	assert.NoError(t, e)
+	require.NoError(t, e)
 	_, e = showingItTo.LearnPattern(Show)
-	assert.NoError(t, e)
+	require.NoError(t, e)
 	_, e = showingItTo.LearnPattern(ShowTo)
-	assert.NoError(t, e)
+	require.NoError(t, e)
 
 	// globals
 	strs := []string{
@@ -97,7 +101,7 @@ func TestConsoleParser(t *testing.T) {
 	for {
 		if s, ok := c.Readln(); !ok {
 			break
-		} else if m, err := p.ParseInput(s); assert.NoError(t, err, s) {
+		} else if m, err := p.ParseInputString(s); assert.NoError(t, err, s) {
 			if err := m.OnMatch(); assert.NoError(t, err, s) {
 				continue
 			}

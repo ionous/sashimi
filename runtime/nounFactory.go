@@ -2,34 +2,35 @@ package runtime
 
 import (
 	"fmt"
-	M "github.com/ionous/sashimi/model"
-	P "github.com/ionous/sashimi/parser"
+	"github.com/ionous/sashimi/parser"
+	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/util/ident"
 )
 
-//
-// Return a noun which matches an instance's string id
-//
+// ObjectMatcher returns nouns which matches an instance's string id
 type ObjectMatcher struct {
 	game    *Game
-	act     *M.ActionInfo
+	act     api.Action
 	objects []*GameObject
 }
 
 // make sure the source class matches
-func NewObjectMatcher(game *Game, source *GameObject, act *M.ActionInfo,
+func NewObjectMatcher(game *Game, source *GameObject, act api.Action,
 ) (
 	ret *ObjectMatcher,
 	err error,
 ) {
 	if source == nil {
 		err = fmt.Errorf("couldnt find command source for %s", act)
-	} else if !source.Class().CompatibleWith(act.Source().Id) {
-		err = fmt.Errorf("source class for %s doesnt match", act)
 	} else {
-		om := &ObjectMatcher{game, act, nil}
-		om.addObject(source)
-		ret = om
+		nouns := act.GetNouns()
+		if !source.Class().CompatibleWith(nouns.Get(api.SourceNoun)) {
+			err = fmt.Errorf("source class for %s doesnt match", act)
+		} else {
+			om := &ObjectMatcher{game, act, nil}
+			om.addObject(source)
+			ret = om
+		}
 	}
 	return ret, err
 }
@@ -38,8 +39,8 @@ func NewObjectMatcher(game *Game, source *GameObject, act *M.ActionInfo,
 // MatchNOun to relate the passed name and article to internal objects.
 //
 func (om *ObjectMatcher) MatchNoun(name string, _ string) (err error) {
-	nouns := om.act.NounTypes
-	if cnt, max := len(om.objects), len(nouns); cnt >= max {
+	nouns := om.act.GetNouns()
+	if cnt, max := len(om.objects), nouns.GetNounCount(); cnt >= max {
 		err = fmt.Errorf("You've told me more than I've understood.")
 	} else {
 		tried, ok := om.game.Model.NounNames.Try(name, func(id ident.Id) (okay bool) {
@@ -60,13 +61,13 @@ func (om *ObjectMatcher) MatchNoun(name string, _ string) (err error) {
 // Matches gets called by the parser after succesfully found the command and nouns.
 //
 func (om *ObjectMatcher) OnMatch() (err error) {
-	nouns := om.act.NounTypes
-	if cnt, max := len(om.objects), len(nouns); cnt != max {
-		err = P.MismatchedNouns("I", max, cnt)
+	nouns := om.act.GetNouns()
+	if cnt, max := len(om.objects), nouns.GetNounCount(); cnt != max {
+		err = parser.MismatchedNouns("I", max, cnt)
 	} else {
 		tgt := ObjectTarget{om.game, om.objects[0]}
-		act := &RuntimeAction{om.game, om.act, om.objects, nil}
-		om.game.queue.QueueEvent(tgt, om.act.EventName, act)
+		act := &RuntimeAction{om.game, om.act.GetId(), om.objects, nil}
+		om.game.queue.QueueEvent(tgt, om.act.GetEventName(), act)
 	}
 	return err
 }
@@ -76,10 +77,9 @@ func (om *ObjectMatcher) OnMatch() (err error) {
 //
 func (om *ObjectMatcher) MatchId(id ident.Id) (okay bool) {
 	if gobj, ok := om.game.Objects[id]; ok {
-		nouns := om.act.NounTypes
-		if cnt, max := len(om.objects), len(nouns); cnt < max {
-			class := nouns[cnt]
-			if gobj.Class().CompatibleWith(class.Id) {
+		nouns := om.act.GetNouns()
+		if cnt, max := len(om.objects), nouns.GetNounCount(); cnt < max {
+			if gobj.Class().CompatibleWith(nouns[cnt]) {
 				om.addObject(gobj)
 				okay = true
 			}

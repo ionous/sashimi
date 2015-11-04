@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"fmt"
 	G "github.com/ionous/sashimi/game"
 	R "github.com/ionous/sashimi/runtime"
 	. "github.com/ionous/sashimi/script"
@@ -67,7 +68,7 @@ func TestMoveGoing(t *testing.T) {
 	s.The("player", Exists(), In("the foyer"))
 	if g, err := NewTestGame(t, s); assert.NoError(t, err) {
 		// FIX: move parser source and parent lookup elsewhere
-		g.PushParserSource(func(g G.Play) (ret G.IObject) {
+		g.StandardParser.ObjectParser.PushParserSource(func(g G.Play) (ret G.IObject) {
 			return g.The("player")
 		})
 		g.PushParentLookup(func(g G.Play, o G.IObject) (ret G.IObject) {
@@ -76,7 +77,7 @@ func TestMoveGoing(t *testing.T) {
 			}
 			return ret
 		})
-		testMoves(t, g,
+		if e := testMoves(t, g,
 			xMove{"go west", "Lobby"},
 			xMove{"go east", "Lobby"},
 			xMove{"go up", "Parapet"},
@@ -86,7 +87,13 @@ func TestMoveGoing(t *testing.T) {
 			xMove{"go south", "Outside"},
 			xMove{"go south", "Foyer"},
 			xMove{"enter curtain", "Cloakroom"},
-		)
+		); !assert.NoError(t, e, "failed move") {
+			p := g.StandardParser.ObjectParser.Parser
+			t.Logf("parser has %d comprehension", len(p))
+			for k, v := range p {
+				t.Logf("%v:%v", k, v)
+			}
+		}
 	}
 }
 
@@ -95,20 +102,26 @@ type xMove struct {
 	res ident.Id
 }
 
-func testMoves(t *testing.T, g TestGame, moves ...xMove) {
+func testMoves(t *testing.T, g TestGame, moves ...xMove) (err error) {
 	// FIX: relations are stored in the model
-	if p, ok := g.FindObject("player"); assert.True(t, ok) {
+	if p, ok := g.FindObject("player"); !ok {
+		err = fmt.Errorf("couldnt find player")
+	} else {
 		for _, move := range moves {
 			t.Logf("%s => %s", move.cmd, move.res)
-			if err := g.RunInput(move.cmd); assert.NoError(t, err, move.cmd) {
+			if e := g.RunInput(move.cmd); e != nil {
+				err = e
+				break
+			} else {
 				out := g.FlushOutput()
-				if !assert.Equal(t, move.res, where(p)) {
-					t.Log(out)
+				if res := where(p); move.res != res {
+					err = fmt.Errorf("unexpected move result: %v %v", res, out)
 					break
 				}
 			}
 		}
 	}
+	return err
 }
 
 func where(gobj *R.GameObject) (ret ident.Id) {

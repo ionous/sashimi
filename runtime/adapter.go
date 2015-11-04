@@ -13,7 +13,7 @@ type GameEventAdapter struct {
 	*Game
 	data      *RuntimeAction
 	cancelled bool
-	hint      *M.ClassInfo
+	hint      ident.Id
 }
 
 //
@@ -158,14 +158,15 @@ func (ga *GameEventAdapter) getObject(name string) (ret G.IObject, okay bool) {
 		} else if cls, ok := ga.Model.Classes.FindClassBySingular(name); ok {
 			// FIX?hint tries to find targeted classln, not sure if its working
 			if DebugGet {
-				ga.Log("DebugGet ", cls, ga.hint)
+				ga.Log("DebugGet: cls:", cls, "hint:", ga.hint)
 			}
-			if cls == ga.hint {
+			if cls.Id == ga.hint {
 				ret, okay = ga.data.getObject(0)
 			} else {
 				ret, okay = ga.data.findByClass(cls)
 			}
 		}
 	}
+
 	return ret, okay
 }

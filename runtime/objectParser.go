@@ -2,18 +2,16 @@ package runtime
 
 import (
 	G "github.com/ionous/sashimi/game"
-	M "github.com/ionous/sashimi/model"
-	P "github.com/ionous/sashimi/parser"
+	"github.com/ionous/sashimi/parser"
+	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/util/errutil"
 )
 
-//
 // ObjectParser adapts the parser to the runtime,
 // queuing actions for game objects based upon user input.
-//
 type ObjectParser struct {
-	game *Game // for access to all available objects
-	*P.Parser
+	game   *Game // for generating object adapters after a noun is matfched
+	Parser parser.Parser
 	source *ParserSourceStack
 }
 
@@ -21,42 +19,47 @@ type ObjectParser struct {
 // NormalizeInput wraps parser.NormalizeInput for convenience's sake.
 //
 func (op *ObjectParser) NormalizeInput(s string) string {
-	return P.NormalizeInput(s)
+	return parser.NormalizeInput(s)
 }
 
 //
-// NewParser and add all commands and patterns.
+// NewObjectParser and add all commands and patterns.
 //
-func NewParser(game *Game,
+func NewObjectParser(game *Game,
 ) (ret *ObjectParser, err error,
 ) {
-	model := game.Model
-	parser := P.NewParser()
-	op := &ObjectParser{game, parser, &ParserSourceStack{}}
+	model := game.ModelApi
+	p := parser.NewParser()
+	op := &ObjectParser{game, p, &ParserSourceStack{}}
+
+	// STORE: can this code generated, lifted into some higher level api, or expanded on use?????
+	// OTHERWISE, we are going to be generating this each and everytime we process code
+
 	// pre-compile the parser statements ( ex. to catch errors. )
-	for _, p := range model.ParserActions {
-		act := p.Action
-		name := act.ActionName
-		if comp, e := parser.NewComprehension(name,
-			func() (P.IMatch, error) {
-				return op.NewObjectMatcher(act)
+	model.GetParserActions(func(act api.Action, commands []string) (finished bool) {
+		game.log.Println("adding comprehension", act.GetId(), commands)
+		if comp, e := p.NewComprehension(act.GetId(),
+			func() (parser.IMatch, error) {
+				return op.GetObjectMatcher(act)
 			}); e != nil {
 			err = errutil.Append(err, e)
 		} else {
-			for _, learn := range p.Commands {
+			for _, learn := range commands {
 				if _, e := comp.LearnPattern(learn); e != nil {
 					err = errutil.Append(err, e)
 				}
 			}
 		}
-	}
+		return
+	})
+
 	if err == nil {
 		ret = op
 	}
 	return ret, err
 }
 
-func (op *ObjectParser) NewObjectMatcher(act *M.ActionInfo) (*ObjectMatcher, error) {
+func (op *ObjectParser) GetObjectMatcher(act api.Action) (*ObjectMatcher, error) {
 	return NewObjectMatcher(op.game, op.source.FindSource(), act)
 }
 

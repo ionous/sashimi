@@ -15,51 +15,51 @@ var Debugging bool
 // StardardStart assists the creation of a standard game.
 // see: NewStandardGame()
 type StandardStart struct {
-	_StandardCore
+	StandardCore
 }
 
 // StandardGame wraps the runtime.Game with the standard rules.
 type StandardGame struct {
-	_StandardCore
+	StandardCore
 	started, quit, completed bool
 	lastInput                string
 }
 
-// _StandardCore assists the transformation of a StandardStart into a StandardGame.
-type _StandardCore struct {
+// StandardCore assists the transformation of a StandardStart into a StandardGame.
+type StandardCore struct {
 	*R.Game
-	*Parser
-	story, status G.IObject
+	StandardParser *StandardParser
+	story, status  G.IObject
 }
 
 // Left status bar text.
-func (sc *_StandardCore) Left() string {
+func (sc *StandardCore) Left() string {
 	return sc.status.Text("left")
 }
 
 // Right status bar text.
-func (sc *_StandardCore) Right() string {
+func (sc *StandardCore) Right() string {
 	return sc.status.Text("right")
 }
 
 // SetLeft status bar text.
-func (sc *_StandardCore) SetLeft(status string) {
+func (sc *StandardCore) SetLeft(status string) {
 	sc.status.SetText("left", status)
 }
 
 // SetRight status bar text.
-func (sc *_StandardCore) SetRight(status string) {
+func (sc *StandardCore) SetRight(status string) {
 	sc.status.SetText("right", status)
 }
 
 // NewStandardGame creates a game which is based on the standard rules.
 func NewStandardGame(game *R.Game) (ret StandardStart, err error) {
-	if parser, e := NewParser(game); e != nil {
+	if parser, e := NewStandardParser(game); e != nil {
 		err = e
 	} else {
 		g := R.NewGameAdapter(game)
 		//
-		parser.PushParserSource(func(g G.Play) G.IObject {
+		parser.ObjectParser.PushParserSource(func(g G.Play) G.IObject {
 			return g.The("player")
 		})
 		//
@@ -76,7 +76,7 @@ func NewStandardGame(game *R.Game) (ret StandardStart, err error) {
 			if status, found := G.Any(g, "status bar instances"); !found {
 				err = fmt.Errorf("couldn't find status bar")
 			} else {
-				core := _StandardCore{game, parser, story, status}
+				core := StandardCore{game, parser, story, status}
 				core.SetLeft(story.Text("name"))
 				core.SetRight(fmt.Sprintf(`"%s" by %s.`, story.Text("name"), story.Text("author")))
 				ret = StandardStart{core}
@@ -89,7 +89,7 @@ func NewStandardGame(game *R.Game) (ret StandardStart, err error) {
 // Start sends commencing, and returns a new StandardGame.
 // FIX: no longer sends commencing, that's done by input "start"
 func (sg *StandardStart) Start(immediate bool) (ret *StandardGame, err error) {
-	ret = &StandardGame{_StandardCore: sg._StandardCore}
+	ret = &StandardGame{StandardCore: sg.StandardCore}
 	if immediate {
 		ret.endTurn("commencing")
 	}
@@ -110,7 +110,7 @@ func (sg *StandardGame) IsFinished() bool {
 // (automatically ends the turn )
 func (sg *StandardGame) Input(s string) (err error) {
 	if !sg.IsFinished() {
-		in := sg.NormalizeInput(s)
+		in := sg.StandardParser.ObjectParser.NormalizeInput(s)
 		if in == "q" || in == "quit" {
 			sg.quit = true
 		} else {
@@ -123,7 +123,7 @@ func (sg *StandardGame) Input(s string) (err error) {
 				} else {
 					sg.lastInput = in
 				}
-				if matcher, e := sg.ParseInput(in); e != nil {
+				if matcher, e := sg.StandardParser.ParseInput(in); e != nil {
 					err = e
 
 				} else if e := matcher.OnMatch(); e != nil {

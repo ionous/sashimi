@@ -6,6 +6,7 @@ import (
 	. "github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/standard"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -50,6 +51,7 @@ func TestObjectSet(t *testing.T) {
 //
 func TestStartupText(t *testing.T) {
 	s := InitScripts()
+	R.DebugGet = true
 
 	s.The("story",
 		Called("testing"),
@@ -66,13 +68,13 @@ func TestStartupText(t *testing.T) {
 
 	if game, err := NewTestGame(t, s); assert.NoError(t, err, "compile should work") {
 		story := game.FindFirstOf(game.Model.Classes.FindClass("stories"))
-		assert.NotNil(t, story, "should have game")
+		require.NotNil(t, story, "should have game")
 
 		room := game.FindFirstOf(game.Model.Classes.FindClass("rooms"))
-		assert.NotNil(t, room, "should have room")
+		require.NotNil(t, room, "should have room")
 
 		err = game.SendEvent("commencing", story.Id())
-		assert.NoError(t, err, "commencing")
+		require.NoError(t, err, "commencing")
 
 		expected := []string{
 			"testing",
@@ -83,6 +85,6 @@ func TestStartupText(t *testing.T) {
 			"an empty room",
 			"",
 		}
-		assert.Exactly(t, expected, game.FlushOutput())
+		require.Exactly(t, expected, game.FlushOutput())
 	}
 }

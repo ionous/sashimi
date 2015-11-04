@@ -1,30 +1,24 @@
 package runtime
 
 import (
-	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/util/ident"
 )
 
-func NewSystemActions() SystemActions {
-	return SystemActions{make(map[string][]SystemCallback)}
-}
+// SystemActions are run after all other actions have taken place
+type SystemActions map[ident.Id][]SystemCallback
 
-type SystemActions struct {
-	actions map[string][]SystemCallback
-}
+type SystemCallback func(obj []*GameObject)
 
-type SystemCallback func(action *M.ActionInfo, obj []*GameObject)
-
-func (this *SystemActions) Capture(event string, cb SystemCallback) *SystemActions {
-	arr := this.actions[event]
+func (a SystemActions) Capture(act ident.Id, cb SystemCallback) {
+	arr := a[act]
 	arr = append(arr, cb)
-	this.actions[event] = arr
-	return this
+	a[act] = arr
 }
 
-func (this *SystemActions) Run(action *M.ActionInfo, obj []*GameObject) {
-	if arr, ok := this.actions[action.EventName]; ok {
+func (a SystemActions) Run(act ident.Id, objects []*GameObject) {
+	if arr, ok := a[act]; ok {
 		for _, cb := range arr {
-			cb(action, obj)
+			cb(objects)
 		}
 	}
 }

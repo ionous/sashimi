@@ -3,6 +3,7 @@ package parser
 import (
 	"fmt"
 	"github.com/ionous/sashimi/util/errutil"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 func UnknownInput(input string) error {
@@ -11,20 +12,20 @@ func UnknownInput(input string) error {
 	})
 }
 
-func DuplicateComprehension(name string) error {
+func DuplicateComprehension(id ident.Id) error {
 	return errutil.Func(func() string {
-		return fmt.Sprintf("The comprehension '%s' already exists.", name)
+		return fmt.Sprintf("The comprehension '%s' already exists.", id)
 	})
 }
 
-func InvalidComprehension(name string) error {
+func InvalidComprehension(id ident.Id) error {
 	return errutil.Func(func() string {
-		return fmt.Sprintf("The comprehension name '%s' isn't a valid.", name)
+		return fmt.Sprintf("The comprehension '%s' isn't valid.", id)
 	})
 }
 
-func MismatchedNouns(name string, expected, received int) error {
+func MismatchedNouns(id ident.Id, expected, received int) error {
 	return errutil.Func(func() string {
-		return fmt.Sprintf("%s expected %d nouns, but matched %d nouns.", name, expected, received)
+		return fmt.Sprintf("%s expected %d nouns, but matched %d nouns.", id, expected, received)
 	})
 }

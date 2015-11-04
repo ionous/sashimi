@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"github.com/ionous/sashimi/util/ident"
 	"github.com/stretchr/testify/assert"
 	"regexp"
 	"testing"
@@ -130,7 +131,7 @@ func TestUnderstandings(t *testing.T) {
 	for _, cmd := range testCmds {
 		cmd.T = t
 		cmd.pool = pool
-		comp, err := p.NewComprehension(cmd.name, cmd.NewMatcher)
+		comp, err := p.NewComprehension(ident.MakeId(cmd.name), cmd.NewMatcher)
 		if err != nil {
 			t.Fatal(err, cmd)
 		}
@@ -139,7 +140,7 @@ func TestUnderstandings(t *testing.T) {
 
 	// err: change function
 	repeat := testCmds[0]
-	_, fail := p.NewComprehension(repeat.name, repeat.NewMatcher)
+	_, fail := p.NewComprehension(ident.MakeId(repeat.name), repeat.NewMatcher)
 	if fail == nil {
 		t.Fatalf("expected changed function to fail")
 	}
@@ -175,10 +176,10 @@ func TestUnderstandings(t *testing.T) {
 	// ok: parse some commands
 	testParser := func(cmd string, expect string) (err error) {
 		normalizedInput := NormalizeInput(cmd)
-		match, e := p.ParseInput(normalizedInput)
+		match, e := p.ParseInputString(normalizedInput)
 		if e != nil {
 			err = e
-		} else if match.Pattern != nil && match.Pattern.Comprehension().Name() != expect {
+		} else if match.Pattern != nil && match.Pattern.Comprehension().Id() != ident.MakeId(expect) {
 			err = fmt.Errorf("Mismatched pattern: %s got %s", expect, match.Pattern)
 		} else {
 			err = match.OnMatch()
@@ -188,24 +189,24 @@ func TestUnderstandings(t *testing.T) {
 
 	nf := pool
 
-	// assert.Error(t, testParser("ignore", ""), "doesnt exist")
-	// assert.NoError(t, testParser("look", "looking"), "")
-	// assert.NoError(t, testParser("smell", "smelling"), "")
-	// assert.Error(t, testParser("x n1", "examining"), "we dont know n1 yet.")
+	assert.Error(t, testParser("ignore", ""), "doesnt exist")
+	assert.NoError(t, testParser("look", "looking"), "")
+	assert.NoError(t, testParser("smell", "smelling"), "")
+	assert.Error(t, testParser("x n1", "examining"), "we dont know n1 yet.")
 	nf.AddNouns("n1")
-	// assert.NoError(t, testParser("x n1", "examining"), "We should know n1.")
-	// assert.NoError(t, testParser("x the n1", "examining"), "now we know n1 with an article")
-	// assert.NoError(t, testParser("  x  n1    ", "examining"), "spaces shouldnt matter")
-	// assert.Error(t, testParser("x n2", "examining"), "fail on another unknown noun")
-	// assert.NoError(t, testParser("look n1", "examining"), "looking is examining")
-	// assert.NoError(t, testParser("look at n1", "examining"), "look at is examining")
-	// assert.NoError(t, testParser("look	at	n1", "examining"), "ignore spaces")
+	assert.NoError(t, testParser("x n1", "examining"), "We should know n1.")
+	assert.NoError(t, testParser("x the n1", "examining"), "now we know n1 with an article")
+	assert.NoError(t, testParser("  x  n1    ", "examining"), "spaces shouldnt matter")
+	assert.Error(t, testParser("x n2", "examining"), "fail on another unknown noun")
+	assert.NoError(t, testParser("look n1", "examining"), "looking is examining")
+	assert.NoError(t, testParser("look at n1", "examining"), "look at is examining")
+	assert.NoError(t, testParser("look	at	n1", "examining"), "ignore spaces")
 	nf.AddNouns("actor", "prize")
-	// assert.NoError(t, testParser("show actor prize", "reporting shown"), "test showing")
-	// assert.NoError(t, testParser("present prize to actor", "reporting shown"), "reverse showing")
+	assert.NoError(t, testParser("show actor prize", "reporting shown"), "test showing")
+	assert.NoError(t, testParser("present prize to actor", "reporting shown"), "reverse showing")
 	assert.Error(t, testParser("show prize actor", "reporting shown"), "because the test string expects actor first.")
 	nf.AddNouns("evil fish")
-	// assert.NoError(t, testParser("space test evil fish", "spacing"), "spacing in nouns")
-	// assert.NoError(t, testParser("space   test   an    evil   fish  ", "spacing"), "fishy spacing")
-	// assert.NoError(t, testParser("show the actor some prize", "reporting shown"), "give us some nouns")
+	assert.NoError(t, testParser("space test evil fish", "spacing"), "spacing in nouns")
+	assert.NoError(t, testParser("space   test   an    evil   fish  ", "spacing"), "fishy spacing")
+	assert.NoError(t, testParser("show the actor some prize", "reporting shown"), "give us some nouns")
 }

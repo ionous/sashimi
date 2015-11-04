@@ -58,7 +58,7 @@ func TestActionClassCallback(t *testing.T) {
 		Has("description", "it's an error!"),
 	)
 	if g, err := NewTestGame(t, s); assert.NoError(t, err) {
-		g.PushParserSource(func(g G.Play) G.IObject {
+		g.StandardParser.ObjectParser.PushParserSource(func(g G.Play) G.IObject {
 			return g.The("obj")
 		})
 		if err := g.SendEvent("testing", "Obj"); assert.NoError(t, err) {
@@ -84,7 +84,7 @@ func TestActionCallbackBeforeAfter(t *testing.T) {
 	)
 	s.The("kind", Called("obj"), Exists())
 	if g, err := NewTestGame(t, s); assert.NoError(t, err) {
-		g.PushParserSource(func(g G.Play) G.IObject {
+		g.StandardParser.ObjectParser.PushParserSource(func(g G.Play) G.IObject {
 			return g.The("obj")
 		})
 		if err := g.SendEvent("testing", "Obj"); assert.NoError(t, err) {
@@ -124,7 +124,7 @@ func TestActionCallbackParsing(t *testing.T) {
 	// should trigger "test", which should print the description
 	if g, err := NewTestGame(t, s); assert.NoError(t, err) {
 		if assert.Len(t, g.Model.NounNames, 2) {
-			g.PushParserSource(func(g G.Play) G.IObject {
+			g.StandardParser.ObjectParser.PushParserSource(func(g G.Play) G.IObject {
 				return g.The("looker")
 			})
 			str := "look at lookee"
