@@ -31,37 +31,37 @@ func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 	if x, e := ctx.Compile(); e != nil {
 		err = e
 	} else {
-		m := &M.Model{}
-		for k, v := range x.Classes {
-			_, _ = k, v
-		}
-		for k, v := range x.Relations {
-			_, _ = k, v
-		}
-		for k, v := range x.Actions {
-			_, _ = k, v
-		}
-		for k, v := range x.Events {
-			_, _ = k, v
-		}
-		for i, v := range x.ParserActions {
-			_, _ = i, v
-		}
-		for k, v := range x.Instances {
-			_, _ = k, v
-		}
-		for i, v := range x.ActionHandlers {
-			_, _ = i, v
-		}
-		for i, v := range x.EventListeners {
-			_, _ = i, v
-		}
-		for k, v := range x.Tables.Tables {
-			_, _ = k, v
-		}
+		// m := &M.Model{}
+		// for k, v := range x.Classes {
+		// 	_, _ = k, v
+		// }
+		// for k, v := range x.Relations {
+		// 	_, _ = k, v
+		// }
+		// for k, v := range x.Actions {
+		// 	_, _ = k, v
+		// }
+		// for k, v := range x.Events {
+		// 	_, _ = k, v
+		// }
+		// for i, v := range x.ParserActions {
+		// 	_, _ = i, v
+		// }
+		// for k, v := range x.Instances {
+		// 	_, _ = k, v
+		// }
+		// for i, v := range x.ActionHandlers {
+		// 	_, _ = i, v
+		// }
+		// for i, v := range x.EventListeners {
+		// 	_, _ = i, v
+		// }
+		// for k, v := range x.Tables.Tables {
+		// 	_, _ = k, v
+		// }
 		// for _, v := range x.Generators {
 		// }
-		ret = m
+		ret = x
 	}
 	return
 }

@@ -5,6 +5,7 @@ import (
 	E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game"
 	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/model/table"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 	"log"
@@ -27,6 +28,7 @@ type Game struct {
 	parentLookup   ParentLookupStack
 	Globals        Globals
 	rand           *rand.Rand
+	Tables         table.Tables
 }
 
 type logAdapter struct {
@@ -44,6 +46,11 @@ type CallbackPair struct {
 	call G.Callback
 }
 
+// FIX: change callback structure to contain info on location
+func (f CallbackPair) String() string {
+	return fmt.Sprint(f.call)
+}
+
 type DefaultActions map[*M.ActionInfo][]CallbackPair
 
 type Globals map[ident.Id]reflect.Value
@@ -51,15 +58,17 @@ type Globals map[ident.Id]reflect.Value
 func (cfg Config) NewGame(model *M.Model) (_ *Game, err error) {
 	log := log.New(logAdapter{cfg.Output}, "game: ", log.Lshortfile)
 	dispatchers := NewDispatchers(log)
-	objects, e := CreateGameObjects(model.Instances, model.Tables)
+	tables := model.Tables.Clone()
+	objects, e := CreateGameObjects(model.Instances, tables)
 	if e != nil {
 		return nil, e
 	}
 
 	globals := make(Globals)
-	for k, gen := range model.Generators {
-		globals[k] = reflect.New(gen)
-	}
+	// DISABLED:
+	// for k, gen := range model.Generators {
+	// 	globals[k] = reflect.New(gen)
+	// }
 	frame := cfg.Frame
 	if frame == nil {
 		frame = DefaultEventFrame
@@ -79,6 +88,7 @@ func (cfg Config) NewGame(model *M.Model) (_ *Game, err error) {
 		ParentLookupStack{},
 		globals,
 		rand.New(rand.NewSource(1)),
+		tables,
 	}
 	for _, handler := range model.ActionHandlers {
 		src := handler.Callback

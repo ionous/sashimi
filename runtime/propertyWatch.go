@@ -4,47 +4,34 @@ import (
 	"github.com/ionous/sashimi/util/ident"
 )
 
-//
-// Callback interface for hearing when an object's property has changed.
-// FIX? I think better would be a property proivder interface
-// and then the user/implementer code could implement the watch inside its own set.
-//
-type IPropertyChanged interface {
-	PropertyChanged(object, property ident.Id, prev, value interface{})
+// PropertyChange for hearing when an object's data has changed.
+type PropertyChange interface {
+	NumChange(obj *GameObject, prop ident.Id, prev, next float32)
+	TextChange(obj *GameObject, prop ident.Id, prev, next string)
+	StateChange(obj *GameObject, prop ident.Id, prev, next ident.Id)
+	ReferenceChange(obj *GameObject, prop, other ident.Id, prev, next *GameObject)
 }
 
-//
-// Set of property changed callbacks.
-//
+// PropertyWatchers provides a collection of PropertyChange interfaces
 type PropertyWatchers struct {
-	arr []IPropertyChanged
+	arr []PropertyChange
 }
 
-//
-// Sends a notification that an object property has changed.
-//
-func (this *PropertyWatchers) Notify(
-	object ident.Id,
-	property ident.Id,
-	prev interface{},
-	value interface{}) {
-	for _, el := range this.arr {
-		el.PropertyChanged(object, property, prev, value)
+// VisitWatchers
+func (w PropertyWatchers) VisitWatchers(cb func(PropertyChange)) {
+	for _, el := range w.arr {
+		cb(el)
 	}
 }
 
-//
-// Start listening for property changes.
-//
-func (this *PropertyWatchers) AddWatcher(p IPropertyChanged) {
-	this.arr = append(this.arr, p)
+// AddWatcher starts listening for property changes.
+func (w *PropertyWatchers) AddWatcher(p PropertyChange) {
+	w.arr = append(w.arr, p)
 }
 
-//
-// Stop listening for property changes.
-//
-func (this *PropertyWatchers) RemoveWatcher(p IPropertyChanged) (found bool) {
-	a := this.arr
+// RemoveWatcher stops listening for property changes.
+func (w *PropertyWatchers) RemoveWatcher(p PropertyChange) (found bool) {
+	a := w.arr
 	if l := len(a); l > 0 {
 		for i, el := range a {
 			if el == p {
@@ -54,7 +41,7 @@ func (this *PropertyWatchers) RemoveWatcher(p IPropertyChanged) (found bool) {
 				break
 			}
 		}
-		this.arr = a
+		w.arr = a
 	}
 	return found
 }

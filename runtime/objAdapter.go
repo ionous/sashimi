@@ -19,6 +19,10 @@ type ObjectAdapter struct {
 	gobj *GameObject
 }
 
+func (oa ObjectAdapter) GetGameObject() *GameObject {
+	return oa.gobj
+}
+
 //
 // String helps debugging.
 //
@@ -57,7 +61,7 @@ func (oa ObjectAdapter) Exists() bool {
 //
 func (oa ObjectAdapter) Class(class string) (okay bool) {
 	if cls, ok := oa.game.Model.Classes.FindClassBySingular(class); ok {
-		okay = oa.gobj.Class().CompatibleWith(cls.Id)
+		okay = oa.gobj.cls.CompatibleWith(cls.Id)
 	}
 	return okay
 }
@@ -66,7 +70,7 @@ func (oa ObjectAdapter) Class(class string) (okay bool) {
 // Is this object in the passed state?
 //
 func (oa ObjectAdapter) Is(state string) (ret bool) {
-	if prop, index, ok := oa.gobj.Class().PropertyByChoice(state); !ok {
+	if prop, index, ok := oa.gobj.cls.PropertyByChoice(state); !ok {
 		oa.logError(fmt.Errorf("is: no such choice '%s'.'%s'", oa, state))
 	} else {
 		testChoice, _ := prop.IndexToChoice(index)
@@ -80,7 +84,7 @@ func (oa ObjectAdapter) Is(state string) (ret bool) {
 // IsNow changes the state of an object.
 //
 func (oa ObjectAdapter) IsNow(state string) {
-	if prop, index, ok := oa.gobj.Class().PropertyByChoice(state); !ok {
+	if prop, index, ok := oa.gobj.cls.PropertyByChoice(state); !ok {
 		oa.logError(fmt.Errorf("IsNow: no such choice '%s'.'%s'", oa, state))
 	} else {
 		// get the current choice from the implied property slot
@@ -93,7 +97,9 @@ func (oa ObjectAdapter) IsNow(state string) {
 				oa.gobj.removeDirect(currChoice)           // delete the old choice's boolean,
 				oa.gobj.setDirect(newChoice, true)         // and set the new
 				oa.gobj.setDirect(prop.GetId(), newChoice) // // set the property slot to the new choice
-				oa.game.Properties.Notify(oa.gobj.Id(), prop.GetId(), currChoice, newChoice)
+				oa.game.Properties.VisitWatchers(func(ch PropertyChange) {
+					ch.StateChange(oa.gobj, prop.GetId(), currChoice, newChoice)
+				})
 			}
 		}
 	}
@@ -120,7 +126,10 @@ func (oa ObjectAdapter) SetNum(prop string, value float32) {
 	if old, ok := oa.gobj.SetValue(id, value); !ok {
 		oa.logError(TypeMismatch(prop, "set num"))
 	} else {
-		oa.game.Properties.Notify(oa.gobj.Id(), id, old, value)
+		old := old.(float32)
+		oa.game.Properties.VisitWatchers(func(ch PropertyChange) {
+			ch.NumChange(oa.gobj, id, old, value)
+		})
 	}
 }
 
@@ -155,7 +164,10 @@ func (oa ObjectAdapter) SetText(prop string, text string) {
 	} else if old, ok := oa.gobj.SetValue(id, text); !ok {
 		oa.logError(TypeMismatch(prop, "set text"))
 	} else {
-		oa.game.Properties.Notify(oa.gobj.Id(), id, old, text)
+		old := old.(string)
+		oa.game.Properties.VisitWatchers(func(ch PropertyChange) {
+			ch.TextChange(oa.gobj, id, old, text)
+		})
 	}
 }
 
@@ -165,7 +177,7 @@ func (oa ObjectAdapter) SetText(prop string, text string) {
 func (oa ObjectAdapter) Object(prop string) (ret G.IObject) {
 	// TBD: should these be logged? its sure nice to have be able to test objects generically for properties
 	var res ident.Id
-	if p, ok := oa.gobj.Class().FindProperty(prop); ok {
+	if p, ok := oa.gobj.cls.FindProperty(prop); ok {
 		switch p := p.(type) {
 		case M.PointerProperty:
 			if val, ok := oa.gobj.Value(p.GetId()).(ident.Id); ok {
@@ -193,7 +205,7 @@ func (oa ObjectAdapter) Object(prop string) (ret G.IObject) {
 // Set changes an object relationship.
 //
 func (oa ObjectAdapter) Set(prop string, object G.IObject) {
-	if p, ok := oa.gobj.Class().FindProperty(prop); ok {
+	if p, ok := oa.gobj.cls.FindProperty(prop); ok {
 		switch p := p.(type) {
 		default:
 			oa.logError(TypeMismatch(oa.String(), prop))
@@ -237,7 +249,18 @@ func (oa ObjectAdapter) Set(prop string, object G.IObject) {
 				if err != nil {
 					oa.logError(err)
 				} else {
-					oa.game.Properties.Notify(oa.gobj.Id(), p.GetId(), prev, next)
+					// get the relation
+					relation := oa.game.Model.Relations[p.Relation]
+
+					// get the reverse property
+					other := relation.GetOther(p.IsRev)
+
+					prev, next := oa.game.Objects[prev], oa.game.Objects[next]
+
+					//oa.game.Properties.Notify(oa.gobj.Id(), p.GetId(), prev, next)
+					oa.game.Properties.VisitWatchers(func(ch PropertyChange) {
+						ch.ReferenceChange(oa.gobj, p.GetId(), other.Property, prev, next)
+					})
 				}
 			}
 		}
@@ -248,7 +271,7 @@ func (oa ObjectAdapter) Set(prop string, object G.IObject) {
 // ObjectList returns a list of related objects.
 //
 func (oa ObjectAdapter) ObjectList(prop string) (ret []G.IObject) {
-	if p, ok := oa.gobj.Class().FindProperty(prop); ok {
+	if p, ok := oa.gobj.cls.FindProperty(prop); ok {
 		switch p := p.(type) {
 		default:
 			oa.logError(TypeMismatch(oa.String(), prop))

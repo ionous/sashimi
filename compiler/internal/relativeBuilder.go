@@ -1,8 +1,9 @@
-package compiler
+package internal
 
 import (
 	"fmt"
-	M "github.com/ionous/sashimi/compiler/model"
+	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/model/table"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/ident"
 )
@@ -67,7 +68,7 @@ func (rel RelativeBuilder) SetProperty(ctx PropertyContext) (err error) {
 // FIX: where and how to validate table.style:
 // maybe in the table iteself since its already searching for duplicate pairs...
 func (rel RelativeBuilder) _refSet(
-	table *M.TableRelation,
+	table *table.Table,
 	cls *M.ClassInfo,
 	inst ident.Id,
 	other *PartialInstance,

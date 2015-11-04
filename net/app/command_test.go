@@ -10,6 +10,7 @@ import (
 	"github.com/ionous/sashimi/net/session"
 	"github.com/ionous/sashimi/script"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -58,12 +59,12 @@ func TestNetApp(t *testing.T) {
 					assert.NoError(t, checkTable(g, 1))
 
 					if _, err := g.post("open the glass jar"); assert.NoError(t, err) {
-						assert.NoError(t, checkTable(g, 1))
+						require.NoError(t, checkTable(g, 1))
 					}
 
 					// take the beaker
 					if _, err := g.post("take the glass jar"); assert.NoError(t, err) {
-						assert.NoError(t, checkTable(g, 0))
+						require.NoError(t, checkTable(g, 0))
 					}
 					cmd := CommandInput{
 						Action:  "show-it-to",

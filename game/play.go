@@ -39,7 +39,7 @@ type Play interface {
 	// FIX: a hack, mainly for conversations
 	// a system of varient -- and possibly user type -- globals is needed
 	// but many of these could go away if there was a real table implementatioin
-	Global(name string) interface{}
+	Global(name string) (interface{}, bool)
 	Go(RuntimePhrase)
 	// return a random number ranging from 0 to n, not including n
 	Random(n int) int

@@ -1,6 +1,7 @@
 package app
 
 import (
+	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/util/ident"
 )
 
@@ -12,10 +13,12 @@ type KnownObjects map[ident.Id]bool
 //
 // Mark the id'd object as known; return true if newly known.
 //
-func (this KnownObjects) SetKnown(id ident.Id) (okay bool) {
-	if !this[id] {
-		this[id] = true
-		okay = true
+func (known KnownObjects) SetKnown(gobj *R.GameObject) (okay bool) {
+	if gobj != nil {
+		if id := gobj.Id(); !known[id] {
+			known[id] = true
+			okay = true
+		}
 	}
 	return okay
 }

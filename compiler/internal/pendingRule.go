@@ -1,4 +1,4 @@
-package compiler
+package internal
 
 import (
 	S "github.com/ionous/sashimi/source"

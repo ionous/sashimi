@@ -58,10 +58,15 @@ func (ga *GameEventAdapter) Go(phrase G.RuntimePhrase) {
 }
 
 //
-func (ga *GameEventAdapter) Global(name string) interface{} {
+func (ga *GameEventAdapter) Global(name string) (ret interface{}, okay bool) {
 	id := M.MakeStringId(name)
-	val := ga.Globals[id]
-	return val.Interface()
+	if val, ok := ga.Globals[id]; !ok {
+		ga.Log("no such global", name)
+	} else {
+		ret = val.Interface()
+		okay = true
+	}
+	return ret, okay
 }
 
 //
@@ -70,7 +75,7 @@ func (ga *GameEventAdapter) Add(data string) (ret G.IObject) {
 		ret = NullObjectSource(data, 2)
 	} else {
 		id := ident.MakeUniqueId()
-		gobj := &GameObject{id, cls, make(TemplateValues), make(TemplatePool), ga.Game.Model.Tables}
+		gobj := &GameObject{id, cls, make(TemplateValues), make(TemplatePool), ga.Game.Tables}
 		for _, prop := range cls.Properties {
 			if e := gobj.setValue(prop, prop.GetZero(cls.Constraints)); e != nil {
 				panic(e)

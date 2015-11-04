@@ -1,8 +1,8 @@
-package compiler
+package internal
 
 import (
 	"fmt"
-	M "github.com/ionous/sashimi/compiler/model"
+	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
@@ -11,13 +11,13 @@ import (
 
 type PartialInstances struct {
 	log      *log.Logger
-	tables   M.TableRelations
+	tables   TableRelations
 	partials PartialMap
 }
 type PartialMap map[ident.Id]*PartialInstance
 
 func newPartialInstances(log *log.Logger, relations M.RelationMap) PartialInstances {
-	tables := M.NewTableRelations(relations)
+	tables := NewTableRelations(relations)
 	partials := make(PartialMap)
 	return PartialInstances{log, tables, partials}
 }
@@ -37,7 +37,7 @@ func (part *PartialInstances) newInstance(pending *PendingInstance, class *M.Cla
 // returns thos instance and the tables
 //
 func (part *PartialInstances) makeData(choices []S.ChoiceStatement, kvs []S.KeyValueStatement,
-) (instances M.InstanceMap, tables M.TableRelations, err error) {
+) (instances M.InstanceMap, tables TableRelations, err error) {
 	if e := part._addChoices(choices); e != nil {
 		err = e
 	} else if e := part._addKeyValues(kvs); e != nil {

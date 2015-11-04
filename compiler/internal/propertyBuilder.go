@@ -1,7 +1,7 @@
-package compiler
+package internal
 
 import (
-	M "github.com/ionous/sashimi/compiler/model"
+	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/util/ident"
 )
 
@@ -19,12 +19,12 @@ type IBuildProperty interface {
 // the compiler publishes a model which pushes out all data via tabless.
 //
 type PropertyContext struct {
-	inst   ident.Id         // owner instance id
-	tables M.TableRelations // source of relation data
-	class  *M.ClassInfo     // finalized class; the class comes after the builder, so we dont normally have access to it.
-	values PendingValues    // accumulates the object's initial values
-	refs   PartialMap       // verification for the existance of other instances
-	value  interface{}      // value to set to the accumulating object values
+	inst   ident.Id       // owner instance id
+	tables TableRelations // source of relation data
+	class  *M.ClassInfo   // finalized class; the class comes after the builder, so we dont normally have access to it.
+	values PendingValues  // accumulates the object's initial values
+	refs   PartialMap     // verification for the existance of other instances
+	value  interface{}    // value to set to the accumulating object values
 }
 
 //

@@ -1,7 +1,7 @@
-package compiler
+package internal
 
 import (
-	M "github.com/ionous/sashimi/compiler/model"
+	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/util/ident"
 )
 
@@ -17,7 +17,7 @@ type PartialInstance struct {
 	propertyBuilders PropertyBuilders // access to the class data
 	values           PendingValues    // accumulates the object's initial values
 	refs             PartialMap       // verification for the existance of other instances
-	tables           M.TableRelations // access to relation data
+	tables           TableRelations   // access to relation data
 }
 
 //

@@ -56,8 +56,7 @@ func (gobj *GameObject) SetValue(id ident.Id, val interface{}) (old interface{},
 	if v, had := gobj.vals[id.String()]; had &&
 		reflect.TypeOf(v) == reflect.TypeOf(val) {
 		gobj.setDirect(id, val)
-		old = had
-		okay = true
+		old, okay = v, true
 	}
 	return old, okay
 }

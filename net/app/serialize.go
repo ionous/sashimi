@@ -22,8 +22,8 @@ func NewObjectSerializer() *ObjectSerializer {
 }
 
 //
-func (this *ObjectSerializer) IsKnown(id ident.Id) bool {
-	return this.known[id]
+func (this *ObjectSerializer) IsKnown(gobj *R.GameObject) bool {
+	return gobj != nil && this.known[gobj.Id()]
 }
 
 //
@@ -34,7 +34,7 @@ func (this *ObjectSerializer) IsKnown(id ident.Id) bool {
 // ex. /games/{session}/actors/player/inventory
 //
 func (this *ObjectSerializer) SerializeObject(out resource.IBuildObjects, gobj *R.GameObject, force bool) (obj *resource.Object) {
-	if this.known.SetKnown(gobj.Id()) || force {
+	if this.known.SetKnown(gobj) || force {
 		obj = this.NewObject(out, gobj)
 		//
 		states := []string{}

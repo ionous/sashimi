@@ -62,7 +62,7 @@ func TestSimpleRelates(t *testing.T) {
 		assert.True(t, ok)
 
 		petsrel := pets.(M.RelativeProperty)
-		table, ok := model.Tables.TableById(petsrel.Relation)
+		table, ok := model.Tables[petsrel.Relation]
 		assert.True(t, ok, "found table")
 
 		assert.EqualValues(t, []ident.Id{"Loofah"}, table.List(claire.Id, petsrel.IsRev))

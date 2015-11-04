@@ -38,7 +38,7 @@ type SerialOut struct {
 
 // TryObjectRef only creates an object ref if the object is already known.
 func (serial *SerialOut) TryObjectRef(gobj *R.GameObject) (ret *resource.Object, okay bool) {
-	if serial.IsKnown(gobj.Id()) {
+	if serial.IsKnown(gobj) {
 		ret = serial.NewObjectRef(gobj)
 		okay = true
 	}
@@ -125,73 +125,57 @@ func (this *CommandOutput) changedLocation(action *M.ActionInfo, gobjs []*R.Game
 	this.events.AddAction("set-initial-position", who, where)
 }
 
-// propertyChanged callback via PropertyWatcher, triggered by runtime's Notify()
-func (out *CommandOutput) propertyChanged(game *R.Game, gobj *R.GameObject, prop M.IProperty, prev, next interface{}) {
-	//
-	// property changes dont cause an object to be serialized
-	// some other event or request is required
-	//
-	switch prop := prop.(type) {
-	case M.NumProperty:
-		if obj, ok := out.serial.TryObjectRef(gobj); ok {
-			data := struct {
-				Prop  string  `json:"prop"`
-				Value float32 `json:"value"`
-			}{jsonId(prop.GetId()), next.(float32)}
-			out.events.AddAction("x-num", obj, data)
-		}
+func (out *CommandOutput) NumChange(gobj *R.GameObject, prop ident.Id, prev, next float32) {
+	if obj, ok := out.serial.TryObjectRef(gobj); ok {
+		data := struct {
+			Prop  string  `json:"prop"`
+			Value float32 `json:"value"`
+		}{jsonId(prop), next}
+		out.events.AddAction("x-num", obj, data)
+	}
+}
 
-	case M.TextProperty:
-		if obj, ok := out.serial.TryObjectRef(gobj); ok {
-			data := struct {
-				Prop  string `json:"prop"`
-				Value string `json:"value"`
-			}{jsonId(prop.GetId()), next.(string)}
-			out.events.AddAction("x-txt", obj, data)
-		}
-
-	case M.EnumProperty:
-		if obj, ok := out.serial.TryObjectRef(gobj); ok {
-			data := struct {
-				Prop string `json:"prop"`
-				Prev string `json:"prev"`
-				Next string `json:"next"`
-			}{jsonId(prop.GetId()),
-				jsonId(prev.(ident.Id)),
-				jsonId(next.(ident.Id))}
-			out.events.AddAction("x-set", obj, data)
-		}
-
-	case M.RelativeProperty:
-		// get the relation
-		relation := game.Model.Relations[prop.Relation]
-
-		// get the reverse property
-		other := relation.GetOther(prop.IsRev)
-
-		type RelationChange struct {
+func (out *CommandOutput) TextChange(gobj *R.GameObject, prop ident.Id, prev, next string) {
+	if obj, ok := out.serial.TryObjectRef(gobj); ok {
+		data := struct {
+			Prop  string `json:"prop"`
+			Value string `json:"value"`
+		}{jsonId(prop), next}
+		out.events.AddAction("x-txt", obj, data)
+	}
+}
+func (out *CommandOutput) StateChange(gobj *R.GameObject, prop ident.Id, prev, next ident.Id) {
+	if obj, ok := out.serial.TryObjectRef(gobj); ok {
+		data := struct {
+			Prop string `json:"prop"`
+			Prev string `json:"prev"`
+			Next string `json:"next"`
+		}{jsonId(prop),
+			jsonId(prev),
+			jsonId(next)}
+		out.events.AddAction("x-set", obj, data)
+	}
+}
+func (out *CommandOutput) ReferenceChange(gobj *R.GameObject, prop, other ident.Id, prev, next *R.GameObject) {
+	if out.serial.IsKnown(gobj) || out.serial.IsKnown(prev) || out.serial.IsKnown(next) {
+		obj := out.serial.NewObjectRef(gobj)
+		relChange := struct {
 			Prop  string           `json:"prop"`
 			Other string           `json:"other"`
 			Prev  *resource.Object `json:"prev,omitempty"`
 			Next  *resource.Object `json:"next,omitempty"`
+		}{Prop: jsonId(prop), Other: jsonId(other)}
+
+		// fire for the prev object's relationships
+		if prev != nil {
+			relChange.Prev = out.serial.NewObjectRef(prev)
 		}
 
-		// fire for the original object
-		if out.serial.IsKnown(gobj.Id()) || out.serial.IsKnown(prev.(ident.Id)) || out.serial.IsKnown(next.(ident.Id)) {
-			obj := out.serial.NewObjectRef(gobj)
-			relChange := RelationChange{Prop: jsonId(prop.GetId()), Other: jsonId(other.Property)}
-
-			// fire for the prev object's relationships
-			if gprev, ok := game.Objects[prev.(ident.Id)]; ok {
-				relChange.Prev = out.serial.NewObjectRef(gprev)
-			}
-
-			// fire for the next object's relationships
-			if gnext, ok := game.Objects[next.(ident.Id)]; ok {
-				relChange.Next = out.serial.NewObjectRef(gnext)
-			}
-			out.events.AddAction("x-rel", obj, relChange)
+		// fire for the next object's relationships
+		if next != nil {
+			relChange.Next = out.serial.NewObjectRef(next)
 		}
+		out.events.AddAction("x-rel", obj, relChange)
 	}
 }
 

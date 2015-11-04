@@ -41,7 +41,7 @@ func NewCommandSession(id string, model *M.Model, calls R.Callbacks) (ret *Comma
 			// setup system event callbacks --
 			game.SystemActions.Capture("setting initial position", output.changedLocation)
 			// add watchers for property changes --
-			game.Properties.AddWatcher(PropertyChangeHandler{game.Game, output})
+			game.Properties.AddWatcher(output)
 			// now start the game, and start receiving changes --
 			immediate := false
 			if game, e := game.Start(immediate); e != nil {

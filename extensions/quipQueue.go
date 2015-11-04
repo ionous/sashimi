@@ -23,8 +23,11 @@ type NextQuipPhrase struct {
 }
 
 func (p NextQuipPhrase) Execute(g G.Play) {
-	con := g.Global("conversation").(*Conversation)
-	con.Queue.SetNextQuip(g, g.The(p.quip))
+	if con, ok := g.Global("conversation"); ok {
+		con := con.(*Conversation)
+
+		con.Queue.SetNextQuip(g, g.The(p.quip))
+	}
 }
 
 // SetNextQuip for the associated NPC's next round of conversation.

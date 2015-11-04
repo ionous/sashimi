@@ -12,7 +12,7 @@ import (
 type RelativeValue struct {
 	inst  ident.Id
 	prop  M.RelativeProperty
-	table table.Table
+	table *table.Table
 }
 
 // return a list of referenced instances

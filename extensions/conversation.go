@@ -29,23 +29,30 @@ func LearnThe(fact G.IObject) FactPhrase {
 type FactPhrase string
 
 func (fact FactPhrase) Execute(g G.Play) {
-	con := g.Global("conversation").(*Conversation)
-	con.Memory.Learn(g.The(string(fact)))
+	if con, ok := g.Global("conversation"); ok {
+		con := con.(*Conversation)
+		con.Memory.Learn(g.The(string(fact)))
+	}
 }
 
 func PlayerLearns(g G.Play, fact string) (newlyLearned bool) {
-	con := g.Global("conversation").(*Conversation)
-	quip := g.The(string(fact))
-	if recollects := con.Memory.Recollects(quip); !recollects {
-		con.Memory.Learn(quip)
-		newlyLearned = true
+	if con, ok := g.Global("conversation"); ok {
+		con := con.(*Conversation)
+		quip := g.The(string(fact))
+		if recollects := con.Memory.Recollects(quip); !recollects {
+			con.Memory.Learn(quip)
+			newlyLearned = true
+		}
 	}
 	return newlyLearned
 }
 
-func PlayerRecollects(g G.Play, fact string) bool {
-	con := g.Global("conversation").(*Conversation)
-	return con.Memory.Recollects(g.The(fact))
+func PlayerRecollects(g G.Play, fact string) (okay bool) {
+	if con, ok := g.Global("conversation"); ok {
+		con := con.(*Conversation)
+		okay = con.Memory.Recollects(g.The(fact))
+	}
+	return okay
 }
 
 func DirectlyFollows(other string) IFragment {
@@ -128,19 +135,23 @@ func init() {
 		s.The("actors",
 			Can("depart").And("departing").RequiresNothing(),
 			To("depart", func(g G.Play) {
-				con := g.Global("conversation").(*Conversation)
-				if npc := con.Depart(); npc.Exists() {
-					if Debugging {
-						g.Log("!", g.The("actor"), "departing", npc)
+				if con, ok := g.Global("conversation"); ok {
+					con := con.(*Conversation)
+					if npc := con.Depart(); npc.Exists() {
+						if Debugging {
+							g.Log("!", g.The("actor"), "departing", npc)
+						}
+						g.Say("(", inflect.Capitalize(DefiniteName(g, "actor", nil)), "says goodbye.", ")")
 					}
-					g.Say("(", inflect.Capitalize(DefiniteName(g, "actor", nil)), "says goodbye.", ")")
 				}
 			}))
 
 		s.The("stories",
 			When("ending the turn").Always(func(g G.Play) {
-				con := g.Global("conversation").(*Conversation)
-				con.Converse(g)
+				if con, ok := g.Global("conversation"); ok {
+					con := con.(*Conversation)
+					con.Converse(g)
+				}
 			}))
 
 		s.The("actors",
@@ -158,7 +169,7 @@ func init() {
 				if Debugging {
 					g.Log("!", talker, "commenting", quip, "'"+comment+"'")
 				}
-				con := g.Global("conversation").(*Conversation)
+
 				// the player wants to speak: probably has chosen a line of dialog from the menu
 				if comment != "" {
 					talker.Says(comment)
@@ -166,7 +177,10 @@ func init() {
 
 				// an actor will reply to the comment.
 				// they will do this via Converse() at the end of the turn.
-				con.Queue.SetNextQuip(g, quip)
+				if con, ok := g.Global("conversation"); ok {
+					con := con.(*Conversation)
+					con.Queue.SetNextQuip(g, quip)
+				}
 				// moved history push into the npc's discuss
 				// which should happen (right) after this.
 				// the conversation choices are determined by what the npc says...
@@ -177,12 +191,15 @@ func init() {
 				if Debugging {
 					g.Log("!", talker, "discussing", quip)
 				}
-				con := g.Global("conversation").(*Conversation)
+
 				if reply := quip.Text("reply"); reply != "" {
 					talker.Says(reply)
 				}
-				con.Memory.Learn(quip)
-				con.History.PushQuip(quip)
+				if con, ok := g.Global("conversation"); ok {
+					con := con.(*Conversation)
+					con.Memory.Learn(quip)
+					con.History.PushQuip(quip)
+				}
 			}))
 
 		s.The("actors",

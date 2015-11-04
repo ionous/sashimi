@@ -1,5 +1,9 @@
 package model
 
+import (
+	"github.com/ionous/sashimi/model/table"
+)
+
 //
 // Results of compilation.
 //
@@ -15,6 +19,6 @@ type Model struct {
 	NounNames      NounNames
 	ActionHandlers ActionCallbacks
 	EventListeners ListenerCallbacks
-	Tables         TableRelations
-	Generators     GeneratorMap
+	Tables         table.Tables
+	//Generators     GeneratorMap
 }

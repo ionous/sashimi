@@ -1,8 +1,8 @@
-package compiler
+package internal
 
 import (
 	"fmt"
-	M "github.com/ionous/sashimi/compiler/model"
+	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/util/ident"
 )
 
@@ -44,7 +44,7 @@ func (enum EnumBuilder) SetProperty(ctx PropertyContext) (err error) {
 	}
 
 	if constraint, ok := constraints.(*M.EnumConstraint); !ok {
-		err = fmt.Errorf("internal error: expected enum contraints")
+		err = fmt.Errorf("runtime error: expected enum contraints")
 	} else {
 		switch choice := ctx.value.(type) {
 		case int:

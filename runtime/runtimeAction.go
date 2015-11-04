@@ -28,7 +28,7 @@ func (act *RuntimeAction) runAfterDefaults(cb CallbackPair) {
 func (act *RuntimeAction) runCallback(cb CallbackPair, cls *M.ClassInfo) bool {
 	// FIX: it might be cooler to make act some sort of API...
 	// then we could have the callback object: callback.run( IPlay, Data ) maybe...
-	act.game.log.Println("calling:", act.action, cb.src)
+	act.game.log.Println("calling:", act.action, cb)
 
 	adapter := NewGameAdapter(act.game)
 	adapter.data = act

@@ -1,8 +1,8 @@
-package compiler
+package internal
 
 import (
 	"fmt"
-	M "github.com/ionous/sashimi/compiler/model"
+	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
 )

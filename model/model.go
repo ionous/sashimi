@@ -20,5 +20,8 @@ type Model struct {
 	ActionHandlers ActionCallbacks
 	EventListeners ListenerCallbacks
 	Tables         table.Tables
-	Generators     GeneratorMap
+
+	// this cant serialize: nned to replace with
+	// lists and table variables in globals
+	//Generators     GeneratorMap
 }
