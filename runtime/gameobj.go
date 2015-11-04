@@ -10,12 +10,16 @@ import (
 
 // GameObject
 type GameObject struct {
-	id     ident.Id       // unique id, matches instance info's ids.
-	cls    *M.ClassInfo   // for property set, etc. access
-	vals   TemplateValues // runtime gobj are key'd by string for go's templates
-	temps  TemplatePool   // FIX? cache for templates.... probably should nix this.
+	id     ident.Id     // unique id, matches instance info's ids.
+	cls    *M.ClassInfo // for property set, etc. access
+	vals   RuntimeValues
 	tables table.Tables
 }
+
+type RuntimeValues map[string]interface{}
+
+//vals   TemplateValues // runtime gobj are key'd by string for go's templates
+//temps  TemplatePool   // FIX? cache for templates.... probably should nix this.
 
 //
 // GameObjects maps model instance id to runtime game object class.
@@ -82,10 +86,7 @@ func (gobj *GameObject) setValue(prop M.IProperty, val interface{}) (err error) 
 			gobj.setDirect(choice, true)
 		}
 
-	case M.NumProperty:
-		gobj.setDirect(prop.GetId(), val)
-
-	case M.PointerProperty:
+	case M.NumProperty, M.PointerProperty, M.TextProperty:
 		gobj.setDirect(prop.GetId(), val)
 
 	case M.RelativeProperty:
@@ -94,14 +95,6 @@ func (gobj *GameObject) setValue(prop M.IProperty, val interface{}) (err error) 
 		} else {
 			rel := RelativeValue{gobj.Id(), prop, table}
 			gobj.setDirect(prop.GetId(), rel)
-		}
-
-	case M.TextProperty:
-		gobj.setDirect(prop.GetId(), val)
-		// TBD: when to parse this? maybe options? here for early errors.
-		str := val.(string)
-		if e := gobj.temps.New(prop.GetId().String(), str); e != nil {
-			err = e
 		}
 
 	default:

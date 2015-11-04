@@ -31,7 +31,7 @@ func NewCommandSession(id string, model *M.Model, calls R.Callbacks) (ret *Comma
 			output.events.PopEvent()
 		}
 	}
-	cfg := R.Config{Calls: calls, Frame: frame, Output: output}
+	cfg := R.RuntimeConfig{Calls: calls, Frame: frame, Output: output}
 	if game, e := cfg.NewGame(model); e != nil {
 	} else {
 		// after creating the game, but vefore running it --

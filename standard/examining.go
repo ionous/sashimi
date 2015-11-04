@@ -23,6 +23,17 @@ func init() {
 			Can("be examined").And("being examined").RequiresOne("actor"),
 			To("be examined", func(g G.Play) {
 				object := g.The("object")
+				object.Go("print details")
+				object.Go("print contents")
+			}))
+
+		s.The("objects",
+			Can("print contents").And("printing contents").RequiresNothing())
+
+		s.The("objects",
+			Can("print details").And("printing details").RequiresNothing(),
+			To("print details", func(g G.Play) {
+				object := g.The("object")
 				desc := object.Text("description")
 				if desc != "" {
 					g.Say(desc)
@@ -30,11 +41,7 @@ func init() {
 					//g.Say("You see nothing special about:")
 					object.Go("print name")
 				}
-				object.Go("print contents")
 			}))
-
-		s.The("objects",
-			Can("print contents").And("printing contents").RequiresNothing())
 
 		s.The("containers",
 			When("printing contents").Always(func(g G.Play) {

@@ -9,7 +9,7 @@ import (
 
 func NewSimpleSession(calls R.Callbacks, model *M.Model) (ret *SimpleSession, err error) {
 	out := &SimpleOutput{}
-	cfg := R.Config{Calls: calls, Frame: nil, Output: out}
+	cfg := R.RuntimeConfig{Calls: calls, Frame: nil, Output: out}
 	if game, e := cfg.NewGame(model); e != nil {
 		err = e
 	} else if game, e := standard.NewStandardGame(game); e != nil {

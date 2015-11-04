@@ -13,7 +13,6 @@ type RuntimeAction struct {
 	game   *Game
 	action *M.ActionInfo
 	objs   []*GameObject
-	values map[string]TemplateValues
 	after  []CallbackPair
 }
 
@@ -33,8 +32,6 @@ func (act *RuntimeAction) runCallback(cb CallbackPair, cls *M.ClassInfo) bool {
 	adapter := NewGameAdapter(act.game)
 	adapter.data = act
 	adapter.hint = cls
-	templateValueStack.pushValues(act.values)
-	defer templateValueStack.pop()
 	cb.call(adapter)
 	return !adapter.cancelled
 }

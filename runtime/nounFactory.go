@@ -14,7 +14,6 @@ type ObjectMatcher struct {
 	game    *Game
 	act     *M.ActionInfo
 	objects []*GameObject
-	values  map[string]TemplateValues
 }
 
 // make sure the source class matches
@@ -28,7 +27,7 @@ func NewObjectMatcher(game *Game, source *GameObject, act *M.ActionInfo,
 	} else if !source.Class().CompatibleWith(act.Source().Id) {
 		err = fmt.Errorf("source class for %s doesnt match", act)
 	} else {
-		om := &ObjectMatcher{game, act, nil, make(map[string]TemplateValues)}
+		om := &ObjectMatcher{game, act, nil}
 		om.addObject(source)
 		ret = om
 	}
@@ -66,7 +65,7 @@ func (om *ObjectMatcher) OnMatch() (err error) {
 		err = P.MismatchedNouns("I", max, cnt)
 	} else {
 		tgt := ObjectTarget{om.game, om.objects[0]}
-		act := &RuntimeAction{om.game, om.act, om.objects, om.values, nil}
+		act := &RuntimeAction{om.game, om.act, om.objects, nil}
 		om.game.queue.QueueEvent(tgt, om.act.EventName, act)
 	}
 	return err
@@ -90,9 +89,9 @@ func (om *ObjectMatcher) MatchId(id ident.Id) (okay bool) {
 }
 
 func (om *ObjectMatcher) addObject(gobj *GameObject) {
-	cnt := len(om.objects)
-	keys := []string{"Source", "Target", "Context"}
 	om.objects = append(om.objects, gobj)
-	key := keys[cnt]
-	om.values[key] = gobj.vals
+	// cnt := len(om.objects)-1
+	// keys := []string{"Source", "Target", "Context"}
+	// key := keys[cnt]
+	// om.values[key] = gobj.vals
 }

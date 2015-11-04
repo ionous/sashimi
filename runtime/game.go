@@ -55,7 +55,7 @@ type DefaultActions map[*M.ActionInfo][]CallbackPair
 
 type Globals map[ident.Id]reflect.Value
 
-func (cfg Config) NewGame(model *M.Model) (_ *Game, err error) {
+func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 	log := log.New(logAdapter{cfg.Output}, "game: ", log.Lshortfile)
 	dispatchers := NewDispatchers(log)
 	tables := model.Tables.Clone()
@@ -243,11 +243,9 @@ func (g *Game) newRuntimeAction(action *M.ActionInfo, nouns ...ident.Id,
 		err = fmt.Errorf("too many nouns specified for '%s', +%d", action, diff)
 	default:
 		objs := make([]*GameObject, len(types))
-		keys := []string{"Source", "Target", "Context"}
-		values := make(map[string]TemplateValues)
 
 		for i, class := range types {
-			noun, key := nouns[i], keys[i]
+			noun := nouns[i]
 			if gobj, ok := g.Objects[noun]; !ok {
 				err = M.InstanceNotFound(noun.String())
 				break
@@ -255,12 +253,11 @@ func (g *Game) newRuntimeAction(action *M.ActionInfo, nouns ...ident.Id,
 				err = TypeMismatch(noun.String(), class.String())
 				break
 			} else {
-				values[key] = gobj.vals
 				objs[i] = gobj
 			}
 		}
 		if err == nil {
-			ret = &RuntimeAction{g, action, objs, values, nil}
+			ret = &RuntimeAction{g, action, objs, nil}
 		}
 	}
 	return ret, err

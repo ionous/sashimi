@@ -28,7 +28,7 @@ func CreateGameObjects(
 			allProps[class] = props
 		}
 		// turn properties into tables:
-		gobj := &GameObject{inst.Id, inst.Class, make(TemplateValues), make(TemplatePool), tables}
+		gobj := &GameObject{inst.Id, inst.Class, make(RuntimeValues), tables}
 		// FIX FIX FIX
 		name := inst.Name
 		if n, ok := inst.FindValue("printed name"); ok {

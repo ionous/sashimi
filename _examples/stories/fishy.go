@@ -31,7 +31,17 @@ func A_Day_For_Fresh_Sushi(s *Script) {
 	s.The("room",
 		Called("studio"),
 		Has("printed name", "Studio"),
-		Has("description", `{{if .Visited}}Decorated with Britney's signature flair. It was her innate sense of style that first made you forgive her that ludicrous name. And here it is displayed to the fullest: deep-hued drapes on the walls, the windows flung open with their stunning view of old Vienna, the faint smell of coffee that clings to everything. Her easel stands over by the windows, where the light is brightest.{{else}}This is Britney's studio. You haven't been around here for a while, because of how busy you've been with work, and she's made a few changes -- the aquarium in the corner, for instance. But it still brings back a certain emotional sweetness from the days when you had just met for the first time... when you used to spend hours on the sofa...{{paragraph}}You shake your head. No time for fantasy. Must feed fish.{{end}}`))
+		When("printing details").Always(func(g G.Play) {
+			if g.The("studio").Is("visited") {
+				g.Say("Decorated with Britney's signature flair. It was her innate sense of style that first made you forgive her that ludicrous name. And here it is displayed to the fullest: deep-hued drapes on the walls, the windows flung open with their stunning view of old Vienna, the faint smell of coffee that clings to everything. Her easel stands over by the windows, where the light is brightest.")
+			} else {
+				g.Say(
+					`This is Britney's studio. You haven't been around here for a while, because of how busy you've been with work, and she's made a few changes -- the aquarium in the corner, for instance. But it still brings back a certain emotional sweetness from the days when you had just met for the first time... when you used to spend hours on the sofa...
+You shake your head. No time for fantasy. Must feed fish.`)
+			}
+			g.StopHere()
+		}))
+
 	//  11
 	s.The("studio",
 		When("reporting smell").Always(func(g G.Play) {
@@ -225,7 +235,14 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 		}))
 	s.The("opener", Called("window"), Is("scenery"), In("the studio"))
 	s.The("window", Is("hinged").And("closed"))
-	s.The("window", Has("description", `{{if .Open}}Through the windows you get a lovely view of the street outside. At the moment, the glass is thrown open, and a light breeze is blowing through.{{else}}Through the windows, you get a lovely view of the street outside -- the little fountain on the corner, the slightly dilapidated but nonetheless magnificent Jugendstil architecture of the facing building. The glass itself is shut, however.{{end}}`))
+	s.The("window", When("printing details").Always(func(g G.Play) {
+		if g.The("window").Is("open") {
+			g.Say(`Through the windows you get a lovely view of the street outside. At the moment, the glass is thrown open, and a light breeze is blowing through.`)
+		} else {
+			g.Say(`Through the windows, you get a lovely view of the street outside -- the little fountain on the corner, the slightly dilapidated but nonetheless magnificent Jugendstil architecture of the facing building. The glass itself is shut, however.`)
+		}
+		g.StopHere()
+	}))
 	s.The("window", IsKnownAs("windows"))
 	// [108-110)
 	s.The("window",
@@ -474,7 +491,10 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 	// 231-233
 	s.Our("A Day For Fresh Sushi",
 		When("commencing").Always(func(g G.Play) {
-			g.Say(`You're on the run. You've got a million errands to do -- your apartment to get cleaned up, the fish to feed, lingerie to buy, Britney's shuttle to meet--{{paragraph}}The fish. You almost forgot. And it's in the studio, halfway across town from anywhere else you have to do. Oh well, you'll just zip over, take care of it, and hop back on the El. This'll be over in no time.{{paragraph}}Don't you just hate days where you wake up the wrong color?`)
+			g.Say(
+				`You're on the run. You've got a million errands to do -- your apartment to get cleaned up, the fish to feed, lingerie to buy, Britney's shuttle to meet--
+The fish. You almost forgot. And it's in the studio, halfway across town from anywhere else you have to do. Oh well, you'll just zip over, take care of it, and hop back on the El. This'll be over in no time.
+Don't you just hate days where you wake up the wrong color?`)
 		}),
 		Has("maximum score", 1),
 	)

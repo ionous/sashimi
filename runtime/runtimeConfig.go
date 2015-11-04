@@ -5,7 +5,7 @@ import (
 	"github.com/ionous/sashimi/util/ident"
 )
 
-type Config struct {
+type RuntimeConfig struct {
 	Calls  Callbacks
 	Frame  EventFrame
 	Output IOutput

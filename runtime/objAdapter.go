@@ -139,14 +139,7 @@ func (oa ObjectAdapter) SetNum(prop string, value float32) {
 //
 func (oa ObjectAdapter) Text(prop string) (ret string) {
 	id := M.MakeStringId(prop)
-	// is oa text stored as a template?
-	if temp, ok := oa.gobj.temps[id.String()]; ok {
-		if s, e := runTemplate(temp, oa.gobj.vals); e != nil {
-			oa.logError(e)
-		} else {
-			ret = s
-		}
-	} else if val, ok := oa.gobj.Value(id).(string); !ok {
+	if val, ok := oa.gobj.Value(id).(string); !ok {
 		oa.logError(TypeMismatch(prop, "get text"))
 	} else {
 		ret = val
@@ -159,9 +152,7 @@ func (oa ObjectAdapter) Text(prop string) (ret string) {
 //
 func (oa ObjectAdapter) SetText(prop string, text string) {
 	id := M.MakeStringId(prop)
-	if e := oa.gobj.temps.New(id.String(), text); e != nil {
-		oa.logError(e)
-	} else if old, ok := oa.gobj.SetValue(id, text); !ok {
+	if old, ok := oa.gobj.SetValue(id, text); !ok {
 		oa.logError(TypeMismatch(prop, "set text"))
 	} else {
 		old := old.(string)

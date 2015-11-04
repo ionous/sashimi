@@ -75,7 +75,7 @@ func (ga *GameEventAdapter) Add(data string) (ret G.IObject) {
 		ret = NullObjectSource(data, 2)
 	} else {
 		id := ident.MakeUniqueId()
-		gobj := &GameObject{id, cls, make(TemplateValues), make(TemplatePool), ga.Game.Tables}
+		gobj := &GameObject{id, cls, make(RuntimeValues), ga.Game.Tables}
 		for _, prop := range cls.Properties {
 			if e := gobj.setValue(prop, prop.GetZero(cls.Constraints)); e != nil {
 				panic(e)
