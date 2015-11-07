@@ -1,4 +1,4 @@
-package standard
+package lang
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -7,5 +7,5 @@ import (
 
 // go test --run TestVowels
 func TestVowels(t *testing.T) {
-	assert.True(t, startsVowel("evil fish"))
+	assert.True(t, StartsWithVowel("evil fish"))
 }
