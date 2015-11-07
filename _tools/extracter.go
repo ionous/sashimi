@@ -31,7 +31,7 @@ import (
 G "github.com/ionous/sashimi/game"
 . "github.com/ionous/sashimi/standard"
 . "github.com/ionous/sashimi/extensions"
-"bitbucket.org/pkg/inflect"
+"github.com/ionous/sashimi/util/lang"
 "fmt"
 "strings"
 )

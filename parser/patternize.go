@@ -2,9 +2,12 @@ package parser
 
 import (
 	"fmt"
+	"github.com/ionous/sashimi/util/lang"
 	"regexp"
 	"strings"
 )
+
+var articleBar = strings.Join(lang.Articles, " |")
 
 //
 // mash the groups together while assigning tags to nouns

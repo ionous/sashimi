@@ -1,11 +1,11 @@
 package extensions
 
 import (
-	"bitbucket.org/pkg/inflect"
 	"fmt"
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
 	. "github.com/ionous/sashimi/standard"
+	"github.com/ionous/sashimi/util/lang"
 	"reflect"
 )
 
@@ -141,7 +141,7 @@ func init() {
 						if Debugging {
 							g.Log("!", g.The("actor"), "departing", npc)
 						}
-						g.Say("(", inflect.Capitalize(DefiniteName(g, "actor", nil)), "says goodbye.", ")")
+						g.Say("(", lang.Capitalize(DefiniteName(g, "actor", nil)), "says goodbye.", ")")
 					}
 				}
 			}))
@@ -254,15 +254,14 @@ func init() {
 			//
 			// note: there is a gap in the original logic --
 			// if the current quip is restrictive and if the person isnt the current interlocutor,
-			// then the immediate optional conversation doesn't cleared; it sticks in there until the player chooses some unrestrictive quip.
-			// but: it's difficult to get immediate conversation assigned to a person who isnt the current interlocutor
-			// because the shortcuts always refer to the current interlocutor.
+			// then the immediate optional conversation doesn't clear;
+			// it sticks in there until the player chooses some unrestrictive quip.
+			// but: it's difficult to get immediate conversation assigned to a person who isnt the current interlocutor: the shortcuts always refer to the current interlocutor.
 			// the gap is likely an oversight.
 			AreEither("planned").Or("casual"),
 		)
 		s.The("actors",
-			// FIX? with pointers, it wouldnt be too difficult to have parts now
-			// an auto-created association.
+			// FIX? with pointers, it wouldnt be too difficult to have parts now; an auto-created association.
 			Have("next quip", "next quip"))
 	})
 }

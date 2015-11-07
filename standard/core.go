@@ -1,10 +1,10 @@
 package standard
 
 import (
-	"bitbucket.org/pkg/inflect"
 	"fmt"
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
+	"github.com/ionous/sashimi/util/lang"
 	"strings"
 )
 
@@ -23,30 +23,6 @@ func AssignTo(prop G.IObject, rel string, dest G.IObject) {
 		prop.Set(parentRel, nil)
 	}
 	prop.Set(rel, dest)
-}
-
-//var articles = regexp.MustCompile(`^(The|A|An|Our|Some)[[:upper:]]`)
-//http://www.mudconnect.com/SMF/index.php?topic=74725.0
-func startsWith(s string, set ...string) (ok bool) {
-	for _, x := range set {
-		if strings.HasPrefix(s, x) {
-			ok = true
-			break
-		}
-	}
-	return ok
-}
-
-func startsVowel(str string) (vowelSound bool) {
-	s := strings.ToUpper(str)
-	if startsWith(s, "A", "E", "I", "O", "U") {
-		if !startsWith(s, "EU", "EW", "ONCE", "ONE", "OUI", "UBI", "UGAND", "UKRAIN", "UKULELE", "ULYSS", "UNA", "UNESCO", "UNI", "UNUM", "URA", "URE", "URI", "URO", "URU", "USA", "USE", "USI", "USU", "UTA", "UTE", "UTI", "UTO") {
-			vowelSound = true
-		}
-	} else if startsWith(s, "HEIR", "HERB", "HOMAGE", "HONEST", "HONOR", "HONOUR", "HORS", "HOUR") {
-		vowelSound = true
-	}
-	return vowelSound
 }
 
 //
@@ -218,7 +194,7 @@ func init() {
 		s.The("actors",
 			Can("impress").And("impressing").RequiresNothing(),
 			To("impress", func(g G.Play) {
-				g.Say(inflect.Capitalize(ArticleName(g, "actor", nil)), "is unimpressed.")
+				g.Say(lang.Capitalize(ArticleName(g, "actor", nil)), "is unimpressed.")
 			}))
 
 		// "taking inventory" in inform
@@ -284,7 +260,7 @@ func articleName(g G.Play, which string, definite bool, status NameStatus) strin
 	obj := g.The(which)
 	text := obj.Text("Name")
 	if obj.Is("proper-named") {
-		text = inflect.Titleize(text)
+		text = lang.Titleize(text)
 	} else {
 		article := ""
 		if definite {
@@ -294,7 +270,7 @@ func articleName(g G.Play, which string, definite bool, status NameStatus) strin
 			if article == "" {
 				if obj.Is("plural-named") {
 					article = "some"
-				} else if startsVowel(text) {
+				} else if lang.StartsWithVowel(text) {
 					article = "an"
 				} else {
 					article = "a"
@@ -339,7 +315,7 @@ func init() {
 			Can("print name").And("printing name text").RequiresNothing(),
 			To("print name", func(g G.Play) {
 				if text := ArticleName(g, "object", NameFullStop); len(text) > 0 {
-					text = inflect.Capitalize(text)
+					text = lang.Capitalize(text)
 					g.Say(text)
 				}
 			}))
@@ -360,7 +336,7 @@ func init() {
 					}
 					return status
 				})
-				text = inflect.Capitalize(text)
+				text = lang.Capitalize(text)
 				g.Say(text)
 				g.StopHere()
 			}))
@@ -378,7 +354,7 @@ func init() {
 					}
 					return status
 				})
-				text = inflect.Capitalize(text)
+				text = lang.Capitalize(text)
 				g.Say(text)
 				g.StopHere()
 			}))
@@ -402,7 +378,7 @@ func init() {
 				}
 				// FIX: duplicated in stories describe the first room
 				room.IsNow("visited")
-				g.The("status bar").SetText("left", inflect.Titleize(room.Text("Name")))
+				g.The("status bar").SetText("left", lang.Titleize(room.Text("Name")))
 			}))
 	})
 }

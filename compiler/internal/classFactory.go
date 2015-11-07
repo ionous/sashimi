@@ -1,11 +1,11 @@
 package internal
 
 import (
-	"bitbucket.org/pkg/inflect"
 	"fmt"
 	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/ident"
+	"github.com/ionous/sashimi/util/lang"
 )
 
 type PendingClasses map[ident.Id]*PendingClass // ptr for presense detection
@@ -120,7 +120,7 @@ func (fac *ClassFactory) addClassRef(parent *PendingClass, plural, single string
 //
 func (fac *ClassFactory) _addOptions(plural, singular string) (string, error) {
 	if singular == "" {
-		singular = inflect.Singularize(plural)
+		singular = lang.Singularize(plural)
 	}
 	// reserve `room` to mean `rooms`
 	// we dont return the id -- if they meant a specific singular string, we want that

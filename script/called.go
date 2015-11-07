@@ -2,7 +2,7 @@ package script
 
 import (
 	S "github.com/ionous/sashimi/source"
-	"regexp"
+	"github.com/ionous/sashimi/util/lang"
 	"strings"
 )
 
@@ -40,17 +40,11 @@ type CalledFragment struct {
 	singular string // optional singular version of that name
 }
 
-var articles = regexp.MustCompile(`^((?U)the|a|an|our|some) `)
-
 func (frag CalledFragment) MakeStatement(b SubjectBlock) error {
 	// FIX: this is only half measure --
 	// really it needs to split into words, then compare the first article.
 	name := strings.TrimSpace(frag.subject)
-	article, bare := "", name
-	if pair := articles.FindStringIndex(name); pair != nil {
-		article = name[:pair[0]]
-		bare = name[pair[1]:]
-	}
+	article, bare := lang.SliceArticle(name)
 	opt := map[string]string{
 		"article":       article,
 		"long name":     name,

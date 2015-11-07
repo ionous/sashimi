@@ -1,10 +1,10 @@
 package standard
 
 import (
-	"bitbucket.org/pkg/inflect"
 	"fmt"
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
+	"github.com/ionous/sashimi/util/lang"
 )
 
 //
@@ -103,7 +103,7 @@ func init() {
 				/// FIX: visited should happen elsewhere
 				room.Go("report the view")
 				room.IsNow("visited")
-				g.The("status bar").SetText("left", inflect.Titleize(room.Text("Name")))
+				g.The("status bar").SetText("left", lang.Titleize(room.Text("Name")))
 			}),
 		)
 	})

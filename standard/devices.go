@@ -1,9 +1,9 @@
 package standard
 
 import (
-	"bitbucket.org/pkg/inflect"
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
+	"github.com/ionous/sashimi/util/lang"
 )
 
 func init() {
@@ -27,7 +27,7 @@ func init() {
 					}
 					return status
 				})
-				text = inflect.Capitalize(text)
+				text = lang.Capitalize(text)
 				g.Say(text)
 				g.StopHere()
 			}))
