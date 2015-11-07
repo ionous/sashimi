@@ -24,7 +24,7 @@ func NewObjectMatcher(game *Game, source *GameObject, act api.Action,
 		err = fmt.Errorf("couldnt find command source for %s", act)
 	} else {
 		nouns := act.GetNouns()
-		if !source.Class().CompatibleWith(nouns.Get(api.SourceNoun)) {
+		if !game.ModelApi.AreCompatible(source.cls.GetId(), nouns.Get(api.SourceNoun)) {
 			err = fmt.Errorf("source class for %s doesnt match", act)
 		} else {
 			om := &ObjectMatcher{game, act, nil}
@@ -67,7 +67,7 @@ func (om *ObjectMatcher) OnMatch() (err error) {
 	} else {
 		tgt := ObjectTarget{om.game, om.objects[0]}
 		act := &RuntimeAction{om.game, om.act.GetId(), om.objects, nil}
-		om.game.queue.QueueEvent(tgt, om.act.GetEventName(), act)
+		om.game.queue.QueueEvent(tgt, om.act.GetEvent().GetEventName(), act)
 	}
 	return err
 }
@@ -79,7 +79,7 @@ func (om *ObjectMatcher) MatchId(id ident.Id) (okay bool) {
 	if gobj, ok := om.game.Objects[id]; ok {
 		nouns := om.act.GetNouns()
 		if cnt, max := len(om.objects), nouns.GetNounCount(); cnt < max {
-			if gobj.Class().CompatibleWith(nouns[cnt]) {
+			if om.game.ModelApi.AreCompatible(gobj.cls.GetId(), nouns[cnt]) {
 				om.addObject(gobj)
 				okay = true
 			}

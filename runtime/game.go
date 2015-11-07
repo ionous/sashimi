@@ -61,9 +61,11 @@ type Globals map[ident.Id]reflect.Value
 
 func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 	log := log.New(logAdapter{cfg.Output}, "game: ", log.Lshortfile)
-	dispatchers := NewDispatchers(log)
+
 	tables := model.Tables.Clone()
-	objects, e := CreateGameObjects(model.Instances, tables)
+	modelApi := memory.NewMemoryModel(model, tables)
+	dispatchers := NewDispatchers(log)
+	objects, e := CreateGameObjects(modelApi, tables)
 	if e != nil {
 		return nil, e
 	}
@@ -80,7 +82,7 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 
 	game := &Game{
 		model,
-		memory.NewMemoryModel(model),
+		modelApi,
 		objects,
 		dispatchers,
 		cfg.Output,
@@ -197,8 +199,9 @@ func (g *Game) ProcessEvents() (err error) {
 // it might be better to add a name search (interface) to the model
 // and then use the id in the runtime.
 func (g *Game) FindObject(name string) (ret *GameObject, okay bool) {
-	if info, ok := g.Model.Instances.FindInstance(name); ok {
-		ret = g.Objects[info.Id]
+	id := StripStringId(name)
+	if obj, ok := g.Objects[id]; ok {
+		ret = obj
 		okay = true
 	}
 	return ret, okay
@@ -207,7 +210,7 @@ func (g *Game) FindObject(name string) (ret *GameObject, okay bool) {
 // FIX: TEMP(ish)
 func (g *Game) FindFirstOf(cls *M.ClassInfo, _ ...bool) (ret *GameObject) {
 	for _, o := range g.Objects {
-		if o.Class() == cls {
+		if o.Class().GetId() == cls.Id {
 			ret = o
 			break
 		}
@@ -251,7 +254,7 @@ func (g *Game) newRuntimeAction(action *M.ActionInfo, nouns ...ident.Id,
 			if gobj, ok := g.Objects[noun]; !ok {
 				err = M.InstanceNotFound(noun.String())
 				break
-			} else if !gobj.Class().CompatibleWith(class.Id) {
+			} else if !g.ModelApi.AreCompatible(gobj.cls.GetId(), class.Id) {
 				err = TypeMismatch(noun.String(), class.String())
 				break
 			} else {

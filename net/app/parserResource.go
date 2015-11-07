@@ -10,10 +10,10 @@ func ParserResource(m api.Model) resource.IResource {
 	return resource.Wrapper{
 		Queries: func(doc resource.DocumentBuilder) {
 			objects := doc.NewObjects()
-			m.GetParserActions(func(act api.Action, _ []string) (finished bool) {
+			for i := 0; i < m.NumParserAction(); i++ {
+				act := m.ParserActionNum(i)
 				objects.NewObject(jsonId(act.GetId()), "action")
-				return finished
-			})
+			}
 		},
 		Finds: func(id string) (ret resource.IResource, okay bool) {
 			if act, ok := m.GetAction(ident.MakeId(id)); ok {

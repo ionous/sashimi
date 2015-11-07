@@ -1,10 +1,9 @@
 package app
 
 import (
-	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/net/resource"
 	R "github.com/ionous/sashimi/runtime"
-	"github.com/ionous/sashimi/util/ident"
+	"github.com/ionous/sashimi/runtime/api"
 )
 
 //
@@ -22,8 +21,8 @@ func NewObjectSerializer() *ObjectSerializer {
 }
 
 //
-func (this *ObjectSerializer) IsKnown(gobj *R.GameObject) bool {
-	return gobj != nil && this.known[gobj.Id()]
+func (s *ObjectSerializer) IsKnown(gobj *R.GameObject) bool {
+	return gobj != nil && s.known[gobj.Id()]
 }
 
 //
@@ -33,19 +32,28 @@ func (this *ObjectSerializer) IsKnown(gobj *R.GameObject) bool {
 // The client will ask explicitly ask for the relation information it wants:
 // ex. /games/{session}/actors/player/inventory
 //
-func (this *ObjectSerializer) SerializeObject(out resource.IBuildObjects, gobj *R.GameObject, force bool) (obj *resource.Object) {
-	if this.known.SetKnown(gobj) || force {
-		obj = this.NewObject(out, gobj)
+func (s *ObjectSerializer) SerializeObject(out resource.IBuildObjects, gobj *R.GameObject, force bool) (obj *resource.Object) {
+	if s.known.SetKnown(gobj) || force {
+		obj = s.NewObject(out, gobj)
 		//
 		states := []string{}
-		for propId, prop := range gobj.Class().AllProperties() {
-			if val := gobj.Value(propId); val != nil {
-				switch prop.(type) {
-				case M.EnumProperty:
-					choice := val.(ident.Id)
-					states = append(states, jsonId(choice))
+		// OBJECT FIX: should be from objcet
+		cls := gobj.Class()
+		for i := 0; i < cls.NumProperty(); i++ {
+			prop := cls.PropertyNum(i)
+			if val := gobj.Value(prop.GetId()); val != nil {
+				id := jsonId(prop.GetId())
+				switch prop.GetType() {
+				case api.NumProperty:
+					obj.SetAttr(id, prop.GetValue().GetNum())
+				case api.TextProperty:
+					obj.SetAttr(id, prop.GetValue().GetText())
+				case api.StateProperty:
+					obj.SetAttr(id, jsonId(prop.GetValue().GetState()))
+				case api.ObjectProperty:
+					obj.SetAttr(id, jsonId(prop.GetValue().GetObject()))
 				default:
-					obj.SetAttr(jsonId(propId), val)
+					// ignore arrays for now....
 				}
 			}
 		}
@@ -60,11 +68,11 @@ func (this *ObjectSerializer) SerializeObject(out resource.IBuildObjects, gobj *
 // Add a reference to the passed object into the passed refs list,
 // with a full seriaization into includes if the object is newly known.
 //
-func (this *ObjectSerializer) AddObjectRef(out resource.IBuildObjects, gobj *R.GameObject, include resource.IBuildObjects) (obj *resource.Object) {
-	this.SerializeObject(include, gobj, false)
-	return this.NewObject(out, gobj)
+func (s *ObjectSerializer) AddObjectRef(out resource.IBuildObjects, gobj *R.GameObject, include resource.IBuildObjects) (obj *resource.Object) {
+	s.SerializeObject(include, gobj, false)
+	return s.NewObject(out, gobj)
 }
 
-func (this *ObjectSerializer) NewObject(out resource.IBuildObjects, gobj *R.GameObject) (obj *resource.Object) {
-	return out.NewObject(jsonId(gobj.Id()), jsonId(gobj.Class().Id))
+func (s *ObjectSerializer) NewObject(out resource.IBuildObjects, gobj *R.GameObject) (obj *resource.Object) {
+	return out.NewObject(jsonId(gobj.Id()), jsonId(gobj.Class().GetId()))
 }

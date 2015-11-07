@@ -73,22 +73,22 @@ func (act *RuntimeAction) findByParamName(name string) (ret G.IObject, okay bool
 }
 
 // findByExactClass; true if found
-func (act *RuntimeAction) findByClass(cls *M.ClassInfo) (ret G.IObject, okay bool) {
+func (act *RuntimeAction) findByClass(id ident.Id) (ret G.IObject, okay bool) {
 	// these are the classes originally named in the action declaration; not the sub-classes of the event target. ie. s.The("actors", Can("crawl"), not s.The("babies", When("crawling")
-	if obj, ok := act.findByExactClass(cls); ok {
+	if obj, ok := act.findByExactClass(id); ok {
 		ret, okay = obj, true
 	} else {
 		// when all else fails try compatible classes one by one.
-		ret, okay = act.findBySimilarClass(cls)
+		ret, okay = act.findBySimilarClass(id)
 	}
 	return ret, okay
 }
 
 // findByExactClass; true if found
-func (act *RuntimeAction) findByExactClass(cls *M.ClassInfo) (ret G.IObject, okay bool) {
+func (act *RuntimeAction) findByExactClass(id ident.Id) (ret G.IObject, okay bool) {
 	if a, ok := act.game.ModelApi.GetAction(act.action); ok {
 		for i, nounClass := range a.GetNouns() {
-			if cls.Id == nounClass {
+			if same := id == nounClass; same {
 				ret, okay = act.getObject(i)
 				break
 			}
@@ -98,10 +98,10 @@ func (act *RuntimeAction) findByExactClass(cls *M.ClassInfo) (ret G.IObject, oka
 }
 
 // findBySimilarClass; true if found
-func (act *RuntimeAction) findBySimilarClass(cls *M.ClassInfo) (ret G.IObject, okay bool) {
+func (act *RuntimeAction) findBySimilarClass(id ident.Id) (ret G.IObject, okay bool) {
 	if a, ok := act.game.ModelApi.GetAction(act.action); ok {
 		for i, nounClass := range a.GetNouns() {
-			if similar := cls.CompatibleWith(nounClass); similar {
+			if similar := act.game.ModelApi.AreCompatible(id, nounClass); similar {
 				ret, okay = act.getObject(i)
 				break
 			}

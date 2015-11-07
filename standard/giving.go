@@ -49,11 +49,12 @@ func init() {
 		s.The("props",
 			Can("be acquired").And("being acquired").RequiresOne("actor"),
 			To("be acquired", func(g G.Play) {
-				actor, prop := g.The("actor"), g.The("prop")
+				actor, prop, rel := g.The("actor"), g.The("prop"), "owner"
 				if Debugging {
-					g.Log(prop, "AssignTo", actor)
+					a, b := DirectParent(prop)
+					g.Log(prop, "AssignTo", actor, rel, "from", a, b)
 				}
-				AssignTo(prop, "owner", actor)
+				AssignTo(prop, rel, actor)
 			}))
 		// 1. source
 		s.The("actors",

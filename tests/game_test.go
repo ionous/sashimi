@@ -66,6 +66,18 @@ func TestStartupText(t *testing.T) {
 		}),
 	)
 
+	bannerCalled := false
+	storyExists := false
+	nameOkay := false
+	s.The("stories",
+		When("printing the banner").Always(func(g G.Play) {
+			bannerCalled = true
+			story := g.The("story")
+			storyExists = story.Exists()
+			name := story.Text("name")
+			nameOkay = name == "testing"
+		}))
+
 	if game, err := NewTestGame(t, s); assert.NoError(t, err, "compile should work") {
 		story := game.FindFirstOf(game.Model.Classes.FindClass("stories"))
 		require.NotNil(t, story, "should have game")
@@ -85,6 +97,11 @@ func TestStartupText(t *testing.T) {
 			"an empty room",
 			"",
 		}
-		require.Exactly(t, expected, game.FlushOutput())
+		out := game.FlushOutput()
+		if assert.True(t, bannerCalled, "banner called") {
+			require.True(t, storyExists, "story exists")
+			require.True(t, nameOkay, "name set")
+		}
+		require.Exactly(t, expected, out)
 	}
 }

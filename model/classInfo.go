@@ -18,18 +18,11 @@ func (cls *ClassInfo) String() string {
 
 // FIX: collapse all the class info methods into something using visit
 // add a unit test to verify the traversal order and exit.
-// func (cls *ClassInfo) Visit(parentsFirst bool, vistor func(cls *ClassInfo) bool) (finished bool) {
-// 	if parentsFirst && cls.Parent != nil {
-// 		finished = cls.Parent.Visit(parentsFirst, vistor)
-// 	}
-// 	if !finished {
-// 		finished = vistor(cls)
-// 		if !finished && !parentsFirst && cls.Parent != nil {
-// 			ret = cls.Parent.Visit(parentsFirst, vistor)
-// 		}
-// 	}
-// 	return finished
-// }
+func (cls *ClassInfo) Visit(visitor func(cls *ClassInfo) bool) {
+	if !visitor(cls) && cls.Parent != nil {
+		cls.Parent.Visit(visitor)
+	}
+}
 
 // AllProperties returns a new property set consisting of all properties in this cls and all parents.
 func (cls *ClassInfo) AllProperties() PropertySet {
@@ -76,11 +69,11 @@ func (cls *ClassInfo) PropertyByChoice(choice string) (
 	ok bool,
 ) {
 	choiceId := MakeStringId(choice)
-	return cls._propertyByChoice(choiceId)
+	return cls.PropertyByChoiceId(choiceId)
 }
 
 //
-func (cls *ClassInfo) _propertyByChoice(choice ident.Id) (
+func (cls *ClassInfo) PropertyByChoiceId(choice ident.Id) (
 	prop EnumProperty,
 	index int,
 	ok bool,
@@ -100,7 +93,7 @@ func (cls *ClassInfo) _propertyByChoice(choice ident.Id) (
 		}
 	}
 	if !ok && cls.Parent != nil {
-		prop, index, ok = cls.Parent._propertyByChoice(choice)
+		prop, index, ok = cls.Parent.PropertyByChoiceId(choice)
 	}
 	return prop, index, ok
 }

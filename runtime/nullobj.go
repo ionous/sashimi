@@ -53,7 +53,7 @@ func (null _Null) Remove() {
 }
 
 //
-func (null _Null) Class(cls string) bool {
+func (null _Null) FromClass(cls string) bool {
 	return false
 }
 

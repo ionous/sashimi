@@ -1,50 +1,39 @@
 package runtime
 
 import (
-	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/model/table"
+	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/util/errutil"
 )
 
-//
 // Turn the passed instances into objects.
-//
 func CreateGameObjects(
-	src M.InstanceMap,
+	mdl api.Model,
 	tables table.Tables,
 ) (
 	ret GameObjects,
 	err error,
 ) {
 	ret = make(GameObjects)
-	allProps := make(map[*M.ClassInfo]M.PropertySet)
+	printedName := MakeStringId("printed name")
 
-	for _, inst := range src {
-		// create property sets for this instance's class
-		class := inst.Class
-		props, had := allProps[class]
-		if !had {
-			props = class.AllProperties()
-			allProps[class] = props
-		}
+	for i := 0; i < mdl.NumInstance(); i++ {
+		inst := mdl.InstanceNum(i)
 		// turn properties into tables:
-		gobj := &GameObject{inst.Id, inst.Class, make(RuntimeValues), tables}
-		// FIX FIX FIX
-		name := inst.Name
-		if n, ok := inst.FindValue("printed name"); ok {
-			if n, ok := n.(string); ok && n != "" {
-				name = n
+		if gobj, e := NewGameObject(mdl, inst.GetId(), inst.GetParentClass(), inst, tables); e != nil {
+			err = errutil.Append(err, e)
+		} else {
+			// FIX FIX FIX
+			name := inst.GetOriginalName()
+			if p, ok := inst.GetProperty(printedName); ok {
+				if txt := p.GetValue().GetText(); txt != "" {
+					name = txt
+				}
 			}
+			gobj.setDirect(MakeStringId("name"), name)
+			ret[inst.GetId()] = gobj
 		}
-		gobj.setDirect("Name", name)
 
-		for propId, prop := range props {
-			val, _ := inst.Value(propId)
-			if e := gobj.setValue(prop, val); e != nil {
-				err = errutil.Append(err, e)
-			}
-		}
-		ret[inst.Id] = gobj
 	}
 	return ret, err
 }

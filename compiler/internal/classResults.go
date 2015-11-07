@@ -18,9 +18,10 @@ type ClassResultMap map[*PendingClass]*ClassResult
 
 //
 type ClassResults struct {
-	pending   PendingClasses
-	results   ClassResultMap
-	relatives *RelativeFactory
+	pending        PendingClasses
+	results        ClassResultMap
+	relatives      *RelativeFactory
+	singleToPlural map[string]string
 }
 
 //
@@ -28,51 +29,52 @@ func newResults(classes PendingClasses, relatives *RelativeFactory) ClassResults
 	results := make(ClassResultMap)
 	// add a placeholder for the null/root class
 	results[nil] = &ClassResult{nil, nil}
-	return ClassResults{classes, results, relatives}
+	return ClassResults{classes, results, relatives, make(map[string]string)}
 }
 
 //
 // exactly duplicated in makeInstances()
 //
-func (this ClassResults) finalizeClasses() (
+func (cr ClassResults) finalizeClasses() (
 	classes M.ClassMap,
+	singleToPlural map[string]string,
 	err error,
 ) {
 	classes = make(M.ClassMap)
 
-	for name, pending := range this.pending {
-		if info, e := this.makeClass(pending); e != nil {
+	for name, pending := range cr.pending {
+		if info, e := cr.makeClass(pending); e != nil {
 			err = errutil.Append(err, e)
 		} else {
 			classes[name] = info
+			singleToPlural = cr.singleToPlural
 		}
 	}
-	return classes, err
+	return classes, singleToPlural, err
 }
 
 //
 // make a class and its parents
 //
-func (this ClassResults) makeClass(pending *PendingClass,
+func (cr ClassResults) makeClass(pending *PendingClass,
 ) (cls *M.ClassInfo, err error) {
-	cr := this.results[pending]
-	if cr != nil {
-		cls, err = cr.class, cr.err
+	if res, ok := cr.results[pending]; ok {
+		cls, err = res.class, res.err
 	} else {
-		cls, err = this._makeClass(pending)
+		cls, err = cr._makeClass(pending)
 		result := &ClassResult{cls, err}
-		this.results[pending] = result
+		cr.results[pending] = result
 	}
 	return cls, err
 }
 
 //
 // recusively make class and parents
-func (this ClassResults) _makeClass(pending *PendingClass,
+func (cr ClassResults) _makeClass(pending *PendingClass,
 ) (cls *M.ClassInfo, err error) {
 	// both so that we can have a direct pointer to our parent,
 	// and so that we can find parent properties for adding constraints
-	parent, e := this.makeClass(pending.parent)
+	parent, e := cr.makeClass(pending.parent)
 	if e != nil {
 		err = e
 	} else if props, e := pending.makePropertySet(); e != nil {
@@ -150,6 +152,7 @@ func (this ClassResults) _makeClass(pending *PendingClass,
 				Properties:  props,
 				Constraints: M.ConstraintSet{parentConstraints, constraints},
 			}
+			cr.singleToPlural[pending.singular] = pending.name
 		}
 	}
 	return cls, err

@@ -2,7 +2,7 @@ package runtime
 
 import (
 	E "github.com/ionous/sashimi/event"
-	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/util/ident"
 )
 
@@ -12,13 +12,13 @@ import (
 //
 type ClassTarget struct {
 	host     ObjectTarget
-	class    *M.ClassInfo
+	class    api.Class
 	upObject *GameObject
 }
 
 //
 func (ct ClassTarget) Id() ident.Id {
-	return ct.class.Id
+	return ct.class.GetId()
 }
 
 //
@@ -28,7 +28,7 @@ func (ct ClassTarget) Class() ident.Id {
 
 //
 func (ct ClassTarget) String() string {
-	return ct.class.String()
+	return ct.class.GetId().String()
 }
 
 //
@@ -36,8 +36,7 @@ func (ct ClassTarget) String() string {
 // (from E.ITarget)
 //
 func (ct ClassTarget) Parent() (ret E.ITarget, ok bool) {
-	parent := ct.class.Parent
-	if parent != nil {
+	if parent := ct.class.GetParentClass(); parent != nil {
 		ret = ClassTarget{ct.host, parent, ct.upObject}
 		ok = true
 	} else if next := ct.upObject; next != nil {
@@ -52,7 +51,7 @@ func (ct ClassTarget) Parent() (ret E.ITarget, ok bool) {
 // (from E.ITarget)
 //
 func (ct ClassTarget) Dispatch(evt E.IEvent) (err error) {
-	if d, ok := ct.host.game.Dispatchers.GetDispatcher(ct.class.Id); ok {
+	if d, ok := ct.host.game.Dispatchers.GetDispatcher(ct.class.GetId()); ok {
 		err = d.Dispatch(evt)
 	}
 	return err

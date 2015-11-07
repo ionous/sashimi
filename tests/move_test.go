@@ -4,6 +4,7 @@ import (
 	"fmt"
 	G "github.com/ionous/sashimi/game"
 	R "github.com/ionous/sashimi/runtime"
+	"github.com/ionous/sashimi/runtime/api"
 	. "github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/standard"
 	"github.com/ionous/sashimi/util/ident"
@@ -105,7 +106,7 @@ type xMove struct {
 func testMoves(t *testing.T, g TestGame, moves ...xMove) (err error) {
 	// FIX: relations are stored in the model
 	if p, ok := g.FindObject("player"); !ok {
-		err = fmt.Errorf("couldnt find player")
+		err = fmt.Errorf("couldnt find player %v", g.Objects)
 	} else {
 		for _, move := range moves {
 			t.Logf("%s => %s", move.cmd, move.res)
@@ -114,7 +115,7 @@ func testMoves(t *testing.T, g TestGame, moves ...xMove) (err error) {
 				break
 			} else {
 				out := g.FlushOutput()
-				if res := where(p); move.res != res {
+				if res := where(g.ModelApi, p); move.res != res {
 					err = fmt.Errorf("unexpected move result: %v %v", res, out)
 					break
 				}
@@ -124,11 +125,11 @@ func testMoves(t *testing.T, g TestGame, moves ...xMove) (err error) {
 	return err
 }
 
-func where(gobj *R.GameObject) (ret ident.Id) {
-	if rel, ok := gobj.Value(ident.MakeId("whereabouts")).(R.RelativeValue); ok {
-		for _, v := range rel.List() {
-			ret = v
-			break
+func where(mdl api.Model, gobj *R.GameObject) (ret ident.Id) {
+	// STORE: should be from object
+	if inst, ok := mdl.GetInstance(gobj.Id()); ok {
+		if prop, ok := inst.GetProperty(ident.MakeId("whereabouts")); ok {
+			ret = prop.GetValue().GetObject()
 		}
 	}
 	return ret

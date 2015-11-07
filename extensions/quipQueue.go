@@ -39,8 +39,9 @@ func (q *QuipQueue) SetNextQuip(g G.Play, quip G.IObject) {
 	if old := npc.Object("next quip"); old.Exists() {
 		old.Remove()
 	}
-
-	nextQuip := g.Add("next quip")
+	// FIX: remove NewFrom, if parts existed, this wouldnt be needed
+	// a simple
+	nextQuip := g.NewFrom("next quips")
 	npc.Set("next quip", nextQuip)
 	nextQuip.Set("quip", quip)
 	nextQuip.IsNow("planned")
@@ -77,7 +78,7 @@ func (q *QuipQueue) UpdateNextQuips(g G.Play, qm QuipMemory) {
 		} else {
 			// check to make sure this quip wasn't said in the time since it was queued.
 			if quip.Is("repeatable") || !qm.Recollects(quip) {
-				nextQuip := g.Add("next quip")
+				nextQuip := g.NewFrom("next quips")
 				npc.Set("next quip", nextQuip)
 				nextQuip.Set("quip", quip)
 				nextQuip.IsNow("casual")

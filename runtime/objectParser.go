@@ -36,7 +36,9 @@ func NewObjectParser(game *Game,
 	// OTHERWISE, we are going to be generating this each and everytime we process code
 
 	// pre-compile the parser statements ( ex. to catch errors. )
-	model.GetParserActions(func(act api.Action, commands []string) (finished bool) {
+	for i := 0; i < model.NumParserAction(); i++ {
+		pa := model.ParserActionNum(i)
+		act, commands := pa.Action, pa.Commands
 		game.log.Println("adding comprehension", act.GetId(), commands)
 		if comp, e := p.NewComprehension(act.GetId(),
 			func() (parser.IMatch, error) {
@@ -50,9 +52,7 @@ func NewObjectParser(game *Game,
 				}
 			}
 		}
-		return
-	})
-
+	}
 	if err == nil {
 		ret = op
 	}

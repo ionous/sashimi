@@ -76,7 +76,7 @@ func (fac *ClassFactory) findByRelativeName(kind string, hint S.RelativeHint,
 
 //
 func (fac *ClassFactory) makeClasses(relatives *RelativeFactory) (
-	classes M.ClassMap, err error,
+	classes M.ClassMap, singleToPlural map[string]string, err error,
 ) {
 	cr := newResults(fac.pending, relatives)
 	return cr.finalizeClasses()

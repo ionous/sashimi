@@ -2,47 +2,70 @@ package runtime
 
 import (
 	"fmt"
-	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/model/table"
+	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 	"reflect"
 )
 
 // GameObject
 type GameObject struct {
-	id     ident.Id     // unique id, matches instance info's ids.
-	cls    *M.ClassInfo // for property set, etc. access
+	id     ident.Id // not all game objects come from instances
+	cls    api.Class
 	vals   RuntimeValues
 	tables table.Tables
 }
 
+func NewGameObject(
+	mdl api.Model,
+	objId ident.Id,
+	cls api.Class,
+	proto api.Prototype,
+	tables table.Tables,
+) (_ *GameObject, err error,
+) {
+	gobj := &GameObject{objId, cls, make(RuntimeValues), tables}
+	// store-fix: with fallback, is this needed?
+	for i := 0; i < proto.NumProperty(); i++ {
+		prop := proto.PropertyNum(i)
+		switch prop.GetType() {
+		case api.StateProperty:
+			choice := prop.GetValue().GetState()
+			gobj.setDirect(prop.GetId(), choice)
+			gobj.setDirect(choice, true)
+
+		case api.NumProperty:
+			gobj.setDirect(prop.GetId(), prop.GetValue().GetNum())
+		case api.TextProperty:
+			gobj.setDirect(prop.GetId(), prop.GetValue().GetText())
+		case api.ObjectProperty:
+			gobj.setDirect(prop.GetId(), prop.GetValue().GetObject())
+		case api.ObjectProperty | api.ArrayProperty:
+			// ignore
+		default:
+			err = errutil.Append(err, fmt.Errorf("unknown property type %s:%v", prop, prop.GetType()))
+		}
+	}
+	return gobj, err
+}
+
 type RuntimeValues map[string]interface{}
 
-//vals   TemplateValues // runtime gobj are key'd by string for go's templates
-//temps  TemplatePool   // FIX? cache for templates.... probably should nix this.
-
-//
 // GameObjects maps model instance id to runtime game object class.
-//
 type GameObjects map[ident.Id]*GameObject
 
-//
 // Id uniquely identifies this object.
-//
 func (gobj *GameObject) Id() ident.Id {
 	return gobj.id
 }
 
-//
 // Class of this game object.
-//
-func (gobj *GameObject) Class() *M.ClassInfo {
+func (gobj *GameObject) Class() api.Class {
 	return gobj.cls
 }
 
-//
 // String representation of the object's id.
-//
 func (gobj *GameObject) String() string {
 	return gobj.id.String()
 }
@@ -73,32 +96,4 @@ func (gobj *GameObject) setDirect(id ident.Id, value interface{}) {
 //
 func (gobj *GameObject) removeDirect(id ident.Id) {
 	delete(gobj.vals, id.String())
-}
-
-// set the property value.
-func (gobj *GameObject) setValue(prop M.IProperty, val interface{}) (err error) {
-	switch prop := prop.(type) {
-	case M.EnumProperty:
-		if choice, e := prop.IndexToChoice(val.(int)); e != nil {
-			err = e
-		} else {
-			gobj.setDirect(prop.GetId(), choice)
-			gobj.setDirect(choice, true)
-		}
-
-	case M.NumProperty, M.PointerProperty, M.TextProperty:
-		gobj.setDirect(prop.GetId(), val)
-
-	case M.RelativeProperty:
-		if table, ok := gobj.tables[prop.Relation]; !ok {
-			err = fmt.Errorf("couldn't find table", prop.Relation)
-		} else {
-			rel := RelativeValue{gobj.Id(), prop, table}
-			gobj.setDirect(prop.GetId(), rel)
-		}
-
-	default:
-		err = fmt.Errorf("internal error: unknown property type %s:%T", prop, prop)
-	}
-	return err
 }

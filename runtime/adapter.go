@@ -3,8 +3,8 @@ package runtime
 import (
 	"fmt"
 	G "github.com/ionous/sashimi/game"
-	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/util/ident"
+	"github.com/ionous/sashimi/util/lang"
 	"strings"
 )
 
@@ -59,7 +59,7 @@ func (ga *GameEventAdapter) Go(phrase G.RuntimePhrase) {
 
 //
 func (ga *GameEventAdapter) Global(name string) (ret interface{}, okay bool) {
-	id := M.MakeStringId(name)
+	id := MakeStringId(name)
 	if val, ok := ga.Globals[id]; !ok {
 		ga.Log("no such global", name)
 	} else {
@@ -69,35 +69,32 @@ func (ga *GameEventAdapter) Global(name string) (ret interface{}, okay bool) {
 	return ret, okay
 }
 
-//
-func (ga *GameEventAdapter) Add(data string) (ret G.IObject) {
-	if cls, ok := ga.Model.Classes.FindClassBySingular(data); !ok {
-		ret = NullObjectSource(data, 2)
+// Add creates a new (data) object.
+func (ga *GameEventAdapter) NewFrom(class string) (ret G.IObject) {
+	clsid := StripStringId(class)
+	if cls, ok := ga.ModelApi.GetClass(clsid); !ok {
+		ret = NullObjectSource(class, 2)
 	} else {
 		id := ident.MakeUniqueId()
-		gobj := &GameObject{id, cls, make(RuntimeValues), ga.Game.Tables}
-		for _, prop := range cls.Properties {
-			if e := gobj.setValue(prop, prop.GetZero(cls.Constraints)); e != nil {
-				panic(e)
-			}
+		if gobj, e := NewGameObject(ga.ModelApi, id, cls, cls, ga.Game.Tables); e != nil {
+			ga.Log(e)
+			ret = NullObjectSource(class, 2)
+		} else {
+			ret = NewObjectAdapter(ga.Game, gobj)
+			ga.Objects[id] = gobj
 		}
-		ret = NewObjectAdapter(ga.Game, gobj)
-		ga.Objects[id] = gobj
 	}
 	return ret
 }
 
 //
 func (ga *GameEventAdapter) Visit(class string, visits func(G.IObject) bool) (okay bool) {
-	if cls, ok := ga.Model.Classes.FindClass(class); !ok {
-		ga.log.Printf("no objects found of type requested `%s`", class)
-	} else {
-		for _, gobj := range ga.Objects {
-			if gobj.Class().CompatibleWith(cls.Id) {
-				if visits(NewObjectAdapter(ga.Game, gobj)) {
-					okay = true
-					break
-				}
+	clsid := StripStringId(class)
+	for _, gobj := range ga.Objects {
+		if id := gobj.cls.GetId(); ga.ModelApi.AreCompatible(id, clsid) {
+			if visits(NewObjectAdapter(ga.Game, gobj)) {
+				okay = true
+				break
 			}
 		}
 	}
@@ -155,18 +152,18 @@ func (ga *GameEventAdapter) getObject(name string) (ret G.IObject, okay bool) {
 		// to fix use different interfaces perhaps?
 		if obj, ok := ga.data.findByParamName(name); ok {
 			ret, okay = obj, true
-		} else if cls, ok := ga.Model.Classes.FindClassBySingular(name); ok {
-			// FIX?hint tries to find targeted classln, not sure if its working
-			if DebugGet {
-				ga.Log("DebugGet: cls:", cls, "hint:", ga.hint)
-			}
-			if cls.Id == ga.hint {
+		} else {
+			clsid := MakeStringId(ga.ModelApi.Pluralize(lang.StripArticle(name)))
+			if clsid == ga.hint {
 				ret, okay = ga.data.getObject(0)
 			} else {
-				ret, okay = ga.data.findByClass(cls)
+				ret, okay = ga.data.findByClass(clsid)
+			}
+			if !okay {
+				ga.Log("couldnt find object", name, "including class", clsid)
+				fmt.Println("!!!", clsid)
 			}
 		}
 	}
-
 	return ret, okay
 }

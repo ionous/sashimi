@@ -16,12 +16,16 @@ type Model struct {
 	ParserActions []ParserAction
 	// data like:
 	Instances      InstanceMap
-	NounNames      NounNames
 	ActionHandlers ActionCallbacks
 	EventListeners ListenerCallbacks
 	Tables         table.Tables
+	//
+	NounNames      NounNames
+	SingleToPlural SingleToPlural
 
 	// this cant serialize: nned to replace with
 	// lists and table variables in globals
 	//Generators     GeneratorMap
 }
+
+type SingleToPlural map[string]string

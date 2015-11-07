@@ -22,5 +22,5 @@ func (rel RelativeProperty) GetName() string {
 }
 
 func (rel RelativeProperty) GetZero(_ ConstraintSet) interface{} {
-	return nil
+	panic("relative properties dont have values")
 }

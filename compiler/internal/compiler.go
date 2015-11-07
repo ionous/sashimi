@@ -354,7 +354,7 @@ func (ctx *Compiler) Compile() (*M.Model, error) {
 
 	// make classes
 	ctx.Log.Println("making classes")
-	classes, err := ctx.Classes.makeClasses(ctx.Relatives)
+	classes, plurals, err := ctx.Classes.makeClasses(ctx.Relatives)
 	if err != nil {
 		return nil, err
 	}
@@ -465,10 +465,11 @@ func (ctx *Compiler) Compile() (*M.Model, error) {
 		events,
 		parserActions,
 		instances,
-		names,
 		actHandlers,
 		evtListeners,
 		tables.Tables,
+		names,
+		plurals,
 		//generators,
 	}
 	return res, nil

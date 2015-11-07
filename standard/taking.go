@@ -51,7 +51,7 @@ func init() {
 					}
 					parent, rel := DirectParent(prop)
 					if rel != "" {
-						if parent.Class("actor") {
+						if parent.FromClass("actors") {
 							if parent != actor {
 								g.Say("That'd be stealing!")
 							} else {

@@ -19,7 +19,7 @@ func (ot ObjectTarget) Id() ident.Id {
 
 //
 func (ot ObjectTarget) Class() ident.Id {
-	return ot.obj.Class().Id
+	return ot.obj.Class().GetId()
 }
 
 //

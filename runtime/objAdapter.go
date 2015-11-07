@@ -4,7 +4,7 @@ import (
 	"fmt"
 	E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game"
-	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/util/ident"
 	"strings"
 )
@@ -59,23 +59,21 @@ func (oa ObjectAdapter) Exists() bool {
 //
 // Class returns true when this object is compatible with ( based on ) the named class. ( parent or other ancestor )
 //
-func (oa ObjectAdapter) Class(class string) (okay bool) {
-	if cls, ok := oa.game.Model.Classes.FindClassBySingular(class); ok {
-		okay = oa.gobj.cls.CompatibleWith(cls.Id)
-	}
-	return okay
+func (oa ObjectAdapter) FromClass(class string) (okay bool) {
+	clsid := StripStringId(class)
+	return oa.game.ModelApi.AreCompatible(oa.gobj.cls.GetId(), clsid)
 }
 
 //
 // Is this object in the passed state?
 //
 func (oa ObjectAdapter) Is(state string) (ret bool) {
-	if prop, index, ok := oa.gobj.cls.PropertyByChoice(state); !ok {
+	choice := MakeStringId(state)
+	if prop, ok := oa.gobj.cls.GetPropertyByChoice(choice); !ok {
 		oa.logError(fmt.Errorf("is: no such choice '%s'.'%s'", oa, state))
 	} else {
-		testChoice, _ := prop.IndexToChoice(index)
 		currChoice := oa.gobj.Value(prop.GetId())
-		ret = currChoice == testChoice
+		ret = currChoice == choice
 	}
 	return ret
 }
@@ -84,7 +82,8 @@ func (oa ObjectAdapter) Is(state string) (ret bool) {
 // IsNow changes the state of an object.
 //
 func (oa ObjectAdapter) IsNow(state string) {
-	if prop, index, ok := oa.gobj.cls.PropertyByChoice(state); !ok {
+	newChoice := MakeStringId(state)
+	if prop, ok := oa.gobj.cls.GetPropertyByChoice(newChoice); !ok {
 		oa.logError(fmt.Errorf("IsNow: no such choice '%s'.'%s'", oa, state))
 	} else {
 		// get the current choice from the implied property slot
@@ -92,7 +91,6 @@ func (oa ObjectAdapter) IsNow(state string) {
 			err := TypeMismatch(oa.gobj.Id().String(), prop.GetId().String())
 			oa.logError(err)
 		} else {
-			newChoice, _ := prop.IndexToChoice(index)
 			if currChoice != newChoice {
 				oa.gobj.removeDirect(currChoice)           // delete the old choice's boolean,
 				oa.gobj.setDirect(newChoice, true)         // and set the new
@@ -109,7 +107,7 @@ func (oa ObjectAdapter) IsNow(state string) {
 // Num value of the named property.
 //
 func (oa ObjectAdapter) Num(prop string) (ret float32) {
-	id := M.MakeStringId(prop)
+	id := MakeStringId(prop)
 	if val, ok := oa.gobj.Value(id).(float32); !ok {
 		oa.logError(TypeMismatch(prop, "get num"))
 	} else {
@@ -122,7 +120,7 @@ func (oa ObjectAdapter) Num(prop string) (ret float32) {
 // SetNum changes the value of an existing number property.
 //
 func (oa ObjectAdapter) SetNum(prop string, value float32) {
-	id := M.MakeStringId(prop)
+	id := MakeStringId(prop)
 	if old, ok := oa.gobj.SetValue(id, value); !ok {
 		oa.logError(TypeMismatch(prop, "set num"))
 	} else {
@@ -138,7 +136,7 @@ func (oa ObjectAdapter) SetNum(prop string, value float32) {
 // ( interestingly, inform seems to error when trying to store or manipulate templated text. )
 //
 func (oa ObjectAdapter) Text(prop string) (ret string) {
-	id := M.MakeStringId(prop)
+	id := MakeStringId(prop)
 	if val, ok := oa.gobj.Value(id).(string); !ok {
 		oa.logError(TypeMismatch(prop, "get text"))
 	} else {
@@ -151,7 +149,7 @@ func (oa ObjectAdapter) Text(prop string) (ret string) {
 // SetText changes the value of an existing text property.
 //
 func (oa ObjectAdapter) SetText(prop string, text string) {
-	id := M.MakeStringId(prop)
+	id := MakeStringId(prop)
 	if old, ok := oa.gobj.SetValue(id, text); !ok {
 		oa.logError(TypeMismatch(prop, "set text"))
 	} else {
@@ -168,24 +166,11 @@ func (oa ObjectAdapter) SetText(prop string, text string) {
 func (oa ObjectAdapter) Object(prop string) (ret G.IObject) {
 	// TBD: should these be logged? its sure nice to have be able to test objects generically for properties
 	var res ident.Id
-	if p, ok := oa.gobj.cls.FindProperty(prop); ok {
-		switch p := p.(type) {
-		case M.PointerProperty:
-			if val, ok := oa.gobj.Value(p.GetId()).(ident.Id); ok {
-				res = val
-			}
-		case M.RelativeProperty:
-			// TBD: can the relative property changes automatically reflect into the value table
-			// ex. on event?
-			if rel, ok := oa.gobj.Value(p.GetId()).(RelativeValue); ok {
-				if p.IsMany {
-					oa.logError(fmt.Errorf("object requested, but relation is list"))
-				} else {
-					list := rel.List()
-					if len(list) != 0 {
-						res = ident.Id(list[0])
-					}
-				}
+	id := MakeStringId(prop)
+	if p, ok := oa.gobj.cls.GetProperty(id); ok {
+		if t := p.GetType(); t == api.ObjectProperty {
+			if val, ok := oa.gobj.vals[p.GetId().String()]; ok {
+				res = val.(ident.Id)
 			}
 		}
 	}
@@ -196,62 +181,33 @@ func (oa ObjectAdapter) Object(prop string) (ret G.IObject) {
 // Set changes an object relationship.
 //
 func (oa ObjectAdapter) Set(prop string, object G.IObject) {
-	if p, ok := oa.gobj.cls.FindProperty(prop); ok {
-		switch p := p.(type) {
+	propId := MakeStringId(prop)
+	if p, ok := oa.gobj.cls.GetProperty(propId); ok {
+		switch t := p.GetType(); t {
 		default:
 			oa.logError(TypeMismatch(oa.String(), prop))
-		case M.PointerProperty:
-			set := false
+
+		case api.ObjectProperty:
+			var id ident.Id
+			if other, ok := object.(ObjectAdapter); ok {
+				id = other.gobj.Id()
+			}
+			oa.gobj.SetValue(propId, id)
+			//
+			i, _ := oa.game.ModelApi.GetInstance(oa.gobj.Id())
+			p, _ := i.GetProperty(propId)
+			p.GetValue().SetObject(id)
+
+		case api.ObjectProperty | api.ArrayProperty:
+			// STORE FIX: this should come from the object
+			i, _ := oa.game.ModelApi.GetInstance(oa.gobj.Id())
+			p, _ := i.GetProperty(propId)
+			values := p.GetValues()
 			if other, ok := object.(ObjectAdapter); !ok {
-				oa.gobj.SetValue(p.GetId(), ident.Id(""))
-				set = true
+				values.ClearValues()
 			} else {
-				oa.gobj.SetValue(p.GetId(), other.gobj.Id())
-				set = true
-			}
-			if !set {
-				oa.logError(fmt.Errorf("couldnt set value for prop %s", prop))
-			}
-		case M.RelativeProperty:
-			if rel, ok := oa.gobj.Value(p.GetId()).(RelativeValue); ok {
-				var prev, next ident.Id
-				var err error
-
-				// if the new object doesnt exist, we take it to mean they are clearing the reference.
-				if other, ok := object.(ObjectAdapter); !ok {
-					if removed, e := rel.ClearReference(); e != nil {
-						err = e
-					} else {
-						prev = removed
-					}
-				} else {
-					// FIX? the impedence b/t IObject and Reference is annoying.
-					other := other.gobj.Id()
-					if ref, ok := oa.game.Model.Instances[other]; !ok {
-						err = fmt.Errorf("Set: couldnt find object names %s", other)
-					} else if removed, e := rel.SetReference(ref); e != nil {
-						err = e
-					} else {
-						// removed is probably? a single object
-						prev = removed
-						next = other
-					}
-				}
-				if err != nil {
-					oa.logError(err)
-				} else {
-					// get the relation
-					relation := oa.game.Model.Relations[p.Relation]
-
-					// get the reverse property
-					other := relation.GetOther(p.IsRev)
-
-					prev, next := oa.game.Objects[prev], oa.game.Objects[next]
-
-					//oa.game.Properties.Notify(oa.gobj.Id(), p.GetId(), prev, next)
-					oa.game.Properties.VisitWatchers(func(ch PropertyChange) {
-						ch.ReferenceChange(oa.gobj, p.GetId(), other.Property, prev, next)
-					})
+				if e := values.AppendObject(other.gobj.Id()); e != nil {
+					oa.logError(e)
 				}
 			}
 		}
@@ -262,17 +218,18 @@ func (oa ObjectAdapter) Set(prop string, object G.IObject) {
 // ObjectList returns a list of related objects.
 //
 func (oa ObjectAdapter) ObjectList(prop string) (ret []G.IObject) {
-	if p, ok := oa.gobj.cls.FindProperty(prop); ok {
-		switch p := p.(type) {
+	if p, ok := oa.gobj.cls.GetProperty(MakeStringId(prop)); ok {
+		switch p.GetType() {
 		default:
 			oa.logError(TypeMismatch(oa.String(), prop))
-		case M.RelativeProperty:
-			if rel, ok := oa.gobj.Value(p.GetId()).(RelativeValue); ok {
-				list := rel.List()
-				ret = make([]G.IObject, len(list))
-				for i, objId := range list {
-					ret[i] = NewObjectAdapter(oa.game, oa.game.Objects[objId])
-				}
+
+		case api.ObjectProperty | api.ArrayProperty:
+			vals := p.GetValues()
+			l := vals.NumValue()
+			ret = make([]G.IObject, l)
+			for i := 0; i < l; i++ {
+				objId := vals.ValueNum(i).GetObject()
+				ret[i] = NewObjectAdapter(oa.game, oa.game.Objects[objId])
 			}
 		}
 	}

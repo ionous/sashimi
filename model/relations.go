@@ -26,6 +26,10 @@ type Relation struct {
 	Style  RelationStyle
 }
 
+func (r Relation) String() string {
+	return r.Id.String()
+}
+
 type HalfRelation struct {
 	Class    ident.Id
 	Property ident.Id

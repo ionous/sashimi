@@ -20,8 +20,8 @@ type Play interface {
 	Our(noun string) IObject
 	// A(n) alias for The.
 	A(noun string) IObject
-	// New an object at runtime; can only be used with "data" classes
-	Add(data string) IObject
+	// NewFrom: creates a new object from the passed plural-named class.
+	NewFrom(data string) IObject
 	// Say friendly narrative print.
 	Say(text ...string)
 	// Log a quiet print.

@@ -14,8 +14,10 @@ import (
 // (except: Is and IsNow are nice )
 type IObject interface {
 	Id() ident.Id
-	Exists() bool      // FIX: added for obj.Object() tests, alternatives?
-	Class(string) bool // FIX: seems to programmery, alternatives?
+	Exists() bool // FIX: added for obj.Object() tests, alternatives?
+	// FromClass: true if the object was derived from the passed plural named class.
+	// FIX: seems to programmery, alternatives?
+	FromClass(string) bool
 	// Remove a previously new'd data object.
 	Remove()
 
