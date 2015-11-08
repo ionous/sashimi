@@ -67,7 +67,7 @@ func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 }
 
 type MemoryResult struct {
-	*M.Model
+	Model *M.Model
 	Calls call.MemoryStorage
 }
 

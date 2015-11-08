@@ -6,17 +6,17 @@ import (
 	"github.com/ionous/sashimi/util/ident"
 )
 
-func ParserResource(m api.Model) resource.IResource {
+func ParserResource(mdl api.Model) resource.IResource {
 	return resource.Wrapper{
 		Queries: func(doc resource.DocumentBuilder) {
 			objects := doc.NewObjects()
-			for i := 0; i < m.NumParserAction(); i++ {
-				act := m.ParserActionNum(i)
+			for i := 0; i < mdl.NumParserAction(); i++ {
+				act := mdl.ParserActionNum(i)
 				objects.NewObject(jsonId(act.Action), "action")
 			}
 		},
 		Finds: func(id string) (ret resource.IResource, okay bool) {
-			if act, ok := m.GetAction(ident.MakeId(id)); ok {
+			if act, ok := mdl.GetAction(ident.MakeId(id)); ok {
 				okay, ret = true, resource.Wrapper{
 					Queries: func(doc resource.DocumentBuilder) {
 						actionResource(doc, act)

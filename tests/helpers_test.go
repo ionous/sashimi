@@ -2,7 +2,7 @@ package tests
 
 import (
 	"fmt"
-	"github.com/ionous/sashimi/compiler/call"
+	"github.com/ionous/sashimi/compiler"
 	C "github.com/ionous/sashimi/console"
 	"github.com/ionous/sashimi/parser"
 	R "github.com/ionous/sashimi/runtime"
@@ -65,7 +65,7 @@ func NewTestGame(t *testing.T, s *Script) (ret TestGame, err error) {
 		} else if parser, e := standard.NewStandardParser(game); e != nil {
 			err = e
 		} else {
-			ret = TestGame{t, game, cons, parser, model.Calls}
+			ret = TestGame{t, game, model, cons, parser}
 		}
 	}
 	return ret, err
@@ -74,9 +74,9 @@ func NewTestGame(t *testing.T, s *Script) (ret TestGame, err error) {
 type TestGame struct {
 	t *testing.T
 	*R.Game
+	compiler.MemoryResult
 	out            TestOutput
 	StandardParser *standard.StandardParser
-	call           call.MemoryStorage
 }
 
 //

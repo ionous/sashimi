@@ -57,7 +57,7 @@ func TestMoveConstruction(t *testing.T) {
 	s := makeTestRoom()
 	m, err := s.Compile(Log(t))
 	if assert.NoError(t, err) {
-		m.PrintModel(t.Log)
+		m.Model.PrintModel(t.Log)
 	}
 }
 

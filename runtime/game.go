@@ -17,7 +17,6 @@ import (
 
 // FIX: standarize member exports by splitting game into smaller classes and interfaces; focus on injecting what game needs, and allowing providers to decorate/instrument what they need.
 type Game struct {
-	Model          *M.Model
 	ModelApi       api.Model
 	Objects        GameObjects
 	Dispatchers    Dispatchers
@@ -81,7 +80,6 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 	}
 
 	game := &Game{
-		model,
 		modelApi,
 		objects,
 		dispatchers,
@@ -89,7 +87,7 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 		EventQueue{E.NewQueue()},
 		frame,
 		make(DefaultActions),
-		make(SystemActions),
+		SystemActions{modelApi, make(SystemActionMap)},
 		log,
 		PropertyWatchers{},
 		ParentLookupStack{},

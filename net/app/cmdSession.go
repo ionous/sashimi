@@ -40,11 +40,11 @@ func NewCommandSession(id string, model *M.Model, calls R.Callbacks) (ret *Comma
 			err = e
 		} else {
 			// setup system event callbacks --
-			if act, ok := model.Actions.FindActionByName("set initial position"); !ok {
-				err = fmt.Errorf("couldnt find initial position")
+			// STORE-FIX: can this be removed? why is it needed?
+			setInitialPos := R.MakeStringId("set initial position")
+			if e := game.SystemActions.Capture(setInitialPos, output.changedLocation); e != nil {
+				err = e
 			} else {
-				// STORE-FIX: can this be removed? why is it needed?
-				game.SystemActions.Capture(act.Id, output.changedLocation)
 				// add watchers for property changes --
 				game.Properties.AddWatcher(output)
 				// now start the game, and start receiving changes --
@@ -52,7 +52,7 @@ func NewCommandSession(id string, model *M.Model, calls R.Callbacks) (ret *Comma
 				if game, e := game.Start(immediate); e != nil {
 					err = e
 				} else {
-					ret = &CommandSession{game, output, 1, &sync.RWMutex{}}
+					ret = &CommandSession{game, model, output, 1, &sync.RWMutex{}}
 				}
 			}
 		}
@@ -65,6 +65,7 @@ func NewCommandSession(id string, model *M.Model, calls R.Callbacks) (ret *Comma
 //
 type CommandSession struct {
 	game       *standard.StandardGame
+	Model      *M.Model
 	output     *CommandOutput
 	frameCount int
 	*sync.RWMutex
@@ -77,12 +78,12 @@ func (sess *CommandSession) Find(name string) (ret resource.IResource, okay bool
 	switch name {
 	// by default, objects are grouped by their class:
 	default:
-		if cls, plural := sess.game.Model.Classes.FindClass(name); plural {
-			ret, okay = ObjectResource(sess.game.Game, cls, sess.output.serial.ObjectSerializer), true
+		if cls, plural := sess.Model.Classes.FindClass(name); plural {
+			ret, okay = ObjectResource(sess.game.Game, cls.Id, sess.output.serial.ObjectSerializer), true
 		}
 	// a request for information about a class:
 	case "class":
-		ret, okay = ClassResource(sess.game.Model.Classes), true
+		ret, okay = ClassResource(sess.Model.Classes), true
 		// a request for information about a parser input action:
 	case "action":
 		ret, okay = ParserResource(sess.game.ModelApi), true
@@ -141,7 +142,7 @@ func (sess *CommandSession) _handleInput(input CommandInput) (err error) {
 					err = e
 				} else {
 					for _, n := range input.Nouns() {
-						id := M.MakeStringId(n)
+						id := R.MakeStringId(n)
 						if ok := om.MatchId(id); !ok {
 							err = fmt.Errorf("unknown object %s; %v", n, id)
 							break

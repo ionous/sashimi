@@ -15,7 +15,7 @@ func TestActionUnknown(t *testing.T) {
 		}),
 	)
 	if model, err := s.Compile(Log(t)); !assert.Error(t, err, "expected failure") {
-		model.PrintModel(t.Log)
+		model.Model.PrintModel(t.Log)
 	}
 }
 
@@ -26,7 +26,7 @@ func TestActionKnown(t *testing.T) {
 		When("this exists").Always(func(g G.Play) {}),
 		Can("exist").And("this exists").RequiresNothing())
 	if model, err := s.Compile(Log(t)); assert.NoError(t, err) {
-		model.PrintModel(t.Log)
+		model.Model.PrintModel(t.Log)
 	}
 }
 

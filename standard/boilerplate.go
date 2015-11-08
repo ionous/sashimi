@@ -55,7 +55,7 @@ func RunScript(script *script.Script, opt Options) (err error) {
 		err = e
 	} else {
 		if dump {
-			model.PrintModel(func(args ...interface{}) { fmt.Println(args...) })
+			model.Model.PrintModel(func(args ...interface{}) { fmt.Println(args...) })
 			return
 		}
 		cfg := R.RuntimeConfig{Calls: model.Calls, Output: NewStandardOutput(cons, writer)}

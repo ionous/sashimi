@@ -18,7 +18,7 @@ func testField(
 	fieldName string,
 	value interface{},
 ) (err error) {
-	if inst, ok := res.Instances.FindInstance(instName); !ok {
+	if inst, ok := res.Model.Instances.FindInstance(instName); !ok {
 		err = M.InstanceNotFound(instName)
 	} else if prop, ok := inst.Class.FindProperty(fieldName); !ok {
 		err = fmt.Errorf("'%s.%v' missing field", instName, fieldName)
@@ -44,8 +44,8 @@ func TestEmpty(t *testing.T) {
 		t.Error(err)
 	}
 	// we expect the single built in "kinds" class
-	if len(c.Classes) != 1 {
-		t.Fatal("expected one classes", c.Classes)
+	if len(c.Model.Classes) != 1 {
+		t.Fatal("expected one classes", c.Model.Classes)
 	}
 }
 
@@ -61,13 +61,13 @@ func TestClass(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	res.PrintModel(t.Log)
-	if len(res.Classes) != 2 {
-		t.Fatal("expected two classes", res.Classes)
+	res.Model.PrintModel(t.Log)
+	if len(res.Model.Classes) != 2 {
+		t.Fatal("expected two classes", res.Model.Classes)
 	}
-	stories := res.Classes[M.MakeStringId("stories")]
+	stories := res.Model.Classes[M.MakeStringId("stories")]
 	if stories == nil {
-		t.Fatal("expected stories", res.Classes)
+		t.Fatal("expected stories", res.Model.Classes)
 	}
 	if stories.Singular != "story" {
 		t.Fatal("singular/plural problem", stories)
@@ -103,8 +103,8 @@ func TestClassProperty(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	res.PrintModel(t.Log)
-	objs := res.Classes[M.MakeStringId("kinds")]
+	res.Model.PrintModel(t.Log)
+	objs := res.Model.Classes[M.MakeStringId("kinds")]
 	if objs == nil {
 		t.Fatal("missing objs", res)
 	}
@@ -142,13 +142,13 @@ func TestInst(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	res.PrintModel(t.Log)
-	if len(res.Instances) != 1 {
-		t.Fatal("expected one instance", res.Instances)
+	res.Model.PrintModel(t.Log)
+	if len(res.Model.Instances) != 1 {
+		t.Fatal("expected one instance", res.Model.Instances)
 	}
-	test := res.Instances[M.MakeStringId("test")]
+	test := res.Model.Instances[M.MakeStringId("test")]
 	if test == nil {
-		t.Fatal("expected test instance", res.Instances)
+		t.Fatal("expected test instance", res.Model.Instances)
 	}
 }
 
@@ -168,7 +168,7 @@ func TestTextProperties(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	res.PrintModel(t.Log)
+	res.Model.PrintModel(t.Log)
 	err = testField(res, "test", "author", "any mouse")
 	if err != nil {
 		t.Fatal(err)
@@ -192,7 +192,7 @@ func TestNumProperties(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	res.PrintModel(t.Log)
+	res.Model.PrintModel(t.Log)
 	err = testField(res, "test", "int", 5)
 	if err != nil {
 		t.Fatal(err)
@@ -237,7 +237,7 @@ func TestEitherOr(t *testing.T) {
 	if err != nil {
 		t.Log(err)
 	}
-	//res.PrintModel(t.Log)
+	//res.Model.PrintModel(t.Log)
 	//
 	err = testField(res, "scored-default", "scoredProperty", M.MakeStringId("scored")) // not default: false
 	if err != nil {
@@ -273,7 +273,7 @@ func TestEitherError(t *testing.T) {
 
 	res, err := s.Compile(Log(t))
 	if err == nil {
-		res.PrintModel(t.Log)
+		res.Model.PrintModel(t.Log)
 		t.Fatal("expected unscored story to report an issue")
 	}
 	t.Log("expected error:", err)

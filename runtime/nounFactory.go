@@ -41,7 +41,7 @@ func (om *ObjectMatcher) MatchNoun(name string, _ string) (err error) {
 	if cnt, max := len(om.objects), nouns.GetNounCount(); cnt >= max {
 		err = fmt.Errorf("You've told me more than I've understood.")
 	} else {
-		tried, ok := om.game.Model.NounNames.Try(name, func(id ident.Id) (okay bool) {
+		tried, ok := om.game.ModelApi.MatchNounName(name, func(id ident.Id) (okay bool) {
 			return om.MatchId(id)
 		})
 		if !ok {

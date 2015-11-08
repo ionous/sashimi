@@ -31,7 +31,8 @@ func TestTableDecl(t *testing.T) {
 	s := &Script{}
 	makeSweets(s)
 	nameSweets(s)
-	if m, err := s.Compile(Log(t)); assert.NoError(t, err, "table compile") {
+	if res, err := s.Compile(Log(t)); assert.NoError(t, err, "table compile") {
+		m := res.Model
 		assert.Len(t, m.Instances, 3)
 		// and now some values:
 		if inst, ok := m.Instances.FindInstance("boreo"); assert.True(t, ok, "find tabled instance by name") {
@@ -63,7 +64,8 @@ func TestTableGeneration(t *testing.T) {
 			"A crunchy summer's day snack.", "you can't be serious",
 		),
 	)
-	if m, err := s.Compile(Log(t)); assert.NoError(t, err, "table compile") {
+	if res, err := s.Compile(Log(t)); assert.NoError(t, err, "table compile") {
+		m := res.Model
 		assert.Len(t, m.Instances, 3)
 	}
 }
@@ -74,7 +76,8 @@ func TestTabledData(t *testing.T) {
 	makeSweets(s)
 	nameSweets(s)
 	s.Our("Boreo", Is("acceptable"), Has("price", 42))
-	if m, err := s.Compile(Log(t)); assert.NoError(t, err, "table compile") {
+	if res, err := s.Compile(Log(t)); assert.NoError(t, err, "table compile") {
+		m := res.Model
 		if inst, ok := m.Instances.FindInstance("boreo"); assert.True(t, ok, "find tabled instance by name") {
 			if val, ok := inst.FindValue("price"); assert.True(t, ok, "find desc") {
 				assert.EqualValues(t, 42, val)
@@ -108,7 +111,8 @@ func TestTablePointers(t *testing.T) {
 	nameSweets(s)
 	makePeople(s)
 	namePeople(s)
-	if m, err := s.Compile(Log(t)); assert.NoError(t, err, "table compile") {
+	if res, err := s.Compile(Log(t)); assert.NoError(t, err, "table compile") {
+		m := res.Model
 		if inst, ok := m.Instances.FindInstance("Grace"); assert.True(t, ok, "find person by name") {
 			if val, ok := inst.FindValue("Favorite Sweet"); assert.True(t, ok, "find favorite") {
 				if id, ok := val.(ident.Id); assert.True(t, ok, "id") {

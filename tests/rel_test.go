@@ -23,8 +23,9 @@ func TestSimpleRelation(t *testing.T) {
 			Implying("rocks", HaveOne("o beneficent one", "gremlin")),
 	)
 	s.The("kinds", Called("rocks"), Exist())
-	model, err := s.Compile(Log(t))
+	res, err := s.Compile(Log(t))
 	if assert.NoError(t, err) {
+		model := res.Model
 		model.PrintModel(t.Log)
 		assert.Equal(t, 1, len(model.Relations))
 		for _, v := range model.Relations {
@@ -51,8 +52,9 @@ func TestSimpleRelates(t *testing.T) {
 	s.The("rock", Called("Loofah"), Exists())
 
 	//
-	model, err := s.Compile(Log(t))
+	res, err := s.Compile(Log(t))
 	if assert.NoError(t, err, "compile") {
+		model := res.Model
 		assert.Equal(t, 2, len(model.Instances), "two instances")
 
 		claire, ok := model.Instances.FindInstance("claire")

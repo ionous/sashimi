@@ -2,18 +2,18 @@ package app
 
 import (
 	"fmt"
-	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/net/resource"
 	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/util/ident"
 )
 
-func ObjectResource(game *R.Game, gcls *M.ClassInfo, serial *ObjectSerializer) resource.IResource {
+func ObjectResource(game *R.Game, clsId ident.Id, serial *ObjectSerializer) resource.IResource {
 	return resource.Wrapper{
 		// Find the id object.
 		Finds: func(id string) (ret resource.IResource, okay bool) {
-			if gobj, ok := game.Objects[M.MakeStringId(id)]; ok {
-				if cls := gobj.Class(); cls.GetId() == gcls.Id {
+			if gobj, ok := game.Objects[R.MakeStringId(id)]; ok {
+				if cls := gobj.Class(); clsId == cls.GetId() {
 					okay, ret = true, resource.Wrapper{
 						// Return the object:
 						Queries: func(doc resource.DocumentBuilder) {
@@ -22,7 +22,7 @@ func ObjectResource(game *R.Game, gcls *M.ClassInfo, serial *ObjectSerializer) r
 						// Find a relation in the object:
 						Finds: func(propertyName string) (ret resource.IResource, okay bool) {
 							// FIX: relations are stored in the model
-							propId := M.MakeStringId(propertyName)
+							propId := R.MakeStringId(propertyName)
 							i, _ := game.ModelApi.GetInstance(gobj.Id())
 
 							if prop, ok := i.GetProperty(propId); ok {
