@@ -3,7 +3,6 @@ package runtime
 import (
 	"fmt"
 	G "github.com/ionous/sashimi/game"
-	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/util/ident"
 	"strings"
 )
@@ -28,16 +27,13 @@ func (act *RuntimeAction) runAfterDefaults(cb CallbackPair) {
 // Run the passed game callback.
 // This creates the game event adapter, sets up the necessary template context, etc.
 // Returns the results of the callback.
-func (act *RuntimeAction) runCallback(cb CallbackPair, cls *M.ClassInfo) bool {
+func (act *RuntimeAction) runCallback(cb CallbackPair, clsId ident.Id) bool {
 	// FIX: it might be cooler to make act some sort of API...
 	// then we could have the callback object: callback.run( IPlay, Data ) maybe...
 	act.game.log.Println("calling:", act.action, cb)
-
 	adapter := NewGameAdapter(act.game)
 	adapter.data = act
-	if cls != nil {
-		adapter.hint = cls.Id
-	}
+	adapter.hint = clsId
 	cb.call(adapter)
 	return !adapter.cancelled
 }
@@ -52,11 +48,11 @@ func (act *RuntimeAction) runDefaultActions() {
 	// the main reason it does it to share code b/t Go() and the ProcessEventLoop
 	if actions, existed := act.game.defaultActions[act.action]; existed {
 		for _, cb := range actions {
-			act.runCallback(cb, nil)
+			act.runCallback(cb, ident.Empty())
 		}
 	}
 	for _, after := range act.after {
-		act.runCallback(after, nil)
+		act.runCallback(after, ident.Empty())
 	}
 	act.game.SystemActions.Run(act.action, act.objs)
 }

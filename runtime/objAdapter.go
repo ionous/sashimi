@@ -251,7 +251,8 @@ func (oa ObjectAdapter) Says(text string) {
 // @see also: Game.ProcessEventQueue
 //
 func (oa ObjectAdapter) Go(act string, objects ...G.IObject) {
-	if action, ok := oa.game.Model.Actions.FindActionByName(act); !ok {
+	actionId := MakeStringId(act)
+	if action, ok := oa.game.ModelApi.GetAction(actionId); !ok {
 		e := fmt.Errorf("unknown action for Go %s", act)
 		oa.logError(e)
 	} else {
@@ -265,7 +266,7 @@ func (oa ObjectAdapter) Go(act string, objects ...G.IObject) {
 			oa.logError(e)
 		} else {
 			tgt := ObjectTarget{oa.game, oa.gobj}
-			msg := &E.Message{Name: action.EventName, Data: act}
+			msg := &E.Message{Name: action.GetEvent().GetEventName(), Data: act}
 			if e := oa.game.frame.SendMessage(tgt, msg); e != nil {
 				oa.logError(e)
 			}

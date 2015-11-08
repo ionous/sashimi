@@ -24,6 +24,9 @@ type Model interface {
 
 	AreCompatible(child, parent ident.Id) bool
 	Pluralize(string) string
+
+	// hrmmm...
+	MatchNounName(string, func(ident.Id) bool) (tries int, okay bool)
 }
 
 type Action interface {
@@ -40,6 +43,9 @@ type Event interface {
 	GetId() ident.Id
 	// GetEventName returns the original name given by the scripter.
 	GetEventName() string
+	// GetAction: there shouldnt have to be a one to one mapping between actions ad events
+	// that's just how it is right now :(
+	GetAction() Action
 }
 
 type Prototype interface {
@@ -110,7 +116,7 @@ type Value interface {
 
 // NOTE: ParserActions aren't id'd so, they are represented as structs.
 type ParserAction struct {
-	Action
+	Action   ident.Id
 	Commands []string
 }
 

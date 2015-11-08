@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"fmt"
 	G "github.com/ionous/sashimi/game"
 	"github.com/ionous/sashimi/parser"
 	"github.com/ionous/sashimi/runtime/api"
@@ -38,17 +39,21 @@ func NewObjectParser(game *Game,
 	// pre-compile the parser statements ( ex. to catch errors. )
 	for i := 0; i < model.NumParserAction(); i++ {
 		pa := model.ParserActionNum(i)
-		act, commands := pa.Action, pa.Commands
-		game.log.Println("adding comprehension", act.GetId(), commands)
-		if comp, e := p.NewComprehension(act.GetId(),
-			func() (parser.IMatch, error) {
-				return op.GetObjectMatcher(act)
-			}); e != nil {
-			err = errutil.Append(err, e)
+		actionId, commands := pa.Action, pa.Commands
+		if action, ok := model.GetAction(actionId); !ok {
+			err = errutil.Append(err, fmt.Errorf("couldnt find action", actionId))
 		} else {
-			for _, learn := range commands {
-				if _, e := comp.LearnPattern(learn); e != nil {
-					err = errutil.Append(err, e)
+			game.log.Println("adding comprehension", actionId, commands)
+			if comp, e := p.NewComprehension(actionId,
+				func() (parser.IMatch, error) {
+					return op.GetObjectMatcher(action)
+				}); e != nil {
+				err = errutil.Append(err, e)
+			} else {
+				for _, learn := range commands {
+					if _, e := comp.LearnPattern(learn); e != nil {
+						err = errutil.Append(err, e)
+					}
 				}
 			}
 		}

@@ -12,7 +12,7 @@ func ParserResource(m api.Model) resource.IResource {
 			objects := doc.NewObjects()
 			for i := 0; i < m.NumParserAction(); i++ {
 				act := m.ParserActionNum(i)
-				objects.NewObject(jsonId(act.GetId()), "action")
+				objects.NewObject(jsonId(act.Action), "action")
 			}
 		},
 		Finds: func(id string) (ret resource.IResource, okay bool) {

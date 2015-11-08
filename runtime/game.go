@@ -104,7 +104,7 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 		} else {
 			cb := CallbackPair{src, cb}
 			act := handler.Action
-			arr := game.defaultActions[act.Id]
+			arr := game.defaultActions[act]
 			// FIX: for now treating target as bubble,
 			// really the compiler should hand off a sorted flat list based on three separate groups
 			// target growing in the same direction as after, but distinctly in the middle of things.
@@ -114,7 +114,7 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 				// prepend:
 				arr = append([]CallbackPair{cb}, arr...)
 			}
-			game.defaultActions[act.Id] = arr
+			game.defaultActions[act] = arr
 		}
 	}
 
@@ -126,23 +126,21 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 	for _, listener := range model.EventListeners {
 		src := listener.Callback
 		if cb := cfg.Calls.Lookup(src); cb == nil {
-			err = errutil.Append(err, fmt.Errorf("couldnt find callback for listener", listener))
+			err = errutil.Append(err, fmt.Errorf("couldn't find callback for listener %s", listener))
+		} else if evt, ok := modelApi.GetEvent(listener.Event); !ok {
+			err = errutil.Append(err, fmt.Errorf("couldn't find event for listener %s", listener))
 		} else {
-			act := listener.Action
-			callback := GameCallback{game, listener, CallbackPair{src, cb}}
-
-			var id ident.Id
-			if inst := listener.Instance; inst != nil {
-				id = inst.Id
-			} else if cls := listener.Class; cls != nil {
-				id = cls.Id
-			} else {
-				e := fmt.Errorf("couldnt create listener %v", listener)
-				err = errutil.Append(err, e)
-				continue
+			call := CallbackPair{src, cb}
+			var opt CallbackOptions
+			if listener.UseTargetOnly() {
+				opt |= UseTargetOnly
 			}
-			dispatch := dispatchers.CreateDispatcher(id)
-			dispatch.Listen(act.EventName, callback, listener.UseCapture())
+			if listener.UseAfterQueue() {
+				opt |= UseAfterQueue
+			}
+			callback := GameCallback{call, opt, listener.Class}
+			dispatch := dispatchers.CreateDispatcher(listener.GetId())
+			dispatch.Listen(evt.GetEventName(), callback, listener.UseCapture())
 		}
 	}
 	if err != nil {
@@ -224,13 +222,14 @@ func (g *Game) FindFirstOf(cls *M.ClassInfo, _ ...bool) (ret *GameObject) {
 func (g *Game) SendEvent(event string, nouns ...ident.Id,
 ) (err error,
 ) {
-	if action, e := g.Model.Events.FindEventByName(event); e != nil {
-		err = e
-	} else if act, e := g.newRuntimeAction(action, nouns...); e != nil {
+	eventId := MakeStringId(event)
+	if event, ok := g.ModelApi.GetEvent(eventId); !ok {
+		err = fmt.Errorf("couldnt find event %s", event)
+	} else if act, e := g.newRuntimeAction(event.GetAction(), nouns...); e != nil {
 		err = e
 	} else {
 		tgt := ObjectTarget{g, act.objs[0]}
-		g.queue.QueueEvent(tgt, action.EventName, act)
+		g.queue.QueueEvent(tgt, event.GetEventName(), act)
 	}
 	return err
 }
@@ -238,10 +237,10 @@ func (g *Game) SendEvent(event string, nouns ...ident.Id,
 //
 // FIX: merge with runCommand()
 //
-func (g *Game) newRuntimeAction(action *M.ActionInfo, nouns ...ident.Id,
+func (g *Game) newRuntimeAction(action api.Action, nouns ...ident.Id,
 ) (ret *RuntimeAction, err error,
 ) {
-	types := action.NounTypes
+	types := action.GetNouns()
 	switch diff := len(nouns) - len(types); {
 	case diff < 0:
 		err = fmt.Errorf("too few nouns specified for '%s', %d", action, diff)
@@ -254,7 +253,7 @@ func (g *Game) newRuntimeAction(action *M.ActionInfo, nouns ...ident.Id,
 			if gobj, ok := g.Objects[noun]; !ok {
 				err = M.InstanceNotFound(noun.String())
 				break
-			} else if !g.ModelApi.AreCompatible(gobj.cls.GetId(), class.Id) {
+			} else if !g.ModelApi.AreCompatible(gobj.cls.GetId(), class) {
 				err = TypeMismatch(noun.String(), class.String())
 				break
 			} else {
@@ -262,7 +261,7 @@ func (g *Game) newRuntimeAction(action *M.ActionInfo, nouns ...ident.Id,
 			}
 		}
 		if err == nil {
-			ret = &RuntimeAction{g, action.Id, objs, nil}
+			ret = &RuntimeAction{g, action.GetId(), objs, nil}
 		}
 	}
 	return ret, err

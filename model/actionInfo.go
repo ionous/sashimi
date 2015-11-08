@@ -6,12 +6,20 @@ import (
 )
 
 type ActionInfo struct {
-	Id                    ident.Id
-	ActionName, EventName string
-	NounTypes             []*ClassInfo
+	Id         ident.Id
+	ActionName string
+	EventId    ident.Id
+	NounTypes  []*ClassInfo
 }
 
-func NewAction(id ident.Id, action, event string, classes ...*ClassInfo) (ret *ActionInfo, err error) {
+// FIX: a one to one action/event ratio isnt desirable
+type EventInfo struct {
+	Id        ident.Id
+	EventName string
+	ActionId  ident.Id
+}
+
+func NewAction(id ident.Id, action string, event ident.Id, classes ...*ClassInfo) (ret *ActionInfo, err error) {
 	end, found := len(classes), false
 	for i := len(classes) - 1; i >= 0; i-- {
 		c := classes[i]
@@ -33,6 +41,10 @@ func NewAction(id ident.Id, action, event string, classes ...*ClassInfo) (ret *A
 	return ret, err
 }
 
-func (a *ActionInfo) String() string {
-	return a.Id.String()
+func (a ActionInfo) String() string {
+	return a.ActionName
+}
+
+func (e EventInfo) String() string {
+	return e.EventName
 }

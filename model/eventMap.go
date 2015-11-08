@@ -8,12 +8,12 @@ import (
 // actions and events have slightly different purposes
 // but for now, we put all of the info into action
 // and just provide a way to find it by event name
-type EventMap map[ident.Id]*ActionInfo
+type EventMap map[ident.Id]*EventInfo
 
-// FIX: i kind of think all maps with the string ids should have this
-func (this EventMap) FindEventByName(name string) (ret *ActionInfo, err error) {
+// FIX: i kind of think all maps with the string ids should have m
+func (m EventMap) FindEventByName(name string) (ret *EventInfo, err error) {
 	id := MakeStringId(name)
-	if act, ok := this[id]; !ok {
+	if act, ok := m[id]; !ok {
 		err = EventNotFound{name}
 	} else {
 		ret = act
@@ -27,6 +27,6 @@ type EventNotFound struct {
 }
 
 //
-func (this EventNotFound) Error() string {
-	return fmt.Sprintf("unknown event requested %s", this.action)
+func (m EventNotFound) Error() string {
+	return fmt.Sprintf("unknown event requested %s", m.action)
 }

@@ -113,7 +113,7 @@ func (ctx *Compiler) compileActions(classes M.ClassMap,
 			// add the action; if it exists, the uniquifier should have excluded any difs, so just ignore....
 			act := actions[actionId]
 			if act == nil {
-				if act, e = M.NewAction(actionId, fields.Action, fields.Event, source, target, context); e != nil {
+				if act, e = M.NewAction(actionId, fields.Action, eventId, source, target, context); e != nil {
 					err = errutil.Append(err, e)
 				} else {
 					actions[actionId] = act
@@ -121,7 +121,7 @@ func (ctx *Compiler) compileActions(classes M.ClassMap,
 			}
 			// add the event
 			if prev := events[eventId]; prev == nil {
-				events[eventId] = act
+				events[eventId] = &M.EventInfo{eventId, fields.Event, actionId}
 			}
 		}
 	}
@@ -161,20 +161,19 @@ func (ctx *Compiler) newCallback(
 	owner string,
 	classes M.ClassMap,
 	instances M.InstanceMap,
-	action *M.ActionInfo,
 	callback G.Callback,
 	options M.ListenerOptions,
 ) (
-	ret *M.ListenerCallback, err error,
+	ret M.ListenerCallback, err error,
 ) {
 	if cb, e := ctx.Calls.CompileCallback(callback); e != nil {
-		err = errutil.Append(e, fmt.Errorf("couldn't compile callback for `%s(%s)`", owner, action))
+		err = errutil.Append(e, fmt.Errorf("couldn't compile callback for `%s`", owner))
 	} else if cls, _ := classes.FindClass(owner); cls != nil {
-		ret = M.NewClassCallback(cls, action, cb, options)
+		ret = M.NewClassCallback(cls, cb, options)
 	} else if inst, ok := instances.FindInstance(owner); ok {
-		ret = M.NewInstanceCallback(inst, action, cb, options)
+		ret = M.NewInstanceCallback(inst, cb, options)
 	} else {
-		err = fmt.Errorf("unknown listener requested `%s(%s)`", owner, action)
+		err = fmt.Errorf("unknown listener requested `%s`", owner)
 	}
 	return ret, err
 }
@@ -198,23 +197,24 @@ func (ctx *Compiler) makeActionHandlers(classes M.ClassMap, instances M.Instance
 			options |= M.EventTargetOnly
 		}
 
-		cb, e := ctx.newCallback(f.Owner, classes, instances, action, f.Callback, options)
+		cb, e := ctx.newCallback(f.Owner, classes, instances, f.Callback, options)
 		if e != nil {
 			err = errutil.Append(err, SourceError(statement.Source(), e))
 			continue
 		}
-		callbacks = append(callbacks, cb)
+		id := M.MakeStringId(action.ActionName)
+		callbacks = append(callbacks, M.ActionCallback{id, cb})
 	}
 	return callbacks, err
 }
 
 //
 func (ctx *Compiler) makeEventListeners(events M.EventMap, classes M.ClassMap, instances M.InstanceMap,
-) (callbacks M.ListenerCallbacks, err error,
+) (callbacks M.EventCallbacks, err error,
 ) {
 	for _, l := range ctx.Source.EventHandlers {
 		r := l.Fields()
-		action, e := events.FindEventByName(r.Event)
+		evt, e := events.FindEventByName(r.Event)
 		if e != nil {
 			err = errutil.Append(err, SourceError(l.Source(), e))
 			continue
@@ -229,12 +229,13 @@ func (ctx *Compiler) makeEventListeners(events M.EventMap, classes M.ClassMap, i
 		if r.RunsAfter() {
 			options |= M.EventQueueAfter
 		}
-		cb, e := ctx.newCallback(r.Owner, classes, instances, action, r.Callback, options)
+		cb, e := ctx.newCallback(r.Owner, classes, instances, r.Callback, options)
 		if e != nil {
 			err = errutil.Append(err, SourceError(l.Source(), e))
 			continue
 		}
-		callbacks = append(callbacks, cb)
+		id := M.MakeStringId(evt.EventName)
+		callbacks = append(callbacks, M.EventCallback{id, cb})
 	}
 	return callbacks, err
 }
@@ -269,11 +270,12 @@ func (ctx *Compiler) compileAliases(instances M.InstanceMap, actions M.ActionMap
 			}
 		} else {
 			// alias is an action:
-			if act, ok := actions.FindActionByName(key); ok {
+			id := M.MakeStringId(key)
+			if _, ok := actions[id]; ok {
 				// FUTURE: ensure action Parsings always involve the player object?
 				// but, to know the player... might mean we couldnt run without the standard lib,
 				// maybe there's user rules, or something...?
-				parserAction := M.ParserAction{act, phrases}
+				parserAction := M.ParserAction{id, phrases}
 				parserActions = append(parserActions, parserAction)
 			} else {
 				e := fmt.Errorf("unknown alias requested %s", key)

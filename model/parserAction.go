@@ -1,7 +1,9 @@
 package model
 
-// map actions to the parser
+import "github.com/ionous/sashimi/util/ident"
+
+// ParserAction commands that beome an action
 type ParserAction struct {
-	Action   *ActionInfo
+	Action   ident.Id
 	Commands []string
 }

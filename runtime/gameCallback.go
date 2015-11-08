@@ -3,33 +3,43 @@ package runtime
 import (
 	"fmt"
 	E "github.com/ionous/sashimi/event"
-	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/util/ident"
 )
 
-//
-// Adapt model listeners to game events.
+// GameCallback adapts model listeners to game events.
 // ( by implementing E.IListen )
-//
 type GameCallback struct {
-	game *Game
-	*M.ListenerCallback
-	call CallbackPair
+	call      CallbackPair
+	options   CallbackOptions
+	classHint ident.Id
 }
 
-//
-// Implementation of E.IListen.
-//
+type CallbackOptions int
+
+const (
+	UseTargetOnly CallbackOptions = 1 << iota
+	UseAfterQueue
+)
+
+func (opt CallbackOptions) UseTargetOnly() bool {
+	return opt&UseTargetOnly != 0
+}
+func (opt CallbackOptions) UseAfterQueue() bool {
+	return opt&UseAfterQueue != 0
+}
+
+// HandleEvent implements E.IListen.
 func (cb GameCallback) HandleEvent(evt E.IEvent) (err error) {
 	if act, okay := evt.Data().(*RuntimeAction); !okay {
 		err = fmt.Errorf("unexpected game event data type %T", act)
 	} else {
 		// callbacks from scripts can ask to be limited to the "target" phase,
 		// whereas event listeneres are either registered as part of the bubbling or capturing cycle.
-		if trigger := !cb.UseTargetOnly() || isTargetPhase(evt); trigger {
-			if cb.UseAfterQueue() {
+		if trigger := !cb.options.UseTargetOnly() || isTargetPhase(evt); trigger {
+			if cb.options.UseAfterQueue() {
 				act.runAfterDefaults(cb.call)
 			} else {
-				if !act.runCallback(cb.call, cb.Class) {
+				if !act.runCallback(cb.call, cb.classHint) {
 					evt.StopImmediatePropagation()
 					evt.PreventDefault()
 				}
@@ -39,9 +49,7 @@ func (cb GameCallback) HandleEvent(evt E.IEvent) (err error) {
 	return err
 }
 
-//
-// Expands the target phase to include the target instance and the instance's class.
-//
+// isTargetPhase expands the target phase to include the target instance and the instance's class.
 func isTargetPhase(evt E.IEvent) bool {
 	targetPhase := evt.Phase() == E.TargetPhase
 	if !targetPhase {

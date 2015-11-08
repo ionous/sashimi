@@ -14,10 +14,10 @@ import (
 type MemoryModel struct {
 	*M.Model
 	_actions   []*M.ActionInfo
+	_events    []*M.EventInfo
 	_classes   []*M.ClassInfo
 	_instances []*M.InstanceInfo
 	_relations []*M.Relation
-	_events    []*M.ActionInfo
 	tables     table.Tables
 }
 
@@ -50,7 +50,7 @@ func (mdl *MemoryModel) NumEvent() int {
 }
 func (mdl *MemoryModel) EventNum(i int) api.Event {
 	if mdl._events == nil {
-		mdl._events = make([]*M.ActionInfo, 0, len(mdl.Events))
+		mdl._events = make([]*M.EventInfo, 0, len(mdl.Events))
 		for _, v := range mdl.Events {
 			mdl._events = append(mdl._events, v)
 		}
@@ -121,11 +121,18 @@ func (mdl *MemoryModel) GetInstance(id ident.Id) (ret api.Instance, okay bool) {
 func (mdl *MemoryModel) ParserActionNum(i int) api.ParserAction {
 	// panics on out of range
 	p := mdl.ParserActions[i]
-	return api.ParserAction{actionInfo{mdl, p.Action}, p.Commands}
+	return api.ParserAction{p.Action, p.Commands}
 }
 
 func (mdl MemoryModel) NumParserAction() int {
 	return len(mdl.ParserActions)
+}
+
+func (mdl MemoryModel) AreCompatible(child, parent ident.Id) (okay bool) {
+	if c, ok := mdl.Classes[child]; ok {
+		okay = c.CompatibleWith(parent)
+	}
+	return
 }
 
 func (mdl MemoryModel) Pluralize(single string) (plural string) {
@@ -137,11 +144,9 @@ func (mdl MemoryModel) Pluralize(single string) (plural string) {
 	return
 }
 
-func (mdl MemoryModel) AreCompatible(child, parent ident.Id) (okay bool) {
-	if c, ok := mdl.Classes[child]; ok {
-		okay = c.CompatibleWith(parent)
-	}
-	return
+// hrmmm...
+func (mdl MemoryModel) MatchNounName(n string, f func(ident.Id) bool) (int, bool) {
+	return mdl.NounNames.Try(n, f)
 }
 
 func (mdl *MemoryModel) makeInstance(n *M.InstanceInfo) api.Instance {
@@ -176,9 +181,8 @@ func (a actionInfo) GetActionName() string {
 }
 
 func (a actionInfo) GetEvent() (ret api.Event) {
-	id := M.MakeStringId(a.EventName)
-	if e, ok := a.mdl.Events[id]; !ok {
-		panic(fmt.Sprintf("internal error, no event found for action %s", a.ActionName))
+	if e, ok := a.mdl.Events[a.EventId]; !ok {
+		panic(fmt.Sprintf("internal error, no event found for action %s", a.EventId))
 	} else {
 		ret = eventInfo{a.mdl, e}
 	}
@@ -195,7 +199,7 @@ func (a actionInfo) GetNouns() api.Nouns {
 
 type eventInfo struct {
 	mdl *MemoryModel
-	*M.ActionInfo
+	*M.EventInfo
 }
 
 func (e eventInfo) GetId() ident.Id {
@@ -204,6 +208,15 @@ func (e eventInfo) GetId() ident.Id {
 
 func (e eventInfo) GetEventName() string {
 	return e.EventName
+}
+
+func (e eventInfo) GetAction() (ret api.Action) {
+	if a, ok := e.mdl.GetAction(e.ActionId); !ok {
+		panic(fmt.Sprintf("internal error, no action found for event %s", e.ActionId))
+	} else {
+		ret = a
+	}
+	return
 }
 
 type classInfo struct {

@@ -35,9 +35,7 @@ func NewObjectMatcher(game *Game, source *GameObject, act api.Action,
 	return ret, err
 }
 
-//
-// MatchNOun to relate the passed name and article to internal objects.
-//
+// MatchNoun to relate the passed name and article to internal objects.
 func (om *ObjectMatcher) MatchNoun(name string, _ string) (err error) {
 	nouns := om.act.GetNouns()
 	if cnt, max := len(om.objects), nouns.GetNounCount(); cnt >= max {

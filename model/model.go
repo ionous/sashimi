@@ -17,7 +17,7 @@ type Model struct {
 	// data like:
 	Instances      InstanceMap
 	ActionHandlers ActionCallbacks
-	EventListeners ListenerCallbacks
+	EventListeners EventCallbacks
 	Tables         table.Tables
 	//
 	NounNames      NounNames
