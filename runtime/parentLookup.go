@@ -1,10 +1,10 @@
 package runtime
 
-//
+import "github.com/ionous/sashimi/runtime/api"
+
 // TargetLookup: so object targets can find their parents
 // implemented as a stack to allow context to define hierarchy
-//
-type TargetLookup func(gobj *GameObject) *GameObject
+type TargetLookup func(gobj api.Instance) api.Instance
 
 //
 type ParentLookupStack struct {
@@ -12,7 +12,7 @@ type ParentLookupStack struct {
 }
 
 //
-func (this *ParentLookupStack) FindParent(gobj *GameObject) (ret *GameObject) {
+func (this *ParentLookupStack) FindParent(gobj api.Instance) (ret api.Instance) {
 	count := len(this.arr)
 	if count > 0 {
 		parentLookup := this.arr[count-1]

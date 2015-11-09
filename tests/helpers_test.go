@@ -6,6 +6,7 @@ import (
 	C "github.com/ionous/sashimi/console"
 	"github.com/ionous/sashimi/parser"
 	R "github.com/ionous/sashimi/runtime"
+	"github.com/ionous/sashimi/runtime/api"
 	. "github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/standard" // :(
 	"strings"
@@ -42,8 +43,10 @@ func (out TestOutput) ScriptSays(lines []string) {
 	}
 }
 
-func (out TestOutput) ActorSays(whose *R.GameObject, lines []string) {
-	name := whose.Value("Name")
+func (out TestOutput) ActorSays(whose api.Instance, lines []string) {
+	prop, _ := whose.GetProperty("Name")
+	name := prop.GetValue().GetText()
+
 	for _, l := range lines {
 		out.Println(name, ": ", l)
 	}

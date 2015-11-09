@@ -13,7 +13,7 @@ type SystemActions struct {
 	actions SystemActionMap
 }
 
-type SystemCallback func(obj []*GameObject)
+type SystemCallback func(obj []api.Instance)
 
 func (a SystemActions) Capture(act ident.Id, cb SystemCallback) (err error) {
 	if _, ok := a.mdl.GetAction(act); !ok {
@@ -26,7 +26,7 @@ func (a SystemActions) Capture(act ident.Id, cb SystemCallback) (err error) {
 	return err
 }
 
-func (a SystemActions) Run(act ident.Id, objects []*GameObject) {
+func (a SystemActions) Run(act ident.Id, objects []api.Instance) {
 	if arr, ok := a.actions[act]; ok {
 		for _, cb := range arr {
 			cb(objects)

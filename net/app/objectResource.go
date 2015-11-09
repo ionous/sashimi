@@ -3,29 +3,28 @@ package app
 import (
 	"fmt"
 	"github.com/ionous/sashimi/net/resource"
-	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/util/ident"
 )
 
-func ObjectResource(game *R.Game, clsId ident.Id, serial *ObjectSerializer) resource.IResource {
+func ObjectResource(mdl api.Model, clsId ident.Id, serial *ObjectSerializer) resource.IResource {
 	return resource.Wrapper{
 		// Find the id object.
-		Finds: func(id string) (ret resource.IResource, okay bool) {
-			if gobj, ok := game.Objects[R.MakeStringId(id)]; ok {
-				if cls := gobj.Class(); clsId == cls.GetId() {
+		Finds: func(name string) (ret resource.IResource, okay bool) {
+			id := ident.MakeId(name)
+			if inst, ok := mdl.GetInstance(id); ok {
+				if cls := inst.GetParentClass(); clsId == cls.GetId() {
 					okay, ret = true, resource.Wrapper{
 						// Return the object:
 						Queries: func(doc resource.DocumentBuilder) {
-							serial.SerializeObject(doc, gobj, true)
+							serial.SerializeObject(doc, inst, true)
 						},
 						// Find a relation in the object:
 						Finds: func(propertyName string) (ret resource.IResource, okay bool) {
 							// FIX: relations are stored in the model
-							propId := R.MakeStringId(propertyName)
-							i, _ := game.ModelApi.GetInstance(gobj.Id())
+							propId := ident.MakeId(propertyName)
 
-							if prop, ok := i.GetProperty(propId); ok {
+							if prop, ok := inst.GetProperty(propId); ok {
 								if prop.GetType() == api.ObjectProperty|api.ArrayProperty {
 									vals := prop.GetValues()
 									okay, ret = true, resource.Wrapper{
@@ -35,10 +34,10 @@ func ObjectResource(game *R.Game, clsId ident.Id, serial *ObjectSerializer) reso
 											//
 											for i := 0; i < vals.NumValue(); i++ {
 												n := vals.ValueNum(i).GetObject()
-												if gobj, ok := game.Objects[n]; !ok {
+												if other, ok := mdl.GetInstance(n); !ok {
 													panic(fmt.Sprintf("internal error, couldnt find related object '%s'", n))
 												} else {
-													serial.AddObjectRef(classes, gobj, includes)
+													serial.AddObjectRef(classes, other, includes)
 												}
 											}
 										},

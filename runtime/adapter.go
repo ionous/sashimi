@@ -3,6 +3,7 @@ package runtime
 import (
 	"fmt"
 	G "github.com/ionous/sashimi/game"
+	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/ionous/sashimi/util/lang"
 	"strings"
@@ -24,13 +25,20 @@ func NewGameAdapter(game *Game) *GameEventAdapter {
 	return &GameEventAdapter{Game: game}
 }
 
-//
 // NewObjectAdapter gives the passed game object the IObject interface.
 // Public for testing.
-//
-func NewObjectAdapter(game *Game, gobj *GameObject) (ret G.IObject) {
-	if gobj != nil {
-		ret = ObjectAdapter{game, gobj}
+func NewObjectAdapterFromId(game *Game, id ident.Id) (ret G.IObject) {
+	if inst, ok := game.ModelApi.GetInstance(id); ok {
+		ret = ObjectAdapter{game, inst}
+	} else {
+		ret = NullObjectSource("", 2)
+	}
+	return ret
+}
+
+func NewObjectAdapter(game *Game, inst api.Instance) (ret G.IObject) {
+	if inst != nil {
+		ret = ObjectAdapter{game, inst}
 	} else {
 		ret = NullObjectSource("", 2)
 	}
@@ -70,28 +78,30 @@ func (ga *GameEventAdapter) Global(name string) (ret interface{}, okay bool) {
 }
 
 // Add creates a new (data) object.
-func (ga *GameEventAdapter) NewFrom(class string) (ret G.IObject) {
-	clsid := StripStringId(class)
-	if cls, ok := ga.ModelApi.GetClass(clsid); !ok {
-		ret = NullObjectSource(class, 2)
-	} else {
-		id := ident.MakeUniqueId()
-		if gobj, e := NewGameObject(ga.ModelApi, id, cls, cls, ga.Game.Tables); e != nil {
-			ga.Log(e)
-			ret = NullObjectSource(class, 2)
-		} else {
-			ret = NewObjectAdapter(ga.Game, gobj)
-			ga.Objects[id] = gobj
-		}
-	}
-	return ret
+func (ga *GameEventAdapter) NewFrom(class string) G.IObject {
+	panic("not supported")
+	// clsid := StripStringId(class)
+	// if cls, ok := ga.ModelApi.GetClass(clsid); !ok {
+	// 	ret = NullObjectSource(class, 2)
+	// } else {
+	// 	id := ident.MakeUniqueId()
+	// 	if gobj, e := NewGameObject(ga.ModelApi, id, cls, cls, ga.Game.Tables); e != nil {
+	// 		ga.Log(e)
+	// 		ret = NullObjectSource(class, 2)
+	// 	} else {
+	// 		ret = NewObjectAdapter(ga.Game, gobj)
+	// 		ga.Objects[id] = gobj
+	// 	}
+	// }
+	// return ret
 }
 
 //
 func (ga *GameEventAdapter) Visit(class string, visits func(G.IObject) bool) (okay bool) {
 	clsid := StripStringId(class)
-	for _, gobj := range ga.Objects {
-		if id := gobj.cls.GetId(); ga.ModelApi.AreCompatible(id, clsid) {
+	for i := 0; i < ga.ModelApi.NumInstance(); i++ {
+		gobj := ga.ModelApi.InstanceNum(i)
+		if id := gobj.GetParentClass().GetId(); ga.ModelApi.AreCompatible(id, clsid) {
 			if visits(NewObjectAdapter(ga.Game, gobj)) {
 				okay = true
 				break

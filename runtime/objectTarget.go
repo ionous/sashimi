@@ -2,35 +2,36 @@ package runtime
 
 import (
 	E "github.com/ionous/sashimi/event"
+	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/util/ident"
 )
 
-// ObjectTarget implements event.ITarget for GameObject.
+// ObjectTarget implements event.ITarget for Instances.
 // The standard rules implement a hierarchy of objects based on containment; for instance: carried object => carrier=> container/supporter of the carrier => room of the contaniner.
 type ObjectTarget struct {
 	game *Game
-	obj  *GameObject // FIX? why is the target object and not adapter?
+	obj  api.Instance // FIX? why is the target an instance and not adapter?
 }
 
 //
 func (ot ObjectTarget) Id() ident.Id {
-	return ot.obj.Id()
+	return ot.obj.GetId()
 }
 
 //
 func (ot ObjectTarget) Class() ident.Id {
-	return ot.obj.Class().GetId()
+	return ot.obj.GetParentClass().GetId()
 }
 
 //
 func (ot ObjectTarget) String() string {
-	return ot.obj.String()
+	return ot.obj.GetId().String()
 }
 
 // Parent walks up the the (externally defined) containment hierarchy (from event.ITarget.)
 func (ot ObjectTarget) Parent() (ret E.ITarget, ok bool) {
 	game, obj := ot.game, ot.obj
-	cls, next := obj.Class(), game.parentLookup.FindParent(obj)
+	cls, next := obj.GetParentClass(), game.parentLookup.FindParent(obj)
 	if cls != nil || next != nil {
 		ret, ok = ClassTarget{ot, cls, next}, true
 	}
@@ -39,7 +40,7 @@ func (ot ObjectTarget) Parent() (ret E.ITarget, ok bool) {
 
 // Dispatch an event to an object (from event.ITarget.)
 func (ot ObjectTarget) Dispatch(evt E.IEvent) (err error) {
-	if d, ok := ot.game.Dispatchers.GetDispatcher(ot.obj.Id()); ok {
+	if d, ok := ot.game.Dispatchers.GetDispatcher(ot.obj.GetId()); ok {
 		err = d.Dispatch(evt)
 	}
 	return err

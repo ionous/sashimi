@@ -6,6 +6,8 @@ import (
 	M "github.com/ionous/sashimi/model"
 	. "github.com/ionous/sashimi/script"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"testing"
 )
 
@@ -99,37 +101,19 @@ func TestClassProperty(t *testing.T) {
 		Have("text", "text"),
 		Have("num", "num"),
 	)
-	res, err := s.Compile(Log(t))
-	if err != nil {
-		t.Fatal(err)
-	}
-	res.Model.PrintModel(t.Log)
-	objs := res.Model.Classes[M.MakeStringId("kinds")]
-	if objs == nil {
-		t.Fatal("missing objs", res)
-	}
-	props := objs.Properties
-	if props == nil {
-		t.Fatal("missing props", objs)
-	}
-	if len(props) != 2 {
-		t.Fatal("unexpected props", props)
-	}
-	text := props[M.MakeStringId("text")]
-	if text == nil {
-		t.Fatal("missing text", props)
-	}
-	_, isText := text.(M.TextProperty)
-	if !isText {
-		t.Errorf("unexpected property type %T", text)
-	}
-	num := props[M.MakeStringId("num")]
-	if num == nil {
-		t.Fatal("missing num", props)
-	}
-	_, isNum := num.(M.NumProperty)
-	if !isNum {
-		t.Errorf("unexpected property type %T", num)
+	if res, err := s.Compile(Log(t)); assert.NoError(t, err) {
+		res.Model.PrintModel(t.Log)
+		if cls := res.Model.Classes[M.MakeStringId("kinds")]; assert.NotNil(t, cls) {
+			if props := cls.Properties; assert.NotNil(t, props) {
+				require.Len(t, props, 2+1) // MOD: +1 for auto-generated "name" property
+				if pid := M.MakeStringId("text"); assert.Contains(t, props, pid) {
+					require.IsType(t, M.TextProperty{}, props[pid])
+				}
+				if pid := M.MakeStringId("num"); assert.Contains(t, props, pid) {
+					require.IsType(t, M.NumProperty{}, props[pid])
+				}
+			}
+		}
 	}
 }
 

@@ -458,6 +458,22 @@ func (ctx *Compiler) Compile() (*M.Model, error) {
 		}
 	}
 
+	// FIX FIX FIX: set a generic "name" property to each instance based on "printed name"
+	// really, this should combine with "long name" etc.
+	directName, printedName := M.MakeStringId("name"), M.MakeStringId("printed name")
+	kinds, _ := classes.FindClass("kinds")
+	kinds.Properties[directName] = M.TextProperty{
+		Id:   directName,
+		Name: "name",
+	}
+	for _, i := range instances {
+		name := i.Name
+		if printed, ok := i.Values[printedName]; ok {
+			name = printed.(string)
+		}
+		i.Values[directName] = name
+	}
+
 	// return the results with no error
 	ctx.Log.Println("compile finished")
 	res := &M.Model{

@@ -18,7 +18,6 @@ import (
 // FIX: standarize member exports by splitting game into smaller classes and interfaces; focus on injecting what game needs, and allowing providers to decorate/instrument what they need.
 type Game struct {
 	ModelApi       api.Model
-	Objects        GameObjects
 	Dispatchers    Dispatchers
 	output         IOutput
 	queue          EventQueue
@@ -64,10 +63,6 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 	tables := model.Tables.Clone()
 	modelApi := memory.NewMemoryModel(model, make(memory.ObjectValueMap), tables)
 	dispatchers := NewDispatchers(log)
-	objects, e := CreateGameObjects(modelApi, tables)
-	if e != nil {
-		return nil, e
-	}
 
 	globals := make(Globals)
 	// DISABLED:
@@ -81,7 +76,6 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 
 	game := &Game{
 		modelApi,
-		objects,
 		dispatchers,
 		cfg.Output,
 		EventQueue{E.NewQueue()},
@@ -153,16 +147,15 @@ func (g *Game) Random(n int) int {
 
 // PushParentLookup function into the game's determination of which object is which object's container.
 // Changes the user's parent lookup (IObject -> name) into
-// the runtime's parent lookup (GameObject->GameObject).
+// the runtime's parent lookup (Instance -> Instance).
 // FIX: inject an interface, via the constructor, which makes this possible
 // possibly inject the game/object adapter factory even.
 // then the caller can have the handle which does the push
 // and game can remain ignorant of the push (or not) process.
 func (g *Game) PushParentLookup(userLookup G.TargetLookup) {
-	g.parentLookup.PushLookup(func(gobj *GameObject) (ret *GameObject) {
+	g.parentLookup.PushLookup(func(gobj api.Instance) (ret api.Instance) {
 		// setup callback context:
-		play := NewGameAdapter(g)
-		obj := NewObjectAdapter(g, gobj)
+		play, obj := NewGameAdapter(g), NewObjectAdapter(g, gobj)
 		// call the user function
 		res := userLookup(play, obj)
 		// unpack the result
@@ -194,20 +187,20 @@ func (g *Game) ProcessEvents() (err error) {
 // FIX: TEMP(ish)
 // it might be better to add a name search (interface) to the model
 // and then use the id in the runtime.
-func (g *Game) FindObject(name string) (ret *GameObject, okay bool) {
+func (g *Game) FindObject(name string) (ret api.Instance, okay bool) {
 	id := StripStringId(name)
-	if obj, ok := g.Objects[id]; ok {
-		ret = obj
-		okay = true
+	if obj, ok := g.ModelApi.GetInstance(id); ok {
+		ret, okay = obj, ok
 	}
 	return ret, okay
 }
 
 // FIX: TEMP(ish)
-func (g *Game) FindFirstOf(cls *M.ClassInfo, _ ...bool) (ret *GameObject) {
-	for _, o := range g.Objects {
-		if o.Class().GetId() == cls.Id {
-			ret = o
+func (g *Game) FindFirstOf(cls *M.ClassInfo, _ ...bool) (ret api.Instance) {
+	for i := 0; i < g.ModelApi.NumInstance(); i++ {
+		inst := g.ModelApi.InstanceNum(i)
+		if inst.GetParentClass().GetId() == cls.Id {
+			ret = inst
 			break
 		}
 	}
@@ -245,13 +238,13 @@ func (g *Game) newRuntimeAction(action api.Action, nouns ...ident.Id,
 	case diff > 0:
 		err = fmt.Errorf("too many nouns specified for '%s', +%d", action, diff)
 	default:
-		objs := make([]*GameObject, len(types))
+		objs := make([]api.Instance, len(types))
 		for i, class := range types {
 			noun := nouns[i]
-			if gobj, ok := g.Objects[noun]; !ok {
+			if gobj, ok := g.ModelApi.GetInstance(noun); !ok {
 				err = M.InstanceNotFound(noun.String())
 				break
-			} else if !g.ModelApi.AreCompatible(gobj.cls.GetId(), class) {
+			} else if !g.ModelApi.AreCompatible(gobj.GetParentClass().GetId(), class) {
 				err = TypeMismatch(noun.String(), class.String())
 				break
 			} else {

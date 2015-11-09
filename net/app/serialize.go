@@ -2,7 +2,6 @@ package app
 
 import (
 	"github.com/ionous/sashimi/net/resource"
-	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/runtime/api"
 )
 
@@ -21,8 +20,8 @@ func NewObjectSerializer() *ObjectSerializer {
 }
 
 //
-func (s *ObjectSerializer) IsKnown(gobj *R.GameObject) bool {
-	return gobj != nil && s.known[gobj.Id()]
+func (s *ObjectSerializer) IsKnown(gobj api.Instance) bool {
+	return gobj != nil && s.known[gobj.GetId()]
 }
 
 //
@@ -32,34 +31,31 @@ func (s *ObjectSerializer) IsKnown(gobj *R.GameObject) bool {
 // The client will ask explicitly ask for the relation information it wants:
 // ex. /games/{session}/actors/player/inventory
 //
-func (s *ObjectSerializer) SerializeObject(out resource.IBuildObjects, gobj *R.GameObject, force bool) (obj *resource.Object) {
+func (s *ObjectSerializer) SerializeObject(out resource.IBuildObjects, gobj api.Instance, force bool) (obj *resource.Object) {
 	if s.known.SetKnown(gobj) || force {
 		obj = s.NewObject(out, gobj)
 		//
 		states := []string{}
-		// OBJECT FIX: should be from objcet
-		cls := gobj.Class()
-		for i := 0; i < cls.NumProperty(); i++ {
-			prop := cls.PropertyNum(i)
-			if val := gobj.Value(prop.GetId()); val != nil {
-				id := jsonId(prop.GetId())
-				switch prop.GetType() {
-				case api.NumProperty:
-					obj.SetAttr(id, prop.GetValue().GetNum())
-				case api.TextProperty:
-					obj.SetAttr(id, prop.GetValue().GetText())
-				case api.StateProperty:
-					obj.SetAttr(id, jsonId(prop.GetValue().GetState()))
-				case api.ObjectProperty:
-					obj.SetAttr(id, jsonId(prop.GetValue().GetObject()))
-				default:
-					// ignore arrays for now....
-				}
+		for i := 0; i < gobj.NumProperty(); i++ {
+			prop := gobj.PropertyNum(i)
+			pid := jsonId(prop.GetId())
+			switch prop.GetType() {
+			case api.NumProperty:
+				obj.SetAttr(pid, prop.GetValue().GetNum())
+			case api.TextProperty:
+				obj.SetAttr(pid, prop.GetValue().GetText())
+			case api.StateProperty:
+				obj.SetAttr(pid, jsonId(prop.GetValue().GetState()))
+			case api.ObjectProperty:
+				obj.SetAttr(pid, jsonId(prop.GetValue().GetObject()))
+			default:
+				// ignore arrays for now....
 			}
 		}
-		obj.
-			SetMeta("name", gobj.String()).
-			SetMeta("states", states)
+
+		// FIX: shouldnt this be GetProperty("name") ???
+		obj.SetMeta("name", gobj.GetId().String())
+		obj.SetMeta("states", states)
 	}
 	return obj
 }
@@ -68,11 +64,11 @@ func (s *ObjectSerializer) SerializeObject(out resource.IBuildObjects, gobj *R.G
 // Add a reference to the passed object into the passed refs list,
 // with a full seriaization into includes if the object is newly known.
 //
-func (s *ObjectSerializer) AddObjectRef(out resource.IBuildObjects, gobj *R.GameObject, include resource.IBuildObjects) (obj *resource.Object) {
+func (s *ObjectSerializer) AddObjectRef(out resource.IBuildObjects, gobj api.Instance, include resource.IBuildObjects) (obj *resource.Object) {
 	s.SerializeObject(include, gobj, false)
 	return s.NewObject(out, gobj)
 }
 
-func (s *ObjectSerializer) NewObject(out resource.IBuildObjects, gobj *R.GameObject) (obj *resource.Object) {
-	return out.NewObject(jsonId(gobj.Id()), jsonId(gobj.Class().GetId()))
+func (s *ObjectSerializer) NewObject(out resource.IBuildObjects, gobj api.Instance) (obj *resource.Object) {
+	return out.NewObject(jsonId(gobj.GetId()), jsonId(gobj.GetParentClass().GetId()))
 }

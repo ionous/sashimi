@@ -3,14 +3,12 @@ package app
 import (
 	C "github.com/ionous/sashimi/console"
 	"github.com/ionous/sashimi/net/resource"
-	R "github.com/ionous/sashimi/runtime"
+	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/util/ident"
 	"os"
 )
 
-//
 // CommandOutput records game state changes, gets sent to the player/client.
-//
 type CommandOutput struct {
 	id               string
 	C.BufferedOutput // TEMP: implements Print() and Println()
@@ -18,25 +16,21 @@ type CommandOutput struct {
 	events           *EventStream
 }
 
-//
 // Includes all objects referenced by the CommandOutput.
-//
-type Includes map[ident.Id]*R.GameObject
+type Includes map[ident.Id]api.Instance
 
-func (inc Includes) Include(gobj *R.GameObject) {
-	inc[gobj.Id()] = gobj
+func (inc Includes) Include(gobj api.Instance) {
+	inc[gobj.GetId()] = gobj
 }
 
-//
-// SerialOut is used by CommandOuput to track runtime.GameObjects.
-//
+// SerialOut is used by CommandOutput to track instances
 type SerialOut struct {
 	*ObjectSerializer
 	includes Includes
 }
 
 // TryObjectRef only creates an object ref if the object is already known.
-func (serial *SerialOut) TryObjectRef(gobj *R.GameObject) (ret *resource.Object, okay bool) {
+func (serial *SerialOut) TryObjectRef(gobj api.Instance) (ret *resource.Object, okay bool) {
 	if serial.IsKnown(gobj) {
 		ret = serial.NewObjectRef(gobj)
 		okay = true
@@ -44,7 +38,7 @@ func (serial *SerialOut) TryObjectRef(gobj *R.GameObject) (ret *resource.Object,
 	return
 }
 
-func (serial *SerialOut) NewObjectRef(gobj *R.GameObject) *resource.Object {
+func (serial *SerialOut) NewObjectRef(gobj api.Instance) *resource.Object {
 	serial.includes.Include(gobj)
 	return serial.NewObject(resource.ObjectList{}, gobj)
 }
@@ -55,9 +49,7 @@ func (serial *SerialOut) Flush() Includes {
 	return ret
 }
 
-//
 // NewCommandOutput
-//
 func NewCommandOutput(id string) *CommandOutput {
 	out := &CommandOutput{
 		id:     id,
@@ -67,44 +59,35 @@ func NewCommandOutput(id string) *CommandOutput {
 	return out
 }
 
-//
 // ActorSays adds a command for an actor's line of dialog.
-//
-func (out *CommandOutput) ActorSays(who *R.GameObject, lines []string) {
+func (out *CommandOutput) ActorSays(who api.Instance, lines []string) {
 	out.flushPending()
 	tgt := out.serial.NewObjectRef(who)
 	out.events.AddAction("say", tgt, lines)
 }
 
-//
 // ScriptSays add a command for passed script lines.
 // ( The implementation actually consolidates consecutive script says into a single command. )
-//
 func (out *CommandOutput) ScriptSays(lines []string) {
 	for _, l := range lines {
 		out.Println(l)
 	}
 }
 
-//
 // Log the passed message locally, doesn't generate a client command.
 // FIX: a log interface -- perhaps as an anonymous member -- then we could have logf, etc.
 func (out *CommandOutput) Log(message string) {
 	os.Stderr.WriteString(message)
 }
 
-//
 // FlushDocument containing all commands to the passed document builder.
-//
 func (out *CommandOutput) FlushDocument(doc resource.DocumentBuilder) {
 	out.flushPending()
 	// techinically, it'd be some sort of 201 location of the new frame url.
 	out.flushFrame(doc, doc.NewIncludes())
 }
 
-//
 // FlushFrame NOTE: Both header and included may be the same list -- as is true of the first frame.
-//
 func (out *CommandOutput) flushFrame(header, included resource.IBuildObjects) {
 	// create a new frame
 	//include all events for out new frame
@@ -118,13 +101,13 @@ func (out *CommandOutput) flushFrame(header, included resource.IBuildObjects) {
 	}
 }
 
-func (this *CommandOutput) changedLocation(gobjs []*R.GameObject) {
+func (this *CommandOutput) changedLocation(gobjs []api.Instance) {
 	this.flushPending()
 	who, where := this.serial.NewObjectRef(gobjs[1]), this.serial.NewObjectRef(gobjs[2])
 	this.events.AddAction("set-initial-position", who, where)
 }
 
-func (out *CommandOutput) NumChange(gobj *R.GameObject, prop ident.Id, prev, next float32) {
+func (out *CommandOutput) NumChange(gobj api.Instance, prop ident.Id, prev, next float32) {
 	if obj, ok := out.serial.TryObjectRef(gobj); ok {
 		data := struct {
 			Prop  string  `json:"prop"`
@@ -134,7 +117,7 @@ func (out *CommandOutput) NumChange(gobj *R.GameObject, prop ident.Id, prev, nex
 	}
 }
 
-func (out *CommandOutput) TextChange(gobj *R.GameObject, prop ident.Id, prev, next string) {
+func (out *CommandOutput) TextChange(gobj api.Instance, prop ident.Id, prev, next string) {
 	if obj, ok := out.serial.TryObjectRef(gobj); ok {
 		data := struct {
 			Prop  string `json:"prop"`
@@ -143,7 +126,7 @@ func (out *CommandOutput) TextChange(gobj *R.GameObject, prop ident.Id, prev, ne
 		out.events.AddAction("x-txt", obj, data)
 	}
 }
-func (out *CommandOutput) StateChange(gobj *R.GameObject, prop ident.Id, prev, next ident.Id) {
+func (out *CommandOutput) StateChange(gobj api.Instance, prop ident.Id, prev, next ident.Id) {
 	if obj, ok := out.serial.TryObjectRef(gobj); ok {
 		data := struct {
 			Prop string `json:"prop"`
@@ -155,7 +138,7 @@ func (out *CommandOutput) StateChange(gobj *R.GameObject, prop ident.Id, prev, n
 		out.events.AddAction("x-set", obj, data)
 	}
 }
-func (out *CommandOutput) ReferenceChange(gobj *R.GameObject, prop, other ident.Id, prev, next *R.GameObject) {
+func (out *CommandOutput) ReferenceChange(gobj api.Instance, prop, other ident.Id, prev, next api.Instance) {
 	if out.serial.IsKnown(gobj) || out.serial.IsKnown(prev) || out.serial.IsKnown(next) {
 		obj := out.serial.NewObjectRef(gobj)
 		relChange := struct {

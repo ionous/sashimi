@@ -52,7 +52,7 @@ func NewCommandSession(id string, model *M.Model, calls R.Callbacks) (ret *Comma
 				if game, e := game.Start(immediate); e != nil {
 					err = e
 				} else {
-					ret = &CommandSession{game, model, output, 1, &sync.RWMutex{}}
+					ret = &CommandSession{game, output, 1, &sync.RWMutex{}}
 				}
 			}
 		}
@@ -64,8 +64,7 @@ func NewCommandSession(id string, model *M.Model, calls R.Callbacks) (ret *Comma
 // Game data associated with a client's particular sessions.
 //
 type CommandSession struct {
-	game       *standard.StandardGame
-	Model      *M.Model
+	game       *standard.StandardGame // for isQuit, etc.
 	output     *CommandOutput
 	frameCount int
 	*sync.RWMutex
@@ -75,18 +74,19 @@ type CommandSession struct {
 // Return the named game resource
 //
 func (sess *CommandSession) Find(name string) (ret resource.IResource, okay bool) {
+	mdl := sess.game.ModelApi
 	switch name {
 	// by default, objects are grouped by their class:
 	default:
-		if cls, plural := sess.Model.Classes.FindClass(name); plural {
-			ret, okay = ObjectResource(sess.game.Game, cls.Id, sess.output.serial.ObjectSerializer), true
+		if cls, ok := mdl.GetClass(ident.MakeId(name)); ok {
+			ret, okay = ObjectResource(mdl, cls.GetId(), sess.output.serial.ObjectSerializer), true
 		}
 	// a request for information about a class:
 	case "class":
-		ret, okay = ClassResource(sess.Model.Classes), true
+		ret, okay = ClassResource(mdl), true
 		// a request for information about a parser input action:
 	case "action":
-		ret, okay = ParserResource(sess.game.ModelApi), true
+		ret, okay = ParserResource(mdl), true
 	}
 	return ret, okay
 }

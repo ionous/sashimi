@@ -31,7 +31,7 @@ func init() {
 		// FIX: hierarchy is a work in progress.
 		// kinds> stories, rooms, objects > actors (> animals),  props(> openers(> doors,containers), supporters, devices)
 
-		// FIX: IObject and GameObject, ObjectList are confusing versus kind/object
+		// FIX: IObject and Instance, ObjectList are confusing versus kind/object
 		// Instance might be better...? or some better name for the class of objects
 		// i tried "subjects" but hated it more.
 		s.The("kinds",

@@ -1,15 +1,17 @@
 package runtime
 
 import (
+	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/util/ident"
 )
 
 // PropertyChange for hearing when an object's data has changed.
+// what's better? pointers or ids?
 type PropertyChange interface {
-	NumChange(obj *GameObject, prop ident.Id, prev, next float32)
-	TextChange(obj *GameObject, prop ident.Id, prev, next string)
-	StateChange(obj *GameObject, prop ident.Id, prev, next ident.Id)
-	ReferenceChange(obj *GameObject, prop, other ident.Id, prev, next *GameObject)
+	NumChange(obj api.Instance, prop ident.Id, prev, next float32)
+	TextChange(obj api.Instance, prop ident.Id, prev, next string)
+	StateChange(obj api.Instance, prop ident.Id, prev, next ident.Id)
+	ReferenceChange(obj api.Instance, prop, other ident.Id, prev, next api.Instance)
 }
 
 // PropertyWatchers provides a collection of PropertyChange interfaces

@@ -22,14 +22,14 @@ func ApiTest(t *testing.T, mdl api.Model) {
 	require.True(t, mdl.NumInstance() > 0, "need instances to test")
 	inst := mdl.InstanceNum(0)
 	if ilookup, ok := mdl.GetInstance(inst.GetId()); assert.True(t, ok, "find instance by its own id") {
-		//assert.True(t, ilookup == inst, "this doesnt matter too much, just curious really")
+		require.True(t, ilookup == inst, "equality is necessary for the sake of game object adapter")
 		require.True(t, ilookup.GetId() == inst.GetId())
 	}
 	//
-	require.True(t, inst.NumProperty() > 0, "need valueerties to test")
+	require.True(t, inst.NumProperty() > 0, "need properties to test")
 	value := inst.PropertyNum(0)
 	if cls := inst.GetParentClass(); assert.NotNil(t, cls) {
-		if plookup, ok := cls.GetProperty(value.GetId()); assert.True(t, ok, "find instance valueerty in class") {
+		if plookup, ok := cls.GetProperty(value.GetId()); assert.True(t, ok, "find instance property in class") {
 			require.True(t, plookup.GetId() == value.GetId())
 		}
 	}

@@ -1,22 +1,24 @@
 package app
 
 import (
-	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/net/resource"
+	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/util/ident"
 )
 
-func ClassResource(classes M.ClassMap) resource.IResource {
+func ClassResource(mdl api.Model) resource.IResource {
 	return resource.Wrapper{
 		// list all classes
 		Queries: func(doc resource.DocumentBuilder) {
 			objects := doc.NewObjects()
-			for k, _ := range classes {
-				objects.NewObject(jsonId(k), "class")
+			for i := 0; i < mdl.NumClass(); i++ {
+				cls := mdl.ClassNum(i)
+				objects.NewObject(jsonId(cls.GetId()), "class")
 			}
 		},
 		// find the named class
 		Finds: func(id string) (ret resource.IResource, okay bool) {
-			if cls, ok := classes.FindClass(id); ok {
+			if cls, ok := mdl.GetClass(ident.MakeId(id)); ok {
 				okay, ret = true, resource.Wrapper{
 					// return information about the id'd class
 					Queries: func(doc resource.DocumentBuilder) {
@@ -29,25 +31,27 @@ func ClassResource(classes M.ClassMap) resource.IResource {
 	}
 }
 
-func classParents(cls *M.ClassInfo, ar []string) []string {
-	if p := cls.Parent; p != nil {
-		ar = append(classParents(p, ar), jsonId(p.Id))
+func classParents(cls api.Class, ar []string) []string {
+	if p := cls.GetParentClass(); p != nil {
+		ar = append(classParents(p, ar), jsonId(p.GetId()))
 	}
 	return ar
 }
 
-func addClass(doc, sub resource.IBuildObjects, cls *M.ClassInfo) {
+func addClass(doc, sub resource.IBuildObjects, cls api.Class) {
 	var parent *resource.Object
-	if p := cls.Parent; p != nil {
+	if p := cls.GetParentClass(); p != nil {
 		//addClass(model, sub, sub, p)
 		// disabling recursion
-		parent = resource.NewObject(jsonId(p.Id), "class")
+		parent = resource.NewObject(jsonId(p.GetId()), "class")
 	}
-	id := jsonId(cls.Id)
+	id := jsonId(cls.GetId())
 	out := doc.NewObject(id, "class")
 	out.SetAttr("parent", parent)
-	out.SetAttr("name", cls.Plural)
-	out.SetAttr("singular", cls.Singular)
+	plural, _ := cls.GetProperty(ident.MakeId("plural"))
+	out.SetAttr("name", plural.GetValue().GetText())
+	singular, _ := cls.GetProperty(ident.MakeId("singular"))
+	out.SetAttr("singular", singular.GetValue().GetText())
 	a := append(classParents(cls, nil), id)
 	// reverse
 	for i := len(a)/2 - 1; i >= 0; i-- {
@@ -56,19 +60,20 @@ func addClass(doc, sub resource.IBuildObjects, cls *M.ClassInfo) {
 	}
 	out.SetMeta("classes", a)
 	props := resource.Dict{}
-	for pid, prop := range cls.Properties {
+	for i := 0; i < cls.NumProperty(); i++ {
+		prop := cls.PropertyNum(i)
 		typeName := "unknown"
-		switch prop.(type) {
-		case M.RelativeProperty:
+		switch prop.GetType() {
+		case api.ArrayProperty | api.ObjectProperty:
 			typeName = "rel"
-		case M.TextProperty:
+		case api.TextProperty:
 			typeName = "text"
-		case M.NumProperty:
+		case api.NumProperty:
 			typeName = "num"
-		case M.EnumProperty:
+		case api.StateProperty:
 			typeName = "enum"
 		}
-		props[jsonId(pid)] = typeName
+		props[jsonId(prop.GetId())] = typeName
 	}
 	// actionRefs := resource.NewObjectList()
 	// for _, act := range model.Actions {

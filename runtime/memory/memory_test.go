@@ -53,8 +53,18 @@ func TestMemory(t *testing.T) {
 	}
 	i := makeInstance("i", makeClass("test class", "test classes"))
 	makeInstance("x", makeClass("test other", "test others"))
+	mem := NewMemoryModel(m, v, make(table.Tables))
+	// test plural
+	if cls, ok := mem.GetClass("TestClasses"); assert.True(t, ok, "get test class") {
+		if p, ok := cls.GetProperty("Plural"); assert.True(t, ok) {
+			require.EqualValues(t, i.Class.Plural, p.GetValue().GetText())
+		}
+		if p, ok := cls.GetProperty("Singular"); assert.True(t, ok) {
+			require.EqualValues(t, i.Class.Singular, p.GetValue().GetText())
+		}
+	}
 	// test the api
-	tests.ApiTest(t, NewMemoryModel(m, v, make(table.Tables)))
+	tests.ApiTest(t, mem)
 	// test that things really changed
 	if res, ok := v.GetValue(i.Id, numProp); assert.True(t, ok) {
 		require.EqualValues(t, float32(32), res)

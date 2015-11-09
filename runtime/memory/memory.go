@@ -13,18 +13,41 @@ import (
 
 type MemoryModel struct {
 	*M.Model
-	_actions   []*M.ActionInfo
-	_events    []*M.EventInfo
-	_classes   []*M.ClassInfo
-	_instances []*M.InstanceInfo
-	_relations []*M.Relation
-
+	_actions     []*M.ActionInfo
+	_events      []*M.EventInfo
+	_classes     []*M.ClassInfo
+	_instances   []*M.InstanceInfo
+	_relations   []*M.Relation
+	_properties  map[ident.Id]PropertyList
 	objectValues ObjectValue
 	tables       table.Tables
 }
 
+type PropertyList []M.IProperty
+
+// single/plural properties need some fixing
+var singular = ident.MakeId("singular")
+var plural = ident.MakeId("plural")
+
+type junkProperty struct {
+	id  ident.Id
+	val string
+}
+
+func (p junkProperty) GetId() ident.Id {
+	return p.id
+}
+
+func (p junkProperty) GetName() string {
+	return p.id.String()
+}
+
+func (p junkProperty) GetZero(_ M.ConstraintSet) interface{} {
+	return p.val
+}
+
 func NewMemoryModel(m *M.Model, v ObjectValue, t table.Tables) *MemoryModel {
-	return &MemoryModel{Model: m, objectValues: v, tables: t}
+	return &MemoryModel{Model: m, objectValues: v, tables: t, _properties: make(map[ident.Id]PropertyList)}
 }
 
 func (mdl *MemoryModel) NumAction() int {
@@ -80,12 +103,12 @@ func (mdl *MemoryModel) ClassNum(i int) api.Class {
 	}
 	// panics on out of range
 	c := mdl._classes[i]
-	return &classInfo{mdl, c, nil}
+	return classInfo{mdl, c}
 }
 
 func (mdl *MemoryModel) GetClass(id ident.Id) (ret api.Class, okay bool) {
 	if c, ok := mdl.Classes[id]; ok {
-		ret, okay = &classInfo{mdl, c, nil}, true
+		ret, okay = classInfo{mdl, c}, true
 	}
 	return
 }
@@ -158,12 +181,25 @@ func (mdl MemoryModel) MatchNounName(n string, f func(ident.Id) bool) (int, bool
 }
 
 func (mdl *MemoryModel) makeInstance(n *M.InstanceInfo) api.Instance {
-	cls := &classInfo{mdl, n.Class, nil}
+	cls := classInfo{mdl, n.Class}
 	return instInfo{mdl, n, cls}
 }
 func (mdl MemoryModel) getObjects(src, rel ident.Id, isRev bool) []ident.Id {
 	table := mdl.getTable(rel)
 	return table.List(src, isRev)
+}
+func (mdl *MemoryModel) getPropertyList(cls *M.ClassInfo) (ret PropertyList) {
+	if props, ok := mdl._properties[cls.Id]; ok {
+		ret = props
+	} else {
+		props := cls.AllProperties()
+		ret = make([]M.IProperty, 0, len(props))
+		for _, v := range props {
+			ret = append(ret, v)
+		}
+		mdl._properties[cls.Id] = ret
+	}
+	return
 }
 
 func (mdl MemoryModel) getTable(rel ident.Id) (ret *table.Table) {
@@ -230,7 +266,6 @@ func (e eventInfo) GetAction() (ret api.Action) {
 type classInfo struct {
 	mdl *MemoryModel
 	*M.ClassInfo
-	_properties []M.IProperty
 }
 
 func (c classInfo) GetId() ident.Id {
@@ -239,7 +274,7 @@ func (c classInfo) GetId() ident.Id {
 
 func (c classInfo) GetParentClass() (ret api.Class) {
 	if p := c.Parent; p != nil {
-		ret = &classInfo{c.mdl, p, nil}
+		ret = classInfo{c.mdl, p}
 	}
 	return
 }
@@ -248,59 +283,56 @@ func (c classInfo) GetOriginalName() string {
 	return c.Plural
 }
 
-func (c *classInfo) NumProperty() int {
-	props := c.props()
+func (c classInfo) NumProperty() int {
+	props := c.mdl.getPropertyList(c.ClassInfo)
 	return len(props)
 }
 
-func (c *classInfo) PropertyNum(i int) api.Property {
+func (c classInfo) PropertyNum(i int) api.Property {
 	p := c.propertyNum(i)
 	return c.getProperty(p)
 }
 
-func (c *classInfo) propertyNum(i int) M.IProperty {
-	props := c.props()
-	// panics on out of range
-	return props[i]
+func (c classInfo) propertyNum(i int) M.IProperty {
+	props := c.mdl.getPropertyList(c.ClassInfo)
+	return props[i] // panics on out of range
 }
 
-func (c *classInfo) GetProperty(id ident.Id) (ret api.Property, okay bool) {
-	if p, ok := c.PropertyById(id); ok {
-		ret, okay = c.getProperty(p), true
+func (c classInfo) GetProperty(id ident.Id) (ret api.Property, okay bool) {
+	// hack for singular and plural properties, note: they wont show up in enumeration...
+	var prop M.IProperty
+	switch id {
+	case plural:
+		prop, okay = junkProperty{plural, c.Plural}, true
+	case singular:
+		prop, okay = junkProperty{singular, c.Singular}, true
+	default:
+		prop, okay = c.PropertyById(id)
+	}
+	if okay {
+		ret = c.getProperty(prop)
 	}
 	return
 }
 
-func (c *classInfo) GetPropertyByChoice(id ident.Id) (ret api.Property, okay bool) {
+func (c classInfo) GetPropertyByChoice(id ident.Id) (ret api.Property, okay bool) {
 	if p, _, ok := c.PropertyByChoiceId(id); ok {
 		ret, okay = c.getProperty(p), true
 	}
 	return
 }
 
-func (c *classInfo) props() []M.IProperty {
-	if c._properties == nil {
-		props := c.AllProperties()
-		p := make([]M.IProperty, 0, len(props))
-		for _, v := range props {
-			p = append(p, v)
-		}
-		c._properties = p
-	}
-	return c._properties
-}
-
 type instInfo struct {
 	mdl *MemoryModel
 	*M.InstanceInfo
-	class *classInfo
+	class classInfo
 }
 
 func (n instInfo) GetId() ident.Id {
 	return n.Id
 }
 func (n instInfo) GetParentClass() api.Class {
-	return &classInfo{n.mdl, n.Class, nil}
+	return classInfo{n.mdl, n.Class}
 }
 
 func (n instInfo) GetOriginalName() string {
@@ -388,31 +420,34 @@ func (p propBase) GetId() ident.Id {
 }
 
 func (p propBase) GetType() api.PropertyType {
-	switch p := p.prop.(type) {
+	err := "invalid"
+	switch r := p.prop.(type) {
 	case M.NumProperty:
 		return api.NumProperty
-	case M.TextProperty:
+	case M.TextProperty, junkProperty:
 		return api.TextProperty
 	case M.EnumProperty:
 		return api.StateProperty
 	case M.PointerProperty:
 		return api.ObjectProperty
 	case M.RelativeProperty:
-		if p.IsMany {
+		if r.IsMany {
 			return api.ObjectProperty | api.ArrayProperty
 		} else {
 			return api.ObjectProperty
 		}
 	default:
-		panic("unknown property type")
+		err = "unknown"
 	}
+	panic(fmt.Sprintf("GetType(%s.%s) has %s property type %T", p.src, p.prop.GetId(), err, p.prop))
 }
 
 func (p propBase) GetValue() api.Value {
+	err := "invalid"
 	switch m := p.prop.(type) {
 	case M.NumProperty:
 		return numValue{panicValue(p)}
-	case M.TextProperty:
+	case M.TextProperty, junkProperty:
 		return textValue{panicValue(p)}
 	case M.EnumProperty:
 		return enumValue{panicValue(p)}
@@ -423,12 +458,13 @@ func (p propBase) GetValue() api.Value {
 			return singleValue(p)
 		}
 	default:
-		panic("unknown property type")
+		err = "unknown"
 	}
-	panic("invalid property type")
+	panic(fmt.Sprintf("GetValue(%s.%s) has %s property type %T", p.src, p.prop.GetId(), err, p.prop))
 }
 
 func (p propBase) GetValues() api.Values {
+	err := "invalid"
 	switch m := p.prop.(type) {
 	case M.NumProperty:
 	case M.TextProperty:
@@ -439,9 +475,9 @@ func (p propBase) GetValues() api.Values {
 			return manyValue(p)
 		}
 	default:
-		panic("unknown property type")
+		err = "unknown"
 	}
-	panic("invalid property type")
+	panic(fmt.Sprintf("GetValues(%s.%s) has %s property type %T", p.src, p.prop.GetId(), err, p.prop))
 }
 
 // PanicValue implements the Value interface:
@@ -591,13 +627,6 @@ func (p objectList) NumValue() int {
 func (p objectList) ValueNum(i int) api.Value {
 	return objectReadValue{p.panicValue, p.objs[i]}
 }
-
-// the triggers for the property watchers will have to be at this level since the concept of relation is now at this level.... only needs to happend for relation types
-//	prev, next := oa.game.Objects[prev], oa.game.Objects[next]
-// oa.game.Properties.VisitWatchers(func(ch PropertyChange) {
-// 	ch.ReferenceChange(oa.gobj, p.GetId(), rel.Relates, prev, next)
-// })
-//
 
 func (p objectList) ClearValues() {
 	p.mdl.clearValues(p.src, p.prop.(M.RelativeProperty))

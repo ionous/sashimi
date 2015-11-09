@@ -3,7 +3,7 @@ package standard
 import (
 	"fmt"
 	C "github.com/ionous/sashimi/console"
-	R "github.com/ionous/sashimi/runtime"
+	"github.com/ionous/sashimi/runtime/api"
 	"io"
 	"strings"
 	"unicode"
@@ -40,11 +40,13 @@ func (out *StandardOutput) ScriptSays(lines []string) {
 	}
 }
 
-func (out *StandardOutput) ActorSays(whose *R.GameObject, lines []string) {
+func (out *StandardOutput) ActorSays(whose api.Instance, lines []string) {
 	if len(lines) > 0 {
-		// in other contexts ActorSays needs R.GameObject for SerializeObject
+		// in other contexts ActorSays needs the instance for SerializeObject
 		// FIX: what about proper name?
-		name := whose.Value("Name").(string)
+		prop, _ := whose.GetProperty("Name")
+		name := prop.GetValue().GetText()
+
 		if out.lastActor != name {
 			if out.lastActor != "" {
 				out.lastEmpty = true

@@ -69,7 +69,7 @@ func (op *ObjectParser) GetObjectMatcher(act api.Action) (*ObjectMatcher, error)
 }
 
 func (op *ObjectParser) PushParserSource(userSource G.SourceLookup) {
-	op.source.PushSource(func() (ret *GameObject) {
+	op.source.PushSource(func() (ret api.Instance) {
 		// setup callback context:
 		play := NewGameAdapter(op.game)
 		// call the user function

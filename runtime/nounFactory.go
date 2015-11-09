@@ -11,11 +11,11 @@ import (
 type ObjectMatcher struct {
 	game    *Game
 	act     api.Action
-	objects []*GameObject
+	objects []api.Instance
 }
 
 // make sure the source class matches
-func NewObjectMatcher(game *Game, source *GameObject, act api.Action,
+func NewObjectMatcher(game *Game, source api.Instance, act api.Action,
 ) (
 	ret *ObjectMatcher,
 	err error,
@@ -24,7 +24,7 @@ func NewObjectMatcher(game *Game, source *GameObject, act api.Action,
 		err = fmt.Errorf("couldnt find command source for %s", act)
 	} else {
 		nouns := act.GetNouns()
-		if !game.ModelApi.AreCompatible(source.cls.GetId(), nouns.Get(api.SourceNoun)) {
+		if !game.ModelApi.AreCompatible(source.GetParentClass().GetId(), nouns.Get(api.SourceNoun)) {
 			err = fmt.Errorf("source class for %s doesnt match", act)
 		} else {
 			om := &ObjectMatcher{game, act, nil}
@@ -74,10 +74,10 @@ func (om *ObjectMatcher) OnMatch() (err error) {
 // MatchId is usually called by MatchNoun, public for net sessions :(
 //
 func (om *ObjectMatcher) MatchId(id ident.Id) (okay bool) {
-	if gobj, ok := om.game.Objects[id]; ok {
+	if gobj, ok := om.game.ModelApi.GetInstance(id); ok {
 		nouns := om.act.GetNouns()
 		if cnt, max := len(om.objects), nouns.GetNounCount(); cnt < max {
-			if om.game.ModelApi.AreCompatible(gobj.cls.GetId(), nouns[cnt]) {
+			if om.game.ModelApi.AreCompatible(gobj.GetParentClass().GetId(), nouns[cnt]) {
 				om.addObject(gobj)
 				okay = true
 			}
@@ -86,7 +86,7 @@ func (om *ObjectMatcher) MatchId(id ident.Id) (okay bool) {
 	return okay
 }
 
-func (om *ObjectMatcher) addObject(gobj *GameObject) {
+func (om *ObjectMatcher) addObject(gobj api.Instance) {
 	om.objects = append(om.objects, gobj)
 	// cnt := len(om.objects)-1
 	// keys := []string{"Source", "Target", "Context"}

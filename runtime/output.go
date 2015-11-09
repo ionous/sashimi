@@ -1,8 +1,8 @@
 package runtime
 
-//
-// interface the runtime requires an implementation of in order to display text.
-//
+import "github.com/ionous/sashimi/runtime/api"
+
+// IOutput requires an implementation to display text.
 type IOutput interface {
 	//
 	// Standard output.
@@ -11,7 +11,7 @@ type IOutput interface {
 	//
 	// The actor or object with the passed name has something to say.
 	//
-	ActorSays(whose *GameObject, lines []string)
+	ActorSays(whose api.Instance, lines []string)
 	//
 	// Debugging output.
 	//

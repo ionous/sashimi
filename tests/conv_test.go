@@ -211,7 +211,7 @@ func TestFactFinding(t *testing.T) {
 		g := R.NewGameAdapter(game.Game)
 		assert.True(t, qm.IsQuipAllowed(g, g.The("orbital wonder")))
 		assert.True(t, qm.IsQuipAllowed(g, g.The("smoothie request")))
-		assert.False(t, qm.IsQuipAllowed(g, g.The("retort")))
+		assert.False(t, qm.IsQuipAllowed(g, g.The("retort")), "the retort should not be allowed")
 		qm.Learn(g.The("red"))
 		assert.True(t, qm.IsQuipAllowed(g, g.The("orbital wonder")))
 		assert.False(t, qm.IsQuipAllowed(g, g.The("smoothie request")))

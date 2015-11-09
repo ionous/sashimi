@@ -3,19 +3,18 @@ package runtime
 import (
 	"fmt"
 	G "github.com/ionous/sashimi/game"
+	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/util/ident"
 	"strings"
 )
 
 var _ = fmt.Println
 
-//
-// Event data for event handlers and actions.
-//
+// RuntimeAction contains data for event handlers and actions.
 type RuntimeAction struct {
 	game   *Game
 	action ident.Id
-	objs   []*GameObject
+	objs   []api.Instance
 	after  []CallbackPair
 }
 

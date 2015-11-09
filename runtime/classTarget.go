@@ -13,7 +13,7 @@ import (
 type ClassTarget struct {
 	host     ObjectTarget
 	class    api.Class
-	upObject *GameObject
+	upObject api.Instance
 }
 
 //
