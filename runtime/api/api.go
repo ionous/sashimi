@@ -48,6 +48,7 @@ type Event interface {
 	GetAction() Action
 }
 
+// Prototype holds properties; it supports both instance and class type things.
 type Prototype interface {
 	GetId() ident.Id
 	// GetParentClass returns nil for classes if no parent;
@@ -99,15 +100,16 @@ type Values interface {
 	// RemoveValue(int)
 }
 
+// get and set panic if the value is not of the requested type; set can return error when the value, when of the correct type, violates a property constraint
 type Value interface {
 	GetNum() float32
-	SetNum(float32)
+	SetNum(float32) error
 
 	GetText() string
-	SetText(string)
+	SetText(string) error
 
 	GetState() ident.Id
-	SetState(ident.Id)
+	SetState(ident.Id) error
 
 	// FIX : Relations relate Objects -> instances
 	GetObject() ident.Id

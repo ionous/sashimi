@@ -18,11 +18,13 @@ type MemoryModel struct {
 	_classes   []*M.ClassInfo
 	_instances []*M.InstanceInfo
 	_relations []*M.Relation
-	tables     table.Tables
+
+	objectValues ObjectValue
+	tables       table.Tables
 }
 
-func NewMemoryModel(model *M.Model, tables table.Tables) *MemoryModel {
-	return &MemoryModel{Model: model, tables: tables}
+func NewMemoryModel(m *M.Model, v ObjectValue, t table.Tables) *MemoryModel {
+	return &MemoryModel{Model: m, objectValues: v, tables: t}
 }
 
 func (mdl *MemoryModel) NumAction() int {
@@ -89,10 +91,16 @@ func (mdl *MemoryModel) GetClass(id ident.Id) (ret api.Class, okay bool) {
 }
 
 func (c *classInfo) getProperty(p M.IProperty) api.Property {
-	cls := c.ClassInfo
-	return &propInfo{c.mdl, c.Id, p, func() interface{} {
-		return p.GetZero(cls.Constraints)
-	}}
+	return &propBase{
+		mdl:      c.mdl,
+		src:      c.Id,
+		prop:     p,
+		getValue: c.getValue,
+		setValue: nil}
+}
+
+func (c *classInfo) getValue(p M.IProperty) GenericValue {
+	return p.GetZero(c.Constraints)
 }
 
 func (mdl MemoryModel) NumInstance() int {
@@ -323,33 +331,63 @@ func (n instInfo) GetPropertyByChoice(id ident.Id) (ret api.Property, okay bool)
 }
 
 func (n instInfo) getProperty(p M.IProperty) api.Property {
-	inst := n.InstanceInfo
-	return &propInfo{n.mdl, n.Id, p, func() (ret interface{}) {
-		if v, ok := inst.Values[p.GetId()]; ok {
-			ret = v
-		} else {
-			ret = p.GetZero(inst.Class.Constraints)
-		}
-		return
-	}}
+	return &propBase{
+		mdl:      n.mdl,
+		src:      n.Id,
+		prop:     p,
+		getValue: n.getValue,
+		setValue: n.setValue}
 }
 
-type propInfo struct {
+func (n instInfo) getValue(p M.IProperty) (ret GenericValue) {
+	// try the object-value interface first
+	if v, ok := n.mdl.objectValues.GetValue(n.Id, p.GetId()); ok {
+		ret = v
+		// fall back to the instance
+	} else if v, ok := n.Values[p.GetId()]; ok {
+		ret = v
+	} else {
+		// and from there to class ( chain )
+		ret = p.GetZero(n.Class.Constraints)
+	}
+	return
+}
+
+func (n instInfo) setValue(p M.IProperty, v GenericValue) error {
+	// STORE FIX: TEST CONSTRAINTS
+	return n.mdl.objectValues.SetValue(n.Id, p.GetId(), v)
+}
+
+type propBase struct {
 	mdl  *MemoryModel
 	src  ident.Id
 	prop M.IProperty
-	val  func() interface{} // hooray virtual funcions.
+	// life's a little complicated.
+	// we have a generic property base ( propBase )
+	// an extension to panic on every get and set ( panicValue )
+	// and overrides to implement the specific text/num/etc methods ( textValue )
+	// the location of values for class and instances differs, so the class and instance pass themselves to their properties, and on to their values.
+	getValue func(M.IProperty) GenericValue
+	setValue func(M.IProperty, GenericValue) error
 }
 
-func (p propInfo) String() string {
+type propInst struct {
+	propBase
+}
+
+type propClass struct {
+	propBase
+}
+
+func (p propBase) String() string {
 	return fmt.Sprintf("%s.%s", p.src, p.prop.GetId())
 }
 
-func (p propInfo) GetId() ident.Id {
+func (p propBase) GetId() ident.Id {
 	return p.prop.GetId()
 }
 
-func (p propInfo) GetType() api.PropertyType {
+func (p propBase) GetType() api.PropertyType {
 	switch p := p.prop.(type) {
 	case M.NumProperty:
 		return api.NumProperty
@@ -370,7 +408,7 @@ func (p propInfo) GetType() api.PropertyType {
 	}
 }
 
-func (p propInfo) GetValue() api.Value {
+func (p propBase) GetValue() api.Value {
 	switch m := p.prop.(type) {
 	case M.NumProperty:
 		return numValue{panicValue(p)}
@@ -390,7 +428,7 @@ func (p propInfo) GetValue() api.Value {
 	panic("invalid property type")
 }
 
-func (p propInfo) GetValues() api.Values {
+func (p propBase) GetValues() api.Values {
 	switch m := p.prop.(type) {
 	case M.NumProperty:
 	case M.TextProperty:
@@ -406,24 +444,28 @@ func (p propInfo) GetValues() api.Values {
 	panic("invalid property type")
 }
 
-type panicValue propInfo
+// PanicValue implements the Value interface:
+// pancing on every get() and set(), and then
+// specific property types override the specific methods they need:
+// .text for text, num for num, etc.
+type panicValue propBase
 
 func (p panicValue) GetNum() float32 {
 	panic(fmt.Errorf("get num not supported for property %v", p.prop.GetId()))
 }
-func (p panicValue) SetNum(float32) {
+func (p panicValue) SetNum(float32) error {
 	panic(fmt.Errorf("set num not supported for property %v", p.prop.GetId()))
 }
 func (p panicValue) GetText() string {
 	panic(fmt.Errorf("get text not supported for property %v", p.prop.GetId()))
 }
-func (p panicValue) SetText(string) {
+func (p panicValue) SetText(string) error {
 	panic(fmt.Errorf("set text not supported for property %v", p.prop.GetId()))
 }
 func (p panicValue) GetState() ident.Id {
 	panic(fmt.Errorf("get state not supported for property %v", p.prop.GetId()))
 }
-func (p panicValue) SetState(ident.Id) {
+func (p panicValue) SetState(ident.Id) error {
 	panic(fmt.Errorf("set state not supported for property %v", p.prop.GetId()))
 }
 func (p panicValue) GetObject() ident.Id {
@@ -435,38 +477,66 @@ func (p panicValue) SetObject(ident.Id) error {
 
 type numValue struct{ panicValue }
 
+func (p numValue) SetNum(f float32) error {
+	if p.setValue == nil {
+		p.panicValue.SetNum(f)
+	}
+	return p.setValue(p.prop, f)
+}
 func (p numValue) GetNum() float32 {
-	return p.val().(float32)
+	return p.getValue(p.prop).(float32)
 }
 
 type textValue struct{ panicValue }
 
 func (p textValue) GetText() string {
-	return p.val().(string)
+	return p.getValue(p.prop).(string)
+}
+func (p textValue) SetText(t string) error {
+	if p.setValue == nil {
+		p.panicValue.SetText(t)
+	}
+	return p.setValue(p.prop, t)
 }
 
 type enumValue struct{ panicValue }
 
 func (p enumValue) GetState() (ret ident.Id) {
-	if idx, ok := p.val().(int); !ok {
-		panic(fmt.Sprintf("%v %T", p.val(), p.val()))
+	v := p.getValue(p.prop)
+	if idx, ok := v.(int); !ok {
+		panic(fmt.Sprintf("internal error, couldnt convert state to int '%s.%s' %v(%T)", p.src, p.prop.GetId(), v, v))
 	} else {
 		enum := p.prop.(M.EnumProperty)
 		c, _ := enum.IndexToChoice(idx)
 		ret = c
 	}
-	return ret
+	return
+}
+func (p enumValue) SetState(c ident.Id) (err error) {
+	if p.setValue == nil {
+		p.panicValue.SetState(c)
+	}
+	enum := p.prop.(M.EnumProperty)
+	if idx, e := enum.ChoiceToIndex(c); e != nil {
+		err = e
+	} else {
+		p.setValue(p.prop, idx)
+	}
+	return
 }
 
-type pointerValue struct{ panicValue }
+type pointerValue struct {
+	panicValue
+}
 
 func (p pointerValue) GetObject() ident.Id {
-	return p.val().(ident.Id)
+	return p.getValue(p.prop).(ident.Id)
 }
-
-func (p pointerValue) SetObject(ident.Id) error {
-	// FIX: ignoring, instance sets are doubled up to make relative roperties work
-	return nil
+func (p pointerValue) SetObject(o ident.Id) error {
+	if p.setValue == nil {
+		p.panicValue.SetObject(o)
+	}
+	return p.setValue(p.prop, o)
 }
 
 type objectReadValue struct {
@@ -483,7 +553,7 @@ type objectWriteValue struct {
 }
 
 // the one side of a many-to-one, one-to-one, or one-to-many relation.
-func singleValue(p propInfo) api.Value {
+func singleValue(p propBase) api.Value {
 	rel := p.prop.(M.RelativeProperty)
 	objs := p.mdl.getObjects(p.src, rel.Relation, rel.IsRev)
 	var v ident.Id
@@ -508,7 +578,7 @@ type objectList struct {
 	objs []ident.Id
 }
 
-func manyValue(p propInfo) api.Values {
+func manyValue(p propBase) api.Values {
 	rel := p.prop.(M.RelativeProperty)
 	objs := p.mdl.getObjects(p.src, rel.Relation, rel.IsRev)
 	return objectList{panicValue(p), objs}
@@ -565,6 +635,7 @@ func (mdl MemoryModel) clearValues(src ident.Id, rel M.RelativeProperty) {
 	})
 }
 
+// returns error if not compatible.
 func (mdl MemoryModel) appendObject(dst, src ident.Id, rel M.RelativeProperty) (err error) {
 	table := mdl.getTable(rel.Relation)
 	if other, ok := mdl.Instances[dst]; !ok {

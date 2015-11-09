@@ -62,7 +62,7 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 	log := log.New(logAdapter{cfg.Output}, "game: ", log.Lshortfile)
 
 	tables := model.Tables.Clone()
-	modelApi := memory.NewMemoryModel(model, tables)
+	modelApi := memory.NewMemoryModel(model, make(memory.ObjectValueMap), tables)
 	dispatchers := NewDispatchers(log)
 	objects, e := CreateGameObjects(modelApi, tables)
 	if e != nil {

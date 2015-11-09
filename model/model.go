@@ -4,9 +4,7 @@ import (
 	"github.com/ionous/sashimi/model/table"
 )
 
-//
-// Results of compilation.
-//
+// Model: Compiled results of a sashimi story.
 type Model struct {
 	// rule like:
 	Classes       ClassMap
@@ -23,7 +21,7 @@ type Model struct {
 	NounNames      NounNames
 	SingleToPlural SingleToPlural
 
-	// this cant serialize: nned to replace with
+	// this cant serialize: need to replace with
 	// lists and table variables in globals
 	//Generators     GeneratorMap
 }
