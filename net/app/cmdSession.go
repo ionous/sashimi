@@ -8,6 +8,7 @@ import (
 	"github.com/ionous/sashimi/net/resource"
 	"github.com/ionous/sashimi/net/session"
 	R "github.com/ionous/sashimi/runtime"
+	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/standard"
 	"github.com/ionous/sashimi/util/ident"
 	"io"
@@ -138,22 +139,25 @@ func (sess *CommandSession) _handleInput(input CommandInput) (err error) {
 				err = fmt.Errorf("unknown action %s", input.Action)
 				//FIX? RunActions injects the player, that works out well, but is a little strange.
 			} else {
-				if om, e := sess.game.StandardParser.ObjectParser.GetObjectMatcher(act); e != nil {
+				om := R.NewObjectMatcher(sess.game.ModelApi, act.GetNouns(), func(objects []api.Instance) {
+					sess.game.QueueAction(act, objects)
+				})
+				if e := om.AddObject("Player"); e != nil {
 					err = e
 				} else {
 					for _, n := range input.Nouns() {
 						id := R.MakeStringId(n)
-						if ok := om.MatchId(id); !ok {
-							err = fmt.Errorf("unknown object %s; %v", n, id)
+						if e := om.AddObject(id); e != nil {
+							err = e
 							break
 						}
 					}
-					if err == nil {
-						if e := om.OnMatch(); e != nil {
-							err = e
-						} else {
-							sess.game.EndTurn() // game.Input() does sess automatically (dont ask)
-						}
+				}
+				if err == nil {
+					if e := om.OnMatch(); e != nil {
+						err = e
+					} else {
+						sess.game.EndTurn() // game.Input() does sess automatically (dont ask)
 					}
 				}
 			}

@@ -115,7 +115,7 @@ func TestLookAt(t *testing.T) {
 func TestUnderstandings(t *testing.T) {
 
 	// create a parser
-	p := NewParser()
+	p := make(P)
 
 	// ok: define some commands with their allowed nouns
 	pool := NounPool{make(map[string]bool)}
@@ -176,13 +176,13 @@ func TestUnderstandings(t *testing.T) {
 	// ok: parse some commands
 	testParser := func(cmd string, expect string) (err error) {
 		normalizedInput := NormalizeInput(cmd)
-		match, e := p.ParseInputString(normalizedInput)
+		match, e := p.ParseInput(normalizedInput)
 		if e != nil {
 			err = e
 		} else if match.Pattern != nil && match.Pattern.Comprehension().Id() != ident.MakeId(expect) {
 			err = fmt.Errorf("Mismatched pattern: %s got %s", expect, match.Pattern)
 		} else {
-			err = match.OnMatch()
+			err = match.OnMatched()
 		}
 		return err
 	}

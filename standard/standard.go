@@ -3,6 +3,7 @@ package standard
 import (
 	"fmt"
 	G "github.com/ionous/sashimi/game"
+	"github.com/ionous/sashimi/parser"
 	R "github.com/ionous/sashimi/runtime"
 	"log"
 )
@@ -28,8 +29,8 @@ type StandardGame struct {
 // StandardCore assists the transformation of a StandardStart into a StandardGame.
 type StandardCore struct {
 	*R.Game
-	StandardParser *StandardParser
-	story, status  G.IObject
+	Parser        parser.P
+	story, status G.IObject
 }
 
 // Left status bar text.
@@ -54,14 +55,10 @@ func (sc *StandardCore) SetRight(status string) {
 
 // NewStandardGame creates a game which is based on the standard rules.
 func NewStandardGame(game *R.Game) (ret StandardStart, err error) {
-	if parser, e := NewStandardParser(game); e != nil {
+	if parser, e := R.NewObjectParser(game, game.ModelApi, "player"); e != nil {
 		err = e
 	} else {
 		g := R.NewGameAdapter(game)
-		//
-		parser.ObjectParser.PushParserSource(func(g G.Play) G.IObject {
-			return g.The("player")
-		})
 		//
 		game.PushParentLookup(func(g G.Play, o G.IObject) (ret G.IObject) {
 			if parent, where := DirectParent(o); where != "" {
@@ -110,7 +107,7 @@ func (sg *StandardGame) IsFinished() bool {
 // (automatically ends the turn )
 func (sg *StandardGame) Input(s string) (err error) {
 	if !sg.IsFinished() {
-		in := sg.StandardParser.ObjectParser.NormalizeInput(s)
+		in := parser.NormalizeInput(s)
 		if in == "q" || in == "quit" {
 			sg.quit = true
 		} else {
@@ -123,10 +120,9 @@ func (sg *StandardGame) Input(s string) (err error) {
 				} else {
 					sg.lastInput = in
 				}
-				if matcher, e := sg.StandardParser.ParseInput(in); e != nil {
+				if matcher, e := sg.Parser.ParseInput(in); e != nil {
 					err = e
-
-				} else if e := matcher.OnMatch(); e != nil {
+				} else if e := matcher.OnMatched(); e != nil {
 					err = e
 				} else {
 					sg.EndTurn()

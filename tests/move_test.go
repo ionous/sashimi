@@ -67,10 +67,7 @@ func TestMoveGoing(t *testing.T) {
 	s := makeTestRoom()
 	s.The("player", Exists(), In("the foyer"))
 	if g, err := NewTestGame(t, s); assert.NoError(t, err) {
-		// FIX: move parser source and parent lookup elsewhere
-		g.StandardParser.ObjectParser.PushParserSource(func(g G.Play) (ret G.IObject) {
-			return g.The("player")
-		})
+		// FIX: move parent lookup elsewhere
 		g.PushParentLookup(func(g G.Play, o G.IObject) (ret G.IObject) {
 			if parent, where := standard.DirectParent(o); where != "" {
 				ret = parent
@@ -88,7 +85,7 @@ func TestMoveGoing(t *testing.T) {
 			xMove{"go south", "Foyer"},
 			xMove{"enter curtain", "Cloakroom"},
 		); !assert.NoError(t, e, "failed move") {
-			p := g.StandardParser.ObjectParser.Parser
+			p := g.Parser
 			t.Logf("parser has %d comprehension", len(p))
 			for k, v := range p {
 				t.Logf("%v:%v", k, v)

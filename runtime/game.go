@@ -141,6 +141,12 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 	return game, err
 }
 
+func (g *Game) QueueAction(act api.Action, objects []api.Instance) {
+	tgt := ObjectTarget{g, objects[0]}
+	data := &RuntimeAction{g, act.GetId(), objects, nil}
+	g.queue.QueueEvent(tgt, act.GetEvent().GetEventName(), data)
+}
+
 func (g *Game) Random(n int) int {
 	return g.rand.Intn(n)
 }

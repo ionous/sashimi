@@ -63,7 +63,7 @@ func TestConsoleParser(t *testing.T) {
 	ShowTo := "show|present|display {{something else}} to {{something}}"
 
 	// commands
-	p := parser.NewParser()
+	p := make(parser.P)
 	looking, e := p.NewComprehension("looking", TestComprehension{t, "l", 0}.NewMatcher)
 	require.NoError(t, e)
 	examining, e := p.NewComprehension("examining it", TestComprehension{t, "x", 1}.NewMatcher)
@@ -101,7 +101,7 @@ func TestConsoleParser(t *testing.T) {
 	for {
 		if s, ok := c.Readln(); !ok {
 			break
-		} else if m, err := p.ParseInputString(s); assert.NoError(t, err, s) {
+		} else if m, err := p.ParseInput(s); assert.NoError(t, err, s) {
 			if err := m.OnMatch(); assert.NoError(t, err, s) {
 				continue
 			}

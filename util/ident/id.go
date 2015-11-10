@@ -14,8 +14,13 @@ type Id string
 //
 // Return the Id as a regular string.
 //
-func (id Id) String() string {
-	return string(id)
+func (id Id) String() (ret string) {
+	if id.Empty() {
+		ret = "<empty>"
+	} else {
+		ret = string(id)
+	}
+	return ret
 }
 
 func (id Id) Empty() bool {

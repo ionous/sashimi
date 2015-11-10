@@ -226,7 +226,9 @@ func init() {
 						}
 
 						// time to hack the parser
-						TheParser.CaptureInput(func(input string) (err error) {
+						panic("use player state instead")
+						//TheParser.CaptureInput
+						_ = func(input string) (err error) {
 							var choice int
 							if _, e := fmt.Sscan(input, &choice); e != nil {
 								err = fmt.Errorf("Please choose a number from the menu; input: %s", input)
@@ -240,7 +242,7 @@ func init() {
 								player.Go("comment", quip)
 							}
 							return err
-						})
+						}
 					}
 				}
 			}))

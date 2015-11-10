@@ -57,10 +57,7 @@ func TestActionClassCallback(t *testing.T) {
 		Called("other"),
 		Has("description", "it's an error!"),
 	)
-	if g, err := NewTestGame(t, s); assert.NoError(t, err) {
-		g.StandardParser.ObjectParser.PushParserSource(func(g G.Play) G.IObject {
-			return g.The("obj")
-		})
+	if g, err := NewTestGameSource(t, s, "obj"); assert.NoError(t, err) {
 		if err := g.SendEvent("testing", "Obj"); assert.NoError(t, err) {
 			if err := g.ProcessEvents(); assert.NoError(t, err) {
 				expected := []string{"it's a trap!"}
@@ -83,10 +80,7 @@ func TestActionCallbackBeforeAfter(t *testing.T) {
 		}),
 	)
 	s.The("kind", Called("obj"), Exists())
-	if g, err := NewTestGame(t, s); assert.NoError(t, err) {
-		g.StandardParser.ObjectParser.PushParserSource(func(g G.Play) G.IObject {
-			return g.The("obj")
-		})
+	if g, err := NewTestGameSource(t, s, "obj"); assert.NoError(t, err) {
 		if err := g.SendEvent("testing", "Obj"); assert.NoError(t, err) {
 			if err := g.ProcessEvents(); assert.NoError(t, err) {
 				expected := []string{"Before", "After"}
@@ -122,11 +116,8 @@ func TestActionCallbackParsing(t *testing.T) {
 		Matching("look|l at {{something}}"),
 	)
 	// should trigger "test", which should print the description
-	if g, err := NewTestGame(t, s); assert.NoError(t, err) {
+	if g, err := NewTestGameSource(t, s, "looker"); assert.NoError(t, err) {
 		if assert.Len(t, g.Model.NounNames, 2) {
-			g.StandardParser.ObjectParser.PushParserSource(func(g G.Play) G.IObject {
-				return g.The("looker")
-			})
 			str := "look at lookee"
 			if err := g.RunInput(str); assert.NoError(t, err, "handle input") {
 				expected := []string{"look it's a test!"}

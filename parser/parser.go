@@ -2,16 +2,12 @@ package parser
 
 import "github.com/ionous/sashimi/util/ident"
 
-// Parser collects input matchers.
-type Parser map[ident.Id]*Comprehension
-
-func NewParser() Parser {
-	return make(map[ident.Id]*Comprehension)
-}
+// P collects input matchers.
+type P map[ident.Id]*Comprehension
 
 // NewComprehension adds a pattern set.
 // Name must be unique ( used to help with error-handling and auto-documentation. )
-func (p Parser) NewComprehension(id ident.Id, matcher NewMatcher) (
+func (p P) NewComprehension(id ident.Id, matcher NewMatcher) (
 	ret *Comprehension,
 	err error,
 ) {
@@ -30,7 +26,7 @@ func (p Parser) NewComprehension(id ident.Id, matcher NewMatcher) (
 
 // Parse the input, and generate a matching command.
 // Returns the command found regardless of error.
-func (p Parser) ParseInputString(input string) (ret Matched, err error) {
+func (p P) ParseInput(input string) (ret Matched, err error) {
 	matched := false
 	for _, c := range p {
 		if pattern, matcher, e := c.TryParse(input); e == nil || matcher != nil {

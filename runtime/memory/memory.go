@@ -600,10 +600,12 @@ func singleValue(p propBase) api.Value {
 }
 
 func (p objectWriteValue) SetObject(id ident.Id) (err error) {
-	p.mdl.clearValues(p.src, p.prop.(M.RelativeProperty))
-	if e := p.mdl.appendObject(id, p.src, p.prop.(M.RelativeProperty)); e != nil {
-		err = e
-	} else {
+	if !id.Empty() {
+		err = p.mdl.canAppend(id, p.src, p.prop.(M.RelativeProperty))
+	}
+	if err == nil {
+		p.mdl.clearValues(p.src, p.prop.(M.RelativeProperty))
+		p.mdl.appendObject(id, p.src, p.prop.(M.RelativeProperty))
 		p.currentVal = id
 	}
 	return err
@@ -641,9 +643,10 @@ func (p objectList) AppendText(string) {
 }
 
 func (p objectList) AppendObject(id ident.Id) (err error) {
-	if e := p.mdl.appendObject(id, p.src, p.prop.(M.RelativeProperty)); e != nil {
+	if e := p.mdl.canAppend(id, p.src, p.prop.(M.RelativeProperty)); e != nil {
 		err = e
 	} else {
+		p.mdl.appendObject(id, p.src, p.prop.(M.RelativeProperty))
 		p.objs = append(p.objs, id)
 	}
 	return
@@ -665,19 +668,21 @@ func (mdl MemoryModel) clearValues(src ident.Id, rel M.RelativeProperty) {
 }
 
 // returns error if not compatible.
-func (mdl MemoryModel) appendObject(dst, src ident.Id, rel M.RelativeProperty) (err error) {
-	table := mdl.getTable(rel.Relation)
+func (mdl MemoryModel) canAppend(dst, src ident.Id, rel M.RelativeProperty) (err error) {
 	if other, ok := mdl.Instances[dst]; !ok {
-		err = fmt.Errorf("no such instance %s", dst)
+		err = fmt.Errorf("no such instance '%s'", dst)
 	} else if !mdl.AreCompatible(other.Class.Id, rel.Relates) {
 		err = fmt.Errorf("%s not compatible with %v in relation %v", other, rel.Relates, rel.Relation)
-	} else {
-		if rel.IsRev {
-			dst, src = src, dst
-		}
-		table.Add(src, dst)
 	}
 	return err
+}
+
+func (mdl MemoryModel) appendObject(dst, src ident.Id, rel M.RelativeProperty) {
+	if rel.IsRev {
+		dst, src = src, dst
+	}
+	table := mdl.getTable(rel.Relation)
+	table.Add(src, dst)
 }
 
 // func (r *relInfo) RemoveRelative(src, dst ident.Id) {

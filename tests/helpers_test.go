@@ -8,7 +8,6 @@ import (
 	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/runtime/api"
 	. "github.com/ionous/sashimi/script"
-	"github.com/ionous/sashimi/standard" // :(
 	"strings"
 	"testing"
 )
@@ -56,8 +55,7 @@ func (out TestOutput) Log(s string) {
 	out.t.Log(strings.TrimSpace(s))
 }
 
-//
-func NewTestGame(t *testing.T, s *Script) (ret TestGame, err error) {
+func NewTestGameSource(t *testing.T, s *Script, source string) (ret TestGame, err error) {
 	if model, e := s.Compile(Log(t)); e != nil {
 		err = e
 	} else {
@@ -65,7 +63,7 @@ func NewTestGame(t *testing.T, s *Script) (ret TestGame, err error) {
 		cfg := R.RuntimeConfig{Calls: model.Calls, Output: cons}
 		if game, e := cfg.NewGame(model.Model); e != nil {
 			err = e
-		} else if parser, e := standard.NewStandardParser(game); e != nil {
+		} else if parser, e := R.NewObjectParser(game, game.ModelApi, source); e != nil {
 			err = e
 		} else {
 			ret = TestGame{t, game, model, cons, parser}
@@ -74,12 +72,17 @@ func NewTestGame(t *testing.T, s *Script) (ret TestGame, err error) {
 	return ret, err
 }
 
+//
+func NewTestGame(t *testing.T, s *Script) (ret TestGame, err error) {
+	return NewTestGameSource(t, s, "player")
+}
+
 type TestGame struct {
 	t *testing.T
 	*R.Game
 	compiler.MemoryResult
-	out            TestOutput
-	StandardParser *standard.StandardParser
+	out    TestOutput
+	Parser parser.P
 }
 
 //
@@ -90,7 +93,7 @@ func (test *TestGame) RunInput(s string) (err error) {
 		err = e
 	} else {
 		in := parser.NormalizeInput(s)
-		if m, e := test.StandardParser.ParseInput(in); e != nil {
+		if m, e := test.Parser.ParseInput(in); e != nil {
 			test.out.Log(fmt.Sprintf("RunInput: failed parse: %v orig: '%s' in: '%s' e: '%s'", m, s, in, e))
 			err = e
 		} else if e := m.OnMatch(); e != nil {

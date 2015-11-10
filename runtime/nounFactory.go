@@ -9,40 +9,26 @@ import (
 
 // ObjectMatcher returns nouns which matches an instance's string id
 type ObjectMatcher struct {
-	game    *Game
-	act     api.Action
+	mdl     api.Model
+	nouns   api.Nouns
 	objects []api.Instance
+	onMatch OnMatch
 }
 
+type OnMatch func([]api.Instance)
+
 // make sure the source class matches
-func NewObjectMatcher(game *Game, source api.Instance, act api.Action,
-) (
-	ret *ObjectMatcher,
-	err error,
-) {
-	if source == nil {
-		err = fmt.Errorf("couldnt find command source for %s", act)
-	} else {
-		nouns := act.GetNouns()
-		if !game.ModelApi.AreCompatible(source.GetParentClass().GetId(), nouns.Get(api.SourceNoun)) {
-			err = fmt.Errorf("source class for %s doesnt match", act)
-		} else {
-			om := &ObjectMatcher{game, act, nil}
-			om.addObject(source)
-			ret = om
-		}
-	}
-	return ret, err
+func NewObjectMatcher(mdl api.Model, nouns api.Nouns, onMatch OnMatch) *ObjectMatcher {
+	return &ObjectMatcher{mdl, nouns, nil, onMatch}
 }
 
 // MatchNoun to relate the passed name and article to internal objects.
 func (om *ObjectMatcher) MatchNoun(name string, _ string) (err error) {
-	nouns := om.act.GetNouns()
-	if cnt, max := len(om.objects), nouns.GetNounCount(); cnt >= max {
+	if cnt, max := len(om.objects), om.nouns.GetNounCount(); cnt >= max {
 		err = fmt.Errorf("You've told me more than I've understood.")
 	} else {
-		tried, ok := om.game.ModelApi.MatchNounName(name, func(id ident.Id) (okay bool) {
-			return om.MatchId(id)
+		tried, ok := om.mdl.MatchNounName(name, func(id ident.Id) bool {
+			return om.AddObject(id) == nil
 		})
 		if !ok {
 			if tried > 0 {
@@ -55,41 +41,30 @@ func (om *ObjectMatcher) MatchNoun(name string, _ string) (err error) {
 	return err
 }
 
-//
-// Matches gets called by the parser after succesfully found the command and nouns.
-//
+// OnMatch called by the parser after succesfully found the command and nouns.
 func (om *ObjectMatcher) OnMatch() (err error) {
-	nouns := om.act.GetNouns()
-	if cnt, max := len(om.objects), nouns.GetNounCount(); cnt != max {
+	objects, nouns := om.objects, om.nouns
+	if cnt, max := len(objects), nouns.GetNounCount(); cnt != max {
 		err = parser.MismatchedNouns("I", max, cnt)
 	} else {
-		tgt := ObjectTarget{om.game, om.objects[0]}
-		act := &RuntimeAction{om.game, om.act.GetId(), om.objects, nil}
-		om.game.queue.QueueEvent(tgt, om.act.GetEvent().GetEventName(), act)
+		om.onMatch(objects)
 	}
-	return err
+	return
 }
 
-//
-// MatchId is usually called by MatchNoun, public for net sessions :(
-//
-func (om *ObjectMatcher) MatchId(id ident.Id) (okay bool) {
-	if gobj, ok := om.game.ModelApi.GetInstance(id); ok {
-		nouns := om.act.GetNouns()
-		if cnt, max := len(om.objects), nouns.GetNounCount(); cnt < max {
-			if om.game.ModelApi.AreCompatible(gobj.GetParentClass().GetId(), nouns[cnt]) {
-				om.addObject(gobj)
-				okay = true
-			}
+// AddObject is usually called by MatchNoun, public for net sessions :(
+func (om *ObjectMatcher) AddObject(id ident.Id) (err error) {
+	if gobj, ok := om.mdl.GetInstance(id); !ok {
+		err = fmt.Errorf("couldnt find noun %s", id)
+	} else if cnt, max := len(om.objects), om.nouns.GetNounCount(); !(cnt < max) {
+		err = fmt.Errorf("too many nouns %d<%d", cnt, max)
+	} else {
+		noun := om.nouns[cnt]
+		if cls := gobj.GetParentClass(); !om.mdl.AreCompatible(cls.GetId(), noun) {
+			err = fmt.Errorf("noun %d not compatible %s(%s) != %s", cnt, id, cls, noun)
+		} else {
+			om.objects = append(om.objects, gobj)
 		}
 	}
-	return okay
-}
-
-func (om *ObjectMatcher) addObject(gobj api.Instance) {
-	om.objects = append(om.objects, gobj)
-	// cnt := len(om.objects)-1
-	// keys := []string{"Source", "Target", "Context"}
-	// key := keys[cnt]
-	// om.values[key] = gobj.vals
+	return
 }

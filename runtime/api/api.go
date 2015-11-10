@@ -26,7 +26,7 @@ type Model interface {
 	Pluralize(string) string
 
 	// hrmmm...
-	MatchNounName(string, func(ident.Id) bool) (tries int, okay bool)
+	MatchNounName(string, func(ident.Id) bool) (tries int, err bool)
 }
 
 type Action interface {
