@@ -2,6 +2,7 @@ package memory
 
 import (
 	//"fmt"
+	"fmt"
 	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/model/table"
 	"github.com/ionous/sashimi/runtime/api/tests"
@@ -64,9 +65,12 @@ func TestMemory(t *testing.T) {
 		}
 	}
 	// test the api
-	tests.ApiTest(t, mem)
+	tests.ApiTest(t, mem, i.Id)
 	// test that things really changed
-	if res, ok := v.GetValue(i.Id, numProp); assert.True(t, ok) {
+	if res, ok := v.GetValue(i.Id, numProp); !assert.True(t, ok, fmt.Sprintf("missing (%s.%s)", i.Id, numProp)) {
+		t.Log(v)
+		t.Fatal()
+	} else {
 		require.EqualValues(t, float32(32), res)
 	}
 	if res, ok := v.GetValue(i.Id, textProp); assert.True(t, ok) {

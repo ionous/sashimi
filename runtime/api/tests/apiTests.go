@@ -14,16 +14,25 @@ import (
 // requires at least one instance and one class
 // the class valueerties should include "num", "text, "state", "object" of corresponding types
 // "state" should contain choices "yes" and "no"
-func ApiTest(t *testing.T, mdl api.Model) {
+func ApiTest(t *testing.T, mdl api.Model, instId ident.Id) {
 	require.NotNil(t, mdl)
 	_, noExist := mdl.GetInstance(ident.MakeUniqueId())
 	require.False(t, noExist)
-	//
+	// find inst by index
+	var inst api.Instance
 	require.True(t, mdl.NumInstance() > 0, "need instances to test")
-	inst := mdl.InstanceNum(0)
-	if ilookup, ok := mdl.GetInstance(inst.GetId()); assert.True(t, ok, "find instance by its own id") {
-		require.True(t, ilookup == inst, "equality is necessary for the sake of game object adapter")
-		require.True(t, ilookup.GetId() == inst.GetId())
+	for i := 0; i < mdl.NumInstance(); i++ {
+		indirect := mdl.InstanceNum(i)
+		if instId == indirect.GetId() {
+			assert.Nil(t, inst, "instance id should only exist once")
+			inst = indirect
+		}
+	}
+	require.NotNil(t, inst, "should have found instance by index")
+	// find inst by id
+	if direct, ok := mdl.GetInstance(instId); assert.True(t, ok, "get instance by id") {
+		require.True(t, direct == inst, "equality is necessary for the sake of game object adapter")
+		require.EqualValues(t, instId, direct.GetId(), "self id test")
 	}
 	//
 	require.True(t, inst.NumProperty() > 0, "need properties to test")
