@@ -8,6 +8,7 @@ import (
 	"github.com/ionous/sashimi/net/resource"
 	"github.com/ionous/sashimi/net/session"
 	R "github.com/ionous/sashimi/runtime"
+	"github.com/ionous/sashimi/runtime/parse"
 	"github.com/ionous/sashimi/standard"
 	"github.com/ionous/sashimi/util/ident"
 	"io"
@@ -43,7 +44,7 @@ func NewCommandSession(id string, model *M.Model, calls R.Callbacks) (ret *Comma
 		} else {
 			// setup system event callbacks --
 			// STORE-FIX: can this be removed? why is it needed?
-			setInitialPos := R.MakeStringId("set initial position")
+			setInitialPos := ident.MakeId("set initial position")
 			if e := game.SystemActions.Capture(setInitialPos, output.changedLocation); e != nil {
 				err = e
 			} else {
@@ -137,11 +138,11 @@ func (sess *CommandSession) _handleInput(input CommandInput) (err error) {
 			if act, ok := sess.game.ModelApi.GetAction(id); !ok {
 				err = fmt.Errorf("unknown action %s", input.Action)
 				//FIX? RunActions injects the player, that works out well, but is a little strange.
-			} else if om, e := R.NewObjectMatcher(act, playerId, sess.game.ModelApi); e != nil {
+			} else if om, e := parse.NewObjectMatcher(act, playerId, sess.game.ModelApi); e != nil {
 				err = e
 			} else {
 				for _, n := range input.Nouns() {
-					id := R.MakeStringId(n)
+					id := ident.MakeId(n)
 					if e := om.AddObject(id); e != nil {
 						err = e
 						break

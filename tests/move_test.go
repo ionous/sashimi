@@ -66,15 +66,15 @@ func TestMoveConstruction(t *testing.T) {
 func TestMoveGoing(t *testing.T) {
 	s := makeTestRoom()
 	s.The("player", Exists(), In("the foyer"))
-	if g, err := NewTestGame(t, s); assert.NoError(t, err) {
+	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
 		// FIX: move parent lookup elsewhere
-		g.PushParentLookup(func(g G.Play, o G.IObject) (ret G.IObject) {
+		test.Game.PushParentLookup(func(test G.Play, o G.IObject) (ret G.IObject) {
 			if parent, where := standard.DirectParent(o); where != "" {
 				ret = parent
 			}
 			return ret
 		})
-		if e := testMoves(t, g,
+		if e := testMoves(t, test,
 			xMove{"go west", "Lobby"},
 			xMove{"go east", "Lobby"},
 			xMove{"go up", "Parapet"},
@@ -85,7 +85,7 @@ func TestMoveGoing(t *testing.T) {
 			xMove{"go south", "Foyer"},
 			xMove{"enter curtain", "Cloakroom"},
 		); !assert.NoError(t, e, "failed move") {
-			p := g.Parser
+			p := test.Parser
 			t.Logf("parser has %d comprehension", len(p.Comprehensions))
 			for k, v := range p.Comprehensions {
 				t.Logf("%v:%v", k, v)
@@ -99,15 +99,15 @@ type xMove struct {
 	res ident.Id
 }
 
-func testMoves(t *testing.T, g TestGame, moves ...xMove) (err error) {
+func testMoves(t *testing.T, test TestGame, moves ...xMove) (err error) {
 	// FIX: relations are stored in the model
-	if p, ok := g.FindObject("player"); assert.True(t, ok, "found player") {
+	if p, ok := test.Game.ModelApi.GetInstance(ident.MakeId("player")); assert.True(t, ok, "found player") {
 		for _, move := range moves {
 			t.Logf("%s => %s", move.cmd, move.res)
-			if out, e := g.RunInput(move.cmd); e != nil {
+			if out, e := test.RunInput(move.cmd); e != nil {
 				err = e
 				break
-			} else if res := where(g.ModelApi, p); move.res != res {
+			} else if res := where(test.Game.ModelApi, p); move.res != res {
 				err = fmt.Errorf("unexpected move result: %v %v", res, out)
 				break
 			}

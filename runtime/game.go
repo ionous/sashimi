@@ -89,6 +89,7 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 		rand.New(rand.NewSource(1)),
 		tables,
 	}
+
 	for _, handler := range model.ActionHandlers {
 		src := handler.Callback
 		if cb := cfg.Calls.Lookup(src); cb == nil {
@@ -182,29 +183,6 @@ func (g *Game) ProcessEvents() (err error) {
 		}
 	}
 	return err
-}
-
-// FIX: TEMP(ish)
-// it might be better to add a name search (interface) to the model
-// and then use the id in the runtime.
-func (g *Game) FindObject(name string) (ret api.Instance, okay bool) {
-	id := StripStringId(name)
-	if obj, ok := g.ModelApi.GetInstance(id); ok {
-		ret, okay = obj, ok
-	}
-	return ret, okay
-}
-
-// FIX: TEMP(ish)
-func (g *Game) FindFirstOf(cls *M.ClassInfo, _ ...bool) (ret api.Instance) {
-	for i := 0; i < g.ModelApi.NumInstance(); i++ {
-		inst := g.ModelApi.InstanceNum(i)
-		if inst.GetParentClass().GetId() == cls.Id {
-			ret = inst
-			break
-		}
-	}
-	return ret
 }
 
 //

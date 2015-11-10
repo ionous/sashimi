@@ -3,8 +3,10 @@ package tests
 import (
 	G "github.com/ionous/sashimi/game"
 	R "github.com/ionous/sashimi/runtime"
+	"github.com/ionous/sashimi/runtime/api"
 	. "github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/standard"
+	"github.com/ionous/sashimi/util/ident"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -78,31 +80,29 @@ func TestStartupText(t *testing.T) {
 			nameOkay = name == "testing"
 		}))
 
-	if game, err := NewTestGame(t, s); assert.NoError(t, err, "compile should work") {
-		story := game.FindFirstOf(game.Model.Classes.FindClass("stories"))
-		require.NotNil(t, story, "should have game")
+	if test, err := NewTestGame(t, s); assert.NoError(t, err, "compile should work") {
+		if story, ok := api.FindFirstOf(test.Game.ModelApi, ident.MakeId("stories")); assert.True(t, ok, "should have test story") {
+			if _, ok := api.FindFirstOf(test.Game.ModelApi, ident.MakeId("rooms")); assert.True(t, ok, "should have room") {
+				err = test.Game.QueueEvent("commencing", story.GetId())
+				require.NoError(t, err, "commencing")
 
-		room := game.FindFirstOf(game.Model.Classes.FindClass("rooms"))
-		require.NotNil(t, room, "should have room")
-
-		err = game.QueueEvent("commencing", story.GetId())
-		require.NoError(t, err, "commencing")
-
-		expected := []string{
-			"testing",
-			"extra extra by me",
-			standard.VersionString,
-			"",
-			"somewhere",
-			"an empty room",
-			"",
-		}
-		if out, e := game.FlushOutput(); assert.NoError(t, e) {
-			if assert.True(t, bannerCalled, "banner called") {
-				require.True(t, storyExists, "story exists")
-				require.True(t, nameOkay, "name set")
+				expected := []string{
+					"testing",
+					"extra extra by me",
+					standard.VersionString,
+					"",
+					"somewhere",
+					"an empty room",
+					"",
+				}
+				if out, e := test.FlushOutput(); assert.NoError(t, e) {
+					if assert.True(t, bannerCalled, "banner called") {
+						require.True(t, storyExists, "story exists")
+						require.True(t, nameOkay, "name set")
+					}
+					require.Exactly(t, expected, out)
+				}
 			}
-			require.Exactly(t, expected, out)
 		}
 	}
 }

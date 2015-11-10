@@ -15,9 +15,9 @@ import (
 
 func TestVisit(t *testing.T) {
 	s := TalkScript()
-	if game, err := NewTestGame(t, s); assert.NoError(t, err) {
+	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
 		total, comments, repeats := 3, 2, 1
-		g := R.NewGameAdapter(game.Game)
+		g := R.NewGameAdapter(test.Game)
 		g.Visit("quips", func(q G.IObject) (done bool) {
 			total--
 			if q.Text("comment") != "" {
@@ -38,8 +38,8 @@ func TestVisit(t *testing.T) {
 // FIX FIX: add more quips and make sure rank and wrapping work properly.
 func TestQuipHistory(t *testing.T) {
 	s := TalkScript()
-	if game, err := NewTestGame(t, s); assert.NoError(t, err) {
-		g := R.NewGameAdapter(game.Game)
+	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
+		g := R.NewGameAdapter(test.Game)
 		qh := QuipHistory{}
 		// FIX:  saying hello.
 		qh.PushQuip(g.Our("WhatsTheMatter"))
@@ -58,8 +58,8 @@ func TestQuipHistory(t *testing.T) {
 // TestDiscuss for the discuss event and the conversation queue.
 func xTestDiscuss(t *testing.T) {
 	s := TalkScript()
-	if game, err := NewTestGame(t, s); assert.NoError(t, err) {
-		g := R.NewGameAdapter(game.Game)
+	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
+		g := R.NewGameAdapter(test.Game)
 		if boy := g.The("alien boy"); assert.True(t, boy.Exists(), "found boy") {
 			if player := g.The("player"); assert.True(t, player.Exists(), "found player") {
 				if con, ok := g.Global("conversation"); assert.True(t, ok, "found conversation") {
@@ -70,7 +70,7 @@ func xTestDiscuss(t *testing.T) {
 					require.Equal(t, boy.Object("next quip").Object("quip"), boy.Object("greeting"))
 					con.Converse(g)
 					// clear the test, and make sure the queue is empty.
-					if lines, err := game.FlushOutput(); assert.NoError(t, err) {
+					if lines, err := test.FlushOutput(); assert.NoError(t, err) {
 						require.True(t, len(lines) > 1)
 						require.Equal(t, `The Alien Boy: "You wouldn't happen to have a matter disrupter?"`, lines[0])
 					}
@@ -85,8 +85,8 @@ func xTestDiscuss(t *testing.T) {
 // both related to the alien boy, but not this convo, and to other npcs
 func xTestTalkQuips(t *testing.T) {
 	s := TalkScript()
-	if game, err := NewTestGame(t, s); assert.NoError(t, err) {
-		g := R.NewGameAdapter(game.Game)
+	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
+		g := R.NewGameAdapter(test.Game)
 		if boy := g.The("alien boy"); assert.True(t, boy.Exists(), "found boy") {
 			if player := g.The("player"); assert.True(t, player.Exists(), "found player") {
 				if con, ok := g.Global("conversation"); assert.True(t, ok, "found conversation") {
@@ -111,11 +111,11 @@ func xTestTalkQuips(t *testing.T) {
 
 					// test the actual converation choices printed
 					player.Go("print conversation choices", boy)
-					if lines, err := game.FlushOutput(); assert.NoError(t, err) {
+					if lines, err := test.FlushOutput(); assert.NoError(t, err) {
 						require.True(t, len(lines) > 2)
 
 						// test the selection
-						if lines, err := game.RunInput("2"); assert.NoError(t, err, "handling menu") {
+						if lines, err := test.RunInput("2"); assert.NoError(t, err, "handling menu") {
 							require.Len(t, lines, 1)
 							require.Contains(t, lines, `player: "Oh, sorry," Alice says. "I'll be back."`)
 						}
@@ -156,8 +156,8 @@ func xTestDirectFollows(t *testing.T) {
 		Has("comment", "I'm going to look around some more."))
 
 	standard.Debugging = true
-	if game, err := NewTestGame(t, s); assert.NoError(t, err) {
-		g := R.NewGameAdapter(game.Game)
+	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
+		g := R.NewGameAdapter(test.Game)
 		if boy := g.The("alien boy"); assert.True(t, boy.Exists(), "found boy") {
 			if player := g.The("player"); assert.True(t, player.Exists(), "found player") {
 				//
@@ -207,8 +207,8 @@ func TestFactFinding(t *testing.T) {
 			And("yellow", "prohibited", "retort"))
 
 	var qm QuipMemory
-	if game, err := NewTestGame(t, s); assert.NoError(t, err) {
-		g := R.NewGameAdapter(game.Game)
+	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
+		g := R.NewGameAdapter(test.Game)
 		assert.True(t, qm.IsQuipAllowed(g, g.The("orbital wonder")))
 		assert.True(t, qm.IsQuipAllowed(g, g.The("smoothie request")))
 		assert.False(t, qm.IsQuipAllowed(g, g.The("retort")), "the retort should not be allowed")

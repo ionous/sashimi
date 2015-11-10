@@ -6,6 +6,7 @@ import (
 	"github.com/ionous/sashimi/parser"
 	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/runtime/parse"
 	"github.com/ionous/sashimi/util/ident"
 	"log"
 )
@@ -57,7 +58,7 @@ func (sc *StandardCore) SetRight(status string) {
 
 // NewStandardGame creates a game which is based on the standard rules.
 func NewStandardGame(game *R.Game) (ret StandardStart, err error) {
-	if parser, e := R.NewObjectParser(game.ModelApi, ident.MakeId("player")); e != nil {
+	if parser, e := parse.NewObjectParser(game.ModelApi, ident.MakeId("player")); e != nil {
 		err = e
 	} else {
 		g := R.NewGameAdapter(game)
@@ -125,7 +126,7 @@ func (sg *StandardGame) Input(s string) (err error) {
 				if _, matcher, e := sg.Parser.ParseInput(in); e != nil {
 					err = e
 				} else {
-					if act, objs, e := matcher.(*R.ObjectMatcher).GetMatch(); e != nil {
+					if act, objs, e := matcher.(*parse.ObjectMatcher).GetMatch(); e != nil {
 						err = e
 					} else {
 						sg.RunTurn(act, objs)

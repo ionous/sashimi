@@ -155,7 +155,7 @@ func (ga *GameEventAdapter) GetObject(name string) (ret G.IObject) {
 
 func (ga *GameEventAdapter) getObject(name string) (ret G.IObject, okay bool) {
 	// asking by object name
-	if gobj, ok := ga.Game.FindObject(name); ok {
+	if gobj, ok := ga.ModelApi.GetInstance(StripStringId(name)); ok {
 		ret, okay = NewObjectAdapter(ga.Game, gobj), true
 	} else if ga.data != nil {
 		// testing against ga.data b/c sometimes the adapter isnt invoked via an event.
