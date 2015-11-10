@@ -109,9 +109,12 @@ func (test *TestGame) RunInput(s string) (ret []string, err error) {
 	return
 }
 
-func (test *TestGame) FlushOutput() []string {
+func (test *TestGame) FlushOutput() (ret []string, err error) {
 	if e := test.ProcessEvents(); e != nil {
 		test.out.Println(e)
+		err = e
+	} else {
+		ret = test.out.Flush()
 	}
-	return test.out.Flush()
+	return
 }

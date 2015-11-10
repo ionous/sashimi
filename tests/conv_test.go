@@ -70,10 +70,10 @@ func xTestDiscuss(t *testing.T) {
 					require.Equal(t, boy.Object("next quip").Object("quip"), boy.Object("greeting"))
 					con.Converse(g)
 					// clear the test, and make sure the queue is empty.
-					lines := game.FlushOutput()
-
-					require.True(t, len(lines) > 1)
-					require.Equal(t, `The Alien Boy: "You wouldn't happen to have a matter disrupter?"`, lines[0])
+					if lines, err := game.FlushOutput(); assert.NoError(t, err) {
+						require.True(t, len(lines) > 1)
+						require.Equal(t, `The Alien Boy: "You wouldn't happen to have a matter disrupter?"`, lines[0])
+					}
 				}
 			}
 		}
@@ -111,13 +111,14 @@ func xTestTalkQuips(t *testing.T) {
 
 					// test the actual converation choices printed
 					player.Go("print conversation choices", boy)
-					lines := game.FlushOutput()
-					require.True(t, len(lines) > 2)
+					if lines, err := game.FlushOutput(); assert.NoError(t, err) {
+						require.True(t, len(lines) > 2)
 
-					// test the selection
-					if lines, err := game.RunInput("2"); assert.NoError(t, err, "handling menu")
-						require.Len(t, lines, 1)
-						require.Contains(t, lines, `player: "Oh, sorry," Alice says. "I'll be back."`)
+						// test the selection
+						if lines, err := game.RunInput("2"); assert.NoError(t, err, "handling menu") {
+							require.Len(t, lines, 1)
+							require.Contains(t, lines, `player: "Oh, sorry," Alice says. "I'll be back."`)
+						}
 					}
 				}
 			}

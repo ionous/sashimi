@@ -60,8 +60,10 @@ func TestActionClassCallback(t *testing.T) {
 	if g, err := NewTestGameSource(t, s, "obj"); assert.NoError(t, err) {
 		if err := g.QueueEvent("testing", "Obj"); assert.NoError(t, err) {
 			if err := g.ProcessEvents(); assert.NoError(t, err) {
-				expected := []string{"it's a trap!"}
-				assert.EqualValues(t, expected, g.FlushOutput())
+				if out, err := g.FlushOutput(); assert.NoError(t, err) {
+					expected := []string{"it's a trap!"}
+					assert.EqualValues(t, expected, out)
+				}
 			}
 		}
 	}
@@ -83,8 +85,10 @@ func TestActionCallbackBeforeAfter(t *testing.T) {
 	if g, err := NewTestGameSource(t, s, "obj"); assert.NoError(t, err) {
 		if err := g.QueueEvent("testing", "Obj"); assert.NoError(t, err) {
 			if err := g.ProcessEvents(); assert.NoError(t, err) {
-				expected := []string{"Before", "After"}
-				assert.EqualValues(t, expected, g.FlushOutput())
+				if out, err := g.FlushOutput(); assert.NoError(t, err) {
+					expected := []string{"Before", "After"}
+					assert.EqualValues(t, expected, out)
+				}
 			}
 		}
 	}

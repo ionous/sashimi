@@ -97,11 +97,12 @@ func TestStartupText(t *testing.T) {
 			"an empty room",
 			"",
 		}
-		out := game.FlushOutput()
-		if assert.True(t, bannerCalled, "banner called") {
-			require.True(t, storyExists, "story exists")
-			require.True(t, nameOkay, "name set")
+		if out, e := game.FlushOutput(); assert.NoError(t, e) {
+			if assert.True(t, bannerCalled, "banner called") {
+				require.True(t, storyExists, "story exists")
+				require.True(t, nameOkay, "name set")
+			}
+			require.Exactly(t, expected, out)
 		}
-		require.Exactly(t, expected, out)
 	}
 }
