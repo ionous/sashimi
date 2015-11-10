@@ -8,13 +8,14 @@ import (
 	"github.com/ionous/sashimi/net/resource"
 	"github.com/ionous/sashimi/net/session"
 	R "github.com/ionous/sashimi/runtime"
-	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/standard"
 	"github.com/ionous/sashimi/util/ident"
 	"io"
 	"log"
 	"sync"
 )
+
+var playerId = ident.MakeId("player")
 
 //
 // Create a session.
@@ -119,9 +120,7 @@ func (sess *CommandSession) Post(reader io.Reader) (ret resource.Document, err e
 	return ret, err
 }
 
-//
 // Send the passed input to the game.
-//
 func (sess *CommandSession) _handleInput(input CommandInput) (err error) {
 	if sess.game.IsQuit() {
 		err = session.SessionClosed{"player quit"}
@@ -138,26 +137,21 @@ func (sess *CommandSession) _handleInput(input CommandInput) (err error) {
 			if act, ok := sess.game.ModelApi.GetAction(id); !ok {
 				err = fmt.Errorf("unknown action %s", input.Action)
 				//FIX? RunActions injects the player, that works out well, but is a little strange.
+			} else if om, e := R.NewObjectMatcher(act, playerId, sess.game.ModelApi); e != nil {
+				err = e
 			} else {
-				om := R.NewObjectMatcher(sess.game.ModelApi, act.GetNouns(), func(objects []api.Instance) {
-					sess.game.QueueAction(act, objects)
-				})
-				if e := om.AddObject("Player"); e != nil {
-					err = e
-				} else {
-					for _, n := range input.Nouns() {
-						id := R.MakeStringId(n)
-						if e := om.AddObject(id); e != nil {
-							err = e
-							break
-						}
+				for _, n := range input.Nouns() {
+					id := R.MakeStringId(n)
+					if e := om.AddObject(id); e != nil {
+						err = e
+						break
 					}
 				}
 				if err == nil {
-					if e := om.OnMatch(); e != nil {
+					if act, objs, e := om.GetMatch(); e != nil {
 						err = e
 					} else {
-						sess.game.EndTurn() // game.Input() does sess automatically (dont ask)
+						sess.game.RunTurn(act, objs)
 					}
 				}
 			}

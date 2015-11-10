@@ -5,6 +5,8 @@ import (
 	G "github.com/ionous/sashimi/game"
 	"github.com/ionous/sashimi/parser"
 	R "github.com/ionous/sashimi/runtime"
+	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/util/ident"
 	"log"
 )
 
@@ -55,7 +57,7 @@ func (sc *StandardCore) SetRight(status string) {
 
 // NewStandardGame creates a game which is based on the standard rules.
 func NewStandardGame(game *R.Game) (ret StandardStart, err error) {
-	if parser, e := R.NewObjectParser(game, game.ModelApi, "player"); e != nil {
+	if parser, e := R.NewObjectParser(game.ModelApi, ident.MakeId("player")); e != nil {
 		err = e
 	} else {
 		g := R.NewGameAdapter(game)
@@ -120,12 +122,14 @@ func (sg *StandardGame) Input(s string) (err error) {
 				} else {
 					sg.lastInput = in
 				}
-				if matcher, e := sg.Parser.ParseInput(in); e != nil {
-					err = e
-				} else if e := matcher.OnMatched(); e != nil {
+				if _, matcher, e := sg.Parser.ParseInput(in); e != nil {
 					err = e
 				} else {
-					sg.EndTurn()
+					if act, objs, e := matcher.(*R.ObjectMatcher).GetMatch(); e != nil {
+						err = e
+					} else {
+						sg.RunTurn(act, objs)
+					}
 				}
 			}
 		}
@@ -135,13 +139,14 @@ func (sg *StandardGame) Input(s string) (err error) {
 
 // EndTurn finishes the turn for the player.
 // ( This is normally called automatically by Input )
-func (sg *StandardGame) EndTurn() {
+func (sg *StandardGame) RunTurn(act api.Action, objs []api.Instance) {
+	sg.Game.QueueAction(act, objs)
 	sg.endTurn("ending the turn")
 }
+
 func (sg *StandardGame) endTurn(event string) {
-	game := sg.Game
-	game.SendEvent(event, sg.story.Id())
-	if e := game.ProcessEvents(); e != nil {
+	sg.Game.QueueEvent(event, sg.story.Id())
+	if e := sg.Game.ProcessEvents(); e != nil {
 		log.Println(e)
 	} else {
 		if sg.story.Is("completed") {

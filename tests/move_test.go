@@ -86,8 +86,8 @@ func TestMoveGoing(t *testing.T) {
 			xMove{"enter curtain", "Cloakroom"},
 		); !assert.NoError(t, e, "failed move") {
 			p := g.Parser
-			t.Logf("parser has %d comprehension", len(p))
-			for k, v := range p {
+			t.Logf("parser has %d comprehension", len(p.Comprehensions))
+			for k, v := range p.Comprehensions {
 				t.Logf("%v:%v", k, v)
 			}
 		}
@@ -104,15 +104,12 @@ func testMoves(t *testing.T, g TestGame, moves ...xMove) (err error) {
 	if p, ok := g.FindObject("player"); assert.True(t, ok, "found player") {
 		for _, move := range moves {
 			t.Logf("%s => %s", move.cmd, move.res)
-			if e := g.RunInput(move.cmd); e != nil {
+			if out, e := g.RunInput(move.cmd); e != nil {
 				err = e
 				break
-			} else {
-				out := g.FlushOutput()
-				if res := where(g.ModelApi, p); move.res != res {
-					err = fmt.Errorf("unexpected move result: %v %v", res, out)
-					break
-				}
+			} else if res := where(g.ModelApi, p); move.res != res {
+				err = fmt.Errorf("unexpected move result: %v %v", res, out)
+				break
 			}
 		}
 	}

@@ -5,9 +5,8 @@ import "github.com/ionous/sashimi/util/ident"
 // Comprehension contains a set of patterns against which user input gets matched.
 // Comprehensions are created via NewComprehension() and expanded via LearnPattern().
 type Comprehension struct {
-	id         ident.Id
-	newMatcher NewMatcher
-	patterns   []Pattern
+	id       ident.Id
+	patterns []Pattern
 }
 
 // Name of this pattern set.
@@ -38,7 +37,7 @@ func (c *Comprehension) Patterns() []Pattern {
 // Parse the paseed input, trying each of the known patterns in turn.
 // If one of the patterns matched, found will contain that pattern --
 // even if the nouns from that pattern failed to match.
-func (c *Comprehension) TryParse(input string) (found *Pattern, matched IMatch, err error) {
+func (c *Comprehension) TryParse(input string, matchFactory IMakeMatchers) (found *Pattern, matched IMatch, err error) {
 	// for all patterns in those sets:
 	for _, p := range c.patterns {
 		// try the pattern:
@@ -46,12 +45,12 @@ func (c *Comprehension) TryParse(input string) (found *Pattern, matched IMatch, 
 			// let the caller know that something matched:
 			found = &p
 			// try the nouns:
-			if m, e := c.newMatcher(); e != nil {
+			if imatch, e := matchFactory.NewMatcher(c.id); e != nil {
 				err = e // provisional return
-			} else if e := match.MatchNouns(m); e != nil {
+			} else if e := match.MatchNouns(imatch); e != nil {
 				err = e // provisional return
 			} else {
-				matched, err = m, nil
+				matched, err = imatch, nil
 				break
 			}
 		}

@@ -8,6 +8,7 @@ import (
 	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/runtime/api"
 	. "github.com/ionous/sashimi/script"
+	"github.com/ionous/sashimi/util/ident"
 	"strings"
 	"testing"
 )
@@ -63,7 +64,7 @@ func NewTestGameSource(t *testing.T, s *Script, source string) (ret TestGame, er
 		cfg := R.RuntimeConfig{Calls: model.Calls, Output: cons}
 		if game, e := cfg.NewGame(model.Model); e != nil {
 			err = e
-		} else if parser, e := R.NewObjectParser(game, game.ModelApi, source); e != nil {
+		} else if parser, e := R.NewObjectParser(game.ModelApi, ident.MakeId(source)); e != nil {
 			err = e
 		} else {
 			ret = TestGame{t, game, model, cons, parser}
@@ -88,20 +89,24 @@ type TestGame struct {
 //
 // For testing:
 //
-func (test *TestGame) RunInput(s string) (err error) {
+func (test *TestGame) RunInput(s string) (ret []string, err error) {
 	if e := test.ProcessEvents(); e != nil {
 		err = e
 	} else {
 		in := parser.NormalizeInput(s)
-		if m, e := test.Parser.ParseInput(in); e != nil {
-			test.out.Log(fmt.Sprintf("RunInput: failed parse: %v orig: '%s' in: '%s' e: '%s'", m, s, in, e))
+		if p, m, e := test.Parser.ParseInput(in); e != nil {
+			test.out.Log(fmt.Sprintf("RunInput: failed parse: %v orig: '%s' in: '%s' e: '%s'", p, s, in, e))
 			err = e
-		} else if e := m.OnMatch(); e != nil {
+		} else if act, objs, e := m.(*R.ObjectMatcher).GetMatch(); e != nil {
 			test.out.Log(fmt.Sprint("RunInput: no match: ", s, e))
 			err = e
+		} else {
+			test.QueueAction(act, objs)
+			// the standard rules send an "ending the turn", we do not have to.
+			ret, err = test.FlushOutput()
 		}
 	}
-	return err
+	return
 }
 
 func (test *TestGame) FlushOutput() []string {

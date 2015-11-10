@@ -85,7 +85,7 @@ func TestStartupText(t *testing.T) {
 		room := game.FindFirstOf(game.Model.Classes.FindClass("rooms"))
 		require.NotNil(t, room, "should have room")
 
-		err = game.SendEvent("commencing", story.GetId())
+		err = game.QueueEvent("commencing", story.GetId())
 		require.NoError(t, err, "commencing")
 
 		expected := []string{

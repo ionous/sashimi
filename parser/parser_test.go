@@ -9,11 +9,11 @@ import (
 )
 
 type NounPool struct {
-	pool map[string]bool
+	nouns map[string]bool
 }
 
-func (nouns NounPool) FindNoun(name string, article string) (noun string, err error) {
-	if nouns.pool[name] {
+func (np NounPool) FindNoun(name string, article string) (noun string, err error) {
+	if np.nouns[name] {
 		noun = name
 	} else {
 		err = fmt.Errorf("Unknown noun: %s %s.", article, name)
@@ -22,9 +22,9 @@ func (nouns NounPool) FindNoun(name string, article string) (noun string, err er
 }
 
 //
-func (nouns *NounPool) AddNouns(names ...string) {
+func (np *NounPool) AddNouns(names ...string) {
 	for _, n := range names {
-		nouns.pool[n] = true
+		np.nouns[n] = true
 	}
 }
 
@@ -56,21 +56,28 @@ type TestCmd struct {
 	name   string
 	expect []string
 	comp   *Comprehension
-	pool   NounPool
+	nouns  NounPool
 }
 
-func (cmd *TestCmd) NewMatcher() (IMatch, error) {
-	return &TestMatcher{TestCmd: cmd}, nil
+type CommandPool map[ident.Id]*TestCmd
+
+func (cmds CommandPool) NewMatcher(id ident.Id) (ret IMatch, err error) {
+	if cmd, ok := cmds[id]; !ok {
+		err = fmt.Errorf("cmd %s not found", id)
+	} else {
+		ret = &TestMatcher{cmd: cmd}
+	}
+	return
 }
 
 type TestMatcher struct {
-	*TestCmd
+	cmd   *TestCmd
 	nouns []string
 }
 
 func (m *TestMatcher) MatchNoun(word string, article string) (err error) {
-	if len(m.nouns) < len(m.expect) {
-		if n, e := m.pool.FindNoun(word, article); e != nil {
+	if len(m.nouns) < len(m.cmd.expect) {
+		if n, e := m.cmd.nouns.FindNoun(word, article); e != nil {
 			err = e
 		} else {
 			m.nouns = append(m.nouns, n)
@@ -83,12 +90,12 @@ func (m *TestMatcher) MatchNoun(word string, article string) (err error) {
 
 // Matched gets called after all nouns in an input have been parsed succesfully.
 func (m *TestMatcher) OnMatch() (err error) {
-	m.Logf("matched %s, expecting %s", m.nouns, m.expect)
-	if got, want := len(m.nouns), len(m.expect); got != want {
+	m.cmd.Logf("matched %s, expecting %s", m.nouns, m.cmd.expect)
+	if got, want := len(m.nouns), len(m.cmd.expect); got != want {
 		err = fmt.Errorf("noun count doesnt match %d(got)!=%d(want)", got, want)
 	} else {
 		for i := 0; i < got; i++ {
-			got, want := m.nouns[i], m.expect[i]
+			got, want := m.nouns[i], m.cmd.expect[i]
 			if want != got {
 				err = fmt.Errorf("nouns dont match %s(got)!=%s(want)", got, want)
 				break
@@ -115,10 +122,12 @@ func TestLookAt(t *testing.T) {
 func TestUnderstandings(t *testing.T) {
 
 	// create a parser
-	p := make(P)
+	commandPool := make(CommandPool)
+	p := NewParser(commandPool)
 
 	// ok: define some commands with their allowed nouns
-	pool := NounPool{make(map[string]bool)}
+	nouns := NounPool{make(map[string]bool)}
+
 	testCmds := []*TestCmd{
 		{name: "looking"},
 		{name: "examining", expect: []string{"n1"}},
@@ -129,18 +138,20 @@ func TestUnderstandings(t *testing.T) {
 
 	// ok: add commands
 	for _, cmd := range testCmds {
+		id := ident.MakeId(cmd.name)
 		cmd.T = t
-		cmd.pool = pool
-		comp, err := p.NewComprehension(ident.MakeId(cmd.name), cmd.NewMatcher)
+		cmd.nouns = nouns
+		comp, err := p.NewComprehension(id)
 		if err != nil {
 			t.Fatal(err, cmd)
 		}
 		cmd.comp = comp
+		commandPool[id] = cmd
 	}
 
 	// err: change function
 	repeat := testCmds[0]
-	_, fail := p.NewComprehension(ident.MakeId(repeat.name), repeat.NewMatcher)
+	_, fail := p.NewComprehension(ident.MakeId(repeat.name))
 	if fail == nil {
 		t.Fatalf("expected changed function to fail")
 	}
@@ -176,18 +187,17 @@ func TestUnderstandings(t *testing.T) {
 	// ok: parse some commands
 	testParser := func(cmd string, expect string) (err error) {
 		normalizedInput := NormalizeInput(cmd)
-		match, e := p.ParseInput(normalizedInput)
-		if e != nil {
+		if pattern, matcher, e := p.ParseInput(normalizedInput); e != nil {
 			err = e
-		} else if match.Pattern != nil && match.Pattern.Comprehension().Id() != ident.MakeId(expect) {
-			err = fmt.Errorf("Mismatched pattern: %s got %s", expect, match.Pattern)
-		} else {
-			err = match.OnMatched()
+		} else if pattern != nil && pattern.Comprehension().Id() != ident.MakeId(expect) {
+			err = fmt.Errorf("Mismatched pattern: %s got %s", expect, pattern)
+		} else if m, ok := matcher.(*TestMatcher); assert.True(t, ok) {
+			err = m.OnMatch()
 		}
 		return err
 	}
 
-	nf := pool
+	nf := nouns
 
 	assert.Error(t, testParser("ignore", ""), "doesnt exist")
 	assert.NoError(t, testParser("look", "looking"), "")

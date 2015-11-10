@@ -115,8 +115,7 @@ func xTestTalkQuips(t *testing.T) {
 					require.True(t, len(lines) > 2)
 
 					// test the selection
-					if err := game.RunInput("2"); assert.NoError(t, err, "handling menu") {
-						lines := game.FlushOutput()
+					if lines, err := game.RunInput("2"); assert.NoError(t, err, "handling menu")
 						require.Len(t, lines, 1)
 						require.Contains(t, lines, `player: "Oh, sorry," Alice says. "I'll be back."`)
 					}

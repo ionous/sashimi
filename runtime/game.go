@@ -141,12 +141,6 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 	return game, err
 }
 
-func (g *Game) QueueAction(act api.Action, objects []api.Instance) {
-	tgt := ObjectTarget{g, objects[0]}
-	data := &RuntimeAction{g, act.GetId(), objects, nil}
-	g.queue.QueueEvent(tgt, act.GetEvent().GetEventName(), data)
-}
-
 func (g *Game) Random(n int) int {
 	return g.rand.Intn(n)
 }
@@ -216,7 +210,7 @@ func (g *Game) FindFirstOf(cls *M.ClassInfo, _ ...bool) (ret api.Instance) {
 //
 // mainly for testing; manual send of an event
 // FIX: merge game with runCommand()
-func (g *Game) SendEvent(event string, nouns ...ident.Id,
+func (g *Game) QueueEvent(event string, nouns ...ident.Id,
 ) (err error,
 ) {
 	eventId := MakeStringId(event)
@@ -229,6 +223,12 @@ func (g *Game) SendEvent(event string, nouns ...ident.Id,
 		g.queue.QueueEvent(tgt, event.GetEventName(), act)
 	}
 	return err
+}
+
+func (g *Game) QueueAction(act api.Action, objects []api.Instance) {
+	tgt := ObjectTarget{g, objects[0]}
+	data := &RuntimeAction{g, act.GetId(), objects, nil}
+	g.queue.QueueEvent(tgt, act.GetEvent().GetEventName(), data)
 }
 
 //

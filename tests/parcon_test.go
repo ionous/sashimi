@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/ionous/sashimi/console"
 	"github.com/ionous/sashimi/parser"
+	"github.com/ionous/sashimi/util/ident"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -24,10 +25,6 @@ type TestComprehension struct {
 	*testing.T
 	name  string
 	count int
-}
-
-func (nouns TestComprehension) NewMatcher() (parser.IMatch, error) {
-	return &TestMatcher{test: nouns}, nil
 }
 
 // IMatch
@@ -53,6 +50,31 @@ func (m *TestMatcher) OnMatch() (err error) {
 	return err
 }
 
+type TestPool struct {
+	comps parser.Comprehensions
+	tests map[ident.Id]TestComprehension
+}
+
+func (t TestPool) NewMatcher(id ident.Id) (ret parser.IMatch, err error) {
+	if test, ok := t.tests[id]; !ok {
+		err = fmt.Errorf("couldnt find test %s", id)
+	} else {
+		ret = &TestMatcher{test: test}
+	}
+	return
+}
+
+func (t TestPool) NewComprehension(name string, x TestComprehension) (ret *parser.Comprehension, err error) {
+	id := ident.MakeId(name)
+	if r, e := t.comps.NewComprehension(id); e != nil {
+		err = e
+	} else {
+		ret = r
+		t.tests[id] = x
+	}
+	return
+}
+
 //
 func TestConsoleParser(t *testing.T) {
 	Look := "look|l"
@@ -63,14 +85,16 @@ func TestConsoleParser(t *testing.T) {
 	ShowTo := "show|present|display {{something else}} to {{something}}"
 
 	// commands
-	p := make(parser.P)
-	looking, e := p.NewComprehension("looking", TestComprehension{t, "l", 0}.NewMatcher)
+	p := TestPool{make(parser.Comprehensions), make(map[ident.Id]TestComprehension)}
+	par := parser.P{p, p.comps}
+
+	looking, e := p.NewComprehension("looking", TestComprehension{t, "l", 0})
 	require.NoError(t, e)
-	examining, e := p.NewComprehension("examining it", TestComprehension{t, "x", 1}.NewMatcher)
+	examining, e := p.NewComprehension("examining it", TestComprehension{t, "x", 1})
 	require.NoError(t, e)
-	showingItTo, e := p.NewComprehension("showing to it", TestComprehension{t, "s", 2}.NewMatcher)
+	showingItTo, e := p.NewComprehension("showing to it", TestComprehension{t, "s", 2})
 	require.NoError(t, e)
-	require.Len(t, p, 3)
+	require.Len(t, p.comps, 3)
 
 	// grammar
 	_, e = looking.LearnPattern(Look)
@@ -101,8 +125,8 @@ func TestConsoleParser(t *testing.T) {
 	for {
 		if s, ok := c.Readln(); !ok {
 			break
-		} else if m, err := p.ParseInput(s); assert.NoError(t, err, s) {
-			if err := m.OnMatch(); assert.NoError(t, err, s) {
+		} else if _, m, err := par.ParseInput(s); assert.NoError(t, err, s) {
+			if err := m.(*TestMatcher).OnMatch(); assert.NoError(t, err, s) {
 				continue
 			}
 		}

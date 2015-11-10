@@ -58,7 +58,7 @@ func TestActionClassCallback(t *testing.T) {
 		Has("description", "it's an error!"),
 	)
 	if g, err := NewTestGameSource(t, s, "obj"); assert.NoError(t, err) {
-		if err := g.SendEvent("testing", "Obj"); assert.NoError(t, err) {
+		if err := g.QueueEvent("testing", "Obj"); assert.NoError(t, err) {
 			if err := g.ProcessEvents(); assert.NoError(t, err) {
 				expected := []string{"it's a trap!"}
 				assert.EqualValues(t, expected, g.FlushOutput())
@@ -81,7 +81,7 @@ func TestActionCallbackBeforeAfter(t *testing.T) {
 	)
 	s.The("kind", Called("obj"), Exists())
 	if g, err := NewTestGameSource(t, s, "obj"); assert.NoError(t, err) {
-		if err := g.SendEvent("testing", "Obj"); assert.NoError(t, err) {
+		if err := g.QueueEvent("testing", "Obj"); assert.NoError(t, err) {
 			if err := g.ProcessEvents(); assert.NoError(t, err) {
 				expected := []string{"Before", "After"}
 				assert.EqualValues(t, expected, g.FlushOutput())
@@ -119,9 +119,9 @@ func TestActionCallbackParsing(t *testing.T) {
 	if g, err := NewTestGameSource(t, s, "looker"); assert.NoError(t, err) {
 		if assert.Len(t, g.Model.NounNames, 2) {
 			str := "look at lookee"
-			if err := g.RunInput(str); assert.NoError(t, err, "handle input") {
+			if res, err := g.RunInput(str); assert.NoError(t, err, "handle input") {
 				expected := []string{"look it's a test!"}
-				assert.EqualValues(t, expected, g.FlushOutput())
+				assert.EqualValues(t, expected, res)
 			}
 		}
 	}
