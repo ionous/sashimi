@@ -149,6 +149,29 @@ func (mdl *MemoryModel) GetInstance(id ident.Id) (ret api.Instance, okay bool) {
 	return
 }
 
+func (mdl MemoryModel) NumRelation() int {
+	return len(mdl.Relations)
+}
+
+func (mdl *MemoryModel) RelationNum(i int) api.Relation {
+	if mdl._relations == nil {
+		mdl._relations = make([]*M.Relation, 0, len(mdl.Relations))
+		for _, v := range mdl.Relations {
+			mdl._relations = append(mdl._relations, v)
+		}
+	}
+	// panics on out of range
+	r := mdl._relations[i]
+	return relInfo{mdl, r}
+}
+
+func (mdl *MemoryModel) GetRelation(id ident.Id) (ret api.Relation, okay bool) {
+	if r, ok := mdl.Relations[id]; ok {
+		ret, okay = relInfo{mdl, r}, true
+	}
+	return
+}
+
 func (mdl *MemoryModel) ParserActionNum(i int) api.ParserAction {
 	// panics on out of range
 	p := mdl.ParserActions[i]
@@ -390,6 +413,15 @@ func (n instInfo) setValue(p M.IProperty, v GenericValue) error {
 	return n.mdl.objectValues.SetValue(n.Id, p.GetId(), v)
 }
 
+type relInfo struct {
+	mdl *MemoryModel
+	*M.Relation
+}
+
+func (r relInfo) GetId() ident.Id {
+	return r.Id
+}
+
 type propBase struct {
 	mdl  *MemoryModel
 	src  ident.Id
@@ -478,6 +510,32 @@ func (p propBase) GetValues() api.Values {
 		err = "unknown"
 	}
 	panic(fmt.Sprintf("GetValues(%s.%s) has %s property type %T", p.src, p.prop.GetId(), err, p.prop))
+}
+
+func (p propBase) GetRelative() (ret api.Relative, okay bool) {
+	switch prop := p.prop.(type) {
+	case M.PointerProperty:
+	case M.RelativeProperty:
+
+		// get the relation
+		relation := p.mdl.Relations[prop.Relation]
+
+		// get the reverse property
+		other := relation.GetOther(prop.IsRev)
+
+		ret = api.Relative{
+			Relation: prop.Relation,
+			Relates:  prop.Relates,
+			// FIX: this exists for backwards compatiblity with the client.
+			// the reality is, a relation effects a table, there may be multiple views that need updating. either the client could do this by seeing the relation and pulling new data,
+			// or we could push all of them. this pushes just one. ( client pulling might be best )
+			From:  other.Property,
+			IsRev: prop.IsRev,
+		}
+	default:
+		panic(fmt.Sprintf("GetRelative(%s.%s) property does not support relations.", p.src, p.prop.GetId()))
+	}
+	return
 }
 
 // PanicValue implements the Value interface:

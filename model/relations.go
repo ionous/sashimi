@@ -11,8 +11,8 @@ const (
 	ManyToMany               = "ManyToMany"
 )
 
-func NewRelation(id ident.Id, name string, src, dst HalfRelation, style RelationStyle) Relation {
-	return Relation{id, name, src, dst, style}
+func NewRelation(id ident.Id, name string, src, dst HalfRelation, style RelationStyle) *Relation {
+	return &Relation{id, name, src, dst, style}
 }
 
 // Relation represents a property-pair.
@@ -35,7 +35,7 @@ type HalfRelation struct {
 	Property ident.Id
 }
 
-type RelationMap map[ident.Id]Relation
+type RelationMap map[ident.Id]*Relation
 
 func (r Relation) GetOther(isRev bool) (other HalfRelation) {
 	if isRev {

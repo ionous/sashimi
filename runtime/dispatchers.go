@@ -25,20 +25,19 @@ func NewDispatchers(log *log.Logger) Dispatchers {
 }
 
 //
-// Retrieve the dispatcher for the passed key, creating the dispatcher if it doesn't yet exist.
-//
-func (this Dispatchers) CreateDispatcher(id ident.Id) (ret Dispatcher) {
-	if dispatcher, ok := this.all[id]; ok {
+// CreateDispatcher, or retrieve one if it already exists
+func (d Dispatchers) CreateDispatcher(id ident.Id) (ret Dispatcher) {
+	if dispatcher, ok := d.all[id]; ok {
 		ret = dispatcher
 	} else {
 		dispatcher.Dispatcher = E.NewDispatcher()
-		this.all[id] = dispatcher
+		d.all[id] = dispatcher
 		ret = dispatcher
 	}
 	return ret
 }
 
-func (this Dispatchers) GetDispatcher(id ident.Id) (ret Dispatcher, okay bool) {
-	ret, okay = this.all[id]
+func (d Dispatchers) GetDispatcher(id ident.Id) (ret Dispatcher, okay bool) {
+	ret, okay = d.all[id]
 	return ret, okay
 }

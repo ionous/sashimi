@@ -19,6 +19,10 @@ type Model interface {
 	InstanceNum(int) Instance
 	GetInstance(ident.Id) (Instance, bool)
 
+	NumRelation() int
+	RelationNum(int) Relation
+	GetRelation(ident.Id) (Relation, bool)
+
 	NumParserAction() int
 	ParserActionNum(int) ParserAction
 
@@ -64,6 +68,10 @@ type Prototype interface {
 	GetPropertyByChoice(choice ident.Id) (Property, bool)
 }
 
+type Relation interface {
+	GetId() ident.Id
+}
+
 type Instance Prototype
 type Class Prototype
 
@@ -85,19 +93,16 @@ type Property interface {
 	// or maybe IsCompatible(inst) bool
 	GetValue() Value
 	GetValues() Values
+	// GetRelative panics if the property is not an object or object array.
+	// it returns false if there is no relation -- a pure array or object value.
+	GetRelative() (Relative, bool)
 }
 
-type Values interface {
-	NumValue() int
-	ValueNum(int) Value
-
-	ClearValues()
-
-	AppendNum(float32)
-	AppendText(string)
-	AppendObject(ident.Id) error
-
-	// RemoveValue(int)
+type Relative struct {
+	Relation ident.Id
+	Relates  ident.Id
+	From     ident.Id
+	IsRev    bool // in this future this may include a "projection" or "field name"
 }
 
 // get and set panic if the value is not of the requested type; set can return error when the value, when of the correct type, violates a property constraint
@@ -114,6 +119,19 @@ type Value interface {
 	// FIX : Relations relate Objects -> instances
 	GetObject() ident.Id
 	SetObject(ident.Id) error
+}
+
+type Values interface {
+	NumValue() int
+	ValueNum(int) Value
+
+	ClearValues()
+
+	AppendNum(float32)
+	AppendText(string)
+	AppendObject(ident.Id) error
+
+	// RemoveValue(int)
 }
 
 // NOTE: ParserActions aren't id'd so, they are represented as structs.

@@ -25,7 +25,6 @@ type Game struct {
 	defaultActions DefaultActions
 	SystemActions  SystemActions
 	log            *log.Logger
-	Properties     PropertyWatchers
 	parentLookup   ParentLookupStack
 	Globals        Globals
 	rand           *rand.Rand
@@ -83,13 +82,13 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 		make(DefaultActions),
 		SystemActions{modelApi, make(SystemActionMap)},
 		log,
-		PropertyWatchers{},
 		ParentLookupStack{},
 		globals,
 		rand.New(rand.NewSource(1)),
 		tables,
 	}
 
+	// STORE/FIX: arrange action handlers by action id.
 	for _, handler := range model.ActionHandlers {
 		src := handler.Callback
 		if cb := cfg.Calls.Lookup(src); cb == nil {
@@ -115,7 +114,8 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 		return nil, err
 	}
 
-	// FUTURE: move into scenes, with a handle for removal
+	// STORE/FIX: invert EventListeners and the Dispatcher gets;
+	// thi requires changing the event listeners ( in evt ) to pull.
 	for _, listener := range model.EventListeners {
 		src := listener.Callback
 		if cb := cfg.Calls.Lookup(src); cb == nil {
@@ -185,7 +185,6 @@ func (g *Game) ProcessEvents() (err error) {
 	return err
 }
 
-//
 // mainly for testing; manual send of an event
 // FIX: merge game with runCommand()
 func (g *Game) QueueEvent(event string, nouns ...ident.Id,
