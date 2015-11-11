@@ -13,15 +13,42 @@ import (
 
 type MemoryModel struct {
 	*M.Model
-	_actions     []*M.ActionInfo
-	_events      []*M.EventInfo
-	_classes     []*M.ClassInfo
-	_instances   []*M.InstanceInfo
-	_relations   []*M.Relation
-	_properties  map[ident.Id]PropertyList
-	objectValues ObjectValue
-	tables       table.Tables
+	_actions       []*M.ActionInfo
+	_events        []*M.EventInfo
+	_classes       []*M.ClassInfo
+	_instances     []*M.InstanceInfo
+	_relations     []*M.Relation
+	_properties    map[ident.Id]PropertyList
+	objectValues   ObjectValue
+	tables         table.Tables
+	defaultActions DefaultActions
 }
+
+// indexed by action id-<callbackId
+type DefaultActions map[ident.Id][]ident.Id
+
+type CallbackList struct {
+	callbacks []ident.Id
+}
+
+func (cl CallbackList) NumCallback() int {
+	return len(cl.callbacks)
+}
+
+func (cl CallbackList) CallbackNum(i int) ident.Id {
+	p := cl.callbacks[i]
+	return p // CallbackWrapper(p)
+}
+
+// type CallbackWrapper CallbackPair
+
+// func (ac CallbackWrapper) GetAction() ident.Id {
+// 	return ac.act
+// }
+
+// func (ac CallbackWrapper) GetCallback() ident.Id {
+// 	return ac.callback
+// }
 
 type PropertyList []M.IProperty
 
@@ -47,7 +74,25 @@ func (p junkProperty) GetZero(_ M.ConstraintSet) interface{} {
 }
 
 func NewMemoryModel(m *M.Model, v ObjectValue, t table.Tables) *MemoryModel {
-	return &MemoryModel{Model: m, objectValues: v, tables: t, _properties: make(map[ident.Id]PropertyList)}
+	defaultActions := make(DefaultActions)
+
+	// STORE/FIX: arrange action handlers by action id.
+	for _, handler := range m.ActionHandlers {
+		act, callback, useCapture := handler.Action, handler.Callback, handler.UseCapture()
+		arr := defaultActions[act]
+		// FIX: for now treating target as bubble,
+		// really the compiler should hand off a sorted flat list based on three separate groups
+		// target growing in the same direction as after, but distinctly in the middle of things.
+		if !useCapture {
+			arr = append(arr, callback)
+		} else {
+			// prepend:
+			arr = append([]ident.Id{callback}, arr...)
+		}
+		defaultActions[act] = arr
+	}
+
+	return &MemoryModel{Model: m, objectValues: v, tables: t, _properties: make(map[ident.Id]PropertyList), defaultActions: defaultActions}
 }
 
 func (mdl *MemoryModel) NumAction() int {
@@ -70,6 +115,13 @@ func (mdl *MemoryModel) GetAction(id ident.Id) (ret api.Action, okay bool) {
 	}
 	return
 }
+func (mdl *MemoryModel) GetDefaultCallbacks(id ident.Id) (ret api.ActionCallbacks, okay bool) {
+	if a, ok := mdl.defaultActions[id]; ok {
+		ret, okay = CallbackList{a}, true
+	}
+	return
+}
+
 func (mdl *MemoryModel) NumEvent() int {
 	return len(mdl.Events)
 }

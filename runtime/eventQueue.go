@@ -31,7 +31,7 @@ func (f EventFrame) SendMessage(tgt E.ITarget, msg *E.Message) (err error) {
 			if act, ok := msg.Data.(*RuntimeAction); !ok {
 				err = fmt.Errorf("unknown action data %T", msg.Data)
 			} else {
-				act.runDefaultActions()
+				err = act.runDefaultActions()
 			}
 		}
 	}

@@ -35,7 +35,10 @@ func (m MemoryStorage) CompileCallback(cb G.Callback) (ret ident.Id, err error) 
 	return
 }
 
-// Lookup provides, via duck-typing, the runtime.Callbacks interface
-func (m MemoryStorage) Lookup(id ident.Id) G.Callback {
-	return m.callbacks[id]
+// LookupCallback provides, via duck-typing, the runtime.Callbacks interface
+func (m MemoryStorage) LookupCallback(id ident.Id) (ret G.Callback, okay bool) {
+	if r, ok := m.callbacks[id]; ok {
+		ret, okay = r, ok
+	}
+	return
 }

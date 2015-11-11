@@ -9,6 +9,7 @@ import (
 // GameCallback adapts model listeners to game events.
 // ( by implementing E.IListen )
 type GameCallback struct {
+	c         ICreatePlay
 	call      CallbackPair
 	options   CallbackOptions
 	classHint ident.Id
@@ -39,7 +40,9 @@ func (cb GameCallback) HandleEvent(evt E.IEvent) (err error) {
 			if cb.options.UseAfterQueue() {
 				act.runAfterDefaults(cb.call)
 			} else {
-				if !act.runCallback(cb.call, cb.classHint) {
+				play := cb.c.NewPlay(act, cb.classHint)
+				cb.call.call(play)
+				if act.cancelled {
 					evt.StopImmediatePropagation()
 					evt.PreventDefault()
 				}

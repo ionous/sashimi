@@ -6,6 +6,7 @@ type Model interface {
 	NumAction() int
 	ActionNum(int) Action
 	GetAction(ident.Id) (Action, bool)
+	GetDefaultCallbacks(ident.Id) (ActionCallbacks, bool)
 
 	NumEvent() int
 	EventNum(int) Event
@@ -32,6 +33,16 @@ type Model interface {
 	// hrmmm...
 	MatchNounName(string, func(ident.Id) bool) (tries int, err bool)
 }
+
+type ActionCallbacks interface {
+	NumCallback() int
+	CallbackNum(int) ident.Id
+}
+
+// type ActionCallback interface {
+// 	GetAction() ident.Id
+// 	GetCallback() ident.Id
+// }
 
 type Action interface {
 	GetId() ident.Id

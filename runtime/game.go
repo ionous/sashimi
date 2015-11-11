@@ -17,18 +17,18 @@ import (
 
 // FIX: standarize member exports by splitting game into smaller classes and interfaces; focus on injecting what game needs, and allowing providers to decorate/instrument what they need.
 type Game struct {
-	ModelApi       api.Model
-	Dispatchers    Dispatchers
-	output         IOutput
-	queue          EventQueue
-	frame          EventFrame
-	defaultActions DefaultActions
-	SystemActions  SystemActions
-	log            *log.Logger
-	parentLookup   ParentLookupStack
-	Globals        Globals
-	rand           *rand.Rand
-	Tables         table.Tables
+	ModelApi      api.Model
+	Dispatchers   Dispatchers
+	output        IOutput
+	calls         Callbacks
+	queue         EventQueue
+	frame         EventFrame
+	SystemActions SystemActions
+	log           *log.Logger
+	parentLookup  ParentLookupStack
+	Globals       Globals
+	rand          *rand.Rand
+	Tables        table.Tables
 }
 
 type logAdapter struct {
@@ -51,10 +51,14 @@ func (f CallbackPair) String() string {
 	return fmt.Sprint(f.call)
 }
 
-// indexed by action id
-type DefaultActions map[ident.Id][]CallbackPair
-
 type Globals map[ident.Id]reflect.Value
+
+func (g *Game) NewPlay(data interface{}, hint ident.Id) G.Play {
+	adapter := NewGameAdapter(g)
+	adapter.data = data.(*RuntimeAction)
+	adapter.hint = hint
+	return adapter
+}
 
 func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 	log := log.New(logAdapter{cfg.Output}, "game: ", log.Lshortfile)
@@ -77,9 +81,9 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 		modelApi,
 		dispatchers,
 		cfg.Output,
+		cfg.Calls,
 		EventQueue{E.NewQueue()},
 		frame,
-		make(DefaultActions),
 		SystemActions{modelApi, make(SystemActionMap)},
 		log,
 		ParentLookupStack{},
@@ -88,37 +92,11 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 		tables,
 	}
 
-	// STORE/FIX: arrange action handlers by action id.
-	for _, handler := range model.ActionHandlers {
-		src := handler.Callback
-		if cb := cfg.Calls.Lookup(src); cb == nil {
-			err = errutil.Append(err, fmt.Errorf("couldnt find callback for action", handler))
-		} else {
-			cb := CallbackPair{src, cb}
-			act := handler.Action
-			arr := game.defaultActions[act]
-			// FIX: for now treating target as bubble,
-			// really the compiler should hand off a sorted flat list based on three separate groups
-			// target growing in the same direction as after, but distinctly in the middle of things.
-			if !handler.UseCapture() {
-				arr = append(arr, cb)
-			} else {
-				// prepend:
-				arr = append([]CallbackPair{cb}, arr...)
-			}
-			game.defaultActions[act] = arr
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
 	// STORE/FIX: invert EventListeners and the Dispatcher gets;
 	// thi requires changing the event listeners ( in evt ) to pull.
 	for _, listener := range model.EventListeners {
 		src := listener.Callback
-		if cb := cfg.Calls.Lookup(src); cb == nil {
+		if cb, ok := cfg.Calls.LookupCallback(src); !ok {
 			err = errutil.Append(err, fmt.Errorf("couldn't find callback for listener %s", listener))
 		} else if evt, ok := modelApi.GetEvent(listener.Event); !ok {
 			err = errutil.Append(err, fmt.Errorf("couldn't find event for listener %s", listener))
@@ -131,7 +109,7 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 			if listener.UseAfterQueue() {
 				opt |= UseAfterQueue
 			}
-			callback := GameCallback{call, opt, listener.Class}
+			callback := GameCallback{game, call, opt, listener.Class}
 			dispatch := dispatchers.CreateDispatcher(listener.GetId())
 			dispatch.Listen(evt.GetEventName(), callback, listener.UseCapture())
 		}
@@ -204,7 +182,7 @@ func (g *Game) QueueEvent(event string, nouns ...ident.Id,
 
 func (g *Game) QueueAction(act api.Action, objects []api.Instance) {
 	tgt := ObjectTarget{g, objects[0]}
-	data := &RuntimeAction{g, act.GetId(), objects, nil}
+	data := &RuntimeAction{game: g, action: act.GetId(), objs: objects}
 	g.queue.QueueEvent(tgt, act.GetEvent().GetEventName(), data)
 }
 
@@ -235,7 +213,7 @@ func (g *Game) newRuntimeAction(action api.Action, nouns ...ident.Id,
 			}
 		}
 		if err == nil {
-			ret = &RuntimeAction{g, action.GetId(), objs, nil}
+			ret = &RuntimeAction{game: g, action: action.GetId(), objs: objs}
 		}
 	}
 	return ret, err

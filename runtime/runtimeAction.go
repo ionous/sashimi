@@ -12,10 +12,11 @@ var _ = fmt.Println
 
 // RuntimeAction contains data for event handlers and actions.
 type RuntimeAction struct {
-	game   *Game
-	action ident.Id
-	objs   []api.Instance
-	after  []CallbackPair
+	game      *Game
+	action    ident.Id
+	objs      []api.Instance
+	after     []CallbackPair
+	cancelled bool
 }
 
 // queue for running after the default actions
@@ -23,37 +24,49 @@ func (act *RuntimeAction) runAfterDefaults(cb CallbackPair) {
 	act.after = append(act.after, cb)
 }
 
-// Run the passed game callback.
-// This creates the game event adapter, sets up the necessary template context, etc.
-// Returns the results of the callback.
-func (act *RuntimeAction) runCallback(cb CallbackPair, clsId ident.Id) bool {
-	// FIX: it might be cooler to make act some sort of API...
-	// then we could have the callback object: callback.run( IPlay, Data ) maybe...
-	act.game.log.Println("calling:", act.action, cb)
-	adapter := NewGameAdapter(act.game)
-	adapter.data = act
-	adapter.hint = clsId
-	cb.call(adapter)
-	return !adapter.cancelled
+type ICreatePlay interface {
+	NewPlay(data interface{}, hint ident.Id) G.Play
 }
+
+// // Run the passed game callback.
+// // This creates the game event adapter, sets up the necessary template context, etc.
+// // Returns the results of the callback.
+// func (act *RuntimeAction) runCallback(cb CallbackPair, clsId ident.Id) bool {
+// 	// FIX: it might be cooler to make act some sort of API...
+// 	// then we could have the callback object: callback.run( IPlay, Data ) maybe...
+// 	act.game.log.Println("calling:", act.action, cb)
+// 	adapter := NewGameAdapter(act.game)
+// 	adapter.data = act
+// 	adapter.hint = clsId
+// 	cb.call(adapter)
+// 	return !adapter.cancelled
+// }
 
 //
 // Default actions occur after event processing assuming that they have not been cancelled.
 //
-func (act *RuntimeAction) runDefaultActions() {
-	//act.game.log.Println("default action:", act.action)
-	// FIX: assign defaults at initialization?
-	// it'd be even better if act didn't need game --
-	// the main reason it does it to share code b/t Go() and the ProcessEventLoop
-	if actions, existed := act.game.defaultActions[act.action]; existed {
-		for _, cb := range actions {
-			act.runCallback(cb, ident.Empty())
+func (act *RuntimeAction) runDefaultActions() (err error) {
+	if callbacks, ok := act.game.ModelApi.GetDefaultCallbacks(act.action); ok {
+		for i := 0; i < callbacks.NumCallback(); i++ {
+			cb := callbacks.CallbackNum(i)
+			play := act.game.NewPlay(act, ident.Empty())
+
+			if found, ok := act.game.calls.LookupCallback(cb); !ok {
+				err = fmt.Errorf("internal error, couldnt find callback %s", cb)
+				panic(err.Error())
+				break
+			} else {
+				found(play)
+			}
 		}
+
+		for _, after := range act.after {
+			play := act.game.NewPlay(act, ident.Empty())
+			after.call(play)
+		}
+		act.game.SystemActions.Run(act.action, act.objs)
 	}
-	for _, after := range act.after {
-		act.runCallback(after, ident.Empty())
-	}
-	act.game.SystemActions.Run(act.action, act.objs)
+	return
 }
 
 // fundByParamName: source, target, or context

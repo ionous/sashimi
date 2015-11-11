@@ -12,9 +12,8 @@ import (
 // GameEventAdapter implements game.Play.
 type GameEventAdapter struct {
 	*Game
-	data      *RuntimeAction
-	cancelled bool
-	hint      ident.Id
+	data *RuntimeAction
+	hint ident.Id
 }
 
 //
@@ -130,7 +129,7 @@ func (ga *GameEventAdapter) Log(texts ...interface{}) {
 
 //
 func (ga *GameEventAdapter) StopHere() {
-	ga.cancelled = true
+	ga.data.cancelled = true
 }
 
 //
