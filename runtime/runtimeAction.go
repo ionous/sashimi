@@ -55,7 +55,6 @@ func (act *RuntimeAction) runDefaultActions() (err error) {
 			play := act.game.NewPlay(act, ident.Empty())
 			after.call(play)
 		}
-		act.game.SystemActions.Run(act.action.GetId(), act.objs)
 	}
 	return
 }

@@ -101,12 +101,6 @@ func (out *CommandOutput) flushFrame(header, included resource.IBuildObjects) {
 	}
 }
 
-func (this *CommandOutput) changedLocation(gobjs []api.Instance) {
-	this.flushPending()
-	who, where := this.serial.NewObjectRef(gobjs[1]), this.serial.NewObjectRef(gobjs[2])
-	this.events.AddAction("set-initial-position", who, where)
-}
-
 func (out *CommandOutput) NumChange(gobj api.Instance, prop ident.Id, prev, next float32) {
 	if obj, ok := out.serial.TryObjectRef(gobj); ok {
 		data := struct {

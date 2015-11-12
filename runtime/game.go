@@ -16,17 +16,16 @@ import (
 
 // FIX: standarize member exports by splitting game into smaller classes and interfaces; focus on injecting what game needs, and allowing providers to decorate/instrument what they need.
 type Game struct {
-	ModelApi      api.Model
-	output        IOutput
-	queue         EventQueue
-	frame         EventFrame
-	calls         Callbacks
-	SystemActions SystemActions
-	log           *log.Logger
-	parentLookup  ParentLookupStack
-	Globals       Globals
-	rand          *rand.Rand
-	Tables        table.Tables
+	ModelApi     api.Model
+	output       IOutput
+	queue        EventQueue
+	frame        EventFrame
+	calls        Callbacks
+	log          *log.Logger
+	parentLookup ParentLookupStack
+	Globals      Globals
+	rand         *rand.Rand
+	Tables       table.Tables
 }
 
 type logAdapter struct {
@@ -69,7 +68,6 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 		EventQueue{E.NewQueue()},
 		frame,
 		cfg.Calls,
-		SystemActions{modelApi, make(SystemActionMap)},
 		log,
 		ParentLookupStack{},
 		globals,
@@ -92,6 +90,7 @@ func (g *Game) DispatchEvent(evt E.IEvent, target ident.Id) (err error) {
 	}
 	return
 }
+
 func (g *Game) Random(n int) int {
 	return g.rand.Intn(n)
 }
@@ -122,21 +121,13 @@ func (g *Game) PopParentLookup() {
 	g.parentLookup.PopLookup()
 }
 
-// ProcessEvents in the event queue till empty, or errored.
-func (g *Game) ProcessEvents() (err error) {
-	for !g.queue.Empty() {
-		tgt, msg := g.queue.Pop()
-		if e := g.frame.SendMessage(tgt, msg); e != nil {
-			g.log.Println("error", e)
-			err = e
-			break
-		}
-	}
-	return err
+func (g *Game) QueueAction(act api.Action, objects []api.Instance) {
+	tgt := ObjectTarget{g, objects[0]}
+	data := &RuntimeAction{game: g, action: act, objs: objects}
+	g.queue.QueueEvent(tgt, act.GetEvent().GetId(), data)
 }
 
 // mainly for testing; manual send of an event
-// FIX: merge game with runCommand()
 func (g *Game) QueueEvent(event string, nouns ...ident.Id,
 ) (err error,
 ) {
@@ -152,10 +143,17 @@ func (g *Game) QueueEvent(event string, nouns ...ident.Id,
 	return err
 }
 
-func (g *Game) QueueAction(act api.Action, objects []api.Instance) {
-	tgt := ObjectTarget{g, objects[0]}
-	data := &RuntimeAction{game: g, action: act, objs: objects}
-	g.queue.QueueEvent(tgt, act.GetEvent().GetId(), data)
+// ProcessEvents in the event queue till empty, or errored.
+func (g *Game) ProcessEvents() (err error) {
+	for !g.queue.Empty() {
+		tgt, msg := g.queue.Pop()
+		if e := g.frame.SendMessage(tgt, msg); e != nil {
+			g.log.Println("error", e)
+			err = e
+			break
+		}
+	}
+	return err
 }
 
 // TODO: unwind this.

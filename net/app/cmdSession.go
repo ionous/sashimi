@@ -42,21 +42,14 @@ func NewCommandSession(id string, model *M.Model, calls R.Callbacks) (ret *Comma
 		if game, e := standard.NewStandardGame(game); e != nil {
 			err = e
 		} else {
-			// setup system event callbacks --
-			// STORE-FIX: can this be removed? why is it needed?
-			setInitialPos := ident.MakeId("set initial position")
-			if e := game.SystemActions.Capture(setInitialPos, output.changedLocation); e != nil {
+			// STORE-FIX: add watchers for property changes --
+			// game.Properties.AddWatcher(output)
+			// now start the game, and start receiving changes --
+			immediate := false
+			if game, e := game.Start(immediate); e != nil {
 				err = e
 			} else {
-				// STORE-FIX: add watchers for property changes --
-				// game.Properties.AddWatcher(output)
-				// now start the game, and start receiving changes --
-				immediate := false
-				if game, e := game.Start(immediate); e != nil {
-					err = e
-				} else {
-					ret = &CommandSession{game, output, 1, &sync.RWMutex{}}
-				}
+				ret = &CommandSession{game, output, 1, &sync.RWMutex{}}
 			}
 		}
 	}
