@@ -29,18 +29,18 @@ func (e eventInfo) GetAction() (ret api.Action) {
 	return
 }
 
-// func (e eventInfo) GetListeners(capture bool) (ret api.Listeners, okay bool) {
-// 	var callbacks EventCallbacks
-// 	if !capture {
-// 		callbacks = e.mdl.bubble
-// 	} else {
-// 		callbacks = e.mdl.capture
-// 	}
-// 	if cbs, ok := callbacks[e.Id]; !ok {
-// 		ret = api.NoListeners{}
-// 	} else {
-// 		ret = listenersInfo{e.mdl, e.EventInfo, cbs, capture}
-// 		okay = true
-// 	}
-// 	return
-// }
+func (e eventInfo) GetListeners(capture bool) (ret api.Listeners, okay bool) {
+	var callbacks EventCallbacks
+	if !capture {
+		callbacks = e.mdl.bubble
+	} else {
+		callbacks = e.mdl.capture
+	}
+	if cbs, ok := callbacks[e.Id]; !ok {
+		ret = api.NoListeners{}
+	} else {
+		ret = listenersInfo{e.mdl, e.EventInfo, cbs, capture}
+		okay = true
+	}
+	return
+}

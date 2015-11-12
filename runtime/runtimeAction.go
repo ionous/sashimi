@@ -13,40 +13,31 @@ var _ = fmt.Println
 // RuntimeAction contains data for event handlers and actions.
 type RuntimeAction struct {
 	game      *Game
-	action    ident.Id
+	action    api.Action
 	objs      []api.Instance
-	after     []CallbackPair
+	after     []QueuedCallback
 	cancelled bool
 }
 
+// each action can have a chain of default actions
+type QueuedCallback struct {
+	src  ident.Id
+	call G.Callback
+}
+
+// FIX: change callbacks to include a source file/line location
+func (q QueuedCallback) String() string {
+	return fmt.Sprint(q.call)
+}
+
 // queue for running after the default actions
-func (act *RuntimeAction) runAfterDefaults(cb CallbackPair) {
+func (act *RuntimeAction) runAfterDefaults(cb QueuedCallback) {
 	act.after = append(act.after, cb)
 }
 
-type ICreatePlay interface {
-	NewPlay(data interface{}, hint ident.Id) G.Play
-}
-
-// // Run the passed game callback.
-// // This creates the game event adapter, sets up the necessary template context, etc.
-// // Returns the results of the callback.
-// func (act *RuntimeAction) runCallback(cb CallbackPair, clsId ident.Id) bool {
-// 	// FIX: it might be cooler to make act some sort of API...
-// 	// then we could have the callback object: callback.run( IPlay, Data ) maybe...
-// 	act.game.log.Println("calling:", act.action, cb)
-// 	adapter := NewGameAdapter(act.game)
-// 	adapter.data = act
-// 	adapter.hint = clsId
-// 	cb.call(adapter)
-// 	return !adapter.cancelled
-// }
-
-//
 // Default actions occur after event processing assuming that they have not been cancelled.
-//
 func (act *RuntimeAction) runDefaultActions() (err error) {
-	if callbacks, ok := act.game.ModelApi.GetDefaultCallbacks(act.action); ok {
+	if callbacks, ok := act.action.GetCallbacks(); ok {
 		for i := 0; i < callbacks.NumCallback(); i++ {
 			cb := callbacks.CallbackNum(i)
 			play := act.game.NewPlay(act, ident.Empty())
@@ -64,7 +55,7 @@ func (act *RuntimeAction) runDefaultActions() (err error) {
 			play := act.game.NewPlay(act, ident.Empty())
 			after.call(play)
 		}
-		act.game.SystemActions.Run(act.action, act.objs)
+		act.game.SystemActions.Run(act.action.GetId(), act.objs)
 	}
 	return
 }
@@ -94,12 +85,10 @@ func (act *RuntimeAction) findByClass(id ident.Id) (ret G.IObject, okay bool) {
 
 // findByExactClass; true if found
 func (act *RuntimeAction) findByExactClass(id ident.Id) (ret G.IObject, okay bool) {
-	if a, ok := act.game.ModelApi.GetAction(act.action); ok {
-		for i, nounClass := range a.GetNouns() {
-			if same := id == nounClass; same {
-				ret, okay = act.getObject(i)
-				break
-			}
+	for i, nounClass := range act.action.GetNouns() {
+		if same := id == nounClass; same {
+			ret, okay = act.getObject(i)
+			break
 		}
 	}
 	return
@@ -107,12 +96,10 @@ func (act *RuntimeAction) findByExactClass(id ident.Id) (ret G.IObject, okay boo
 
 // findBySimilarClass; true if found
 func (act *RuntimeAction) findBySimilarClass(id ident.Id) (ret G.IObject, okay bool) {
-	if a, ok := act.game.ModelApi.GetAction(act.action); ok {
-		for i, nounClass := range a.GetNouns() {
-			if similar := act.game.ModelApi.AreCompatible(id, nounClass); similar {
-				ret, okay = act.getObject(i)
-				break
-			}
+	for i, nounClass := range act.action.GetNouns() {
+		if similar := act.game.ModelApi.AreCompatible(id, nounClass); similar {
+			ret, okay = act.getObject(i)
+			break
 		}
 	}
 	return

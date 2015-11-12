@@ -1,12 +1,13 @@
 package event
 
-//
-// Implemented as interface to help show callers are not intended to modify, but
+import "github.com/ionous/sashimi/util/ident"
+
+// IEvent
+// implemented as interface to help show callers are not intended to modify, but
 // since we cant inherit, and i dont want to implement 100 functions for every event
 // a generic data() seems required.
-//
 type IEvent interface {
-	Name() string
+	Id() ident.Id
 	Data() interface{}
 
 	Bubbles() bool
@@ -26,4 +27,20 @@ type IEvent interface {
 	StopPropagation()
 	// stop processing all other event handlers immediately
 	StopImmediatePropagation()
+}
+
+// IListen in order to handle event callbacks.
+// Uses an interface for facilitating add/remove event listeners;
+// comparing function pointers is error-prone in go (due to closures)
+type IListen interface {
+	// FIX: does dispatch really need an error handling? i, personally, am not so sure.
+	HandleEvent(IEvent) error
+}
+
+// ITarget dispatch events to some hierarchical node, for instance, in a DOM.
+type ITarget interface {
+	Id() ident.Id
+	Class() ident.Id
+	Parent() (ITarget, bool)
+	TargetDispatch(IEvent) error
 }

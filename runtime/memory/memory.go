@@ -11,23 +11,23 @@ import (
 
 type MemoryModel struct {
 	*M.Model
-	_actions     []*M.ActionInfo
-	_events      []*M.EventInfo
-	_classes     []*M.ClassInfo
-	_instances   []*M.InstanceInfo
-	_relations   []*M.Relation
-	_properties  map[ident.Id]PropertyList
-	objectValues ObjectValue
-	tables       table.Tables
-	actions      DefaultActions
-	//capture, bubble EventCallbacks
+	_actions        []*M.ActionInfo
+	_events         []*M.EventInfo
+	_classes        []*M.ClassInfo
+	_instances      []*M.InstanceInfo
+	_relations      []*M.Relation
+	_properties     map[ident.Id]PropertyList
+	objectValues    ObjectValue
+	tables          table.Tables
+	actions         DefaultActions
+	capture, bubble EventCallbacks
 }
 
 // actionId -> callbackId
 type DefaultActions map[ident.Id][]ident.Id
 
 // indexed by eventId
-//type EventCallbacks map[ident.Id][]M.ListenerCallback
+type EventCallbacks map[ident.Id][]M.ListenerCallback
 
 // array of properties ( for flat cache )
 type PropertyList []M.IProperty
@@ -50,20 +50,20 @@ func NewMemoryModel(m *M.Model, v ObjectValue, t table.Tables) *MemoryModel {
 		actions[act] = arr
 	}
 
-	// capture, bubble := make(EventCallbacks), make(EventCallbacks)
-	// for _, l := range m.EventListeners {
-	// 	e, cb := l.Event, l.ListenerCallback
-	// 	var callbacks EventCallbacks
-	// 	if cb.UseCapture() {
-	// 		callbacks = capture
-	// 	} else {
-	// 		callbacks = bubble
-	// 	}
-	// 	// append
-	// 	var arr = callbacks[e]
-	// 	arr = append(arr, cb)
-	// 	callbacks[e] = arr
-	// }
+	capture, bubble := make(EventCallbacks), make(EventCallbacks)
+	for _, l := range m.EventListeners {
+		e, cb := l.Event, l.ListenerCallback
+		var callbacks EventCallbacks
+		if cb.UseCapture() {
+			callbacks = capture
+		} else {
+			callbacks = bubble
+		}
+		// append
+		var arr = callbacks[e]
+		arr = append(arr, cb)
+		callbacks[e] = arr
+	}
 
 	flatCache := make(map[ident.Id]PropertyList)
 	return &MemoryModel{
@@ -72,8 +72,8 @@ func NewMemoryModel(m *M.Model, v ObjectValue, t table.Tables) *MemoryModel {
 		tables:       t,
 		_properties:  flatCache,
 		actions:      actions,
-		// capture:      capture,
-		// bubble:       bubble,
+		capture:      capture,
+		bubble:       bubble,
 	}
 }
 
@@ -95,12 +95,6 @@ func (mdl *MemoryModel) ActionNum(i int) api.Action {
 func (mdl *MemoryModel) GetAction(id ident.Id) (ret api.Action, okay bool) {
 	if a, ok := mdl.Actions[id]; ok {
 		ret, okay = actionInfo{mdl, a}, true
-	}
-	return
-}
-func (mdl *MemoryModel) GetDefaultCallbacks(id ident.Id) (ret api.ActionCallbacks, okay bool) {
-	if a, ok := mdl.GetAction(id); ok {
-		ret, okay = a.(actionInfo).GetCallbacks()
 	}
 	return
 }

@@ -4,6 +4,7 @@ import (
 	"container/list"
 	E "github.com/ionous/sashimi/event"
 	"github.com/ionous/sashimi/net/resource"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 // i wonder whether its possible to put ActorSays into an event --
@@ -56,13 +57,13 @@ func (evs *EventStream) CurrentEvent() (ret *EventBlock) {
 	return ret
 }
 
-func (evs *EventStream) PushEvent(evt string, tgt E.ITarget, data interface{}) (ret *EventBlock) {
+func (evs *EventStream) PushEvent(evt ident.Id, tgt E.ITarget, data interface{}) (ret *EventBlock) {
 	parent := evs.CurrentEvent()
 	// create a new event block, and add it ( as the current event )
 	noRef := resource.ObjectList{}.NewObject(
 		jsonId(tgt.Id()),
 		jsonId(tgt.Class()))
-	block := &EventBlock{Evt: evt, Tgt: noRef, Data: data}
+	block := &EventBlock{Evt: jsonId(evt), Tgt: noRef, Data: data}
 	evs.list.PushBack(block)
 	// link this event into its parent (if any)
 	if parent != nil {

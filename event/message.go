@@ -1,9 +1,9 @@
 package event
 
-//import "fmt"
+import "github.com/ionous/sashimi/util/ident"
 
 type Message struct {
-	Name        string
+	Id          ident.Id
 	Data        interface{}
 	CaptureOnly bool
 	CantCancel  bool

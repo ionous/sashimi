@@ -1,5 +1,7 @@
 package event
 
+import "github.com/ionous/sashimi/util/ident"
+
 // Proc implements IEvent
 type Proc struct {
 	msg           *Message
@@ -15,12 +17,12 @@ type Proc struct {
 //
 func (evt *Proc) sendToTarget(loc ITarget) (err error) {
 	evt.currentTarget = loc
-	return evt.currentTarget.Dispatch(evt)
+	return evt.currentTarget.TargetDispatch(evt)
 }
 
 //
-func (evt *Proc) Name() string {
-	return evt.msg.Name
+func (evt *Proc) Id() ident.Id {
+	return evt.msg.Id
 }
 
 //

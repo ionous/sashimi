@@ -37,7 +37,7 @@ func (a actionInfo) GetNouns() api.Nouns {
 	return ret
 }
 
-func (a actionInfo) GetCallbacks() (ret api.ActionCallbacks, okay bool) {
+func (a actionInfo) GetCallbacks() (ret api.Callbacks, okay bool) {
 	if cbs, ok := a.mdl.actions[a.Id]; ok {
 		ret, okay = CallbackList{cbs}, true
 	}

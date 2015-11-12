@@ -39,9 +39,6 @@ func (ot ObjectTarget) Parent() (ret E.ITarget, ok bool) {
 }
 
 // Dispatch an event to an object (from event.ITarget.)
-func (ot ObjectTarget) Dispatch(evt E.IEvent) (err error) {
-	if d, ok := ot.game.Dispatchers.GetDispatcher(ot.obj.GetId()); ok {
-		err = d.Dispatch(evt)
-	}
-	return err
+func (ot ObjectTarget) TargetDispatch(evt E.IEvent) (err error) {
+	return ot.game.DispatchEvent(evt, ot.obj.GetId())
 }

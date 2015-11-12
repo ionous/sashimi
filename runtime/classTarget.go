@@ -31,10 +31,8 @@ func (ct ClassTarget) String() string {
 	return ct.class.GetId().String()
 }
 
-//
 // Walk up the class hierarchy; when we reach the end, move to the next instance.
 // (from E.ITarget)
-//
 func (ct ClassTarget) Parent() (ret E.ITarget, ok bool) {
 	if parent := ct.class.GetParentClass(); parent != nil {
 		ret = ClassTarget{ct.host, parent, ct.upObject}
@@ -46,13 +44,8 @@ func (ct ClassTarget) Parent() (ret E.ITarget, ok bool) {
 	return ret, ok
 }
 
-//
 // Send an event to ct target.
 // (from E.ITarget)
-//
-func (ct ClassTarget) Dispatch(evt E.IEvent) (err error) {
-	if d, ok := ct.host.game.Dispatchers.GetDispatcher(ct.class.GetId()); ok {
-		err = d.Dispatch(evt)
-	}
-	return err
+func (ct ClassTarget) TargetDispatch(evt E.IEvent) (err error) {
+	return ct.host.game.DispatchEvent(evt, ct.class.GetId())
 }

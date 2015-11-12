@@ -3,6 +3,7 @@ package runtime
 import (
 	"fmt"
 	E "github.com/ionous/sashimi/event"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 // NewEventFrame returns a function for defer() end of event.
@@ -14,8 +15,8 @@ type EventQueue struct {
 	*E.Queue
 }
 
-func (q EventQueue) QueueEvent(target E.ITarget, name string, data interface{}) {
-	msg := E.Message{Name: name, Data: data}
+func (q EventQueue) QueueEvent(target E.ITarget, id ident.Id, data interface{}) {
+	msg := E.Message{Id: id, Data: data}
 	q.Enqueue(target, msg)
 }
 

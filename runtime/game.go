@@ -8,7 +8,6 @@ import (
 	"github.com/ionous/sashimi/model/table"
 	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/runtime/memory"
-	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 	"log"
 	"math/rand"
@@ -18,11 +17,10 @@ import (
 // FIX: standarize member exports by splitting game into smaller classes and interfaces; focus on injecting what game needs, and allowing providers to decorate/instrument what they need.
 type Game struct {
 	ModelApi      api.Model
-	Dispatchers   Dispatchers
 	output        IOutput
-	calls         Callbacks
 	queue         EventQueue
 	frame         EventFrame
+	calls         Callbacks
 	SystemActions SystemActions
 	log           *log.Logger
 	parentLookup  ParentLookupStack
@@ -40,17 +38,6 @@ func (log logAdapter) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-// each action can have a chain of default actions
-type CallbackPair struct {
-	src  ident.Id
-	call G.Callback
-}
-
-// FIX: change callback structure to contain info on location
-func (f CallbackPair) String() string {
-	return fmt.Sprint(f.call)
-}
-
 type Globals map[ident.Id]reflect.Value
 
 func (g *Game) NewPlay(data interface{}, hint ident.Id) G.Play {
@@ -65,7 +52,6 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 
 	tables := model.Tables.Clone()
 	modelApi := memory.NewMemoryModel(model, make(memory.ObjectValueMap), tables)
-	dispatchers := NewDispatchers(log)
 
 	globals := make(Globals)
 	// DISABLED:
@@ -77,49 +63,35 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 		frame = DefaultEventFrame
 	}
 
-	game := &Game{
+	return &Game{
 		modelApi,
-		dispatchers,
 		cfg.Output,
-		cfg.Calls,
 		EventQueue{E.NewQueue()},
 		frame,
+		cfg.Calls,
 		SystemActions{modelApi, make(SystemActionMap)},
 		log,
 		ParentLookupStack{},
 		globals,
 		rand.New(rand.NewSource(1)),
 		tables,
-	}
-
-	// STORE/FIX: invert EventListeners and the Dispatcher gets;
-	// thi requires changing the event listeners ( in evt ) to pull.
-	for _, listener := range model.EventListeners {
-		src := listener.Callback
-		if cb, ok := cfg.Calls.LookupCallback(src); !ok {
-			err = errutil.Append(err, fmt.Errorf("couldn't find callback for listener %s", listener))
-		} else if evt, ok := modelApi.GetEvent(listener.Event); !ok {
-			err = errutil.Append(err, fmt.Errorf("couldn't find event for listener %s", listener))
-		} else {
-			call := CallbackPair{src, cb}
-			var opt CallbackOptions
-			if listener.UseTargetOnly() {
-				opt |= UseTargetOnly
-			}
-			if listener.UseAfterQueue() {
-				opt |= UseAfterQueue
-			}
-			callback := GameCallback{game, call, opt, listener.Class}
-			dispatch := dispatchers.CreateDispatcher(listener.GetId())
-			dispatch.Listen(evt.GetEventName(), callback, listener.UseCapture())
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-	return game, err
+	}, nil
 }
 
+// class or instance id
+func (g *Game) DispatchEvent(evt E.IEvent, target ident.Id) (err error) {
+	if src, ok := g.ModelApi.GetEvent(evt.Id()); ok {
+		if ls, ok := src.GetListeners(true); ok {
+			err = E.Capture(evt, NewGameListeners(g, evt, target, ls))
+		}
+		if err == nil {
+			if ls, ok := src.GetListeners(false); ok {
+				err = E.Bubble(evt, NewGameListeners(g, evt, target, ls))
+			}
+		}
+	}
+	return
+}
 func (g *Game) Random(n int) int {
 	return g.rand.Intn(n)
 }
@@ -175,20 +147,18 @@ func (g *Game) QueueEvent(event string, nouns ...ident.Id,
 		err = e
 	} else {
 		tgt := ObjectTarget{g, act.objs[0]}
-		g.queue.QueueEvent(tgt, event.GetEventName(), act)
+		g.queue.QueueEvent(tgt, event.GetId(), act)
 	}
 	return err
 }
 
 func (g *Game) QueueAction(act api.Action, objects []api.Instance) {
 	tgt := ObjectTarget{g, objects[0]}
-	data := &RuntimeAction{game: g, action: act.GetId(), objs: objects}
-	g.queue.QueueEvent(tgt, act.GetEvent().GetEventName(), data)
+	data := &RuntimeAction{game: g, action: act, objs: objects}
+	g.queue.QueueEvent(tgt, act.GetEvent().GetId(), data)
 }
 
-//
-// FIX: merge with runCommand()
-//
+// TODO: unwind this.
 func (g *Game) newRuntimeAction(action api.Action, nouns ...ident.Id,
 ) (ret *RuntimeAction, err error,
 ) {
@@ -213,7 +183,7 @@ func (g *Game) newRuntimeAction(action api.Action, nouns ...ident.Id,
 			}
 		}
 		if err == nil {
-			ret = &RuntimeAction{game: g, action: action.GetId(), objs: objs}
+			ret = &RuntimeAction{game: g, action: action, objs: objs}
 		}
 	}
 	return ret, err

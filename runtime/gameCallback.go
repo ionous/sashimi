@@ -3,49 +3,63 @@ package runtime
 import (
 	"fmt"
 	E "github.com/ionous/sashimi/event"
+	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/util/ident"
 )
+
+// filter listeners to the events appropriate for this target
+func NewGameListeners(game *Game, evt E.IEvent, target ident.Id, ls api.Listeners) GameListeners {
+	filtered := []api.Listener{}
+	for i := 0; i < ls.NumListener(); i++ {
+		l := ls.ListenerNum(i)
+		if target == l.GetInstance() || target == l.GetClass() {
+			// callbacks from scripts can ask to be limited to the "target" phase,
+			if trigger := !l.GetOptions().UseTargetOnly() || isTargetPhase(evt); trigger {
+				filtered = append(filtered, l)
+			}
+		}
+	}
+	return GameListeners{game, filtered}
+}
+
+// implements EventListeners
+type GameListeners struct {
+	game     *Game
+	filtered []api.Listener
+}
+
+func (gl GameListeners) NumListener() int {
+	return len(gl.filtered)
+}
+
+func (gl GameListeners) ListenerNum(i int) E.IListen {
+	l := gl.filtered[i]
+	return GameCallback{gl.game, l}
+}
 
 // GameCallback adapts model listeners to game events.
 // ( by implementing E.IListen )
 type GameCallback struct {
-	c         ICreatePlay
-	call      CallbackPair
-	options   CallbackOptions
-	classHint ident.Id
-}
-
-type CallbackOptions int
-
-const (
-	UseTargetOnly CallbackOptions = 1 << iota
-	UseAfterQueue
-)
-
-func (opt CallbackOptions) UseTargetOnly() bool {
-	return opt&UseTargetOnly != 0
-}
-func (opt CallbackOptions) UseAfterQueue() bool {
-	return opt&UseAfterQueue != 0
+	game *Game
+	api.Listener
 }
 
 // HandleEvent implements E.IListen.
 func (cb GameCallback) HandleEvent(evt E.IEvent) (err error) {
-	if act, okay := evt.Data().(*RuntimeAction); !okay {
+	if act, ok := evt.Data().(*RuntimeAction); !ok {
 		err = fmt.Errorf("unexpected game event data type %T", act)
+	} else if fn, ok := cb.game.calls.LookupCallback(cb.GetCallback()); !ok {
+		err = fmt.Errorf("couldn't find callback for listener %s", cb.Listener)
 	} else {
-		// callbacks from scripts can ask to be limited to the "target" phase,
-		// whereas event listeneres are either registered as part of the bubbling or capturing cycle.
-		if trigger := !cb.options.UseTargetOnly() || isTargetPhase(evt); trigger {
-			if cb.options.UseAfterQueue() {
-				act.runAfterDefaults(cb.call)
-			} else {
-				play := cb.c.NewPlay(act, cb.classHint)
-				cb.call.call(play)
-				if act.cancelled {
-					evt.StopImmediatePropagation()
-					evt.PreventDefault()
-				}
+		if cb.GetOptions().UseAfterQueue() {
+			call := QueuedCallback{cb.GetCallback(), fn}
+			act.runAfterDefaults(call)
+		} else {
+			play := cb.game.NewPlay(act, cb.GetClass())
+			fn(play)
+			if act.cancelled {
+				evt.StopImmediatePropagation()
+				evt.PreventDefault()
 			}
 		}
 	}

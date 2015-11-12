@@ -29,7 +29,7 @@ func NewCommandSession(id string, model *M.Model, calls R.Callbacks) (ret *Comma
 		// other than tgt, src, ctx right now.
 		output.flushPending()
 		//msg.Data == RunTimeAction
-		output.events.PushEvent(msg.Name, tgt, nil)
+		output.events.PushEvent(msg.Id, tgt, nil)
 		return func() {
 			output.flushPending()
 			output.events.PopEvent()

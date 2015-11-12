@@ -24,7 +24,7 @@ type ActionCallback struct {
 	ListenerCallback
 }
 
-// Beacuse of scenes we dont want to bake these into the class or instances;
+// For scenes we dont want to bake these into the class or instances;
 // its cheating, but for now using the same structure for class and instance.
 // NOTE: Instance can be empty if its a class based listener.
 // For the sake of sharing: Even though we listen to events, we point to the action.
@@ -91,7 +91,7 @@ func (cb ListenerCallback) UseTargetOnly() bool {
 	return cb.Options&EventTargetOnly != 0
 }
 
-// UseAfterQueue if the listener wants to trigger after a succesful event cycle.
+// UseAfterQueue if the listener wants to trigger after a successful event cycle.
 func (cb ListenerCallback) UseAfterQueue() bool {
 	return cb.Options&EventQueueAfter != 0
 }

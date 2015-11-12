@@ -205,7 +205,7 @@ func (oa ObjectAdapter) Go(run string, objects ...G.IObject) {
 			oa.log("%s.Go(%s) with %v: error running action: %s", oa, run, objects, e)
 		} else {
 			tgt := ObjectTarget{oa.game, oa.gobj}
-			msg := &E.Message{Name: action.GetEvent().GetEventName(), Data: act}
+			msg := &E.Message{Id: action.GetEvent().GetId(), Data: act}
 			if e := oa.game.frame.SendMessage(tgt, msg); e != nil {
 				oa.log("%s.Go(%s): error sending message: %s", oa, run, e)
 			}

@@ -6,7 +6,6 @@ type Model interface {
 	NumAction() int
 	ActionNum(int) Action
 	GetAction(ident.Id) (Action, bool)
-	GetDefaultCallbacks(ident.Id) (ActionCallbacks, bool)
 
 	NumEvent() int
 	EventNum(int) Event
@@ -27,22 +26,10 @@ type Model interface {
 	NumParserAction() int
 	ParserActionNum(int) ParserAction
 
-	AreCompatible(child, parent ident.Id) bool
 	Pluralize(string) string
-
-	// hrmmm...
+	AreCompatible(child, parent ident.Id) bool
 	MatchNounName(string, func(ident.Id) bool) (tries int, err bool)
 }
-
-type ActionCallbacks interface {
-	NumCallback() int
-	CallbackNum(int) ident.Id
-}
-
-// type ActionCallback interface {
-// 	GetAction() ident.Id
-// 	GetCallback() ident.Id
-// }
 
 type Action interface {
 	GetId() ident.Id
@@ -52,6 +39,13 @@ type Action interface {
 	GetEvent() Event
 	// GetNouns: the classes for required by the action.
 	GetNouns() Nouns
+	//
+	GetCallbacks() (Callbacks, bool)
+}
+
+type Callbacks interface {
+	NumCallback() int
+	CallbackNum(int) ident.Id
 }
 
 type Event interface {
@@ -61,11 +55,56 @@ type Event interface {
 	// GetAction: there shouldnt have to be a one to one mapping between actions ad events
 	// that's just how it is right now :(
 	GetAction() Action
+	// GetListeners returns the capture or bubbling callbacks associated with this event
+	// if GetListeners returns false, Listeners should be set to NoListeners.
+	GetListeners(capture bool) (Listeners, bool)
+}
+
+type Listeners interface {
+	NumListener() int
+	ListenerNum(int) Listener
+}
+
+type NoListeners [0]Listener
+
+func (no NoListeners) NumListener() int {
+	return len(no)
+}
+
+func (no NoListeners) ListenerNum(i int) Listener {
+	return no[i] // panics
+}
+
+type Listener interface {
+	// GetInstance can return Empty()
+	GetInstance() ident.Id
+	// GetClass always returns a valid class id.
+	GetClass() ident.Id
+	// GetCallback() returns a valid callback id.
+	GetCallback() ident.Id
+	//
+	GetOptions() CallbackOptions
+}
+
+type CallbackOptions int
+
+const (
+	UseTargetOnly CallbackOptions = 1 << iota
+	UseAfterQueue
+)
+
+func (opt CallbackOptions) UseTargetOnly() bool {
+	return opt&UseTargetOnly != 0
+}
+func (opt CallbackOptions) UseAfterQueue() bool {
+	return opt&UseAfterQueue != 0
 }
 
 // Prototype holds properties; it supports both instance and class type things.
 type Prototype interface {
 	GetId() ident.Id
+	//?GetType()  -> class or instance
+
 	// GetParentClass returns nil for classes if no parent;
 	// panics if no class can be found for an instnace.
 	GetParentClass() Class
