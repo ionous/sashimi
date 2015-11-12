@@ -76,25 +76,6 @@ func (ga *GameEventAdapter) Global(name string) (ret interface{}, okay bool) {
 	return ret, okay
 }
 
-// Add creates a new (data) object.
-func (ga *GameEventAdapter) NewFrom(class string) G.IObject {
-	panic("not supported")
-	// clsid := StripStringId(class)
-	// if cls, ok := ga.ModelApi.GetClass(clsid); !ok {
-	// 	ret = NullObjectSource(class, 2)
-	// } else {
-	// 	id := ident.MakeUniqueId()
-	// 	if gobj, e := NewGameObject(ga.ModelApi, id, cls, cls, ga.Game.Tables); e != nil {
-	// 		ga.Log(e)
-	// 		ret = NullObjectSource(class, 2)
-	// 	} else {
-	// 		ret = NewObjectAdapter(ga.Game, gobj)
-	// 		ga.Objects[id] = gobj
-	// 	}
-	// }
-	// return ret
-}
-
 //
 func (ga *GameEventAdapter) Visit(class string, visits func(G.IObject) bool) (okay bool) {
 	clsid := StripStringId(class)

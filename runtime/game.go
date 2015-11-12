@@ -14,6 +14,18 @@ import (
 	"reflect"
 )
 
+// FIX: remove
+func (oa ObjectAdapter) Remove() {
+	panic("not implemented")
+}
+
+func (null _Null) Remove() {
+	panic("not implemented")
+}
+func (ga *GameEventAdapter) NewFrom(class string) G.IObject {
+	panic("not supported")
+}
+
 // FIX: standarize member exports by splitting game into smaller classes and interfaces; focus on injecting what game needs, and allowing providers to decorate/instrument what they need.
 type Game struct {
 	ModelApi     api.Model

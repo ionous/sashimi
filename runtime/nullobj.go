@@ -49,9 +49,6 @@ func (null _Null) Exists() bool {
 	return false
 }
 
-func (null _Null) Remove() {
-}
-
 //
 func (null _Null) FromClass(cls string) bool {
 	return false
@@ -66,6 +63,17 @@ func (null _Null) Is(c string) (ret bool) {
 //
 func (null _Null) IsNow(c string) {
 	null.println("IsNow", c)
+}
+
+//
+func (null _Null) Get(p string) G.IValue {
+	null.println("Get", p)
+	return nullValue{fmt.Sprintf("%s.<%s>", null.String(), p)}
+}
+
+func (null _Null) GetList(p string) G.IList {
+	null.println("GetList", p)
+	return nullList{fmt.Sprintf("%s.<%s>", null.String(), p)}
 }
 
 //

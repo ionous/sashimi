@@ -27,10 +27,6 @@ func (oa ObjectAdapter) Id() ident.Id {
 	return oa.gobj.GetId()
 }
 
-func (oa ObjectAdapter) Remove() {
-	panic("not implemented")
-}
-
 // Exists always returns true for ObjectAdapter; see also NullObject which always returns false.
 func (oa ObjectAdapter) Exists() bool {
 	return true
@@ -64,102 +60,59 @@ func (oa ObjectAdapter) IsNow(state string) {
 	}
 }
 
+func (oa ObjectAdapter) Get(prop string) (ret G.IValue) {
+	pid := MakeStringId(prop)
+	if p, ok := oa.gobj.GetProperty(pid); !ok {
+		ret = NewNullValue(oa, fmt.Sprintf("%s.Get(%s): no such property", oa, prop))
+	} else if p.GetType()&api.ArrayProperty != 0 {
+		ret = NewNullValue(oa, fmt.Sprintf("%s.Get(%s): property is array", oa, prop))
+	} else {
+		ret = propValue{oa, p, p.GetValue()}
+	}
+	return
+}
+
+func (oa ObjectAdapter) GetList(prop string) (ret G.IList) {
+	pid := MakeStringId(prop)
+	if p, ok := oa.gobj.GetProperty(pid); !ok {
+		ret = NewNullList(oa, fmt.Sprintf("%s.GetList(%s): no such property", oa, prop))
+	} else if p.GetType()&api.ArrayProperty == 0 {
+		ret = NewNullList(oa, fmt.Sprintf("%s.GetList(%s): property is value", oa, prop))
+	} else {
+		ret = propList{oa, p, p.GetValues()}
+	}
+	return
+}
+
 // Num value of the named property.
 func (oa ObjectAdapter) Num(prop string) (ret float32) {
-	pid := MakeStringId(prop)
-	if prop, ok := oa.gobj.GetProperty(pid); !ok {
-		oa.log("%s.Num(%s): no such property", oa, prop)
-	} else if t := prop.GetType(); t != api.NumProperty {
-		oa.log("%s.Num(%s): property type(%d) is not a number.", oa, prop, t)
-	} else {
-		ret = prop.GetValue().GetNum()
-	}
-	return ret
+	return oa.Get(prop).Num()
 }
 
 // SetNum changes the value of an existing number property.
 func (oa ObjectAdapter) SetNum(prop string, value float32) {
-	pid := MakeStringId(prop)
-	if prop, ok := oa.gobj.GetProperty(pid); !ok {
-		oa.log("%s.SetNum(%s): no such property", oa, prop)
-	} else if t := prop.GetType(); t != api.NumProperty {
-		oa.log("%s.SetNum(%s): property type(%d) is not a number.", oa, prop, t)
-	} else if e := prop.GetValue().SetNum(value); e != nil {
-		oa.log("%s.SetNum(%s): error setting value: %s.", oa, prop, e)
-	}
+	oa.Get(prop).SetNum(value)
 }
 
 // Text value of the named property ( expanding any templated text. )
 // ( interestingly, inform seems to error when trying to store or manipulate templated text. )
 func (oa ObjectAdapter) Text(prop string) (ret string) {
-	pid := MakeStringId(prop)
-	if prop, ok := oa.gobj.GetProperty(pid); !ok {
-		oa.log("%s.Text(%s): no such property", oa, prop)
-	} else if t := prop.GetType(); t != api.TextProperty {
-		oa.log("%s.Text(%s): property type(%d) is not text.", oa, prop, t)
-	} else {
-		ret = prop.GetValue().GetText()
-	}
-	return ret
+	return oa.Get(prop).Text()
 }
 
 // SetText changes the value of an existing text property.
 func (oa ObjectAdapter) SetText(prop string, text string) {
-	pid := MakeStringId(prop)
-	if prop, ok := oa.gobj.GetProperty(pid); !ok {
-		oa.log("%s.SetText(%s): no such property", oa, prop)
-	} else if t := prop.GetType(); t != api.TextProperty {
-		oa.log("%s.SetText(%s): property type(%d) is not text.", oa, prop, t)
-	} else if e := prop.GetValue().SetText(text); e != nil {
-		oa.log("%s.SetText(%s): error setting value: %s.", oa, prop, e)
-	}
+	oa.Get(prop).SetText(text)
 }
 
 // Object returns a related object.
 func (oa ObjectAdapter) Object(prop string) (ret G.IObject) {
-	// TBD: should these be logged? its sure nice to have be able to test objects generically for properties
-	var res ident.Id
-	pid := MakeStringId(prop)
-	if p, ok := oa.gobj.GetProperty(pid); ok {
-		if t := p.GetType(); t != api.ObjectProperty {
-			oa.log("%s.Object(%s): property type(%d) is not an object.", oa, prop, t)
-		} else {
-			res = p.GetValue().GetObject()
-		}
-	}
-	return NewObjectAdapterFromId(oa.game, res)
+	return oa.Get(prop).Object()
 }
 
 // Set changes an object relationship.
 func (oa ObjectAdapter) Set(prop string, object G.IObject) {
-	pid := MakeStringId(prop)
-	if p, ok := oa.gobj.GetProperty(pid); ok {
-		switch t := p.GetType(); t {
-		default:
-			oa.log("%s.Set(%s): property type(%d) is not an object.", oa, prop, t)
-
-		case api.ObjectProperty:
-			var id ident.Id
-			if other, ok := object.(ObjectAdapter); ok {
-				id = other.gobj.GetId()
-			}
-			if e := p.GetValue().SetObject(id); e != nil {
-				oa.log("%s.Set(%s): error setting value: %s.", oa, prop, e)
-			}
-
-		case api.ObjectProperty | api.ArrayProperty:
-			values := p.GetValues()
-			if other, ok := object.(ObjectAdapter); !ok {
-				if e := values.ClearValues(); e != nil {
-					oa.log("%s.Set(%s): error clearing value: %s.", oa, prop, e)
-				}
-			} else {
-				if e := values.AppendObject(other.gobj.GetId()); e != nil {
-					oa.log("%s.Set(%s): error appending value: %s.", oa, prop, e)
-				}
-			}
-		}
-	}
+	oa.Get(prop).SetObject(object)
 }
 
 // ObjectList returns a list of related objects.
