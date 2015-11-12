@@ -3,8 +3,9 @@ package model
 import "github.com/ionous/sashimi/util/ident"
 
 type NumProperty struct {
-	Id   ident.Id `json:"id"`   // property id
-	Name string   `json:"name"` // property name
+	Id     ident.Id `json:"id"`   // property id
+	Name   string   `json:"name"` // property name
+	IsMany bool     `json:"many"`
 }
 
 func (num NumProperty) GetId() ident.Id {
@@ -15,6 +16,11 @@ func (num NumProperty) GetName() string {
 	return num.Name
 }
 
-func (num NumProperty) GetZero(_ ConstraintSet) interface{} {
-	return float32(0)
+func (num NumProperty) GetZero(_ ConstraintSet) (ret interface{}) {
+	if !num.IsMany {
+		ret = float32(0)
+	} else {
+		ret = []interface{}{}
+	}
+	return
 }

@@ -175,10 +175,9 @@ type Values interface {
 	NumValue() int
 	ValueNum(int) Value
 
-	ClearValues()
-
-	AppendNum(float32)
-	AppendText(string)
+	ClearValues() error
+	AppendNum(float32) error
+	AppendText(string) error
 	AppendObject(ident.Id) error
 
 	// RemoveValue(int)

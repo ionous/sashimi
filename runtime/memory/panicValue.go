@@ -6,10 +6,12 @@ import (
 )
 
 // PanicValue implements the Value interface:
-// pancing on every get() and set(), and then
+// panicing on every get() and set(), and then
 // specific property types override the specific methods they need:
 // .text for text, num for num, etc.
-type panicValue propBase
+type panicValue struct {
+	*propBase
+}
 
 func (p panicValue) GetNum() float32 {
 	panic(fmt.Errorf("get num not supported for property %v", p.prop.GetId()))

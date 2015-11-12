@@ -54,6 +54,34 @@ func ApiTest(t *testing.T, mdl api.Model, instId ident.Id) {
 		{MethodMaker("State"), ident.Id("No"), ident.Id("Yes")},
 		{MethodMaker("Object"), ident.Empty(), inst.GetId()},
 	}
+
+	testValue := func(v api.Value, test TestValue, eval func(TestValue, reflect.Value)) {
+		if value := reflect.ValueOf(v); assert.True(t, value.IsValid()) {
+			// test getting the vaule of the appropriate type succeeds
+			require.NotPanics(t, func() {
+				prev := test.GetFrom(value)
+				require.EqualValues(t, prev, test.original, fmt.Sprintf("original value %s, %v", test, prev))
+			}, fmt.Sprintf("get default value: %s", test.String()))
+
+			// custom testing for instances and classes
+			eval(test, value)
+
+			// test every other property type fails
+			for _, m := range methods {
+				if m != test {
+					// panic all other methods:
+					var v interface{}
+					require.Panics(t, func() {
+						v = m.GetFrom(value)
+					}, fmt.Sprintf("trying to get %s from %s; returned %v", m, test, v))
+					require.Panics(t, func() {
+						m.SetTo(value, m.value)
+					}, fmt.Sprintf("trying to set %s to %s", m, test))
+				}
+			}
+		}
+	}
+
 	testMethods := func(src api.Prototype, eval func(TestValue, reflect.Value)) {
 		// test class values;
 		// test instance values
@@ -63,35 +91,17 @@ func ApiTest(t *testing.T, mdl api.Model, instId ident.Id) {
 			// get the property
 			if p, ok := src.GetProperty(pid); assert.True(t, ok, test.String()) {
 				// request the value from the property
-				if value := reflect.ValueOf(p.GetValue()); assert.True(t, value.IsValid()) {
-					// test getting the vaule of the appropriate type succeeds
-					require.NotPanics(t, func() {
-						prev := test.GetFrom(value)
-						require.EqualValues(t, prev, test.original, fmt.Sprintf("original value %s, %v", test, prev))
-					}, fmt.Sprintf("get default value: %s", pid))
-
-					// custom testing for instances and classes
-					eval(test, value)
-
-					// test every other property type fails
-					for _, m := range methods {
-						if m != test {
-							// panic all other methods:
-							var v interface{}
-							require.Panics(t, func() {
-								v = m.GetFrom(value)
-							}, fmt.Sprintf("trying to get %s from %s; returned %v", m, test, v))
-							require.Panics(t, func() {
-								m.SetTo(value, m.value)
-							}, fmt.Sprintf("trying to set %s to %s", m, test))
-						}
-					}
-				}
+				var v api.Value
+				require.NotPanics(t, func() { v = p.GetValue() })
+				require.Panics(t, func() { p.GetValues() })
+				testValue(v, test, eval)
 			}
 		}
 	}
-	testMethods(inst, func(test TestValue, value reflect.Value) {
-		// instances can get and set values
+	_ = testMethods
+	// instances can get and set values
+	// value is reflect valueOf api.Value
+	testInstanceValue := func(test TestValue, value reflect.Value) {
 		require.NotPanics(t, func() {
 			test.SetTo(value, test.value)
 		}, fmt.Sprintf("instance set value: %s", test))
@@ -99,12 +109,89 @@ func ApiTest(t *testing.T, mdl api.Model, instId ident.Id) {
 			next := test.GetFrom(value)
 			require.EqualValues(t, next, test.value, fmt.Sprintf("%v:%T should be %v:%T", next, next, test.value, test.value))
 		}, fmt.Sprintf("get changed value: %s", test))
-	})
+	}
+	testMethods(inst, testInstanceValue)
 
-	testMethods(inst.GetParentClass(), func(test TestValue, value reflect.Value) {
-		// classes disallow set values
+	// classes disallow set values
+	// value is reflect valueOf api.Value
+	testClassValue := func(test TestValue, value reflect.Value) {
 		require.Panics(t, func() {
 			test.SetTo(value, test.value)
+		}, fmt.Sprintf("class set value: %s", test))
+	}
+	_ = testClassValue
+	testMethods(inst.GetParentClass(), testClassValue)
+
+	testArrays := func(src api.Prototype, eval func(TestValue, api.Values)) {
+		// test class values;
+		// test instance values
+		for _, test := range methods {
+			// no state arrays right now
+			if test.String() == "State" {
+				continue
+			}
+			// for every property type: num, text, state
+			pid := ident.MakeId(test.String() + "s")
+			// get the property
+			if p, ok := src.GetProperty(pid); assert.True(t, ok, fmt.Sprintf("trying to get property %s.%s", src, pid)) {
+				// request the value from the property
+				var vs api.Values
+				require.Panics(t, func() { p.GetValue() })
+				require.NotPanics(t, func() { vs = p.GetValues() })
+				var cnt int
+				require.NotPanics(t, func() {
+					cnt = vs.NumValue()
+				}, fmt.Sprintf("trying to num value %s.%s", src, pid))
+				require.Equal(t, 0, cnt)
+
+				eval(test, vs)
+
+				// test alld other appends fails
+				value := reflect.ValueOf(vs)
+				for _, m := range methods {
+					if m != test {
+						// panic all other methods:
+						require.Panics(t, func() {
+							m.Append(value, test.value)
+						}, fmt.Sprintf("trying to append %s from %s", m, test))
+					}
+				}
+			}
+		}
+	}
+
+	testArrays(inst, func(test TestValue, vs api.Values) {
+		value := reflect.ValueOf(vs)
+
+		// append
+		for i := 0; i < 3; i++ {
+			// instances can get and set values
+			require.NotPanics(t, func() {
+				test.Append(value, test.original)
+			}, fmt.Sprintf("instance set value: %s", test))
+			cnt := vs.NumValue()
+			require.EqualValues(t, i+1, cnt, fmt.Sprintf("cnt(%d) should be bigger", cnt))
+			next := vs.ValueNum(i)
+			testValue(next, test, testInstanceValue)
+		}
+
+		// clear
+		require.NotPanics(t, func() {
+			vs.ClearValues()
+		}, fmt.Sprintf("instance clear values: %s", test))
+
+		// back to zero
+		cnt := vs.NumValue()
+		require.EqualValues(t, 0, cnt, fmt.Sprintf("cnt(%d) should be zero", cnt))
+
+		test.Append(value, test.value)
+	})
+
+	testArrays(inst.GetParentClass(), func(test TestValue, vs api.Values) {
+		// classes disallow set values
+		value := reflect.ValueOf(vs)
+		require.Panics(t, func() {
+			test.Append(value, test.value)
 		}, fmt.Sprintf("class set value: %s", test))
 	})
 }
@@ -114,6 +201,7 @@ type MethodMaker string
 func (m MethodMaker) String() string {
 	return string(m)
 }
+
 func (m MethodMaker) GetFrom(value reflect.Value) (ret interface{}) {
 	name := "Get" + m.String()
 	if n := value.MethodByName(name); !n.IsValid() {
@@ -126,6 +214,15 @@ func (m MethodMaker) GetFrom(value reflect.Value) (ret interface{}) {
 
 func (m MethodMaker) SetTo(value reflect.Value, v interface{}) {
 	name := "Set" + m.String()
+	if n := value.MethodByName(name); !n.IsValid() {
+		panic(fmt.Sprintf("method didnt exist %s", name))
+	} else {
+		n.Call([]reflect.Value{reflect.ValueOf(v)})
+	}
+}
+
+func (m MethodMaker) Append(value reflect.Value, v interface{}) {
+	name := "Append" + m.String()
 	if n := value.MethodByName(name); !n.IsValid() {
 		panic(fmt.Sprintf("method didnt exist %s", name))
 	} else {

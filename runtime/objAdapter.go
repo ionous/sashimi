@@ -150,7 +150,9 @@ func (oa ObjectAdapter) Set(prop string, object G.IObject) {
 		case api.ObjectProperty | api.ArrayProperty:
 			values := p.GetValues()
 			if other, ok := object.(ObjectAdapter); !ok {
-				values.ClearValues()
+				if e := values.ClearValues(); e != nil {
+					oa.log("%s.Set(%s): error clearing value: %s.", oa, prop, e)
+				}
 			} else {
 				if e := values.AppendObject(other.gobj.GetId()); e != nil {
 					oa.log("%s.Set(%s): error appending value: %s.", oa, prop, e)

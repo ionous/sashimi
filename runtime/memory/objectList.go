@@ -11,10 +11,10 @@ type objectList struct {
 	objs []ident.Id
 }
 
-func manyValue(p propBase) api.Values {
+func manyValue(p *propBase) api.Values {
 	rel := p.prop.(M.RelativeProperty)
 	objs := p.mdl.getObjects(p.src, rel.Relation, rel.IsRev)
-	return objectList{panicValue(p), objs}
+	return objectList{panicValue{p}, objs}
 }
 
 func (p objectList) NumValue() int {
@@ -25,15 +25,16 @@ func (p objectList) ValueNum(i int) api.Value {
 	return objectReadValue{p.panicValue, p.objs[i]}
 }
 
-func (p objectList) ClearValues() {
+func (p objectList) ClearValues() (err error) {
 	p.mdl.clearValues(p.src, p.prop.(M.RelativeProperty))
 	p.objs = nil
+	return
 }
 
-func (objectList) AppendNum(float32) {
+func (objectList) AppendNum(float32) error {
 	panic("not implemented")
 }
-func (p objectList) AppendText(string) {
+func (p objectList) AppendText(string) error {
 	panic("not implemented")
 }
 

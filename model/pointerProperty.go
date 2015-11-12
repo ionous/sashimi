@@ -7,9 +7,10 @@ import "github.com/ionous/sashimi/util/ident"
 // Unlike RelativeProperty the referenced instance does not know about the reference.
 //
 type PointerProperty struct {
-	Id    ident.Id `json:"id"`    // property id
-	Name  string   `json:"name"`  // property name
-	Class ident.Id `json:"class"` // property id
+	Id     ident.Id `json:"id"`    // property id
+	Name   string   `json:"name"`  // property name
+	Class  ident.Id `json:"class"` // property id
+	IsMany bool     `json:"many"`  // property id
 }
 
 // Id returns the unique id of ptr property.
@@ -23,6 +24,11 @@ func (ptr PointerProperty) GetName() string {
 	return ptr.Name
 }
 
-func (ptr PointerProperty) GetZero(_ ConstraintSet) interface{} {
-	return ident.Empty()
+func (ptr PointerProperty) GetZero(_ ConstraintSet) (ret interface{}) {
+	if !ptr.IsMany {
+		ret = ident.Empty()
+	} else {
+		ret = []interface{}{}
+	}
+	return
 }

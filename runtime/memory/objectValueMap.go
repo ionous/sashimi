@@ -1,6 +1,8 @@
 package memory
 
-import "github.com/ionous/sashimi/util/ident"
+import (
+	"github.com/ionous/sashimi/util/ident"
+)
 
 // ObjectValueMap provides a default implementation of ObjectValue
 type ObjectValueMap map[string]GenericValue

@@ -18,10 +18,10 @@ func TestMemory(t *testing.T) {
 		Classes:   make(M.ClassMap),
 		Instances: make(M.InstanceMap),
 	}
-	numProp := ident.MakeId("Num")
-	textProp := ident.MakeId("Text")
+	numProp, numsProp := ident.MakeId("Num"), ident.MakeId("Nums")
+	textProp, textsProp := ident.MakeId("Text"), ident.MakeId("Texts")
 	stateProp := ident.MakeId("State")
-	objectProp := ident.MakeId("Object")
+	objectProp, objectsProp := ident.MakeId("Object"), ident.MakeId("Objects")
 	enum := M.NewEnumeration([]string{"no", "yes"})
 
 	makeClass := func(single, plural string) *M.ClassInfo {
@@ -31,11 +31,14 @@ func TestMemory(t *testing.T) {
 			Plural:   plural,
 			Singular: single,
 			Properties: M.PropertySet{
-				"Num":   M.NumProperty{Id: numProp},
-				"Text":  M.TextProperty{Id: textProp},
-				"State": M.EnumProperty{Id: stateProp, Enumeration: enum},
-				"Object": M.PointerProperty{Id: objectProp,
-					Class: clsId},
+				"Num":    M.NumProperty{Id: numProp},
+				"Text":   M.TextProperty{Id: textProp},
+				"State":  M.EnumProperty{Id: stateProp, Enumeration: enum},
+				"Object": M.PointerProperty{Id: objectProp, Class: clsId},
+				//
+				"Nums":    M.NumProperty{Id: numsProp, IsMany: true},
+				"Texts":   M.TextProperty{Id: textsProp, IsMany: true},
+				"Objects": M.PointerProperty{Id: objectsProp, Class: clsId, IsMany: true},
 			},
 			// Constraints,
 		}
@@ -83,5 +86,15 @@ func TestMemory(t *testing.T) {
 	}
 	if res, ok := v.GetValue(i.Id, objectProp); assert.True(t, ok) {
 		require.EqualValues(t, i.Id, res)
+	}
+	//
+	if res, ok := v.GetValue(i.Id, numsProp); assert.True(t, ok) {
+		require.Contains(t, res, float32(32))
+	}
+	if res, ok := v.GetValue(i.Id, textsProp); assert.True(t, ok) {
+		require.Contains(t, res, "text")
+	}
+	if res, ok := v.GetValue(i.Id, objectProp); assert.True(t, ok) {
+		require.Contains(t, res, i.Id)
 	}
 }

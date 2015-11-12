@@ -20,48 +20,80 @@ type propBase struct {
 	setValue func(M.IProperty, GenericValue) error
 }
 
-func (p propBase) String() string {
+func (p *propBase) get() GenericValue {
+	return p.getValue(p.prop)
+}
+func (p *propBase) set(v GenericValue) error {
+	return p.setValue(p.prop, v)
+}
+
+func (p *propBase) String() string {
 	return fmt.Sprintf("%s.%s", p.src, p.prop.GetId())
 }
 
-func (p propBase) GetId() ident.Id {
+func (p *propBase) GetId() ident.Id {
 	return p.prop.GetId()
 }
 
-func (p propBase) GetType() api.PropertyType {
+func (p *propBase) GetType() api.PropertyType {
 	err := "invalid"
-	switch r := p.prop.(type) {
+	switch m := p.prop.(type) {
 	case M.NumProperty:
-		return api.NumProperty
-	case M.TextProperty, junkProperty:
-		return api.TextProperty
+		x := api.NumProperty
+		if m.IsMany {
+			x |= api.ArrayProperty
+		}
+		return x
+	case M.TextProperty:
+		x := api.TextProperty
+		if m.IsMany {
+			x |= api.ArrayProperty
+		}
+		return x
+	case junkProperty:
+		x := api.TextProperty
+		return x
 	case M.EnumProperty:
 		return api.StateProperty
 	case M.PointerProperty:
-		return api.ObjectProperty
-	case M.RelativeProperty:
-		if r.IsMany {
-			return api.ObjectProperty | api.ArrayProperty
-		} else {
-			return api.ObjectProperty
+		x := api.ObjectProperty
+		if m.IsMany {
+			x |= api.ArrayProperty
 		}
+		return x
+	case M.RelativeProperty:
+		x := api.ObjectProperty
+		if m.IsMany {
+			x |= api.ArrayProperty
+		}
+		return x
 	default:
 		err = "unknown"
 	}
 	panic(fmt.Sprintf("GetType(%s.%s) has %s property type %T", p.src, p.prop.GetId(), err, p.prop))
 }
 
-func (p propBase) GetValue() api.Value {
+func (p *propBase) GetValue() api.Value {
 	err := "invalid"
 	switch m := p.prop.(type) {
 	case M.NumProperty:
-		return numValue{panicValue(p)}
-	case M.TextProperty, junkProperty:
-		return textValue{panicValue(p)}
+		if !m.IsMany {
+			return numValue{panicValue{p}}
+		}
+	case M.TextProperty:
+		if !m.IsMany {
+			return textValue{panicValue{p}}
+		}
+	case junkProperty:
+		return textValue{panicValue{p}}
+
 	case M.EnumProperty:
-		return enumValue{panicValue(p)}
+		return enumValue{panicValue{p}}
+
 	case M.PointerProperty:
-		return pointerValue{panicValue(p)}
+		if !m.IsMany {
+			return pointerValue{panicValue{p}}
+		}
 	case M.RelativeProperty:
 		if !m.IsMany {
 			return singleValue(p)
@@ -72,13 +104,29 @@ func (p propBase) GetValue() api.Value {
 	panic(fmt.Sprintf("GetValue(%s.%s) has %s property type %T", p.src, p.prop.GetId(), err, p.prop))
 }
 
-func (p propBase) GetValues() api.Values {
+func (p *propBase) GetValues() api.Values {
 	err := "invalid"
 	switch m := p.prop.(type) {
 	case M.NumProperty:
+		if m.IsMany {
+			return arrayValues{p, func(i int) api.Value {
+				return numElement{elementValue{panicValue{p}, i}}
+			}}
+		}
 	case M.TextProperty:
+		if m.IsMany {
+			return arrayValues{p, func(i int) api.Value {
+				return textElement{elementValue{panicValue{p}, i}}
+			}}
+		}
 	case M.EnumProperty:
+		//
 	case M.PointerProperty:
+		if m.IsMany {
+			return arrayValues{p, func(i int) api.Value {
+				return objectElement{elementValue{panicValue{p}, i}}
+			}}
+		}
 	case M.RelativeProperty:
 		if m.IsMany {
 			return manyValue(p)
@@ -89,7 +137,7 @@ func (p propBase) GetValues() api.Values {
 	panic(fmt.Sprintf("GetValues(%s.%s) has %s property type %T", p.src, p.prop.GetId(), err, p.prop))
 }
 
-func (p propBase) GetRelative() (ret api.Relative, okay bool) {
+func (p *propBase) GetRelative() (ret api.Relative, okay bool) {
 	switch prop := p.prop.(type) {
 	case M.PointerProperty:
 	case M.RelativeProperty:

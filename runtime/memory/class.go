@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"fmt"
 	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/util/ident"
@@ -71,9 +72,12 @@ func (c classInfo) getProperty(p M.IProperty) api.Property {
 		src:      c.Id,
 		prop:     p,
 		getValue: c.getValue,
-		setValue: nil}
+		setValue: c.setValue}
 }
 
 func (c classInfo) getValue(p M.IProperty) GenericValue {
 	return p.GetZero(c.Constraints)
+}
+func (c classInfo) setValue(p M.IProperty, v GenericValue) error {
+	panic(fmt.Errorf("classes dont support set property. %s.%v", c.Id, p.GetId()))
 }

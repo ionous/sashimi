@@ -9,7 +9,7 @@ import (
 // NewNumBuilder returns an interface which can generate a number property
 //
 func NewNumBuilder(id ident.Id, name string) (IBuildProperty, error) {
-	prop := M.NumProperty{id, name}
+	prop := M.NumProperty{id, name, false}
 	return NumBuilder{prop}, nil
 }
 
