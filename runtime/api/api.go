@@ -143,8 +143,7 @@ type Property interface {
 	// or maybe IsCompatible(inst) bool
 	GetValue() Value
 	GetValues() Values
-	// GetRelative panics if the property is not an object or object array.
-	// it returns false if there is no relation -- a pure array or object value.
+	// GetRelative returns false if there is no relation -- a pure array or object value.
 	GetRelative() (Relative, bool)
 }
 

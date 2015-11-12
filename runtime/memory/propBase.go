@@ -148,7 +148,7 @@ func (p *propBase) GetRelative() (ret api.Relative, okay bool) {
 		// get the reverse property
 		other := relation.GetOther(prop.IsRev)
 
-		ret = api.Relative{
+		okay, ret = true, api.Relative{
 			Relation: prop.Relation,
 			Relates:  prop.Relates,
 			// FIX: this exists for backwards compatiblity with the client.
@@ -157,8 +157,6 @@ func (p *propBase) GetRelative() (ret api.Relative, okay bool) {
 			From:  other.Property,
 			IsRev: prop.IsRev,
 		}
-	default:
-		panic(fmt.Sprintf("GetRelative(%s.%s) property does not support relations.", p.src, p.prop.GetId()))
 	}
 	return
 }

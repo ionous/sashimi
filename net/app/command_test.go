@@ -42,42 +42,41 @@ func TestNetApp(t *testing.T) {
 
 	g := &Helper{ts, "new"}
 	if d, err := g.post(""); assert.NoError(t, err) {
-		if assert.Len(t, d.Included, 0, "the player and the room") {
-			d, err := g.post("start")
-			if assert.NoError(t, err) && assert.Len(t, d.Included, 2, "the player and the room") {
+		if assert.Len(t, d.Included, 0, "session starts empty") {
+			if d, err := g.getMany("actors", "player", "whereabouts"); assert.NoError(t, err) && assert.Len(t, d.Included, 1, "the room") {
 
-				if _, ok := d.Data.Attributes["events"]; assert.True(t, ok, "frame has event stream") {
+				if d, err := g.post("start"); assert.NoError(t, err) {
+					if _, ok := d.Data.Attributes["events"]; assert.True(t, ok, "frame has event stream") {
+						require.EqualValues(t, "game", d.Data.Class)
 
-					if !assert.EqualValues(t, "game", d.Data.Class) {
-						return
-					}
-					// check the room
-					if contents, err := g.getMany("rooms", "lab", "contents"); assert.NoError(t, err) {
-						assert.Len(t, contents.Data, 3, "the lab should have two objects")
-						assert.Len(t, contents.Included, 2, "the player should be previously known, the table newly known.")
-					}
-					assert.NoError(t, checkTable(g, 1))
-
-					if _, err := g.post("open the glass jar"); assert.NoError(t, err) {
+						// check the room
+						if contents, err := g.getMany("rooms", "lab", "contents"); assert.NoError(t, err) {
+							require.Len(t, contents.Data, 3, "the lab should have two objects")
+							require.Len(t, contents.Included, 3, "the player should (not) be previously known, the table newly known.")
+						}
 						require.NoError(t, checkTable(g, 1))
-					}
 
-					// take the beaker
-					if _, err := g.post("take the glass jar"); assert.NoError(t, err) {
-						require.NoError(t, checkTable(g, 0))
-					}
-					cmd := CommandInput{
-						Action:  "show-it-to",
-						Target:  "lab-assistant",
-						Context: "axe"}
-					if _, err := g.postCmd(cmd); assert.NoError(t, err) {
+						if _, err := g.post("open the glass jar"); assert.NoError(t, err) {
+							require.NoError(t, checkTable(g, 1))
+						}
 
-					}
+						// take the beaker
+						if _, err := g.post("take the glass jar"); assert.NoError(t, err) {
+							require.NoError(t, checkTable(g, 0))
+						}
+						cmd := CommandInput{
+							Action:  "show-it-to",
+							Target:  "lab-assistant",
+							Context: "axe"}
+						if _, err := g.postCmd(cmd); assert.NoError(t, err) {
 
-					if cls, err := g.getOne("class", "droppers"); assert.NoError(t, err) {
-						if parents, ok := cls.Data.Meta["classes"]; assert.True(t, ok, "has classes") {
-							if parents, ok := parents.([]interface{}); assert.True(t, ok, "classes is list") {
-								assert.EqualValues(t, []interface{}{"droppers", "props", "objects", "kinds"}, parents)
+						}
+
+						if cls, err := g.getOne("class", "droppers"); assert.NoError(t, err) {
+							if parents, ok := cls.Data.Meta["classes"]; assert.True(t, ok, "has classes") {
+								if parents, ok := parents.([]interface{}); assert.True(t, ok, "classes is list") {
+									assert.EqualValues(t, []interface{}{"droppers", "props", "objects", "kinds"}, parents)
+								}
 							}
 						}
 					}
