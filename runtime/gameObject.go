@@ -38,6 +38,15 @@ func (oa GameObject) FromClass(class string) (okay bool) {
 	return oa.game.ModelApi.AreCompatible(oa.gobj.GetParentClass().GetId(), clsid)
 }
 
+func (oa GameObject) ParentRelation() (ret G.IObject, rel string) {
+	if p, r, ok := oa.game.parents.GetParent(oa.game.ModelApi, oa.gobj); ok {
+		ret, rel = NewGameObject(oa.game, p), r.String()
+	} else {
+		ret = NullObjectSource(NewPath(oa.Id()).Add("parent"), 1)
+	}
+	return ret, rel
+}
+
 // Is this object in the passed state?
 func (oa GameObject) Is(state string) (ret bool) {
 	choice := MakeStringId(state)

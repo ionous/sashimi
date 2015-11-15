@@ -14,6 +14,9 @@ type PropertyPath struct {
 func NewPath(id ident.Id) PropertyPath {
 	return PropertyPath{[]string{id.String()}}
 }
+func RawPath(s string) PropertyPath {
+	return PropertyPath{[]string{s}}
+}
 
 func (p PropertyPath) Index(i int) PropertyPath {
 	path := append(p.path, strconv.Itoa(i))

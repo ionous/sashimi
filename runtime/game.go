@@ -9,33 +9,26 @@ import (
 	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/runtime/memory"
 	"github.com/ionous/sashimi/util/ident"
-	"log"
-	"math/rand"
 )
 
-// FIX: standarize member exports by splitting game into smaller classes and interfaces; focus on injecting what game needs, and allowing providers to decorate/instrument what they need.
 type Game struct {
-	// fix: merge the initial parts with config?
-	// use a "core" and a "set", copy/combine core into Game directly
 	ModelApi api.Model
-	calls    Callbacks
-	output   IOutput // FIX: merge output, frame, and log.
-	frame    EventFrame
-	Log
-	rand *rand.Rand // FIX: an interface part of config
-	//
-	queue        EventQueue
-	parentLookup ParentLookupStack // FIX: REMOVE ME!
-	Tables       table.Tables
+	RuntimeCore
+	queue  EventQueue
+	Tables table.Tables
 }
 
-type logAdapter struct {
-	output IOutput
-}
+func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
+	core := cfg.Finalize()
+	tables := model.Tables.Clone()
+	modelApi := memory.NewMemoryModel(model, make(memory.ObjectValueMap), tables)
 
-func (log logAdapter) Write(p []byte) (n int, err error) {
-	log.output.Log(string(p))
-	return len(p), nil
+	return &Game{
+		modelApi,
+		core,
+		EventQueue{E.NewQueue()},
+		tables,
+	}, nil
 }
 
 func (g *Game) NewPlay(data interface{}, hint ident.Id) G.Play {
@@ -45,31 +38,8 @@ func (g *Game) NewPlay(data interface{}, hint ident.Id) G.Play {
 	return adapter
 }
 
-func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
-	log := log.New(logAdapter{cfg.Output}, "game: ", log.Lshortfile)
-
-	tables := model.Tables.Clone()
-	modelApi := memory.NewMemoryModel(model, make(memory.ObjectValueMap), tables)
-
-	frame := cfg.Frame
-	if frame == nil {
-		frame = DefaultEventFrame
-	}
-
-	return &Game{
-		modelApi,
-		cfg.Calls,
-		cfg.Output,
-		frame,
-		LogAdapter{
-			func(msg string) {
-				log.Output(4, msg)
-			}},
-		rand.New(rand.NewSource(1)),
-		EventQueue{E.NewQueue()},
-		ParentLookupStack{},
-		tables,
-	}, nil
+func (g *Game) Random(n int) int {
+	return g.rand.Intn(n)
 }
 
 // class or instance id
@@ -85,38 +55,6 @@ func (g *Game) DispatchEvent(evt E.IEvent, target ident.Id) (err error) {
 		}
 	}
 	return
-}
-
-func (g *Game) Println(...interface{}) {
-}
-func (g *Game) Random(n int) int {
-	return g.rand.Intn(n)
-}
-
-// PushParentLookup function into the game's determination of which object is which object's container.
-// Changes the user's parent lookup (IObject -> name) into
-// the runtime's parent lookup (Instance -> Instance).
-// FIX: inject an interface, via the constructor, which makes this possible
-// possibly inject the game/object adapter factory even.
-// then the caller can have the handle which does the push
-// and game can remain ignorant of the push (or not) process.
-func (g *Game) PushParentLookup(userLookup G.TargetLookup) {
-	g.parentLookup.PushLookup(func(gobj api.Instance) (ret api.Instance) {
-		// setup callback context:
-		play, obj := NewGameAdapter(g), NewGameObject(g, gobj)
-		// call the user function
-		res := userLookup(play, obj)
-		// unpack the result
-		if par, ok := res.(GameObject); ok {
-			ret = par.gobj
-		}
-		return ret
-	})
-}
-
-//
-func (g *Game) PopParentLookup() {
-	g.parentLookup.PopLookup()
 }
 
 func (g *Game) QueueAction(act api.Action, objects []api.Instance) *RuntimeAction {

@@ -62,7 +62,7 @@ func NewTestGameSource(t *testing.T, s *Script, source string) (ret TestGame, er
 		err = e
 	} else {
 		cons := TestOutput{t, &C.BufferedOutput{}}
-		cfg := R.RuntimeConfig{Calls: model.Calls, Output: cons}
+		cfg := R.NewConfig().SetCalls(model.Calls).SetOutput(cons)
 		if game, e := cfg.NewGame(model.Model); e != nil {
 			err = e
 		} else if parser, e := parse.NewObjectParser(game.ModelApi, ident.MakeId(source)); e != nil {

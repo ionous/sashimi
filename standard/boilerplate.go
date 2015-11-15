@@ -58,7 +58,8 @@ func RunScript(script *script.Script, opt Options) (err error) {
 			model.Model.PrintModel(func(args ...interface{}) { fmt.Println(args...) })
 			return
 		}
-		cfg := R.RuntimeConfig{Calls: model.Calls, Output: NewStandardOutput(cons, writer)}
+		cfg := R.NewConfig().SetCalls(model.Calls).SetOutput(NewStandardOutput(cons, writer)).SetParentLookup(ParentLookup{})
+
 		if game, e := cfg.NewGame(model.Model); e != nil {
 			err = e
 		} else if game, e := NewStandardGame(game); e != nil {

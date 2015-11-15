@@ -35,7 +35,7 @@ func NewCommandSession(id string, model *M.Model, calls R.Callbacks) (ret *Comma
 			output.events.PopEvent()
 		}
 	}
-	cfg := R.RuntimeConfig{Calls: calls, Frame: frame, Output: output}
+	cfg := R.NewConfig().SetCalls(calls).SetFrame(frame).SetOutput(output).SetParentLookup(standard.ParentLookup{})
 	if game, e := cfg.NewGame(model); e != nil {
 	} else {
 		// after creating the game, but vefore running it --

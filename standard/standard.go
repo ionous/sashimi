@@ -2,7 +2,6 @@ package standard
 
 import (
 	"fmt"
-	G "github.com/ionous/sashimi/game"
 	"github.com/ionous/sashimi/parser"
 	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/runtime/api"
@@ -62,17 +61,37 @@ func (sc *StandardCore) SetRight(status string) {
 	sc.statusRight.SetText(status)
 }
 
+type ParentLookup struct{}
+
+var objects = ident.MakeId("objects")
+var containment = []ident.Id{
+	ident.MakeId("wearer"),
+	ident.MakeId("owner"),
+	ident.MakeId("whereabouts"),
+	ident.MakeId("support"),
+	ident.MakeId("enclosure")}
+
+func (p ParentLookup) GetParent(mdl api.Model, inst api.Instance) (ret api.Instance, rel ident.Id, okay bool) {
+	if mdl.AreCompatible(inst.GetParentClass().GetId(), objects) {
+		for _, wse := range containment {
+			if prop, ok := inst.GetProperty(wse); ok {
+				if parent := prop.GetValue().GetObject(); !parent.Empty() {
+					if fini, ok := mdl.GetInstance(parent); ok {
+						ret, rel, okay = fini, wse, true
+						break
+					}
+				}
+			}
+		}
+	}
+	return
+}
+
 // NewStandardGame creates a game which is based on the standard rules.
 func NewStandardGame(game *R.Game) (ret StandardStart, err error) {
 	if parser, e := parse.NewObjectParser(game.ModelApi, ident.MakeId("player")); e != nil {
 		err = e
 	} else {
-		game.PushParentLookup(func(g G.Play, o G.IObject) (ret G.IObject) {
-			if parent, where := DirectParent(o); where != "" {
-				ret = parent
-			}
-			return ret
-		})
 		//
 		if story, ok := api.FindFirstOf(game.ModelApi, ident.MakeId("stories")); !ok {
 			err = fmt.Errorf("couldn't find story")

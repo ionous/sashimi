@@ -12,7 +12,7 @@ func init() {
 			Can("debug direct parent").And("debugging direct parent").RequiresOne("object"),
 			To("debug direct parent", func(g G.Play) {
 				target := g.The("action.Target")
-				parent, relation := DirectParent(target)
+				parent, relation := target.ParentRelation()
 				if relation == "" {
 					g.Say(target.Text("Name"), "=>", "out of world")
 				} else {

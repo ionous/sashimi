@@ -15,17 +15,22 @@ type _Null struct {
 }
 
 func NullObject(name string) G.IObject {
-	return NullObjectSource(name, 1)
+	path := RawPath(name)
+	return NullObjectSource(path, 1)
 }
 
-func NullObjectSource(name string, skip int) G.IObject {
+func NullObjectSource(path PropertyPath, skip int) G.IObject {
 	pc := []uintptr{0}
 	runtime.Callers(skip+1, pc) // 0 is callers itself, 1 is this code
-	return _Null{NewPath(ident.Id(name)), pc[0]}
+	return _Null{path, pc[0]}
 }
 
 func (null _Null) println(args ...interface{}) {
 	log.Println(append([]interface{}{null.String()}, args...))
+}
+
+func (null _Null) ParentRelation() (G.IObject, string) {
+	return null, ""
 }
 
 //

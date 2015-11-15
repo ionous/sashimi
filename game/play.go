@@ -1,9 +1,5 @@
 package game
 
-type SourceLookup func(Play) IObject
-type TargetLookup func(Play, IObject) IObject
-type ContextLookup func(Play, IObject, IObject) IObject
-
 // Play provides an interface to the runtime for scripted callbacks.
 // FUTURE? replace this interface with a set of global functions which delegate based on context:
 // the script system for definitions, the game systems for callbacks.

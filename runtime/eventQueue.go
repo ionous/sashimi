@@ -39,6 +39,6 @@ func (f EventFrame) SendMessage(tgt E.ITarget, msg *E.Message) (err error) {
 	return err
 }
 
-func DefaultEventFrame(E.ITarget, *E.Message) func() {
+func defaultFrame(E.ITarget, *E.Message) func() {
 	return func() {}
 }

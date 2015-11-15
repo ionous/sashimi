@@ -2,7 +2,6 @@ package tests
 
 import (
 	"fmt"
-	G "github.com/ionous/sashimi/game"
 	"github.com/ionous/sashimi/runtime/api"
 	. "github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/standard"
@@ -67,13 +66,6 @@ func TestMoveGoing(t *testing.T) {
 	s := makeTestRoom()
 	s.The("player", Exists(), In("the foyer"))
 	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
-		// FIX: move parent lookup elsewhere
-		test.Game.PushParentLookup(func(test G.Play, o G.IObject) (ret G.IObject) {
-			if parent, where := standard.DirectParent(o); where != "" {
-				ret = parent
-			}
-			return ret
-		})
 		if e := testMoves(t, test,
 			xMove{"go west", "Lobby"},
 			xMove{"go east", "Lobby"},

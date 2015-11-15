@@ -15,6 +15,9 @@ type IObject interface {
 	// FromClass: true if the object was derived from the passed plural named class.
 	// FIX: seems to programmery, alternatives?
 	FromClass(string) bool
+	// Parent returns the spatial parent, enclosure, of an object.
+	// by default, there is no such object, the standard rules, etc. define their own thing.
+	ParentRelation() (IObject, string)
 
 	Is(string) bool
 	IsNow(string)

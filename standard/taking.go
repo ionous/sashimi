@@ -49,8 +49,7 @@ func init() {
 						//g.StopHere() // FIX: should be cancel
 						return
 					}
-					parent, rel := DirectParent(prop)
-					if rel != "" {
+					if parent, _ := prop.ParentRelation(); parent.Exists() {
 						if parent.FromClass("actors") {
 							if parent != actor {
 								g.Say("That'd be stealing!")

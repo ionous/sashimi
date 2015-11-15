@@ -38,7 +38,7 @@ func NewGameObject(game *Game, inst api.Instance) (ret G.IObject) {
 	if inst != nil {
 		ret = GameObject{game, inst}
 	} else {
-		ret = NullObjectSource("", 2)
+		ret = NullObjectSource(PropertyPath{}, 2)
 	}
 	return ret
 }
@@ -121,7 +121,7 @@ func (ga *GameEventAdapter) GetObject(name string) (ret G.IObject) {
 			}
 			if !found {
 				ga.Log("couldnt find object", name, "including class", clsid)
-				ret = NullObjectSource(id.String(), 3)
+				ret = NullObjectSource(RawPath(name), 3)
 			}
 		}
 	}

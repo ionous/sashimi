@@ -51,8 +51,8 @@ func init() {
 			To("be acquired", func(g G.Play) {
 				actor, prop, rel := g.The("actor"), g.The("prop"), "owner"
 				if Debugging {
-					a, b := DirectParent(prop)
-					g.Log(prop, "AssignTo", actor, rel, "from", a, b)
+					par, prev := prop.ParentRelation()
+					g.Log(prop, "AssignTo", actor, rel, "from", par, prev)
 				}
 				AssignTo(prop, rel, actor)
 			}))
