@@ -125,7 +125,7 @@ func TestTalkQuips(t *testing.T) {
 									// test the selection
 									// if lines, err := test.RunInput("2"); assert.NoError(t, err, "handling menu") {
 									require.Len(t, lines, 1)
-									require.Contains(t, lines, `player: "Oh, soarry," Alice says. "I'll be back."`)
+									require.Contains(t, lines, `player: "Oh, sorry," Alice says. "I'll be back."`)
 								}
 							}
 						}
