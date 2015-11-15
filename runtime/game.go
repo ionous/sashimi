@@ -11,32 +11,21 @@ import (
 	"github.com/ionous/sashimi/util/ident"
 	"log"
 	"math/rand"
-	"reflect"
 )
-
-// FIX: remove
-func (oa GameObject) Remove() {
-	panic("not implemented")
-}
-
-func (null _Null) Remove() {
-	panic("not implemented")
-}
-func (ga *GameEventAdapter) NewFrom(class string) G.IObject {
-	panic("not supported")
-}
 
 // FIX: standarize member exports by splitting game into smaller classes and interfaces; focus on injecting what game needs, and allowing providers to decorate/instrument what they need.
 type Game struct {
-	ModelApi     api.Model
-	output       IOutput
+	// fix: merge the initial parts with config?
+	// use a "core" and a "set", copy/combine core into Game directly
+	ModelApi api.Model
+	calls    Callbacks
+	output   IOutput // FIX: merge output, frame, and log.
+	frame    EventFrame
+	Log
+	rand *rand.Rand // FIX: an interface part of config
+	//
 	queue        EventQueue
-	frame        EventFrame
-	calls        Callbacks
-	log          *log.Logger
-	parentLookup ParentLookupStack
-	Globals      Globals
-	rand         *rand.Rand
+	parentLookup ParentLookupStack // FIX: REMOVE ME!
 	Tables       table.Tables
 }
 
@@ -48,8 +37,6 @@ func (log logAdapter) Write(p []byte) (n int, err error) {
 	log.output.Log(string(p))
 	return len(p), nil
 }
-
-type Globals map[ident.Id]reflect.Value
 
 func (g *Game) NewPlay(data interface{}, hint ident.Id) G.Play {
 	adapter := NewGameAdapter(g)
@@ -64,11 +51,6 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 	tables := model.Tables.Clone()
 	modelApi := memory.NewMemoryModel(model, make(memory.ObjectValueMap), tables)
 
-	globals := make(Globals)
-	// DISABLED:
-	// for k, gen := range model.Generators {
-	// 	globals[k] = reflect.New(gen)
-	// }
 	frame := cfg.Frame
 	if frame == nil {
 		frame = DefaultEventFrame
@@ -76,14 +58,16 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
 
 	return &Game{
 		modelApi,
-		cfg.Output,
-		EventQueue{E.NewQueue()},
-		frame,
 		cfg.Calls,
-		log,
-		ParentLookupStack{},
-		globals,
+		cfg.Output,
+		frame,
+		LogAdapter{
+			func(msg string) {
+				log.Output(4, msg)
+			}},
 		rand.New(rand.NewSource(1)),
+		EventQueue{E.NewQueue()},
+		ParentLookupStack{},
 		tables,
 	}, nil
 }
@@ -135,15 +119,16 @@ func (g *Game) PopParentLookup() {
 	g.parentLookup.PopLookup()
 }
 
-func (g *Game) QueueAction(act api.Action, objects []api.Instance) {
+func (g *Game) QueueAction(act api.Action, objects []api.Instance) *RuntimeAction {
 	tgt := ObjectTarget{g, objects[0]}
 	data := &RuntimeAction{game: g, action: act, objs: objects}
 	g.queue.QueueEvent(tgt, act.GetEvent().GetId(), data)
+	return data
 }
 
 // mainly for testing; manual send of an event
 func (g *Game) QueueEvent(event string, nouns ...ident.Id,
-) (err error,
+) (ret *RuntimeAction, err error,
 ) {
 	eventId := MakeStringId(event)
 	if event, ok := g.ModelApi.GetEvent(eventId); !ok {
@@ -153,8 +138,9 @@ func (g *Game) QueueEvent(event string, nouns ...ident.Id,
 	} else {
 		tgt := ObjectTarget{g, act.objs[0]}
 		g.queue.QueueEvent(tgt, event.GetId(), act)
+		ret = act
 	}
-	return err
+	return ret, err
 }
 
 // ProcessEvents in the event queue till empty, or errored.
@@ -162,7 +148,7 @@ func (g *Game) ProcessEvents() (err error) {
 	for !g.queue.Empty() {
 		tgt, msg := g.queue.Pop()
 		if e := g.frame.SendMessage(tgt, msg); e != nil {
-			g.log.Println("error", e)
+			g.Println("error", e)
 			err = e
 			break
 		}

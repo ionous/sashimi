@@ -62,11 +62,7 @@ func Boy_Talk(s *Script) {
 		Has("comment", `"Wait," says Alice. "Your parents made you go get the camera?" says Alice.`),
 		Has("reply", `"Amazing, huh?" says the Alien Boy. "You wouldn"t believe--"`),
 		After("being discussed").Always(func(g G.Play) {
-			if con, ok := g.Global("conversation"); ok {
-				con := con.(*Conversation)
-
-				con.Memory.Learn(g.The("boy-cam"))
-			}
+			PlayerMemory(g).Learns(g.The("boy-cam"))
 		}))
 
 	s.The("quip", Called("OldBoy: CameraTime1"),

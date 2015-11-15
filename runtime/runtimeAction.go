@@ -30,6 +30,10 @@ func (q QueuedCallback) String() string {
 	return fmt.Sprint(q.call)
 }
 
+func (act *RuntimeAction) Cancelled() bool {
+	return act.cancelled
+}
+
 // queue for running after the default actions
 func (act *RuntimeAction) runAfterDefaults(cb QueuedCallback) {
 	act.after = append(act.after, cb)

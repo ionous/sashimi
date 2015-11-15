@@ -53,22 +53,21 @@ func greetActor(g G.Play, greeter, greeted, greeting G.IObject) {
 	if standard.Debugging {
 		g.Log("!", "introducing", greeter, "to", greeted, "with", greeting)
 	}
-	if greeter == g.The("player") && greeted.Exists() {
-		if con, ok := g.Global("conversation"); ok {
-			con := con.(*Conversation)
-			if npc, alreadySpeaking := con.Interlocutor.Get(); !alreadySpeaking {
-				con.Interlocutor.Set(greeted)
-				// it's not necessary to have a greeting if the npc has some latent conversation options.
-				if greeting.Exists() {
-					// FIX: doesnt raise an error of any sor when we say go("mispelling"
-					greeted.Go("comment", greeting)
-				}
+	if greeter == g.The("player") && greeted.Exists() && greeting.Exists() {
+		con := TheConversation(g)
+		interlocutor := con.Interlocutor()
+		if npc := interlocutor.Object(); !npc.Exists() {
+			interlocutor.SetObject(greeted)
+			// it's not necessary to have a greeting if the npc has some latent conversation options.
+			if greeting.Exists() {
+				// FIX: doesnt raise an error of any sor when we say go("mispelling"
+				greeted.Go("comment", greeting)
+			}
+		} else {
+			if npc == greeted {
+				g.Say("You're already speaking to them!")
 			} else {
-				if npc == greeted {
-					g.Say("You're already speaking to them!")
-				} else {
-					g.Say("You're already speaking to someone!")
-				}
+				g.Say("You're already speaking to someone!")
 			}
 		}
 	}

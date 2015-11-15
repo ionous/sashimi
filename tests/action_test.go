@@ -58,7 +58,7 @@ func TestActionClassCallback(t *testing.T) {
 		Has("description", "it's an error!"),
 	)
 	if g, err := NewTestGameSource(t, s, "obj"); assert.NoError(t, err) {
-		if err := g.Game.QueueEvent("testing", "Obj"); assert.NoError(t, err) {
+		if _, err := g.Game.QueueEvent("testing", "Obj"); assert.NoError(t, err) {
 			if err := g.Game.ProcessEvents(); assert.NoError(t, err) {
 				if out, err := g.FlushOutput(); assert.NoError(t, err) {
 					expected := []string{"it's a trap!"}
@@ -83,7 +83,7 @@ func TestActionCallbackBeforeAfter(t *testing.T) {
 	)
 	s.The("kind", Called("obj"), Exists())
 	if g, err := NewTestGameSource(t, s, "obj"); assert.NoError(t, err) {
-		if err := g.Game.QueueEvent("testing", "Obj"); assert.NoError(t, err) {
+		if _, err := g.Game.QueueEvent("testing", "Obj"); assert.NoError(t, err) {
 			if err := g.Game.ProcessEvents(); assert.NoError(t, err) {
 				if out, err := g.FlushOutput(); assert.NoError(t, err) {
 					expected := []string{"Before", "After"}

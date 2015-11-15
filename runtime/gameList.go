@@ -65,6 +65,8 @@ func (l gameList) Contains(in interface{}) (yes bool) {
 	case api.ObjectProperty | api.ArrayProperty:
 		if in == nil {
 			yes = containsObject(l.values, ident.Empty())
+		} else if v, ok := in.(iasv); ok {
+			yes = containsObject(l.values, v.GetId())
 		} else if v, ok := in.(gameValue); ok && v.ptype == api.ObjectProperty {
 			yes = containsObject(l.values, v.value.GetObject())
 		} else if v, ok := in.(GameObject); ok {

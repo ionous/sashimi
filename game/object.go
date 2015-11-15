@@ -15,7 +15,6 @@ type IObject interface {
 	// FromClass: true if the object was derived from the passed plural named class.
 	// FIX: seems to programmery, alternatives?
 	FromClass(string) bool
-	Remove()
 
 	Is(string) bool
 	IsNow(string)

@@ -27,12 +27,11 @@ func NewGameAdapter(game *Game) *GameEventAdapter {
 // NewGameObject gives the passed game object the IObject interface.
 // Public for testing.
 func NewGameObjectFromId(game *Game, id ident.Id) (ret G.IObject) {
-	if inst, ok := game.ModelApi.GetInstance(id); ok {
-		ret = GameObject{game, inst}
-	} else {
-		ret = NullObjectSource("", 2)
+	var inst api.Instance
+	if i, ok := game.ModelApi.GetInstance(id); ok {
+		inst = i
 	}
-	return ret
+	return NewGameObject(game, inst)
 }
 
 func NewGameObject(game *Game, inst api.Instance) (ret G.IObject) {
@@ -64,31 +63,16 @@ func (ga *GameEventAdapter) Go(phrase G.RuntimePhrase) {
 	phrase.Execute(ga)
 }
 
-//
-func (ga *GameEventAdapter) Global(name string) (ret interface{}, okay bool) {
-	id := MakeStringId(name)
-	if val, ok := ga.Globals[id]; !ok {
-		ga.Log("no such global", name)
-	} else {
-		ret = val.Interface()
-		okay = true
-	}
-	return ret, okay
-}
-
-//
-func (ga *GameEventAdapter) Visit(class string, visits func(G.IObject) bool) (okay bool) {
+func (ga *GameEventAdapter) List(class string) (ret G.IList) {
+	instances := []api.Instance{}
 	clsid := StripStringId(class)
 	for i := 0; i < ga.ModelApi.NumInstance(); i++ {
 		gobj := ga.ModelApi.InstanceNum(i)
 		if id := gobj.GetParentClass().GetId(); ga.ModelApi.AreCompatible(id, clsid) {
-			if visits(NewGameObject(ga.Game, gobj)) {
-				okay = true
-				break
-			}
+			instances = append(instances, gobj)
 		}
 	}
-	return okay
+	return iList{ga.Game, NewPath(clsid), instances}
 }
 
 //
@@ -113,47 +97,34 @@ func (ga *GameEventAdapter) StopHere() {
 	ga.data.cancelled = true
 }
 
-//
-func (ga *GameEventAdapter) Rules() G.IGameRules {
-	return ga.Game
-}
-
 var DebugGet = false
 
 // could make a map that implements IObject?
 // could use special keys for $name, $fullname, $game, etc.
 // FUTURE: use dependency injection instead
 func (ga *GameEventAdapter) GetObject(name string) (ret G.IObject) {
-	if obj, ok := ga.getObject(name); ok {
-		ret = obj
-	} else {
-		ret = NullObjectSource(name, 3)
-	}
-	DebugGet = false
-	return ret
-}
-
-func (ga *GameEventAdapter) getObject(name string) (ret G.IObject, okay bool) {
-	// asking by object name
-	if gobj, ok := ga.ModelApi.GetInstance(StripStringId(name)); ok {
-		ret, okay = NewGameObject(ga.Game, gobj), true
+	id := StripStringId(name)
+	if gobj, ok := ga.ModelApi.GetInstance(id); ok {
+		ret = NewGameObject(ga.Game, gobj)
 	} else if ga.data != nil {
 		// testing against ga.data b/c sometimes the adapter isnt invoked via an event.
 		// to fix use different interfaces perhaps?
 		if obj, ok := ga.data.findByParamName(name); ok {
-			ret, okay = obj, true
+			ret = obj
 		} else {
+			found := false
 			clsid := MakeStringId(ga.ModelApi.Pluralize(lang.StripArticle(name)))
 			if clsid == ga.hint {
-				ret, okay = ga.data.getObject(0)
+				ret, found = ga.data.getObject(0)
 			} else {
-				ret, okay = ga.data.findByClass(clsid)
+				ret, found = ga.data.findByClass(clsid)
 			}
-			if !okay {
+			if !found {
 				ga.Log("couldnt find object", name, "including class", clsid)
-				fmt.Println("!!!", clsid)
+				ret = NullObjectSource(id.String(), 3)
 			}
 		}
 	}
-	return ret, okay
+	DebugGet = false
+	return
 }

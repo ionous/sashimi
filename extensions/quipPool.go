@@ -8,22 +8,24 @@ type followsCb func(leads G.IObject, directly bool) bool
 
 // evaluate all quips which constrain this clip
 // ex. QuipHelp(x).DirectlyFollows(y) -> visit(x) will call cb(y, true)
-func visitFollowConstraints(g G.Play, follower G.IObject, cb followsCb) bool {
+func visitFollowConstraints(g G.Play, follower G.IObject, cb followsCb) (okay bool) {
 	// search all following quips
-	return g.Visit("FollowingQuips", func(obj G.IObject) (okay bool) {
+	for i, quips := 0, g.List("following quips"); i < quips.Len(); i++ {
+		quip := quips.Get(i).Object()
 		// yes, this entry talks about our position relative to some other quip
-		if following := obj.Object("following"); following.Exists() && following == follower {
+		if following := quip.Get("following").Object(); following.Exists() && following == follower {
 			// grab that other quip
-			if leading := obj.Object("leading"); leading.Exists() {
+			if leading := quip.Get("leading").Object(); leading.Exists() {
 				// call the visitor
-				directly := obj.Is("directly following")
+				directly := quip.Is("directly following")
 				if ok := cb(leading, directly); ok {
 					okay = true
+					break
 				}
 			}
 		}
-		return okay
-	})
+	}
+	return
 }
 
 // QuipHelp provides object oriented functions for evaluating quip relations

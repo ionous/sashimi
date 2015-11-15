@@ -83,7 +83,7 @@ func TestStartupText(t *testing.T) {
 	if test, err := NewTestGame(t, s); assert.NoError(t, err, "compile should work") {
 		if story, ok := api.FindFirstOf(test.Game.ModelApi, ident.MakeId("stories")); assert.True(t, ok, "should have test story") {
 			if _, ok := api.FindFirstOf(test.Game.ModelApi, ident.MakeId("rooms")); assert.True(t, ok, "should have room") {
-				err = test.Game.QueueEvent("commencing", story.GetId())
+				_, err = test.Game.QueueEvent("commencing", story.GetId())
 				require.NoError(t, err, "commencing")
 
 				expected := []string{

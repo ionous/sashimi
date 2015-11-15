@@ -57,11 +57,11 @@ func init() {
 				}
 				room := g.The("player").Object("whereabouts")
 				if !room.Exists() {
-					if r, found := G.Any(g, "rooms"); found {
-						room = r
-					} else {
+					rooms := g.List("rooms")
+					if rooms.Len() == 0 {
 						panic("story has no rooms")
 					}
+					room = rooms.Get(0).Object()
 				}
 				story.Go("set initial position", g.The("player"), room)
 				story.Go("print the banner") // see: banner.go
@@ -69,6 +69,10 @@ func init() {
 				// FIX: Go() should handle both Name() and ref
 				story.Go("describe the first room", room)
 			}))
+
+		s.The("stories",
+			Have("player input", "text"),
+			Can("parse player input").And("parsing player input").RequiresNothing())
 
 		s.The("stories",
 			To("end the story", func(g G.Play) {

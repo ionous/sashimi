@@ -8,50 +8,30 @@ import (
 	"github.com/ionous/sashimi/util/lang"
 )
 
-type Conversation struct {
-	Interlocutor GosNilInterfacesAreAnnoying
-	History      QuipHistory
-	Memory       QuipMemory
-	Queue        QuipQueue
-}
-
 // FIX: replace  with player, go learn
 // ALSO: if this were in the "fact" package, it could be: fact.Learn
 // and maybe prop.Give?
 func Learn(fact string) FactPhrase {
-	return FactPhrase(fact)
+	return FactPhrase{fact}
 }
 func LearnThe(fact G.IObject) FactPhrase {
-	return FactPhrase(fact.Id().String())
+	return FactPhrase{fact.Id().String()}
 }
 
-type FactPhrase string
+type FactPhrase struct {
+	fact string
+}
 
-func (fact FactPhrase) Execute(g G.Play) {
-	if con, ok := g.Global("conversation"); ok {
-		con := con.(*Conversation)
-		con.Memory.Learn(g.The(string(fact)))
-	}
+func (p FactPhrase) Execute(g G.Play) {
+	PlayerMemory(g).Learns(g.The(p.fact))
 }
 
 func PlayerLearns(g G.Play, fact string) (newlyLearned bool) {
-	if con, ok := g.Global("conversation"); ok {
-		con := con.(*Conversation)
-		quip := g.The(string(fact))
-		if recollects := con.Memory.Recollects(quip); !recollects {
-			con.Memory.Learn(quip)
-			newlyLearned = true
-		}
-	}
-	return newlyLearned
+	return PlayerMemory(g).TriesToLearn(g.The(fact))
 }
 
-func PlayerRecollects(g G.Play, fact string) (okay bool) {
-	if con, ok := g.Global("conversation"); ok {
-		con := con.(*Conversation)
-		okay = con.Memory.Recollects(g.The(fact))
-	}
-	return okay
+func PlayerRecollects(g G.Play, fact string) bool {
+	return PlayerMemory(g).Recollects(g.The(fact))
 }
 
 func DirectlyFollows(other string) IFragment {
@@ -129,28 +109,35 @@ func init() {
 			}))
 		s.Execute("greet", Matching("talk to {{something}}").Or("t|talk|greet|ask {{something}}"))
 
-		//		s.Generate("conversation", reflect.TypeOf(Conversation{}))
+		s.The("kinds",
+			Called("conversation globals"),
+			Have("interlocutor", "actor"),
+			Have("parent", "quip"),
+			Have("grandparent", "quip"),
+			Have("greatgrand", "quip"),
+			Have("queue", "quip list"))
+
+		s.The("conversation global", Called("conversation"), Exists())
+
+		// note: currently storing both quips and facts in the player's recollection.
+		s.The("actors",
+			HaveMany("recollections", "kinds"))
 
 		s.The("actors",
 			Can("depart").And("departing").RequiresNothing(),
 			To("depart", func(g G.Play) {
-				if con, ok := g.Global("conversation"); ok {
-					con := con.(*Conversation)
-					if npc := con.Depart(); npc.Exists() {
-						if Debugging {
-							g.Log("!", g.The("actor"), "departing", npc)
-						}
-						g.Say("(", lang.Capitalize(DefiniteName(g, "actor", nil)), "says goodbye.", ")")
+				con := TheConversation(g)
+				if npc := con.Depart(); npc.Exists() {
+					if Debugging {
+						g.Log("!", g.The("actor"), "departing", npc)
 					}
+					g.Say("(", lang.Capitalize(DefiniteName(g, "actor", nil)), "says goodbye.", ")")
 				}
 			}))
 
 		s.The("stories",
 			When("ending the turn").Always(func(g G.Play) {
-				if con, ok := g.Global("conversation"); ok {
-					con := con.(*Conversation)
-					con.Converse(g)
-				}
+				Converse(g)
 			}))
 
 		s.The("actors",
@@ -176,10 +163,8 @@ func init() {
 
 				// an actor will reply to the comment.
 				// they will do this via Converse() at the end of the turn.
-				if con, ok := g.Global("conversation"); ok {
-					con := con.(*Conversation)
-					con.Queue.SetNextQuip(g, quip)
-				}
+				con := TheConversation(g)
+				con.Queue().SetNextQuip(quip)
 				// moved history push into the npc's discuss
 				// which should happen (right) after this.
 				// the conversation choices are determined by what the npc says...
@@ -190,15 +175,11 @@ func init() {
 				if Debugging {
 					g.Log("!", talker, "discussing", quip)
 				}
-
 				if reply := quip.Text("reply"); reply != "" {
 					talker.Says(reply)
 				}
-				if con, ok := g.Global("conversation"); ok {
-					con := con.(*Conversation)
-					con.Memory.Learn(quip)
-					con.History.PushQuip(quip)
-				}
+				PlayerMemory(g).Learns(quip)
+				TheConversation(g).History().PushQuip(quip)
 			}))
 
 		s.The("actors",
@@ -223,46 +204,59 @@ func init() {
 							text := fmt.Sprintf("%d: %s", i+1, cmt) // FIX? template instead of fmt
 							g.Say(text)                             // FIX FIX: CAN "SAY" TEXT BE SCOPED TO THE EVENT IN THE CMD OUTPUT.
 						}
-
-						// time to hack the parser
-						panic("use player state instead")
-						//TheParser.CaptureInput
-						_ = func(input string) (err error) {
-							var choice int
-							if _, e := fmt.Sscan(input, &choice); e != nil {
-								err = fmt.Errorf("Please choose a number from the menu; input: %s", input)
-							} else if choice < 1 || choice > len(quips) {
-								err = fmt.Errorf("Please choose a number from the menu; number: %d of %d", choice, len(quips))
-							} else {
-								quip := quips[choice-1]
-								if Debugging {
-									g.Log("!", player, "chose", quip)
-								}
-								player.Go("comment", quip)
-							}
-							return err
-						}
+						player.IsNow("inputing dialog")
 					}
 				}
 			}))
 
-		s.The("kinds",
-			Called("next quips"),
-			Have("quip", "quip"),
-			// these have the same meaning as "immediate obligatory" and "immediate optional".
-			// casual quips lose their relevance whenever a new casual or planned quip is set,
-			// and the moment after a player has spoken ( stop any planned casual follow-ups ).
-			//
-			// note: there is a gap in the original logic --
-			// if the current quip is restrictive and if the person isnt the current interlocutor,
-			// then the immediate optional conversation doesn't clear;
-			// it sticks in there until the player chooses some unrestrictive quip.
-			// but: it's difficult to get immediate conversation assigned to a person who isnt the current interlocutor: the shortcuts always refer to the current interlocutor.
-			// the gap is likely an oversight.
-			AreEither("planned").Or("casual"),
-		)
+		s.The("actors", AreEither("not inputing dialog").Or("inputing dialog"))
+
+		s.The("stories",
+			When("parsing player input").Always(func(g G.Play) {
+				player := g.The("player")
+				if player.Is("inputing dialog") {
+					if quips := GetPlayerQuips(g); len(quips) == 0 {
+						if Debugging {
+							g.Log("! no conversation choices !")
+						}
+						player.IsNow("not inputing dialog")
+						player.Go("depart") // safety first
+					} else {
+						input := g.The("story").Get("player input").Text()
+						var choice int
+						if _, e := fmt.Sscan(input, &choice); e != nil {
+							g.Say("Please choose a number from the menu.", input)
+						} else if choice < 1 || choice > len(quips) {
+							g.Log(fmt.Sprintf("Please choose a number from the menu; number: %d of %d", choice, len(quips)))
+						} else {
+							quip := quips[choice-1]
+							if Debugging {
+								g.Log("!", player, "chose", quip)
+							}
+							player.IsNow("not inputing dialog")
+							player.Go("comment", quip)
+						}
+						g.StopHere()
+					}
+				}
+			}))
+
+		// re: planned/casual:
+		// ( dont love that the quip gets changed )
+		//
+		// these have the same meaning as "immediate obligatory" and "immediate optional".
+		// casual quips lose their relevance whenever a new casual or planned quip is set,
+		// and the moment after a player has spoken ( stop any planned casual follow-ups ).
+		//
+		// note: there is a gap in the original logic --
+		// if the current quip is restrictive and if the person isnt the current interlocutor,
+		// then the immediate optional conversation doesn't clear;
+		// it sticks in there until the player chooses some unrestrictive quip.
+		// but: it's difficult to get immediate conversation assigned to a person who isnt the current interlocutor: the shortcuts always refer to the current interlocutor.
+		// the gap is likely an oversight.
+		s.The("quips",
+			AreEither("planned").Or("casual"))
 		s.The("actors",
-			// FIX? with pointers, it wouldnt be too difficult to have parts now; an auto-created association.
-			Have("next quip", "next quip"))
+			Have("next quip", "quip"))
 	})
 }

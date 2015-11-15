@@ -36,6 +36,7 @@ type StandardCore struct {
 	story  ident.Id
 	title,
 	author,
+	playerInput,
 	complete,
 	statusLeft,
 	statusRight api.Value
@@ -81,6 +82,8 @@ func NewStandardGame(game *R.Game) (ret StandardStart, err error) {
 			err = fmt.Errorf("couldn't find title")
 		} else if author, ok := story.GetProperty(ident.MakeId("author")); !ok {
 			err = fmt.Errorf("couldn't find author")
+		} else if playerInput, ok := story.GetProperty(ident.MakeId("player input")); !ok {
+			err = fmt.Errorf("couldn't find completed status")
 		} else if completed, ok := story.GetPropertyByChoice(ident.MakeId("completed")); !ok {
 			err = fmt.Errorf("couldn't find completed status")
 		} else if left, ok := status.GetProperty(ident.MakeId("left")); !ok {
@@ -92,6 +95,7 @@ func NewStandardGame(game *R.Game) (ret StandardStart, err error) {
 				story.GetId(),
 				title.GetValue(),
 				author.GetValue(),
+				playerInput.GetValue(),
 				completed.GetValue(),
 				left.GetValue(),
 				right.GetValue()}
@@ -141,14 +145,21 @@ func (sg *StandardGame) Input(s string) (err error) {
 				} else {
 					sg.lastInput = in
 				}
-				if _, matcher, e := sg.Parser.ParseInput(in); e != nil {
+				if e := sg.playerInput.SetText(in); e != nil {
+					err = e
+				} else if act, e := sg.Game.QueueEvent("parsing player input", sg.story); e != nil {
+					err = e
+				} else if e := sg.Game.ProcessEvents(); e != nil {
+					err = e
+				} else if act.Cancelled() {
+					log.Print("input cancelled")
+					err = nil // input cancelling is not an error
+				} else if _, matcher, e := sg.Parser.ParseInput(in); e != nil {
+					err = e
+				} else if act, objs, e := matcher.(*parse.ObjectMatcher).GetMatch(); e != nil {
 					err = e
 				} else {
-					if act, objs, e := matcher.(*parse.ObjectMatcher).GetMatch(); e != nil {
-						err = e
-					} else {
-						sg.RunTurn(act, objs)
-					}
+					sg.RunTurn(act, objs)
 				}
 			}
 		}

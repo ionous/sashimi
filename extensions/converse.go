@@ -5,70 +5,95 @@ import (
 	"github.com/ionous/sashimi/standard"
 )
 
-func (con *Conversation) Depart() (wasTalking G.IObject) {
-	if npc, ok := con.Interlocutor.Get(); ok {
-		con.History.ClearQuips()
-		con.Queue.ResetQuipQueue()
-		npc.Object("next quip").Remove()
+type Conversation struct {
+	G.IObject
+}
+
+func TheConversation(g G.Play) Conversation {
+	return Conversation{g.The("conversation")}
+}
+
+func (c Conversation) Interlocutor() G.IValue {
+	return c.Get("interlocutor")
+}
+
+func (c Conversation) History() QuipHistory {
+	return QuipHistory{c.Get("parent"), c.Get("grandparent"), c.Get("greatgrand")}
+}
+
+func (c Conversation) Queue() QuipQueue {
+	return QuipQueue{c.List("queue")}
+}
+
+func (c Conversation) Depart() (wasTalking G.IObject) {
+	interlocutor := c.Interlocutor()
+	if npc := interlocutor.Object(); npc.Exists() {
+		c.History().Reset()
+		c.Queue().Reset()
+		npc.Set("next quip", nil)
 		wasTalking = npc
-		con.Interlocutor.Clear()
+		interlocutor.SetObject(nil)
 	}
 	return wasTalking
 }
 
-func (con *Conversation) Converse(g G.Play) {
-	if npc, ok := con.Interlocutor.Get(); ok {
+func Converse(g G.Play) {
+	c := TheConversation(g)
+	interlocutor := c.Interlocutor()
+	if npc := interlocutor.Object(); npc.Exists() {
 		if standard.Debugging {
 			g.Log("conversing...")
 		}
-		currentQuip := con.History.MostRecent(g)
+		currentQuip := c.History().MostRecent()
 		currentRestricts := currentQuip.Exists() && currentQuip.Is("restrictive")
 		// handle queued conversation, unless the current quip is restrictive.
 		if !currentRestricts {
-			con.Queue.UpdateNextQuips(g, con.Memory)
+			c.Queue().UpdateNextQuips(PlayerMemory(g))
 		}
 
 		// sometimes conversations want to loop, without the player saying anything; for now this doesnt advance the queue -- just looks at next quips; may need to be re-visited.
 		for again := true; again; {
 			again = false
 			// process the current speaker first:
-			if con.perform(npc, currentRestricts) {
+			if c.perform(npc, currentRestricts) {
 				again = true
 			}
 
 			// process anyone else who might have something to say:
-			g.Visit("actors", func(actor G.IObject) (okay bool) {
+			for i, actors := 0, g.List("actors"); i < actors.Len(); i++ {
+				actor := actors.Get(i).Object()
 				// threaded conversation tests:
 				// repeat with target running through **visible** people who are not the player:
 				if actor != npc {
-					if con.perform(actor, currentRestricts) {
+					if c.perform(actor, currentRestricts) {
 						again = true
 					}
 				}
-				return okay
-			})
+			}
 		}
 
 		// we might have changed conversations...
-		if npc, ok := con.Interlocutor.Get(); ok {
+		if npc := interlocutor.Object(); npc.Exists() {
 			g.The("player").Go("print conversation choices", npc)
 		}
 	}
 }
 
-func (con *Conversation) perform(actor G.IObject, currentRestricts bool,
+func (c Conversation) perform(
+	actor G.IObject,
+	currentRestricts bool,
 ) (
 	spoke bool,
 ) {
-	if nextQuip := actor.Object("next quip"); nextQuip.Exists() {
+	next := actor.Get("next quip")
+	if nextQuip := next.Object(); nextQuip.Exists() {
 		if !currentRestricts || nextQuip.Is("planned") {
-			quip := nextQuip.Object("quip")
-			actor.Go("discuss", quip)
+			actor.Go("discuss", nextQuip)
 			spoke = true
 		}
 		// this removes the planned conversation which was just said,
 		// and any casual conversation that couldn't be said due to restriction.
-		nextQuip.Remove()
+		next.SetObject(nil)
 	}
 	return spoke
 }
