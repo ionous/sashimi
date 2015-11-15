@@ -1,4 +1,4 @@
-package runtime
+package internal
 
 import (
 	"fmt"
@@ -80,7 +80,7 @@ func (ga *GameEventAdapter) Say(texts ...string) {
 	if len(texts) > 0 {
 		text := strings.Join(texts, " ")
 		lines := strings.Split(text, "\n")
-		ga.output.ScriptSays(lines)
+		ga.Output.ScriptSays(lines)
 	}
 }
 
@@ -88,7 +88,7 @@ func (ga *GameEventAdapter) Say(texts ...string) {
 func (ga *GameEventAdapter) Log(texts ...interface{}) {
 	if len(texts) > 0 {
 		text := fmt.Sprintln(texts...)
-		ga.output.Log(text)
+		ga.Output.Log(text)
 	}
 }
 

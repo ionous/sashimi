@@ -4,10 +4,11 @@ import (
 	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/net/session"
 	R "github.com/ionous/sashimi/runtime"
+	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/standard"
 )
 
-func NewSimpleSession(calls R.Callbacks, model *M.Model) (ret *SimpleSession, err error) {
+func NewSimpleSession(calls api.LookupCallbacks, model *M.Model) (ret *SimpleSession, err error) {
 	out := &SimpleOutput{}
 	cfg := R.NewConfig().SetCalls(calls).SetOutput(out).SetParentLookup(standard.ParentLookup{})
 	if game, e := cfg.NewGame(model); e != nil {

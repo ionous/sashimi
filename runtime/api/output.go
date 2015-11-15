@@ -1,9 +1,7 @@
-package runtime
+package api
 
-import "github.com/ionous/sashimi/runtime/api"
-
-// IOutput requires an implementation to display text.
-type IOutput interface {
+// Output requires an implementation to display text.
+type Output interface {
 	//
 	// Standard output.
 	//
@@ -11,7 +9,7 @@ type IOutput interface {
 	//
 	// The actor or object with the passed name has something to say.
 	//
-	ActorSays(whose api.Instance, lines []string)
+	ActorSays(whose Instance, lines []string)
 	//
 	// Debugging output.
 	//

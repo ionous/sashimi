@@ -1,4 +1,4 @@
-package runtime
+package internal
 
 import (
 	"fmt"
@@ -39,7 +39,7 @@ func (oa GameObject) FromClass(class string) (okay bool) {
 }
 
 func (oa GameObject) ParentRelation() (ret G.IObject, rel string) {
-	if p, r, ok := oa.game.parents.GetParent(oa.game.ModelApi, oa.gobj); ok {
+	if p, r, ok := oa.game.LookupParent(oa.game.ModelApi, oa.gobj); ok {
 		ret, rel = NewGameObject(oa.game, p), r.String()
 	} else {
 		ret = NullObjectSource(NewPath(oa.Id()).Add("parent"), 1)
@@ -152,7 +152,7 @@ func (oa GameObject) ObjectList(prop string) (ret []G.IObject) {
 func (oa GameObject) Says(text string) {
 	// FIX: share some template love with GameEventAdapter.Say()
 	lines := strings.Split(text, "\n")
-	oa.game.output.ActorSays(oa.gobj, lines)
+	oa.game.Output.ActorSays(oa.gobj, lines)
 }
 
 // Go sends all the events associated with the named action,
@@ -169,12 +169,12 @@ func (oa GameObject) Go(run string, objects ...G.IObject) {
 		for i, o := range objects {
 			nouns[i+1] = o.Id()
 		}
-		if act, e := oa.game.newRuntimeAction(action, nouns...); e != nil {
+		if act, e := oa.game.NewRuntimeAction(action, nouns...); e != nil {
 			oa.log("Go(%s) with %v: error running action: %s", run, objects, e)
 		} else {
 			tgt := ObjectTarget{oa.game, oa.gobj}
 			msg := &E.Message{Id: action.GetEvent().GetId(), Data: act}
-			if e := oa.game.frame.SendMessage(tgt, msg); e != nil {
+			if e := oa.game.SendMessage(tgt, msg); e != nil {
 				oa.log("Go(%s): error sending message: %s", run, e)
 			}
 		}

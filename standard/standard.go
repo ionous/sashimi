@@ -30,7 +30,7 @@ type StandardGame struct {
 
 // StandardCore assists the transformation of a StandardStart into a StandardGame.
 type StandardCore struct {
-	*R.Game
+	R.Game
 	Parser parser.P
 	story  ident.Id
 	title,
@@ -71,7 +71,7 @@ var containment = []ident.Id{
 	ident.MakeId("support"),
 	ident.MakeId("enclosure")}
 
-func (p ParentLookup) GetParent(mdl api.Model, inst api.Instance) (ret api.Instance, rel ident.Id, okay bool) {
+func (p ParentLookup) LookupParent(mdl api.Model, inst api.Instance) (ret api.Instance, rel ident.Id, okay bool) {
 	if mdl.AreCompatible(inst.GetParentClass().GetId(), objects) {
 		for _, wse := range containment {
 			if prop, ok := inst.GetProperty(wse); ok {
@@ -88,14 +88,14 @@ func (p ParentLookup) GetParent(mdl api.Model, inst api.Instance) (ret api.Insta
 }
 
 // NewStandardGame creates a game which is based on the standard rules.
-func NewStandardGame(game *R.Game) (ret StandardStart, err error) {
-	if parser, e := parse.NewObjectParser(game.ModelApi, ident.MakeId("player")); e != nil {
+func NewStandardGame(game R.Game) (ret StandardStart, err error) {
+	if parser, e := parse.NewObjectParser(game.Model, ident.MakeId("player")); e != nil {
 		err = e
 	} else {
 		//
-		if story, ok := api.FindFirstOf(game.ModelApi, ident.MakeId("stories")); !ok {
+		if story, ok := api.FindFirstOf(game.Model, ident.MakeId("stories")); !ok {
 			err = fmt.Errorf("couldn't find story")
-		} else if status, ok := api.FindFirstOf(game.ModelApi, ident.MakeId("status bar instances")); !ok {
+		} else if status, ok := api.FindFirstOf(game.Model, ident.MakeId("status bar instances")); !ok {
 			err = fmt.Errorf("couldn't find status bar")
 		} else if title, ok := story.GetProperty(ident.MakeId("name")); !ok {
 			err = fmt.Errorf("couldn't find title")

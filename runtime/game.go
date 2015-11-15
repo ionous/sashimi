@@ -2,80 +2,52 @@ package runtime
 
 import (
 	"fmt"
-	E "github.com/ionous/sashimi/event"
+	// E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game"
-	M "github.com/ionous/sashimi/model"
-	"github.com/ionous/sashimi/model/table"
+	// M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/runtime/api"
-	"github.com/ionous/sashimi/runtime/memory"
+	"github.com/ionous/sashimi/runtime/internal"
+	//"github.com/ionous/sashimi/runtime/memory"
 	"github.com/ionous/sashimi/util/ident"
+	//"log"
+	//"math/rand"
 )
 
 type Game struct {
-	ModelApi api.Model
-	RuntimeCore
-	queue  EventQueue
-	Tables table.Tables
+	api.Model
+	game *internal.Game
 }
 
-func (cfg RuntimeConfig) NewGame(model *M.Model) (_ *Game, err error) {
-	core := cfg.Finalize()
-	tables := model.Tables.Clone()
-	modelApi := memory.NewMemoryModel(model, make(memory.ObjectValueMap), tables)
-
-	return &Game{
-		modelApi,
-		core,
-		EventQueue{E.NewQueue()},
-		tables,
-	}, nil
+func (g *Game) NewAdapter() G.Play {
+	return internal.NewGameAdapter(g.game)
+}
+func (g *Game) NewGameObject(inst api.Instance) G.IObject {
+	return internal.NewGameObject(g.game, inst)
 }
 
-func (g *Game) NewPlay(data interface{}, hint ident.Id) G.Play {
-	adapter := NewGameAdapter(g)
-	adapter.data = data.(*RuntimeAction)
-	adapter.hint = hint
-	return adapter
+func NullObject(name string) G.IObject {
+	return internal.NullObject(name)
 }
 
-func (g *Game) Random(n int) int {
-	return g.rand.Intn(n)
-}
-
-// class or instance id
-func (g *Game) DispatchEvent(evt E.IEvent, target ident.Id) (err error) {
-	if src, ok := g.ModelApi.GetEvent(evt.Id()); ok {
-		if ls, ok := src.GetListeners(true); ok {
-			err = E.Capture(evt, NewGameListeners(g, evt, target, ls))
-		}
-		if err == nil {
-			if ls, ok := src.GetListeners(false); ok {
-				err = E.Bubble(evt, NewGameListeners(g, evt, target, ls))
-			}
-		}
-	}
-	return
-}
-
-func (g *Game) QueueAction(act api.Action, objects []api.Instance) *RuntimeAction {
-	tgt := ObjectTarget{g, objects[0]}
-	data := &RuntimeAction{game: g, action: act, objs: objects}
-	g.queue.QueueEvent(tgt, act.GetEvent().GetId(), data)
+func (g *Game) QueueAction(act api.Action, objects []api.Instance) *internal.RuntimeAction {
+	tgt := internal.NewObjectTarget(g.game, objects[0])
+	data := internal.NewAction(g.game, act, objects)
+	g.game.Queue.QueueEvent(tgt, act.GetEvent().GetId(), data)
 	return data
 }
 
 // mainly for testing; manual send of an event
 func (g *Game) QueueEvent(event string, nouns ...ident.Id,
-) (ret *RuntimeAction, err error,
+) (ret *internal.RuntimeAction, err error,
 ) {
-	eventId := MakeStringId(event)
-	if event, ok := g.ModelApi.GetEvent(eventId); !ok {
+	eventId := internal.MakeStringId(event)
+	if event, ok := g.GetEvent(eventId); !ok {
 		err = fmt.Errorf("couldnt find event %s", event)
-	} else if act, e := g.newRuntimeAction(event.GetAction(), nouns...); e != nil {
+	} else if act, e := g.game.NewRuntimeAction(event.GetAction(), nouns...); e != nil {
 		err = e
 	} else {
-		tgt := ObjectTarget{g, act.objs[0]}
-		g.queue.QueueEvent(tgt, event.GetId(), act)
+		tgt := internal.NewObjectTarget(g.game, act.GetTarget())
+		g.game.Queue.QueueEvent(tgt, event.GetId(), act)
 		ret = act
 	}
 	return ret, err
@@ -83,44 +55,13 @@ func (g *Game) QueueEvent(event string, nouns ...ident.Id,
 
 // ProcessEvents in the event queue till empty, or errored.
 func (g *Game) ProcessEvents() (err error) {
-	for !g.queue.Empty() {
-		tgt, msg := g.queue.Pop()
-		if e := g.frame.SendMessage(tgt, msg); e != nil {
-			g.Println("error", e)
+	for !g.game.Queue.Empty() {
+		tgt, msg := g.game.Queue.Pop()
+		if e := g.game.SendMessage(tgt, msg); e != nil {
+			g.game.Println("error", e)
 			err = e
 			break
 		}
 	}
 	return err
-}
-
-// TODO: unwind this.
-func (g *Game) newRuntimeAction(action api.Action, nouns ...ident.Id,
-) (ret *RuntimeAction, err error,
-) {
-	types := action.GetNouns()
-	switch diff := len(nouns) - len(types); {
-	case diff < 0:
-		err = fmt.Errorf("too few nouns specified for '%s', %d", action, diff)
-	case diff > 0:
-		err = fmt.Errorf("too many nouns specified for '%s', +%d", action, diff)
-	default:
-		objs := make([]api.Instance, len(types))
-		for i, class := range types {
-			noun := nouns[i]
-			if gobj, ok := g.ModelApi.GetInstance(noun); !ok {
-				err = M.InstanceNotFound(noun.String())
-				break
-			} else if !g.ModelApi.AreCompatible(gobj.GetParentClass().GetId(), class) {
-				err = TypeMismatch(noun.String(), class.String())
-				break
-			} else {
-				objs[i] = gobj
-			}
-		}
-		if err == nil {
-			ret = &RuntimeAction{game: g, action: action, objs: objs}
-		}
-	}
-	return ret, err
 }

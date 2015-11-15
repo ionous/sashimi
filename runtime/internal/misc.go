@@ -1,4 +1,4 @@
-package runtime
+package internal
 
 import (
 	"github.com/ionous/sashimi/util/ident"

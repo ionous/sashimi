@@ -2,7 +2,6 @@ package tests
 
 import (
 	G "github.com/ionous/sashimi/game"
-	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/runtime/api"
 	. "github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/standard"
@@ -33,9 +32,9 @@ func TestObjectSet(t *testing.T) {
 	test, err := NewTestGame(t, s)
 	if assert.NoError(t, err) && assert.NotNil(t, test.Model) {
 		if inst, ok := test.Model.Instances.FindInstance("test"); assert.True(t, ok) {
-			gobj, exists := test.Game.ModelApi.GetInstance(inst.Id)
+			gobj, exists := test.Game.GetInstance(inst.Id)
 			if assert.True(t, exists, "test instance should exist") && assert.NotNil(t, gobj) {
-				obj := R.NewGameObject(test.Game, gobj)
+				obj := test.Game.NewGameObject(gobj)
 				assert.Equal(t, "original", obj.Text("amSet"), "should have original value")
 
 				obj.SetText("amSet", "new")
@@ -53,7 +52,7 @@ func TestObjectSet(t *testing.T) {
 //
 func TestStartupText(t *testing.T) {
 	s := InitScripts()
-	R.DebugGet = true
+	//R.DebugGet = true
 
 	s.The("story",
 		Called("testing"),
@@ -81,8 +80,8 @@ func TestStartupText(t *testing.T) {
 		}))
 
 	if test, err := NewTestGame(t, s); assert.NoError(t, err, "compile should work") {
-		if story, ok := api.FindFirstOf(test.Game.ModelApi, ident.MakeId("stories")); assert.True(t, ok, "should have test story") {
-			if _, ok := api.FindFirstOf(test.Game.ModelApi, ident.MakeId("rooms")); assert.True(t, ok, "should have room") {
+		if story, ok := api.FindFirstOf(test.Game, ident.MakeId("stories")); assert.True(t, ok, "should have test story") {
+			if _, ok := api.FindFirstOf(test.Game, ident.MakeId("rooms")); assert.True(t, ok, "should have room") {
 				_, err = test.Game.QueueEvent("commencing", story.GetId())
 				require.NoError(t, err, "commencing")
 

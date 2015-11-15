@@ -1,4 +1,4 @@
-package runtime
+package internal
 
 import (
 	"fmt"
@@ -17,6 +17,14 @@ type RuntimeAction struct {
 	objs      []api.Instance
 	after     []QueuedCallback
 	cancelled bool
+}
+
+func (act *RuntimeAction) GetTarget() api.Instance {
+	return act.objs[0]
+}
+
+func NewAction(g *Game, act api.Action, objects []api.Instance) *RuntimeAction {
+	return &RuntimeAction{game: g, action: act, objs: objects}
 }
 
 // each action can have a chain of default actions
@@ -44,9 +52,9 @@ func (act *RuntimeAction) runDefaultActions() (err error) {
 	if callbacks, ok := act.action.GetCallbacks(); ok {
 		for i := 0; i < callbacks.NumCallback(); i++ {
 			cb := callbacks.CallbackNum(i)
-			play := act.game.NewPlay(act, ident.Empty())
+			play := act.game.newPlay(act, ident.Empty())
 
-			if found, ok := act.game.calls.LookupCallback(cb); !ok {
+			if found, ok := act.game.LookupCallback(cb); !ok {
 				err = fmt.Errorf("internal error, couldnt find callback %s", cb)
 				panic(err.Error())
 				break
@@ -56,7 +64,7 @@ func (act *RuntimeAction) runDefaultActions() (err error) {
 		}
 
 		for _, after := range act.after {
-			play := act.game.NewPlay(act, ident.Empty())
+			play := act.game.newPlay(act, ident.Empty())
 			after.call(play)
 		}
 	}

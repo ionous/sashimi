@@ -1,4 +1,4 @@
-package runtime
+package internal
 
 import (
 	G "github.com/ionous/sashimi/game"

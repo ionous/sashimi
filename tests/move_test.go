@@ -93,13 +93,13 @@ type xMove struct {
 
 func testMoves(t *testing.T, test TestGame, moves ...xMove) (err error) {
 	// FIX: relations are stored in the model
-	if p, ok := test.Game.ModelApi.GetInstance(ident.MakeId("player")); assert.True(t, ok, "found player") {
+	if p, ok := test.Game.GetInstance(ident.MakeId("player")); assert.True(t, ok, "found player") {
 		for _, move := range moves {
 			t.Logf("%s => %s", move.cmd, move.res)
 			if out, e := test.RunInput(move.cmd); e != nil {
 				err = e
 				break
-			} else if res := where(test.Game.ModelApi, p); move.res != res {
+			} else if res := where(test.Game, p); move.res != res {
 				err = fmt.Errorf("unexpected move result: %v %v", res, out)
 				break
 			}

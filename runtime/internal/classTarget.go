@@ -1,4 +1,4 @@
-package runtime
+package internal
 
 import (
 	E "github.com/ionous/sashimi/event"
@@ -47,5 +47,5 @@ func (ct ClassTarget) Parent() (ret E.ITarget, ok bool) {
 // Send an event to ct target.
 // (from E.ITarget)
 func (ct ClassTarget) TargetDispatch(evt E.IEvent) (err error) {
-	return ct.host.game.DispatchEvent(evt, ct.class.GetId())
+	return ct.host.game.dispatch(evt, ct.class.GetId())
 }

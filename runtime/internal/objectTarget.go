@@ -1,4 +1,4 @@
-package runtime
+package internal
 
 import (
 	E "github.com/ionous/sashimi/event"
@@ -11,6 +11,10 @@ import (
 type ObjectTarget struct {
 	game *Game
 	obj  api.Instance // FIX? why is the target an instance and not adapter?
+}
+
+func NewObjectTarget(g *Game, o api.Instance) ObjectTarget {
+	return ObjectTarget{g, o}
 }
 
 //
@@ -31,7 +35,7 @@ func (ot ObjectTarget) String() string {
 // Parent walks up the the (externally defined) containment hierarchy (from event.ITarget.)
 func (ot ObjectTarget) Parent() (ret E.ITarget, ok bool) {
 	game, obj := ot.game, ot.obj
-	next, _, haveParent := game.parents.GetParent(game.ModelApi, obj)
+	next, _, haveParent := game.LookupParent(game.ModelApi, obj)
 	cls := obj.GetParentClass()
 	if cls != nil || haveParent {
 		ret, ok = ClassTarget{ot, cls, next}, true
@@ -41,5 +45,5 @@ func (ot ObjectTarget) Parent() (ret E.ITarget, ok bool) {
 
 // Dispatch an event to an object (from event.ITarget.)
 func (ot ObjectTarget) TargetDispatch(evt E.IEvent) (err error) {
-	return ot.game.DispatchEvent(evt, ot.obj.GetId())
+	return ot.game.dispatch(evt, ot.obj.GetId())
 }

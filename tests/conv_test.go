@@ -2,7 +2,6 @@ package tests
 
 import (
 	. "github.com/ionous/sashimi/extensions"
-	R "github.com/ionous/sashimi/runtime"
 	. "github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/standard"
 	"github.com/stretchr/testify/assert"
@@ -16,7 +15,7 @@ func TestVisit(t *testing.T) {
 	s := TalkScript()
 	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
 		total, comments, repeats := 3, 2, 1
-		g := R.NewGameAdapter(test.Game)
+		g := test.Game.NewAdapter()
 		for i, quips := 0, g.List("quips"); i < quips.Len(); i++ {
 			q := quips.Get(i).Object()
 			if q.Text("comment") != "" {
@@ -38,7 +37,7 @@ func TestVisit(t *testing.T) {
 func TestQuipHistory(t *testing.T) {
 	s := TalkScript()
 	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
-		g := R.NewGameAdapter(test.Game)
+		g := test.Game.NewAdapter()
 		qh := TheConversation(g).History()
 		// FIX:  saying hello.
 		qh.PushQuip(g.Our("WhatsTheMatter"))
@@ -59,8 +58,7 @@ func TestDiscuss(t *testing.T) {
 	standard.Debugging = true
 	s := TalkScript()
 	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
-		g := R.NewGameAdapter(test.Game)
-		_ = g
+		g := test.Game.NewAdapter()
 		if boy := g.The("alien boy"); assert.True(t, boy.Exists(), "found boy") {
 			if player := g.The("player"); assert.True(t, player.Exists(), "found player") {
 				if con := TheConversation(g); assert.True(t, con.Exists(), "found conversation") {
@@ -89,7 +87,7 @@ func TestDiscuss(t *testing.T) {
 func TestTalkQuips(t *testing.T) {
 	s := TalkScript()
 	if test, e := NewTestGame(t, s); assert.NoError(t, e) {
-		g := R.NewGameAdapter(test.Game)
+		g := test.Game.NewAdapter()
 		if boy := g.The("alien boy"); assert.True(t, boy.Exists(), "found boy") {
 			if player := g.The("player"); assert.True(t, player.Exists(), "found player") {
 				if con := TheConversation(g); assert.True(t, con.Exists(), "found conversation") {
@@ -167,7 +165,7 @@ func TestDirectFollows(t *testing.T) {
 
 	standard.Debugging = true
 	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
-		g := R.NewGameAdapter(test.Game)
+		g := test.Game.NewAdapter()
 		if boy := g.The("alien boy"); assert.True(t, boy.Exists(), "found boy") {
 			if player := g.The("player"); assert.True(t, player.Exists(), "found player") {
 				g.Go(Introduce("player").To("alien boy").WithDefault())
@@ -211,7 +209,7 @@ func TestFactFinding(t *testing.T) {
 			And("yellow", "prohibited", "retort"))
 
 	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
-		g := R.NewGameAdapter(test.Game)
+		g := test.Game.NewAdapter()
 		qm := PlayerMemory(g)
 		assert.True(t, qm.IsQuipAllowed(g, g.The("orbital wonder")))
 		assert.True(t, qm.IsQuipAllowed(g, g.The("smoothie request")))

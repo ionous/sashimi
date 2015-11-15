@@ -65,7 +65,7 @@ func NewTestGameSource(t *testing.T, s *Script, source string) (ret TestGame, er
 		cfg := R.NewConfig().SetCalls(model.Calls).SetOutput(cons)
 		if game, e := cfg.NewGame(model.Model); e != nil {
 			err = e
-		} else if parser, e := parse.NewObjectParser(game.ModelApi, ident.MakeId(source)); e != nil {
+		} else if parser, e := parse.NewObjectParser(game, ident.MakeId(source)); e != nil {
 			err = e
 		} else {
 			ret = TestGame{t, game, model, cons, parser}
@@ -81,7 +81,7 @@ func NewTestGame(t *testing.T, s *Script) (ret TestGame, err error) {
 
 type TestGame struct {
 	t    *testing.T
-	Game *R.Game
+	Game R.Game
 	compiler.MemoryResult
 	out    TestOutput
 	Parser parser.P

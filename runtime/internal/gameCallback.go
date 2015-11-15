@@ -1,4 +1,4 @@
-package runtime
+package internal
 
 import (
 	"fmt"
@@ -48,14 +48,14 @@ type GameCallback struct {
 func (cb GameCallback) HandleEvent(evt E.IEvent) (err error) {
 	if act, ok := evt.Data().(*RuntimeAction); !ok {
 		err = fmt.Errorf("unexpected game event data type %T", act)
-	} else if fn, ok := cb.game.calls.LookupCallback(cb.GetCallback()); !ok {
+	} else if fn, ok := cb.game.LookupCallback(cb.GetCallback()); !ok {
 		err = fmt.Errorf("couldn't find callback for listener %s", cb.Listener)
 	} else {
 		if cb.GetOptions().UseAfterQueue() {
 			call := QueuedCallback{cb.GetCallback(), fn}
 			act.runAfterDefaults(call)
 		} else {
-			play := cb.game.NewPlay(act, cb.GetClass())
+			play := cb.game.newPlay(act, cb.GetClass())
 			fn(play)
 			if act.cancelled {
 				evt.StopImmediatePropagation()

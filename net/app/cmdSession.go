@@ -8,6 +8,7 @@ import (
 	"github.com/ionous/sashimi/net/resource"
 	"github.com/ionous/sashimi/net/session"
 	R "github.com/ionous/sashimi/runtime"
+	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/runtime/parse"
 	"github.com/ionous/sashimi/standard"
 	"github.com/ionous/sashimi/util/ident"
@@ -21,7 +22,7 @@ var playerId = ident.MakeId("player")
 //
 // Create a session.
 //
-func NewCommandSession(id string, model *M.Model, calls R.Callbacks) (ret *CommandSession, err error) {
+func NewCommandSession(id string, model *M.Model, calls api.LookupCallbacks) (ret *CommandSession, err error) {
 	output := NewCommandOutput(id)
 	// event start/end frame
 	frame := func(tgt E.ITarget, msg *E.Message) func() {
@@ -70,7 +71,7 @@ type CommandSession struct {
 // Return the named game resource
 //
 func (sess *CommandSession) Find(name string) (ret resource.IResource, okay bool) {
-	mdl := sess.game.ModelApi
+	mdl := sess.game
 	switch name {
 	// by default, objects are grouped by their class:
 	default:
@@ -128,10 +129,10 @@ func (sess *CommandSession) _handleInput(input CommandInput) (err error) {
 		} else {
 			// Run json'd clicky action:
 			id := ident.MakeId(input.Action)
-			if act, ok := sess.game.ModelApi.GetAction(id); !ok {
+			if act, ok := sess.game.GetAction(id); !ok {
 				err = fmt.Errorf("unknown action %s", input.Action)
 				//FIX? RunActions injects the player, that works out well, but is a little strange.
-			} else if om, e := parse.NewObjectMatcher(act, playerId, sess.game.ModelApi); e != nil {
+			} else if om, e := parse.NewObjectMatcher(act, playerId, sess.game.Model); e != nil {
 				err = e
 			} else {
 				for _, n := range input.Nouns() {

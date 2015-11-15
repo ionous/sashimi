@@ -1,61 +1,62 @@
 package runtime
 
 import (
-	G "github.com/ionous/sashimi/game"
+	"fmt"
+	E "github.com/ionous/sashimi/event"
+	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/runtime/internal"
+	"github.com/ionous/sashimi/runtime/memory"
 	"github.com/ionous/sashimi/util/ident"
-
-	"math/rand"
-
 	"log"
+	"math/rand"
 )
 
 type RuntimeConfig struct {
-	core RuntimeCore
-}
-
-type RuntimeCore struct {
-	calls   Callbacks
-	frame   EventFrame
-	output  IOutput
-	parents ILookupParents
-	Log
-	rand *rand.Rand // FIX: an interface part of config
+	core internal.RuntimeCore
 }
 
 func NewConfig() *RuntimeConfig {
 	return &RuntimeConfig{}
 }
 
-func (cfg RuntimeConfig) Finalize() RuntimeCore {
+func (cfg RuntimeConfig) NewGame(model *M.Model) (Game, error) {
+	core := cfg.Finalize()
+	tables := model.Tables.Clone()
+	modelApi := memory.NewMemoryModel(model, make(memory.ObjectValueMap), tables)
+
+	return Game{modelApi, internal.NewGame(modelApi, core, tables)}, nil
+}
+
+func (cfg RuntimeConfig) Finalize() internal.RuntimeCore {
 	core := cfg.core
-	if core.rand == nil {
-		core.rand = rand.New(rand.NewSource(1))
+	if core.Rand == nil {
+		core.Rand = rand.New(rand.NewSource(1))
 	}
 	if core.Log == nil {
-		log := log.New(logAdapter{core.output}, "game: ", log.Lshortfile)
+		log := log.New(logAdapter{core.Output}, "game: ", log.Lshortfile)
 		core.Log = LogAdapter{
 			func(msg string) {
 				log.Output(4, msg)
 			}}
 	}
-	if core.frame == nil {
-		core.frame = defaultFrame
+	if core.Frame == nil {
+		core.Frame = defaultFrame
 	}
-	if core.parents == nil {
-		core.parents = parentLookup{}
+	if core.LookupParents == nil {
+		core.LookupParents = parentLookup{}
 	}
 	return core
 }
 
 type parentLookup struct{}
 
-func (parentLookup) GetParent(api.Model, api.Instance) (inst api.Instance, rel ident.Id, okay bool) {
+func (parentLookup) LookupParent(api.Model, api.Instance) (inst api.Instance, rel ident.Id, okay bool) {
 	return
 }
 
 type logAdapter struct {
-	output IOutput
+	output api.Output
 }
 
 func (log logAdapter) Write(p []byte) (n int, err error) {
@@ -63,17 +64,8 @@ func (log logAdapter) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-type ILookupParents interface {
-	GetParent(api.Model, api.Instance) (api.Instance, ident.Id, bool)
-}
-
-type Callbacks interface {
-	// LookupCallback returns nil if not found.
-	LookupCallback(ident.Id) (G.Callback, bool)
-}
-
-func (cfg *RuntimeConfig) SetCalls(calls Callbacks) *RuntimeConfig {
-	cfg.core.calls = calls
+func (cfg *RuntimeConfig) SetCalls(calls api.LookupCallbacks) *RuntimeConfig {
+	cfg.core.LookupCallbacks = calls
 	return cfg
 }
 
@@ -84,23 +76,39 @@ func (cfg *RuntimeConfig) SetCalls(calls Callbacks) *RuntimeConfig {
 // only: how do we know that a thing is a "class" and should get "Class" resource?
 // could potentially send target type to startframe
 // right now it seems redicoulous that the game decides that.
-func (cfg *RuntimeConfig) SetFrame(e EventFrame) *RuntimeConfig {
-	cfg.core.frame = e
+func (cfg *RuntimeConfig) SetFrame(e api.EventFrame) *RuntimeConfig {
+	cfg.core.Frame = e
 	return cfg
 }
-func (cfg *RuntimeConfig) SetOutput(o IOutput) *RuntimeConfig {
-	cfg.core.output = o
+func (cfg *RuntimeConfig) SetOutput(o api.Output) *RuntimeConfig {
+	cfg.core.Output = o
 	return cfg
 }
-func (cfg *RuntimeConfig) SetParentLookup(l ILookupParents) *RuntimeConfig {
-	cfg.core.parents = l
+func (cfg *RuntimeConfig) SetParentLookup(l api.LookupParents) *RuntimeConfig {
+	cfg.core.LookupParents = l
 	return cfg
 }
-func (cfg *RuntimeConfig) SetLog(log Log) *RuntimeConfig {
+func (cfg *RuntimeConfig) SetLog(log api.Log) *RuntimeConfig {
 	cfg.core.Log = log
 	return cfg
 }
 func (cfg *RuntimeConfig) SetRand(rand *rand.Rand) *RuntimeConfig {
-	cfg.core.rand = rand
+	cfg.core.Rand = rand
 	return cfg
+}
+
+func defaultFrame(E.ITarget, *E.Message) func() {
+	return func() {}
+}
+
+type LogAdapter struct {
+	print func(s string)
+}
+
+func (log LogAdapter) Printf(format string, v ...interface{}) {
+	log.print(fmt.Sprintf(format, v...))
+}
+
+func (log LogAdapter) Println(v ...interface{}) {
+	log.print(fmt.Sprintln(v...))
 }

@@ -59,10 +59,9 @@ func RunScript(script *script.Script, opt Options) (err error) {
 			return
 		}
 		cfg := R.NewConfig().SetCalls(model.Calls).SetOutput(NewStandardOutput(cons, writer)).SetParentLookup(ParentLookup{})
-
-		if game, e := cfg.NewGame(model.Model); e != nil {
+		if g, e := cfg.NewGame(model.Model); e != nil {
 			err = e
-		} else if game, e := NewStandardGame(game); e != nil {
+		} else if game, e := NewStandardGame(g); e != nil {
 			err = e
 		} else {
 			left := game.title.GetText()

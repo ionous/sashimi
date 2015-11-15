@@ -2,7 +2,6 @@ package tests
 
 import (
 	M "github.com/ionous/sashimi/model"
-	R "github.com/ionous/sashimi/runtime"
 	. "github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/standard"
 	"github.com/ionous/sashimi/util/ident"
@@ -131,7 +130,7 @@ func TestTableRuntime(t *testing.T) {
 	makePeople(s)
 	namePeople(s)
 	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
-		g := R.NewGameAdapter(test.Game)
+		g := test.Game.NewAdapter()
 		if grace := g.Our("Grace"); assert.True(t, grace.Exists()) {
 			if sweet := grace.Object("favorite sweet"); assert.True(t, sweet.Exists(), "grace should have a treat") {
 				if boreo := g.The("Boreo"); assert.True(t, boreo.Exists()) {
