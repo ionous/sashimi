@@ -32,28 +32,33 @@ type StandardGame struct {
 // StandardCore assists the transformation of a StandardStart into a StandardGame.
 type StandardCore struct {
 	*R.Game
-	Parser        parser.P
-	story, status G.IObject
+	Parser parser.P
+	story  ident.Id
+	title,
+	author,
+	complete,
+	statusLeft,
+	statusRight api.Value
 }
 
 // Left status bar text.
 func (sc *StandardCore) Left() string {
-	return sc.status.Text("left")
+	return sc.statusLeft.GetText()
 }
 
 // Right status bar text.
 func (sc *StandardCore) Right() string {
-	return sc.status.Text("right")
+	return sc.statusRight.GetText()
 }
 
 // SetLeft status bar text.
 func (sc *StandardCore) SetLeft(status string) {
-	sc.status.SetText("left", status)
+	sc.statusLeft.SetText(status)
 }
 
 // SetRight status bar text.
 func (sc *StandardCore) SetRight(status string) {
-	sc.status.SetText("right", status)
+	sc.statusRight.SetText(status)
 }
 
 // NewStandardGame creates a game which is based on the standard rules.
@@ -61,8 +66,6 @@ func NewStandardGame(game *R.Game) (ret StandardStart, err error) {
 	if parser, e := parse.NewObjectParser(game.ModelApi, ident.MakeId("player")); e != nil {
 		err = e
 	} else {
-		g := R.NewGameAdapter(game)
-		//
 		game.PushParentLookup(func(g G.Play, o G.IObject) (ret G.IObject) {
 			if parent, where := DirectParent(o); where != "" {
 				ret = parent
@@ -70,17 +73,32 @@ func NewStandardGame(game *R.Game) (ret StandardStart, err error) {
 			return ret
 		})
 		//
-		if story, found := G.Any(g, "stories"); !found {
+		if story, ok := api.FindFirstOf(game.ModelApi, ident.MakeId("stories")); !ok {
 			err = fmt.Errorf("couldn't find story")
+		} else if status, ok := api.FindFirstOf(game.ModelApi, ident.MakeId("status bar instances")); !ok {
+			err = fmt.Errorf("couldn't find status bar")
+		} else if title, ok := story.GetProperty(ident.MakeId("name")); !ok {
+			err = fmt.Errorf("couldn't find title")
+		} else if author, ok := story.GetProperty(ident.MakeId("author")); !ok {
+			err = fmt.Errorf("couldn't find author")
+		} else if completed, ok := story.GetPropertyByChoice(ident.MakeId("completed")); !ok {
+			err = fmt.Errorf("couldn't find completed status")
+		} else if left, ok := status.GetProperty(ident.MakeId("left")); !ok {
+			err = fmt.Errorf("couldn't find left status")
+		} else if right, ok := status.GetProperty(ident.MakeId("right")); !ok {
+			err = fmt.Errorf("couldn't find right status")
 		} else {
-			if status, found := G.Any(g, "status bar instances"); !found {
-				err = fmt.Errorf("couldn't find status bar")
-			} else {
-				core := StandardCore{game, parser, story, status}
-				core.SetLeft(story.Text("name"))
-				core.SetRight(fmt.Sprintf(`"%s" by %s.`, story.Text("name"), story.Text("author")))
-				ret = StandardStart{core}
-			}
+			core := StandardCore{game, parser,
+				story.GetId(),
+				title.GetValue(),
+				author.GetValue(),
+				completed.GetValue(),
+				left.GetValue(),
+				right.GetValue()}
+
+			core.SetLeft(title.GetValue().GetText())
+			core.SetRight(fmt.Sprintf(`"%s" by %s.`, title.GetValue().GetText(), author.GetValue().GetText()))
+			ret = StandardStart{core}
 		}
 	}
 	return ret, err
@@ -146,11 +164,11 @@ func (sg *StandardGame) RunTurn(act api.Action, objs []api.Instance) {
 }
 
 func (sg *StandardGame) endTurn(event string) {
-	sg.Game.QueueEvent(event, sg.story.Id())
+	sg.Game.QueueEvent(event, sg.story)
 	if e := sg.Game.ProcessEvents(); e != nil {
 		log.Println(e)
 	} else {
-		if sg.story.Is("completed") {
+		if sg.complete.GetState() == ident.MakeId("completed") {
 			sg.completed = true
 		}
 	}

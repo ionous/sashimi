@@ -10,6 +10,7 @@ type PropertyFields struct {
 	Class string
 	Name  string
 	Kind  string
+	List  bool
 }
 
 //

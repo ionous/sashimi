@@ -15,14 +15,13 @@ type IObject interface {
 	// FromClass: true if the object was derived from the passed plural named class.
 	// FIX: seems to programmery, alternatives?
 	FromClass(string) bool
-	// Remove a previously new'd data object.
 	Remove()
 
 	Is(string) bool
 	IsNow(string)
 
 	Get(string) IValue
-	GetList(string) IList
+	List(string) IList
 
 	// other built ins
 	Go(action string, withTargetAndContext ...IObject)
@@ -57,5 +56,13 @@ type IValue interface {
 type IList interface {
 	Len() int
 	Get(int) IValue
+
+	// IValue, IObject, numbers, text
 	Contains(interface{}) bool
+
+	AppendNum(float32)
+	AppendText(string)
+	AppendObject(IObject)
+
+	Reset()
 }

@@ -6,7 +6,6 @@ import (
 	. "github.com/ionous/sashimi/script"
 	. "github.com/ionous/sashimi/standard"
 	"github.com/ionous/sashimi/util/lang"
-	"reflect"
 )
 
 type Conversation struct {
@@ -130,7 +129,7 @@ func init() {
 			}))
 		s.Execute("greet", Matching("talk to {{something}}").Or("t|talk|greet|ask {{something}}"))
 
-		s.Generate("conversation", reflect.TypeOf(Conversation{}))
+		//		s.Generate("conversation", reflect.TypeOf(Conversation{}))
 
 		s.The("actors",
 			Can("depart").And("departing").RequiresNothing(),

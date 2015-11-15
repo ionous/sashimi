@@ -138,6 +138,7 @@ const (
 
 type Property interface {
 	GetId() ident.Id
+	GetName() string
 	GetType() PropertyType
 	//GetObjectType()?
 	// or maybe IsCompatible(inst) bool

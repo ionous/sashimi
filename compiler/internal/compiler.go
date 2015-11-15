@@ -445,19 +445,6 @@ func (ctx *Compiler) Compile() (*M.Model, error) {
 		return nil, err
 	}
 
-	ctx.Log.Println("compiling globals")
-	generators := make(M.GeneratorMap)
-	for _, gen := range ctx.Source.Globals {
-		gf := gen.Fields()
-		id := ident.MakeId(gf.Name)
-		if _, exists := generators[id]; exists {
-			e := fmt.Errorf("Global generator %s already exists", gf.Name)
-			err = errutil.Append(err, e)
-		} else {
-			generators[id] = gf.Type
-		}
-	}
-
 	// FIX FIX FIX: set a generic "name" property to each instance based on "printed name"
 	// really, this should combine with "long name" etc.
 	directName, printedName := M.MakeStringId("name"), M.MakeStringId("printed name")

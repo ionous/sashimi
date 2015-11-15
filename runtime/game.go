@@ -15,7 +15,7 @@ import (
 )
 
 // FIX: remove
-func (oa ObjectAdapter) Remove() {
+func (oa GameObject) Remove() {
 	panic("not implemented")
 }
 
@@ -103,6 +103,8 @@ func (g *Game) DispatchEvent(evt E.IEvent, target ident.Id) (err error) {
 	return
 }
 
+func (g *Game) Println(...interface{}) {
+}
 func (g *Game) Random(n int) int {
 	return g.rand.Intn(n)
 }
@@ -117,11 +119,11 @@ func (g *Game) Random(n int) int {
 func (g *Game) PushParentLookup(userLookup G.TargetLookup) {
 	g.parentLookup.PushLookup(func(gobj api.Instance) (ret api.Instance) {
 		// setup callback context:
-		play, obj := NewGameAdapter(g), NewObjectAdapter(g, gobj)
+		play, obj := NewGameAdapter(g), NewGameObject(g, gobj)
 		// call the user function
 		res := userLookup(play, obj)
 		// unpack the result
-		if par, ok := res.(ObjectAdapter); ok {
+		if par, ok := res.(GameObject); ok {
 			ret = par.gobj
 		}
 		return ret

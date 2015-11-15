@@ -7,7 +7,6 @@ import (
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
 	"io"
-	"reflect"
 )
 
 type Script struct {
@@ -67,11 +66,6 @@ func (s *Script) Execute(what string, as Parsing) {
 	origin := NewOrigin(1)
 	alias := S.AliasFields{what, as.phrases}
 	s.blocks.NewAlias(alias, origin.Code())
-}
-
-func (s *Script) Generate(what string, gen reflect.Type) {
-	fields := S.GeneratorFields{what, gen}
-	s.blocks.NewGlobal(fields, NewOrigin(1).Code())
 }
 
 // FIX? scan to find the subject called

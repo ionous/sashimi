@@ -56,8 +56,13 @@ func setRelative(src *PendingRelative, name string, dst, pending PendingRelative
 
 // makeRelation generates the model Relation from p PendingRelation.
 func (p PendingRelation) makeRelation(id ident.Id) (rel *M.Relation, err error) {
-	if p.src.Empty() || p.dst.Empty() {
+	if p.src.Empty() {
 		err = fmt.Errorf("missing half of relation %v", p)
+	} else if p.dst.Empty() {
+		src := M.HalfRelation{p.src.Class, p.src.Id}
+		dst := M.HalfRelation{p.src.Relates, ident.Empty()}
+		rel = M.NewRelation(id, p.name, src, dst, p.style())
+
 	} else {
 		src := M.HalfRelation{p.src.Class, p.src.Id}
 		dst := M.HalfRelation{p.dst.Class, p.dst.Id}

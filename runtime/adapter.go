@@ -24,20 +24,20 @@ func NewGameAdapter(game *Game) *GameEventAdapter {
 	return &GameEventAdapter{Game: game}
 }
 
-// NewObjectAdapter gives the passed game object the IObject interface.
+// NewGameObject gives the passed game object the IObject interface.
 // Public for testing.
-func NewObjectAdapterFromId(game *Game, id ident.Id) (ret G.IObject) {
+func NewGameObjectFromId(game *Game, id ident.Id) (ret G.IObject) {
 	if inst, ok := game.ModelApi.GetInstance(id); ok {
-		ret = ObjectAdapter{game, inst}
+		ret = GameObject{game, inst}
 	} else {
 		ret = NullObjectSource("", 2)
 	}
 	return ret
 }
 
-func NewObjectAdapter(game *Game, inst api.Instance) (ret G.IObject) {
+func NewGameObject(game *Game, inst api.Instance) (ret G.IObject) {
 	if inst != nil {
-		ret = ObjectAdapter{game, inst}
+		ret = GameObject{game, inst}
 	} else {
 		ret = NullObjectSource("", 2)
 	}
@@ -82,7 +82,7 @@ func (ga *GameEventAdapter) Visit(class string, visits func(G.IObject) bool) (ok
 	for i := 0; i < ga.ModelApi.NumInstance(); i++ {
 		gobj := ga.ModelApi.InstanceNum(i)
 		if id := gobj.GetParentClass().GetId(); ga.ModelApi.AreCompatible(id, clsid) {
-			if visits(NewObjectAdapter(ga.Game, gobj)) {
+			if visits(NewGameObject(ga.Game, gobj)) {
 				okay = true
 				break
 			}
@@ -136,7 +136,7 @@ func (ga *GameEventAdapter) GetObject(name string) (ret G.IObject) {
 func (ga *GameEventAdapter) getObject(name string) (ret G.IObject, okay bool) {
 	// asking by object name
 	if gobj, ok := ga.ModelApi.GetInstance(StripStringId(name)); ok {
-		ret, okay = NewObjectAdapter(ga.Game, gobj), true
+		ret, okay = NewGameObject(ga.Game, gobj), true
 	} else if ga.data != nil {
 		// testing against ga.data b/c sometimes the adapter isnt invoked via an event.
 		// to fix use different interfaces perhaps?

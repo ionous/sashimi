@@ -8,8 +8,8 @@ import (
 //
 // NewNumBuilder returns an interface which can generate a number property
 //
-func NewNumBuilder(id ident.Id, name string) (IBuildProperty, error) {
-	prop := M.NumProperty{id, name, false}
+func NewNumBuilder(id ident.Id, name string, isMany bool) (IBuildProperty, error) {
+	prop := M.NumProperty{id, name, isMany}
 	return NumBuilder{prop}, nil
 }
 

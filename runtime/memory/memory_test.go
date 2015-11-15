@@ -60,10 +60,10 @@ func TestMemory(t *testing.T) {
 	mem := NewMemoryModel(m, v, make(table.Tables))
 	// test plural
 	if cls, ok := mem.GetClass("TestClasses"); assert.True(t, ok, "get test class") {
-		if p, ok := cls.GetProperty("Plural"); assert.True(t, ok) {
+		if p, ok := cls.GetProperty(ident.MakeId("plural")); assert.True(t, ok) {
 			require.EqualValues(t, i.Class.Plural, p.GetValue().GetText())
 		}
-		if p, ok := cls.GetProperty("Singular"); assert.True(t, ok) {
+		if p, ok := cls.GetProperty(ident.MakeId("singular")); assert.True(t, ok) {
 			require.EqualValues(t, i.Class.Singular, p.GetValue().GetText())
 		}
 	}

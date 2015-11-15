@@ -8,8 +8,8 @@ import (
 //
 // NewTextBuilder returns an interface which can generate a text property
 //
-func NewTextBuilder(id ident.Id, name string) (IBuildProperty, error) {
-	prop := M.TextProperty{id, name, false}
+func NewTextBuilder(id ident.Id, name string, isMany bool) (IBuildProperty, error) {
+	prop := M.TextProperty{id, name, isMany}
 	return TextBuilder{prop}, nil
 }
 

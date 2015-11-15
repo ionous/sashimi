@@ -107,7 +107,7 @@ func (act *RuntimeAction) findBySimilarClass(id ident.Id) (ret G.IObject, okay b
 // getObject returns the index object; true if the index was in range.
 func (act *RuntimeAction) getObject(i int) (ret G.IObject, okay bool) {
 	if i >= 0 && i < len(act.objs) {
-		ret, okay = NewObjectAdapter(act.game, act.objs[i]), true
+		ret, okay = NewGameObject(act.game, act.objs[i]), true
 	}
 	return
 }

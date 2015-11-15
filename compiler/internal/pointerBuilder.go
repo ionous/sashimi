@@ -9,8 +9,8 @@ import (
 // such a ratcheting would *increasing* restrictiveness, not permissability.
 // for example: "pointer","kind" could store "teddy bears",
 // but changed to "pointer","adult white male" could only store "teddy roosevelt"
-func NewPointerBuilder(id ident.Id, name string, class ident.Id) (IBuildProperty, error) {
-	prop := M.PointerProperty{id, name, class, false}
+func NewPointerBuilder(id ident.Id, name string, class ident.Id, isMany bool) (IBuildProperty, error) {
+	prop := M.PointerProperty{id, name, class, isMany}
 	return PointerBuilder{prop}, nil
 }
 

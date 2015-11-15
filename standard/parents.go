@@ -7,15 +7,17 @@ import (
 
 // touchable ceiling, visibility ceiling (visibility level count)
 func DirectParent(obj IObject) (parent IObject, where string) {
-	for _, wse := range []string{"wearer", "owner", "whereabouts", "support", "enclosure"} {
-		if p := obj.Object(wse); p.Exists() {
-			parent, where = p, wse
-			break
+	if obj.Exists() && obj.FromClass("objects") {
+		for _, wse := range []string{"wearer", "owner", "whereabouts", "support", "enclosure"} {
+			if p := obj.Object(wse); p.Exists() {
+				parent, where = p, wse
+				break
+			}
 		}
 	}
 	// so we arent pointing to nil, which cant easily be tested for. thanks go. :(
 	if where == "" {
-		parent = R.NullObject("DirectPointer")
+		parent = R.NullObject("DirectParent")
 	}
 	return
 }

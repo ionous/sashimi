@@ -1,10 +1,13 @@
 package memory
 
 import (
+	"fmt"
 	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/util/ident"
 )
+
+var _ = fmt.Println
 
 type objectList struct {
 	panicValue
@@ -14,7 +17,7 @@ type objectList struct {
 func manyValue(p *propBase) api.Values {
 	rel := p.prop.(M.RelativeProperty)
 	objs := p.mdl.getObjects(p.src, rel.Relation, rel.IsRev)
-	return objectList{panicValue{p}, objs}
+	return &objectList{panicValue{p}, objs}
 }
 
 func (p objectList) NumValue() int {
@@ -25,7 +28,7 @@ func (p objectList) ValueNum(i int) api.Value {
 	return objectReadValue{p.panicValue, p.objs[i]}
 }
 
-func (p objectList) ClearValues() (err error) {
+func (p *objectList) ClearValues() (err error) {
 	p.mdl.clearValues(p.src, p.prop.(M.RelativeProperty))
 	p.objs = nil
 	return
@@ -38,7 +41,7 @@ func (p objectList) AppendText(string) error {
 	panic("not implemented")
 }
 
-func (p objectList) AppendObject(id ident.Id) (err error) {
+func (p *objectList) AppendObject(id ident.Id) (err error) {
 	if e := p.mdl.canAppend(id, p.src, p.prop.(M.RelativeProperty)); e != nil {
 		err = e
 	} else {

@@ -4,13 +4,13 @@ import (
 	"fmt"
 	G "github.com/ionous/sashimi/game" // iobject
 	"github.com/ionous/sashimi/util/ident"
-	"log"
+	"log" // because we can be constructed globally
 	"runtime"
 )
 
 // FIX? generate the implemenation via "go generate"
 type _Null struct {
-	name string
+	path PropertyPath
 	pc   uintptr
 }
 
@@ -21,7 +21,7 @@ func NullObject(name string) G.IObject {
 func NullObjectSource(name string, skip int) G.IObject {
 	pc := []uintptr{0}
 	runtime.Callers(skip+1, pc) // 0 is callers itself, 1 is this code
-	return _Null{name, pc[0]}
+	return _Null{NewPath(ident.Id(name)), pc[0]}
 }
 
 func (null _Null) println(args ...interface{}) {
@@ -36,12 +36,12 @@ func (null _Null) String() string {
 		file, line := f.FileLine(null.pc - 1)
 		str = fmt.Sprintf("(%s:%d)", file, line)
 	}
-	return "<NullObject " + null.name + str + ">"
+	return "<NullObject " + null.path.String() + str + ">"
 }
 
 //
 func (null _Null) Id() ident.Id {
-	return ""
+	return ident.Empty()
 }
 
 //
@@ -68,12 +68,12 @@ func (null _Null) IsNow(c string) {
 //
 func (null _Null) Get(p string) G.IValue {
 	null.println("Get", p)
-	return nullValue{fmt.Sprintf("%s.<%s>", null.String(), p)}
+	return nullValue(null.path.Add(p))
 }
 
-func (null _Null) GetList(p string) G.IList {
-	null.println("GetList", p)
-	return nullList{fmt.Sprintf("%s.<%s>", null.String(), p)}
+func (null _Null) List(p string) G.IList {
+	null.println("List", p)
+	return nullList(null.path.Add(p))
 }
 
 //

@@ -34,6 +34,9 @@ func (p *propBase) String() string {
 func (p *propBase) GetId() ident.Id {
 	return p.prop.GetId()
 }
+func (p *propBase) GetName() string {
+	return p.prop.GetName()
+}
 
 func (p *propBase) GetType() api.PropertyType {
 	err := "invalid"

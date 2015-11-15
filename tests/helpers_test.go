@@ -45,7 +45,7 @@ func (out TestOutput) ScriptSays(lines []string) {
 }
 
 func (out TestOutput) ActorSays(whose api.Instance, lines []string) {
-	prop, _ := whose.GetProperty("Name")
+	prop, _ := whose.GetProperty(ident.MakeId("name"))
 	name := prop.GetValue().GetText()
 
 	for _, l := range lines {

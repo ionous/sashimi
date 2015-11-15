@@ -4,6 +4,7 @@ import (
 	"fmt"
 	C "github.com/ionous/sashimi/console"
 	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/util/ident"
 	"io"
 	"strings"
 	"unicode"
@@ -44,7 +45,7 @@ func (out *StandardOutput) ActorSays(whose api.Instance, lines []string) {
 	if len(lines) > 0 {
 		// in other contexts ActorSays needs the instance for SerializeObject
 		// FIX: what about proper name?
-		prop, _ := whose.GetProperty("Name")
+		prop, _ := whose.GetProperty(ident.MakeId("name"))
 		name := prop.GetValue().GetText()
 
 		if out.lastActor != name {

@@ -44,7 +44,7 @@ func (cls *PendingClass) makePropertySet() (props M.PropertySet, err error) {
 //
 func (cls *PendingClass) addProperty(src S.Code, fields S.PropertyFields,
 ) (ret IBuildProperty, err error) {
-	name, kind := fields.Name, fields.Kind
+	name, kind, isMany := fields.Name, fields.Kind, fields.List
 	// by using name->type cls ensures that if the name existed, it is of the same type now
 	// cls does not exclude the same name from being used twice in the same class/property hierarchy
 	// that is determined separately, after the hierarchy is known.
@@ -55,12 +55,12 @@ func (cls *PendingClass) addProperty(src S.Code, fields S.PropertyFields,
 		case "text":
 			ret, err = cls.props.make(id, nil,
 				func() (IBuildProperty, error) {
-					return NewTextBuilder(id, name)
+					return NewTextBuilder(id, name, isMany)
 				})
 		case "num":
 			ret, err = cls.props.make(id, nil,
 				func() (IBuildProperty, error) {
-					return NewNumBuilder(id, name)
+					return NewNumBuilder(id, name, isMany)
 				})
 		default:
 			if other, ok := cls.classes.findBySingularName(kind); !ok {
@@ -75,7 +75,7 @@ func (cls *PendingClass) addProperty(src S.Code, fields S.PropertyFields,
 						return
 					},
 					func() (IBuildProperty, error) {
-						return NewPointerBuilder(id, name, other.id)
+						return NewPointerBuilder(id, name, other.id, isMany)
 					})
 			}
 		}
