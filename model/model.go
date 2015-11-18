@@ -1,29 +1,38 @@
 package model
 
 import (
+	"encoding/json"
 	"github.com/ionous/sashimi/model/table"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 // Model: Compiled results of a sashimi story.
 type Model struct {
-	// rule like:
-	Classes       ClassMap
-	Relations     RelationMap
-	Actions       ActionMap
-	Events        EventMap
-	ParserActions []ParserAction
-	// data like:
-	Instances      InstanceMap
-	ActionHandlers ActionCallbacks
-	EventListeners EventCallbacks
-	Tables         table.Tables
-	//
-	NounNames      NounNames
+	Actions        Actions
+	Classes        Classes
+	Enumerations   Enumerations
+	Events         Events
+	Instances      Instances
+	Aliases        Aliases
+	ParserActions  []ParserAction
+	Relations      Relations
 	SingleToPlural SingleToPlural
-
-	// this cant serialize: need to replace with
-	// lists and table variables in globals
-	//Generators     GeneratorMap
+	Tables         table.Tables
 }
 
+type Actions map[ident.Id]*ActionModel
+type Classes map[ident.Id]*ClassModel
+type Enumerations map[ident.Id]*EnumModel
+type Events map[ident.Id]*EventModel
+type Instances map[ident.Id]*InstanceModel
+type Relations map[ident.Id]*RelationModel
 type SingleToPlural map[string]string
+
+func (m *Model) PrintModel(printer func(...interface{})) (err error) {
+	if prettyBytes, e := json.MarshalIndent(m, "", " "); e != nil {
+		err = e
+	} else {
+		printer(string(prettyBytes))
+	}
+	return err
+}

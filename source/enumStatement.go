@@ -11,7 +11,7 @@ type EnumFields struct {
 	Class   string
 	Name    string
 	Choices []string
-	Expects []PropertyExpectation
+	//Expects []PropertyExpectation
 }
 
 //

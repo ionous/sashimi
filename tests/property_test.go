@@ -5,9 +5,9 @@ import (
 	C "github.com/ionous/sashimi/compiler"
 	M "github.com/ionous/sashimi/model"
 	. "github.com/ionous/sashimi/script"
+	"github.com/ionous/sashimi/util/ident"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
 	"testing"
 )
 
@@ -15,31 +15,41 @@ import (
 // test whether the instance has the value or not
 //
 func testField(
+	t *testing.T,
 	res C.MemoryResult,
 	instName string,
 	fieldName string,
 	value interface{},
-) (err error) {
-	if inst, ok := res.Model.Instances.FindInstance(instName); !ok {
-		err = M.InstanceNotFound(instName)
-	} else if prop, ok := inst.Class.FindProperty(fieldName); !ok {
-		err = fmt.Errorf("'%s.%v' missing field", instName, fieldName)
-	} else if val, ok := inst.Value(prop.GetId()); !ok {
-		err = fmt.Errorf("'%s.%v' missing value", instName, fieldName)
-	} else {
-		if enum, ok := prop.(M.EnumProperty); ok {
-			val, _ = enum.IndexToChoice(val.(int))
-		}
-		if !assert.ObjectsAreEqualValues(val, value) {
-			err = fmt.Errorf("'%s.%v' %#v!= %#v", instName, fieldName, val, value)
+) {
+	inst, ok := res.Model.Instances[ident.MakeId(instName)]
+	require.True(t, ok, fmt.Sprintf("instance %s not found", instName))
+
+	cls, ok := res.Model.Classes[inst.Class]
+	require.True(t, ok, fmt.Sprintf("class %s not found for %s", inst.Class, instName))
+
+	prop, ok := cls.FindProperty(fieldName)
+	require.True(t, ok, fmt.Sprintf("'%s.%v' missing field", instName, fieldName))
+
+	val, valExisted := inst.Values[prop.Id]
+
+	if prop.Type == M.EnumProperty {
+		if enum, ok := res.Model.Enumerations[prop.Id]; assert.True(t, ok, fmt.Sprintf("'%s.%v' missing enum", instName, prop.Id)) {
+			if valExisted {
+				val = enum.IndexToChoice(val.(int))
+			} else {
+				val = enum.Choices[0]
+				valExisted = true
+			}
 		}
 	}
-	return err
+	//
+	if assert.True(t, valExisted, fmt.Sprintf("'%s.%v' missing value", instName, prop.Id)) {
+		require.EqualValues(t, val, value, fmt.Sprintf("'%s.%v'", instName, fieldName))
+	}
 }
 
-//
 // compile nothing succesfully
-func TestEmpty(t *testing.T) {
+func TestPropertyEmpty(t *testing.T) {
 	s := Script{}
 	c, err := s.Compile(Log(t))
 	if err != nil {
@@ -53,7 +63,7 @@ func TestEmpty(t *testing.T) {
 
 //
 // create a single subclass called stories
-func TestClass(t *testing.T) {
+func TestPropertySubclass(t *testing.T) {
 	s := Script{}
 	s.The("kinds",
 		Called("stories").WithSingularName("story"),
@@ -67,7 +77,7 @@ func TestClass(t *testing.T) {
 	if len(res.Model.Classes) != 2 {
 		t.Fatal("expected two classes", res.Model.Classes)
 	}
-	stories := res.Model.Classes[M.MakeStringId("stories")]
+	stories := res.Model.Classes[ident.MakeId("stories")]
 	if stories == nil {
 		t.Fatal("expected stories", res.Model.Classes)
 	}
@@ -78,7 +88,7 @@ func TestClass(t *testing.T) {
 
 //
 // double specification of the same class causes no error
-func TestDoubledClass(t *testing.T) {
+func TestPropertyDoubledClass(t *testing.T) {
 	s := Script{}
 	s.The("kinds",
 		Called("stories").WithSingularName("story"),
@@ -94,7 +104,7 @@ func TestDoubledClass(t *testing.T) {
 //
 // create properties on the built in object class
 // ( these use extensions )
-func TestClassProperty(t *testing.T) {
+func TestPropertyKinds(t *testing.T) {
 	s := Script{}
 
 	s.The("kinds",
@@ -103,14 +113,33 @@ func TestClassProperty(t *testing.T) {
 	)
 	if res, err := s.Compile(Log(t)); assert.NoError(t, err) {
 		res.Model.PrintModel(t.Log)
-		if cls := res.Model.Classes[M.MakeStringId("kinds")]; assert.NotNil(t, cls) {
+		if cls := res.Model.Classes[ident.MakeId("kinds")]; assert.NotNil(t, cls) {
 			if props := cls.Properties; assert.NotNil(t, props) {
 				require.Len(t, props, 2+1) // MOD: +1 for auto-generated "name" property
-				if pid := M.MakeStringId("text"); assert.Contains(t, props, pid) {
-					require.IsType(t, M.TextProperty{}, props[pid])
+				if p, ok := cls.FindProperty("text"); assert.True(t, ok, "found text") {
+					require.EqualValues(t, M.TextProperty, p.Type)
 				}
-				if pid := M.MakeStringId("num"); assert.Contains(t, props, pid) {
-					require.IsType(t, M.NumProperty{}, props[pid])
+				if p, ok := cls.FindProperty("num"); assert.True(t, ok, "found num") {
+					require.EqualValues(t, M.NumProperty, p.Type)
+				}
+			}
+		}
+	}
+}
+
+// TestPropertyInst: create an instance ( with no properties )
+// go test -run TestPropertyInst
+func TestPropertyInst(t *testing.T) {
+	s := Script{}
+	s.The("kind", Called("test"), Exists())
+	if res, err := s.Compile(Log(t)); assert.NoError(t, err, "compile") {
+		//	res.Model.PrintModel(t.Log)
+		if assert.Len(t, res.Model.Instances, 1, "expected one instance") {
+			if test, ok := res.Model.Instances[ident.MakeId("test")]; assert.True(t, ok, "expected test instance") {
+				// test auto-generated name.
+				nameId := ident.Join(ident.MakeId("kinds"), ident.MakeId("name"))
+				if name, ok := test.Values[nameId]; assert.True(t, ok, "have name value") {
+					require.Equal(t, "test", name)
 				}
 			}
 		}
@@ -118,26 +147,7 @@ func TestClassProperty(t *testing.T) {
 }
 
 //
-// create an instance ( with no properties )
-func TestInst(t *testing.T) {
-	s := Script{}
-	s.The("kind", Called("test"), Exists())
-	res, err := s.Compile(Log(t))
-	if err != nil {
-		t.Error(err)
-	}
-	res.Model.PrintModel(t.Log)
-	if len(res.Model.Instances) != 1 {
-		t.Fatal("expected one instance", res.Model.Instances)
-	}
-	test := res.Model.Instances[M.MakeStringId("test")]
-	if test == nil {
-		t.Fatal("expected test instance", res.Model.Instances)
-	}
-}
-
-//
-func TestTextProperties(t *testing.T) {
+func TestPropertyText(t *testing.T) {
 	s := Script{}
 
 	s.The("kinds",
@@ -148,19 +158,14 @@ func TestTextProperties(t *testing.T) {
 		Called("test"),
 		Has("author", "any mouse"),
 	)
-	res, err := s.Compile(Log(t))
-	if err != nil {
-		t.Fatal(err)
-	}
-	res.Model.PrintModel(t.Log)
-	err = testField(res, "test", "author", "any mouse")
-	if err != nil {
-		t.Fatal(err)
+	if res, err := s.Compile(Log(t)); assert.NoError(t, err, "compile") {
+		res.Model.PrintModel(t.Log)
+		testField(t, res, "test", "author", "any mouse")
 	}
 }
 
 //
-func TestNumProperties(t *testing.T) {
+func TestPropertyNum(t *testing.T) {
 	s := Script{}
 
 	s.The("kinds",
@@ -177,20 +182,14 @@ func TestNumProperties(t *testing.T) {
 		t.Fatal(err)
 	}
 	res.Model.PrintModel(t.Log)
-	err = testField(res, "test", "int", 5)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = testField(res, "test", "float", 3.25)
-	if err != nil {
-		t.Fatal(err)
-	}
+	testField(t, res, "test", "int", 5)
+	testField(t, res, "test", "float", 3.25)
 }
 
-//
 // build several stories with different settings for their yes/no values
 // verify all is as expected
-func TestEitherOr(t *testing.T) {
+// go test -run TestPropertyEitherOr
+func TestPropertyEitherOr(t *testing.T) {
 	s := Script{}
 
 	s.The("kinds",
@@ -217,33 +216,19 @@ func TestEitherOr(t *testing.T) {
 		Called("unscored"),
 		Is("unscored"),
 	)
-	res, err := s.Compile(Log(t))
-	if err != nil {
-		t.Log(err)
-	}
-	//res.Model.PrintModel(t.Log)
-	//
-	err = testField(res, "scored-default", "scoredProperty", M.MakeStringId("scored")) // not default: false
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = testField(res, "unscored-default", "scoredProperty", M.MakeStringId("unscored")) // not default: false
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = testField(res, "scored", "scoredProperty", M.MakeStringId("scored")) // not default: true
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = testField(res, "unscored", "scoredProperty", M.MakeStringId("unscored")) // not default: true
-	if err != nil {
-		t.Fatal(err)
+	if res, err := s.Compile(Log(t)); assert.NoError(t, err, "compile") {
+		res.Model.PrintModel(t.Log)
+		//
+		testField(t, res, "scored-default", "scored", ident.MakeId("scored"))     // not default: false
+		testField(t, res, "unscored-default", "scored", ident.MakeId("unscored")) // not default: false
+		testField(t, res, "scored", "scored", ident.MakeId("scored"))             // not default: true
+		testField(t, res, "unscored", "scored", ident.MakeId("unscored"))         // not default: true
 	}
 }
 
 //
 // choose an unselected value and make sure it reports an error
-func TestEitherError(t *testing.T) {
+func TestPropertyEitherError(t *testing.T) {
 	s := Script{}
 	s.The("kinds",
 		Called("stories").WithSingularName("story"),
@@ -254,11 +239,7 @@ func TestEitherError(t *testing.T) {
 		Called("errors"),
 		Is("this is meant to report an issue"),
 	)
-
-	res, err := s.Compile(Log(t))
-	if err == nil {
+	if res, err := s.Compile(Log(t)); assert.Error(t, err, "expects compile failure") {
 		res.Model.PrintModel(t.Log)
-		t.Fatal("expected unscored story to report an issue")
 	}
-	t.Log("expected error:", err)
 }

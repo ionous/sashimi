@@ -8,8 +8,8 @@ import (
 
 type listenersInfo struct {
 	mdl       *MemoryModel
-	evt       *M.EventInfo
-	callbacks []M.ListenerCallback
+	evt       *M.EventModel
+	callbacks []M.ListenerModel
 	captures  bool
 }
 
@@ -24,7 +24,7 @@ func (l listenersInfo) ListenerNum(i int) api.Listener {
 }
 
 type listenerInfo struct {
-	*M.ListenerCallback
+	*M.ListenerModel
 }
 
 // GetInstance can return Empty()

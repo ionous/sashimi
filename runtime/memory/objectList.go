@@ -15,8 +15,7 @@ type objectList struct {
 }
 
 func manyValue(p *propBase) api.Values {
-	rel := p.prop.(M.RelativeProperty)
-	objs := p.mdl.getObjects(p.src, rel.Relation, rel.IsRev)
+	objs := p.mdl.getObjects(p.src, p.prop.Relation, p.prop.IsRev)
 	return &objectList{panicValue{p}, objs}
 }
 
@@ -29,7 +28,7 @@ func (p objectList) ValueNum(i int) api.Value {
 }
 
 func (p *objectList) ClearValues() (err error) {
-	p.mdl.clearValues(p.src, p.prop.(M.RelativeProperty))
+	p.mdl.clearValues(p.src, p.prop)
 	p.objs = nil
 	return
 }
@@ -42,16 +41,16 @@ func (p objectList) AppendText(string) error {
 }
 
 func (p *objectList) AppendObject(id ident.Id) (err error) {
-	if e := p.mdl.canAppend(id, p.src, p.prop.(M.RelativeProperty)); e != nil {
+	if e := p.mdl.canAppend(id, p.src, p.prop); e != nil {
 		err = e
 	} else {
-		p.mdl.appendObject(id, p.src, p.prop.(M.RelativeProperty))
+		p.mdl.appendObject(id, p.src, p.prop)
 		p.objs = append(p.objs, id)
 	}
 	return
 }
 
-func (mdl MemoryModel) clearValues(src ident.Id, rel M.RelativeProperty) {
+func (mdl MemoryModel) clearValues(src ident.Id, rel *M.PropertyModel) {
 	table := mdl.getTable(rel.Relation)
 	isRev := rel.IsRev
 	table.Remove(func(x, y ident.Id) bool {

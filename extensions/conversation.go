@@ -53,7 +53,7 @@ func discuss(how, other string) IFragment {
 	// FIX: a way to change the orgin?
 	return NewFunctionFragment(func(b SubjectBlock) error {
 		b.The("following quips",
-			Table("following", "indirectly-following-property", "leading").Has(
+			Table("following", "indirectly following", "leading").Has( //-property
 				b.Subject(), how, other))
 		return nil
 	})
@@ -62,8 +62,8 @@ func discuss(how, other string) IFragment {
 func requires(how, fact string) IFragment {
 	return NewFunctionFragment(func(b SubjectBlock) error {
 		b.The("quip requirements",
-			Table("fact", "permitted-property", "quip").
-				Has(fact, how, b.Subject()))
+			Table("fact", "permitted", "quip"). //-property
+								Has(fact, how, b.Subject()))
 		return nil
 	})
 }

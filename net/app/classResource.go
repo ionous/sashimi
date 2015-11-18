@@ -48,9 +48,9 @@ func addClass(doc, sub resource.IBuildObjects, cls api.Class) {
 	id := jsonId(cls.GetId())
 	out := doc.NewObject(id, "class")
 	out.SetAttr("parent", parent)
-	plural, _ := cls.GetProperty(ident.MakeId("plural"))
+	plural, _ := cls.FindProperty("plural")
 	out.SetAttr("name", plural.GetValue().GetText())
-	singular, _ := cls.GetProperty(ident.MakeId("singular"))
+	singular, _ := cls.FindProperty("singular")
 	out.SetAttr("singular", singular.GetValue().GetText())
 	a := append(classParents(cls, nil), id)
 	// reverse

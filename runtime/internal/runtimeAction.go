@@ -19,12 +19,12 @@ type RuntimeAction struct {
 	cancelled bool
 }
 
-func (act *RuntimeAction) GetTarget() api.Instance {
-	return act.objs[0]
+func NewRuntimeAction(g *Game, act api.Action, objects []api.Instance) *RuntimeAction {
+	return &RuntimeAction{game: g, action: act, objs: objects}
 }
 
-func NewAction(g *Game, act api.Action, objects []api.Instance) *RuntimeAction {
-	return &RuntimeAction{game: g, action: act, objs: objects}
+func (act *RuntimeAction) GetTarget() api.Instance {
+	return act.objs[0]
 }
 
 // each action can have a chain of default actions

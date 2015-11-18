@@ -7,7 +7,6 @@ import (
 	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/runtime/internal"
 	"github.com/ionous/sashimi/runtime/memory"
-	"github.com/ionous/sashimi/util/ident"
 	"log"
 	"math/rand"
 )
@@ -24,8 +23,7 @@ func (cfg RuntimeConfig) NewGame(model *M.Model) (Game, error) {
 	core := cfg.Finalize()
 	tables := model.Tables.Clone()
 	modelApi := memory.NewMemoryModel(model, make(memory.ObjectValueMap), tables)
-
-	return Game{modelApi, internal.NewGame(modelApi, core, tables)}, nil
+	return Game{modelApi, internal.NewGame(core, modelApi)}, nil
 }
 
 func (cfg RuntimeConfig) Finalize() internal.RuntimeCore {
@@ -51,7 +49,7 @@ func (cfg RuntimeConfig) Finalize() internal.RuntimeCore {
 
 type parentLookup struct{}
 
-func (parentLookup) LookupParent(api.Model, api.Instance) (inst api.Instance, rel ident.Id, okay bool) {
+func (parentLookup) LookupParent(api.Model, api.Instance) (inst api.Instance, rel api.Property, okay bool) {
 	return
 }
 

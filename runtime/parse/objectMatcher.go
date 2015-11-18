@@ -48,7 +48,7 @@ func (om *ObjectMatcher) MatchNoun(name string, _ string) (err error) {
 func (om *ObjectMatcher) GetMatch() (act api.Action, ret []api.Instance, err error) {
 	objects, nouns := om.objects, om.act.GetNouns()
 	if cnt, max := len(objects), nouns.GetNounCount(); cnt != max {
-		err = parser.MismatchedNouns("I", max, cnt)
+		err = parser.MismatchedNouns(ident.MakeId("I"), max, cnt)
 	} else {
 		act, ret = om.act, objects
 	}

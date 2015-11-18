@@ -9,9 +9,9 @@ import (
 	"testing"
 )
 
-// TestVisit to ensure that we can visit the dialog and see their properties.
+// TestQuipVisit to ensure that we can visit the dialog and see their properties.
 
-func TestVisit(t *testing.T) {
+func TestQuipVisit(t *testing.T) {
 	s := TalkScript()
 	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
 		total, comments, repeats := 3, 2, 1
@@ -46,15 +46,15 @@ func TestQuipHistory(t *testing.T) {
 		require.True(t, lastQuip.Exists(), "found last quip")
 		//
 		npc := lastQuip.Object("subject")
-		require.EqualValues(t, npc.Id(), "AlienBoy")
+		require.EqualValues(t, "AlienBoy", npc.Id().String())
 		//
 		repeats := lastQuip.Is("one time")
 		require.True(t, repeats, "repeats")
 	}
 }
 
-// TestDiscuss for the discuss event and the conversation queue.
-func TestDiscuss(t *testing.T) {
+// TestQuipDiscuss for the discuss event and the conversation queue.
+func TestQuipDiscuss(t *testing.T) {
 	standard.Debugging = true
 	s := TalkScript()
 	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
@@ -81,10 +81,10 @@ func TestDiscuss(t *testing.T) {
 	}
 }
 
-// TestTalkQuips to test player quip generation.
+// TestQuipTalkQuips to test player quip generation.
 // FIX: this will only be interesting if there are multiple possiblities
 // both related to the alien boy, but not this convo, and to other npcs
-func TestTalkQuips(t *testing.T) {
+func TestQuipTalkQuips(t *testing.T) {
 	s := TalkScript()
 	if test, e := NewTestGame(t, s); assert.NoError(t, e) {
 		g := test.Game.NewAdapter()
@@ -116,7 +116,7 @@ func TestTalkQuips(t *testing.T) {
 						if lines, e := test.FlushOutput(); assert.NoError(t, e) {
 							require.True(t, len(lines) > 2)
 							story.Get("player input").SetText("2")
-							if act, e := test.Game.QueueEvent("parsing player input", story.Id()); assert.NoError(t, e) {
+							if act, e := test.Game.QueueAction("parse player input", story.Id()); assert.NoError(t, e) {
 								if lines, e := test.FlushOutput(); assert.NoError(t, e) {
 									require.True(t, act.Cancelled())
 
@@ -134,8 +134,8 @@ func TestTalkQuips(t *testing.T) {
 	}
 }
 
-// TestDirectFollows to test player quip generation.
-func TestDirectFollows(t *testing.T) {
+// TestQuipDirectFollows to test player quip generation.
+func TestQuipDirectFollows(t *testing.T) {
 	s := InitScripts()
 	s.The("actor", Called("The Alien Boy"), Exists())
 	s.The("alien boy", Has("greeting", "Don't leave!"))
@@ -175,7 +175,7 @@ func TestDirectFollows(t *testing.T) {
 						require.True(t, latest.Is("restrictive"), "should be restrictive")
 						if quips := GetPlayerQuips(g); assert.Len(t, quips, 1) {
 							q := quips[0]
-							require.EqualValues(t, "WeNeedHelp", q.Id())
+							require.EqualValues(t, "WeNeedHelp", q.Id().String())
 						}
 					}
 				}
@@ -184,8 +184,8 @@ func TestDirectFollows(t *testing.T) {
 	}
 }
 
-// TestFactFinding to verify facts and their associated conversation rules.
-func TestFactFinding(t *testing.T) {
+// TestQuipFactFinding to verify facts and their associated conversation rules.
+func TestQuipFactFinding(t *testing.T) {
 	s := InitScripts()
 
 	s.The("facts",
@@ -202,11 +202,11 @@ func TestFactFinding(t *testing.T) {
 			And("orbital wonder", "what were the skies like when you were young?"))
 
 	s.The("quip requirements",
-		Table("fact", "permitted-property", "quip").
-			Has("red", "permitted", "retort").
-			And("red", "prohibited", "smoothie request").
-			And("green", "permitted", "retort").
-			And("yellow", "prohibited", "retort"))
+		Table("fact", "permitted", "quip"). //-property
+							Has("red", "permitted", "retort").
+							And("red", "prohibited", "smoothie request").
+							And("green", "permitted", "retort").
+							And("yellow", "prohibited", "retort"))
 
 	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
 		g := test.Game.NewAdapter()

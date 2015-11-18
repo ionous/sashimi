@@ -7,7 +7,7 @@ import (
 
 type relInfo struct {
 	mdl *MemoryModel
-	*M.Relation
+	*M.RelationModel
 }
 
 func (r relInfo) GetId() ident.Id {
@@ -24,14 +24,14 @@ func (r relInfo) GetId() ident.Id {
 
 // // FIX: im not a huge fan of the property search, its only needed for the auto-inversion:
 // // FIX: im not a huge fan of the auto-inversion, can this be solved from the client side?
-// func (r *relInfo) getRelative(src ident.Id) (srcProp *M.RelativeProperty) {
+// func (r *relInfo) getRelative(src ident.Id) (srcProp *M.PropertyModel) {
 // 	if src == r._relative.src {
 // 		srcProp = r._relative.prop
 // 	} else {
 // 		inst := r.mdl.Instances[src]
-// 		inst.Class.Visit(func(cls *M.ClassInfo) (finished bool) {
+// 		inst.Class.Visit(func(cls *M.ClassModel) (finished bool) {
 // 			for _, p := range cls.Properties {
-// 				if rel, ok := p.(M.RelativeProperty); ok {
+// 				if rel, ok := p.(M.PropertyModel); ok {
 // 					if rel.Relation == r.Id {
 // 						srcProp = &rel
 // 						finished = true

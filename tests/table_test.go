@@ -1,11 +1,11 @@
 package tests
 
 import (
-	M "github.com/ionous/sashimi/model"
 	. "github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/standard"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -18,10 +18,10 @@ func makeSweets(s *Script) {
 }
 func nameSweets(s *Script) {
 	s.The("sweets",
-		Table("name", "desc", "delicious-property").
-			Has("Boreo", "Creme filled wafer things.", "acceptable").
-			And("Vegan chocolate chip cookies", "The secret is the bacon... err... baking.", "delicious").
-			And("Sugar coated ants", "A crunchy summer's day snack.", "you can't be serious"),
+		Table("name", "desc", "delicious"). //-property
+							Has("Boreo", "Creme filled wafer things.", "acceptable").
+							And("Vegan chocolate chip cookies", "The secret is the bacon... err... baking.", "delicious").
+							And("Sugar coated ants", "A crunchy summer's day snack.", "you can't be serious"),
 	)
 }
 
@@ -32,20 +32,26 @@ func TestTableDecl(t *testing.T) {
 	nameSweets(s)
 	if res, err := s.Compile(Log(t)); assert.NoError(t, err, "table compile") {
 		m := res.Model
-		assert.Len(t, m.Instances, 3)
+		require.Len(t, m.Instances, 3)
 		// and now some values:
-		if inst, ok := m.Instances.FindInstance("boreo"); assert.True(t, ok, "find tabled instance by name") {
+		if inst, ok := m.Instances[ident.MakeId("boreo")]; assert.True(t, ok, "find tabled instance by name") {
+			desc := ident.MakeId("sweets-desc")
 			//
-			if val, ok := inst.FindValue("desc"); assert.True(t, ok, "find desc") {
+			if val, ok := inst.Values[desc]; assert.True(t, ok, "find desc") {
 				if str, ok := val.(string); assert.True(t, ok, "have string") {
 					assert.EqualValues(t, str, "Creme filled wafer things.")
 				}
 			}
 			//
-			if prop, ok := inst.Class.FindProperty("delicious-property"); assert.True(t, ok, "find deliciousness") {
-				if val, ok := inst.Value(prop.GetId()); assert.True(t, ok, "find value") {
-					val, _ := prop.(M.EnumProperty).IndexToChoice(val.(int))
-					assert.EqualValues(t, val, M.MakeStringId("acceptable"))
+			if cls, ok := m.Classes[inst.Class]; assert.True(t, ok, "found class") {
+				//-property
+				if prop, ok := cls.FindProperty("delicious"); assert.True(t, ok, "find deliciousness") {
+					if val, ok := inst.Values[prop.Id]; assert.True(t, ok, "find value") {
+						if enum, ok := m.Enumerations[prop.Id]; assert.True(t, ok, "found enum") {
+							val := enum.IndexToChoice(val.(int))
+							assert.EqualValues(t, val, ident.MakeId("acceptable"))
+						}
+					}
 				}
 			}
 		}
@@ -57,7 +63,7 @@ func TestTableGeneration(t *testing.T) {
 	s := &Script{}
 	makeSweets(s)
 	s.The("sweets",
-		Table("desc", "delicious-property").Has(
+		Table("desc", "delicious").Has( //-property
 			"Creme filled wafer things.", "acceptable").And(
 			"It looks the way poisonous berries smell.", "delicious").And(
 			"A crunchy summer's day snack.", "you can't be serious",
@@ -77,8 +83,9 @@ func TestTabledData(t *testing.T) {
 	s.Our("Boreo", Is("acceptable"), Has("price", 42))
 	if res, err := s.Compile(Log(t)); assert.NoError(t, err, "table compile") {
 		m := res.Model
-		if inst, ok := m.Instances.FindInstance("boreo"); assert.True(t, ok, "find tabled instance by name") {
-			if val, ok := inst.FindValue("price"); assert.True(t, ok, "find desc") {
+		if inst, ok := m.Instances[ident.MakeId("boreo")]; assert.True(t, ok, "find tabled instance by name") {
+			price := ident.MakeId("sweets-price")
+			if val, ok := inst.Values[price]; assert.True(t, ok, "find desc") {
 				assert.EqualValues(t, 42, val)
 			}
 		}
@@ -112,10 +119,11 @@ func TestTablePointers(t *testing.T) {
 	namePeople(s)
 	if res, err := s.Compile(Log(t)); assert.NoError(t, err, "table compile") {
 		m := res.Model
-		if inst, ok := m.Instances.FindInstance("Grace"); assert.True(t, ok, "find person by name") {
-			if val, ok := inst.FindValue("Favorite Sweet"); assert.True(t, ok, "find favorite") {
+		if inst, ok := m.Instances[ident.MakeId("Grace")]; assert.True(t, ok, "find person by name") {
+			fav := ident.MakeId("actors favorite sweet")
+			if val, ok := inst.Values[fav]; assert.True(t, ok, "find favorite") {
 				if id, ok := val.(ident.Id); assert.True(t, ok, "id") {
-					assert.EqualValues(t, id, "VeganChocolateChipCookies")
+					assert.EqualValues(t, id, ident.MakeId("VeganChocolateChipCookies"))
 				}
 			}
 		}
@@ -130,13 +138,14 @@ func TestTableRuntime(t *testing.T) {
 	makePeople(s)
 	namePeople(s)
 	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
+		//test.Model.PrintModel(t.Log)
 		g := test.Game.NewAdapter()
 		if grace := g.Our("Grace"); assert.True(t, grace.Exists()) {
 			if sweet := grace.Object("favorite sweet"); assert.True(t, sweet.Exists(), "grace should have a treat") {
 				if boreo := g.The("Boreo"); assert.True(t, boreo.Exists()) {
 					grace.Set("favorite sweet", boreo)
-					retread := grace.Object("favorite sweet").Text("Name")
-					assert.Equal(t, retread, "Boreo")
+					retread := grace.Object("favorite sweet").Text("name")
+					assert.Equal(t, "Boreo", retread)
 				}
 			}
 		}

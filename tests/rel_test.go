@@ -5,12 +5,13 @@ import (
 	. "github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 //
 // create a single subclass called stories
-func TestSimpleRelation(t *testing.T) {
+func TestRelation(t *testing.T) {
 	s := Script{}
 	s.The("kinds",
 		Called("gremlins"),
@@ -29,8 +30,8 @@ func TestSimpleRelation(t *testing.T) {
 		model.PrintModel(t.Log)
 		assert.Equal(t, 1, len(model.Relations))
 		for _, v := range model.Relations {
-			assert.EqualValues(t, "Gremlins", v.Source.Class)
-			assert.EqualValues(t, "Rocks", v.Dest.Class)
+			assert.EqualValues(t, "Gremlins", v.Source.Class.String())
+			assert.EqualValues(t, "Rocks", v.Dest.Class.String())
 			assert.EqualValues(t, M.OneToMany, v.Style)
 		}
 	}
@@ -38,7 +39,7 @@ func TestSimpleRelation(t *testing.T) {
 
 //
 // create a single subclass called stories
-func TestSimpleRelates(t *testing.T) {
+func TestRelates(t *testing.T) {
 	s := Script{}
 	s.The("kinds",
 		Called("gremlins"),
@@ -57,27 +58,30 @@ func TestSimpleRelates(t *testing.T) {
 		model := res.Model
 		assert.Equal(t, 2, len(model.Instances), "two instances")
 
-		claire, ok := model.Instances.FindInstance("claire")
-		assert.True(t, ok, "found claire")
+		claire, ok := model.Instances[ident.MakeId("claire")]
+		require.True(t, ok, "found claire")
 
-		pets, ok := claire.Class.FindProperty("pets")
+		gremlins, ok := model.Classes[claire.Class]
+		require.True(t, ok, "found gremlins")
+
+		petsrel, ok := gremlins.FindProperty("pets")
 		assert.True(t, ok)
 
-		petsrel := pets.(M.RelativeProperty)
-		table, ok := model.Tables[petsrel.Relation]
-		assert.True(t, ok, "found table")
-
-		assert.EqualValues(t, []ident.Id{"Loofah"}, table.List(claire.Id, petsrel.IsRev))
-
-		loofah, ok := model.Instances.FindInstance("loofah")
+		loofah, ok := model.Instances[ident.MakeId("Loofah")]
 		assert.True(t, ok, "found loofah")
 
-		revField, ok := loofah.Class.FindProperty("o beneficent one")
+		table, ok := model.Tables[petsrel.Relation]
+		assert.True(t, ok, "found table")
+		assert.EqualValues(t, []ident.Id{loofah.Id}, table.List(claire.Id, petsrel.IsRev))
+
+		rocks, ok := model.Classes[loofah.Class]
+		require.True(t, ok, "found rocks")
+
+		revProp, ok := rocks.FindProperty("o beneficent one")
 		assert.True(t, ok, "rev property")
-		revProp := revField.(M.RelativeProperty)
 
-		assert.Exactly(t, []ident.Id{"Claire"}, table.List(loofah.Id, revProp.IsRev))
-
-		model.PrintModel(t.Log)
+		if !assert.Exactly(t, []ident.Id{ident.MakeId("claire")}, table.List(loofah.Id, revProp.IsRev)) {
+			model.PrintModel(t.Log)
+		}
 	}
 }

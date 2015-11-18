@@ -11,6 +11,7 @@ func init() {
 		// ( or, possibly a game object type of which there is one, with a relation of an actor. )
 		s.The("actor",
 			Called("player"),
-			Is("scenery"))
+			Is("scenery"),
+		)
 	})
 }

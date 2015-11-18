@@ -3,6 +3,7 @@ package tests
 import (
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
+	"github.com/ionous/sashimi/util/ident"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -58,7 +59,7 @@ func TestActionClassCallback(t *testing.T) {
 		Has("description", "it's an error!"),
 	)
 	if g, err := NewTestGameSource(t, s, "obj"); assert.NoError(t, err) {
-		if _, err := g.Game.QueueEvent("testing", "Obj"); assert.NoError(t, err) {
+		if _, err := g.Game.QueueAction("test", ident.MakeId("obj")); assert.NoError(t, err) {
 			if err := g.Game.ProcessEvents(); assert.NoError(t, err) {
 				if out, err := g.FlushOutput(); assert.NoError(t, err) {
 					expected := []string{"it's a trap!"}
@@ -83,7 +84,7 @@ func TestActionCallbackBeforeAfter(t *testing.T) {
 	)
 	s.The("kind", Called("obj"), Exists())
 	if g, err := NewTestGameSource(t, s, "obj"); assert.NoError(t, err) {
-		if _, err := g.Game.QueueEvent("testing", "Obj"); assert.NoError(t, err) {
+		if _, err := g.Game.QueueAction("test", ident.MakeId("obj")); assert.NoError(t, err) {
 			if err := g.Game.ProcessEvents(); assert.NoError(t, err) {
 				if out, err := g.FlushOutput(); assert.NoError(t, err) {
 					expected := []string{"Before", "After"}
@@ -121,7 +122,7 @@ func TestActionCallbackParsing(t *testing.T) {
 	)
 	// should trigger "test", which should print the description
 	if g, err := NewTestGameSource(t, s, "looker"); assert.NoError(t, err) {
-		if assert.Len(t, g.Model.NounNames, 2) {
+		if assert.Len(t, g.Model.Aliases, 2) {
 			str := "look at lookee"
 			if res, err := g.RunInput(str); assert.NoError(t, err, "handle input") {
 				expected := []string{"look it's a test!"}

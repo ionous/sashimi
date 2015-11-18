@@ -7,7 +7,7 @@ import (
 
 //
 type PropertyRule struct {
-	fieldName ident.Id
+	propId ident.Id
 	S.PropertyExpectation
 }
 

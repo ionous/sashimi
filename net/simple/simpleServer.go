@@ -20,6 +20,7 @@ func NewSimpleServer() *http.ServeMux {
 			if model, e := script.InitScripts().CompileCalls(ioutil.Discard, calls); e != nil {
 				err = e
 			} else {
+				model.PrintModel(func(a ...interface{}) { fmt.Println(a...) })
 				ret, err = NewSimpleSession(calls, model)
 			}
 			return ret, err

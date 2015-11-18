@@ -28,7 +28,7 @@ func (t *Table) Add(x, y ident.Id) (index int) {
 
 func (t *Table) Find(x, y ident.Id) (index int) {
 	for i, pair := range t.Pairs {
-		if pair.X == x && pair.Y == y {
+		if ident.Compare(pair.X, x) == 0 && ident.Compare(pair.Y, y) == 0 {
 			index = i + 1
 			break
 		}
@@ -38,7 +38,7 @@ func (t *Table) Find(x, y ident.Id) (index int) {
 
 func (t *Table) list(x ident.Id) (ret []ident.Id) {
 	for _, pair := range t.Pairs {
-		if pair.X == x {
+		if ident.Compare(pair.X, x) == 0 {
 			ret = append(ret, pair.Y)
 		}
 	}
@@ -47,7 +47,7 @@ func (t *Table) list(x ident.Id) (ret []ident.Id) {
 
 func (t *Table) listRev(y ident.Id) (ret []ident.Id) {
 	for _, pair := range t.Pairs {
-		if pair.Y == y {
+		if ident.Compare(pair.Y, y) == 0 {
 			ret = append(ret, pair.X)
 		}
 	}

@@ -1,7 +1,6 @@
 package memory
 
 import (
-	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/util/ident"
 )
@@ -18,7 +17,7 @@ func (p objectReadValue) GetObject() (ret ident.Id) {
 
 // the one side of a many-to-one, one-to-one, or one-to-many relation.
 func singleValue(p *propBase) api.Value {
-	rel := p.prop.(M.RelativeProperty)
+	rel := p.prop
 	objs := p.mdl.getObjects(p.src, rel.Relation, rel.IsRev)
 	var v ident.Id
 	if len(objs) > 0 {
@@ -35,11 +34,11 @@ type objectWriteValue struct {
 //
 func (p objectWriteValue) SetObject(id ident.Id) (err error) {
 	if !id.Empty() {
-		err = p.mdl.canAppend(id, p.src, p.prop.(M.RelativeProperty))
+		err = p.mdl.canAppend(id, p.src, p.prop)
 	}
 	if err == nil {
-		p.mdl.clearValues(p.src, p.prop.(M.RelativeProperty))
-		p.mdl.appendObject(id, p.src, p.prop.(M.RelativeProperty))
+		p.mdl.clearValues(p.src, p.prop)
+		p.mdl.appendObject(id, p.src, p.prop)
 		p.currentVal = id
 	}
 	return err

@@ -2,47 +2,59 @@ package ident
 
 import (
 	"bytes"
+	"github.com/ionous/sashimi/util/lang"
 	"github.com/satori/go.uuid"
+	"strings"
 	"unicode"
 )
 
-//
-// TitleCaseWord uniquely identifying some resource.
-//
+// Id uniquely identifies some resource.
+// NOTE: go is not capable of comparing slices(!?), and there is no interface for making a type hashable(!?)
+// ALSO: the default json encoding --- even when the marshal is implemented!? -- doesnt seem to support a struct as a map key.
+// Therefore, Id cannot store its parts as an []string. they must be joined first.
 type Id string
 
-//
-// Return the Id as a regular string.
-//
+// String representation of the id (ex. for fmt), currently TitleCase.
 func (id Id) String() (ret string) {
 	if id.Empty() {
 		ret = "<empty>"
 	} else {
-		ret = string(id)
+		parts := id.Split()
+		for i, s := range parts {
+			parts[i] = lang.Capitalize(s)
+		}
+		ret = strings.Join(parts, "")
 	}
 	return ret
 }
 
 func (id Id) Empty() bool {
-	return id == ""
+	return len(id) == 0
 }
 
-func Empty() Id {
-	return ""
+func Compare(a, b Id) int {
+	return strings.Compare(string(a), string(b))
+}
+
+func Join(a, b Id) Id {
+	return Id(strings.Join(append(a.Split(), b.Split()...), "-"))
+}
+
+func Empty() (ret Id) {
+	return
 }
 
 func MakeUniqueId() Id {
-	return Id(uuid.NewV4().String())
+	str := uuid.NewV4().String()
+	return Id(str)
 }
 
-//
-// Create a new string id from the passed raw string.
+// MakeId creates a new string id from the passed raw string.
 // Dashes and spaces are treated as word separators.
 // Other Illegal characters ( leading digits and non-word characters ) are stripped.
-// Articles ( the, etc. ) are stripped for easier matching at the script/table/level.
-//
+// NOTE: Articles ( the, etc. ) are stripped for easier matching at the script/table/level.
 func MakeId(name string) Id {
-	var buffer bytes.Buffer
+	var parts parts
 	started, inword, wasUpper := false, false, false
 
 	for _, r := range name {
@@ -52,41 +64,33 @@ func MakeId(name string) Id {
 		}
 
 		// this test similar to go scanner's is identifier alg:
-		// it has _ which we treat as a space, and
-		// it tested i>0, but since we are stripping spaces, 'started' is better.
+		// it has _, which we treat as a space, and
+		// its i>0, but since we are stripping spaces, 'started' is better.
 		if unicode.IsLetter(r) || (started && unicode.IsDigit(r)) {
 			started = true
 			nowUpper := unicode.IsUpper(r)
 			// classify some common word changes
 			sameWord := inword && ((wasUpper == nowUpper) || (wasUpper && !nowUpper))
-			if !sameWord {
-				r = unicode.ToUpper(r)
-			} else {
+			if nowUpper {
 				r = unicode.ToLower(r)
 			}
-			buffer.WriteRune(r) // docs say err is always nil
+			if !sameWord {
+				parts.flush()
+			}
+			parts.WriteRune(r) // docs say err is always nil
 			wasUpper = nowUpper
 			inword = true
 		}
 	}
 
-	return Id(buffer.String())
+	dashed := strings.Join(parts.flush(), "-")
+	return Id(dashed)
 }
 
-//
-// Break the title cased string id into separated, lower cased components.
-//
-func (id Id) Split() (ret []string) {
-	p := parts{}
-	for _, r := range id {
-		if !unicode.IsUpper(r) {
-			p.WriteRune(r)
-		} else {
-			p.flush()
-			p.WriteRune(unicode.ToLower(r))
-		}
-	}
-	return p.flush()
+// Split the id into separated, lower cased components.
+func (id Id) Split() []string {
+	dashed := string(id)
+	return strings.Split(dashed, "-")
 }
 
 type parts struct {

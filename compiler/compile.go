@@ -3,9 +3,10 @@ package compiler
 import (
 	"github.com/ionous/sashimi/compiler/call"
 	i "github.com/ionous/sashimi/compiler/internal"
-	//	X "github.com/ionous/sashimi/model"
+	X "github.com/ionous/sashimi/compiler/xmodel"
 	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
+	"github.com/ionous/sashimi/util/ident"
 	"io"
 	"log"
 )
@@ -15,14 +16,34 @@ type Config struct {
 	Output io.Writer
 }
 
+type converter struct {
+	*M.Model
+}
+
+func newConverter(x *X.Model) converter {
+	m := &M.Model{
+		Actions:        make(M.Actions),
+		Classes:        make(M.Classes),
+		Enumerations:   make(M.Enumerations),
+		Events:         make(M.Events),
+		Instances:      make(M.Instances),
+		Aliases:        make(M.Aliases),
+		ParserActions:  make([]M.ParserAction, 0, len(x.ParserActions)),
+		Relations:      make(M.Relations),
+		SingleToPlural: make(M.SingleToPlural),
+		Tables:         x.Tables.Clone(),
+	}
+	return converter{m}
+}
+
 // Compile script statements into a "model", a form usable by the runtime.
 func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 	names := i.NewNameSource()
 	rel := i.NewRelativeFactory(names.NewScope(nil))
-	log := log.New(cfg.Output, "compling: ", log.Lshortfile)
+	log := log.New(cfg.Output, "compiling: ", log.Lshortfile)
 	ctx := &i.Compiler{
 		src, names.NewScope(nil),
-		i.NewClassFactory(names, rel),
+		i.NewClassFactory(names, names.NewScope("enums"), rel),
 		i.NewInstanceFactory(names, log),
 		rel,
 		log,
@@ -31,40 +52,245 @@ func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 	if x, e := ctx.Compile(); e != nil {
 		err = e
 	} else {
-		// m := &M.Model{}
-		// for k, v := range x.Classes {
-		// 	_, _ = k, v
-		// }
-		// for k, v := range x.Relations {
-		// 	_, _ = k, v
-		// }
-		// for k, v := range x.Actions {
-		// 	_, _ = k, v
-		// }
-		// for k, v := range x.Events {
-		// 	_, _ = k, v
-		// }
-		// for i, v := range x.ParserActions {
-		// 	_, _ = i, v
-		// }
-		// for k, v := range x.Instances {
-		// 	_, _ = k, v
-		// }
-		// for i, v := range x.ActionHandlers {
-		// 	_, _ = i, v
-		// }
-		// for i, v := range x.EventListeners {
-		// 	_, _ = i, v
-		// }
-		// for k, v := range x.Tables.Tables {
-		// 	_, _ = k, v
-		// }
-		// for _, v := range x.Generators {
-		// }
-		ret = x
+		m := newConverter(x)
+
+		// actionId -> callbackId
+		actions := make(map[ident.Id][]ident.Id)
+
+		for _, handler := range x.ActionHandlers {
+			act, callback, useCapture := handler.Action, handler.Callback, handler.UseCapture()
+			arr := actions[act]
+			// FIX: for now treating target as bubble,
+			// really the compiler should hand off a sorted flat list based on three separate groups; target growing in the same direction as after, but distinctly in the middle of things.
+			if !useCapture {
+				arr = append(arr, callback)
+			} else {
+				// prepend:
+				arr = append([]ident.Id{callback}, arr...)
+			}
+			actions[act] = arr
+		}
+
+		for id, a := range x.Actions {
+			m.Actions[id] = &M.ActionModel{
+				Id:      a.Id,
+				Name:    a.ActionName,
+				EventId: a.EventId,
+				NounTypes: func() (ret []ident.Id) {
+					for _, class := range a.NounTypes {
+						ret = append(ret, class.Id)
+					}
+					return
+				}(),
+				DefaultActions: actions[a.Id],
+			}
+		}
+
+		for id, srcClass := range x.Classes {
+			// if srcClass.Constraints.Len() > 0 {
+			// 	panic("constraints not implemented")
+			// }
+			m.Classes[id] = &M.ClassModel{
+				Id:       srcClass.Id,
+				Parents:  parents(srcClass, nil),
+				Plural:   srcClass.Plural,
+				Singular: srcClass.Singular,
+				Properties: func() (props []M.PropertyModel) {
+					for _, prop := range srcClass.Properties {
+						props = append(props, func() M.PropertyModel {
+							ret := propertyBase(prop)
+							//
+							switch p := prop.(type) {
+							case X.PointerProperty:
+								ret.Relates = p.Class
+
+							case X.EnumProperty:
+								ret.Id = m.makeEnum(&p)
+
+							case X.RelativeProperty:
+								ret.Relation = p.Relation
+								ret.Relates = p.Relates
+								ret.IsRev = p.IsRev
+							}
+							return ret
+						}())
+					}
+					return props
+				}(),
+			}
+		}
+
+		type MapEventCallbacks map[ident.Id]M.EventModelCallbacks
+		capture, bubble := make(MapEventCallbacks), make(MapEventCallbacks)
+		for _, l := range x.EventListeners {
+			e, cb := l.Event, l.ListenerCallback
+			var callbacks MapEventCallbacks
+			if cb.UseCapture() {
+				callbacks = capture
+			} else {
+				callbacks = bubble
+			}
+			// append
+			var arr = callbacks[e]
+			arr = append(arr, M.ListenerModel{
+				Instance: cb.Instance,
+				Class:    cb.Class,
+				Callback: cb.Callback,
+				Options:  M.ListenerOptions(cb.Options),
+			})
+			callbacks[e] = arr
+		}
+
+		for id, evt := range x.Events {
+			m.Events[id] = &M.EventModel{
+				Id:   evt.Id,
+				Name: evt.EventName,
+				// Type: makes perfect sense: the parameters associated with the action.
+				//ActionId:  evt.ActionId,
+				// FIX: a one to one action/event ratio isnt desirable
+				// actions should raise an event, but different actions should be able to raise the same event; events shouldnt know from whence they came
+				Capture: capture[id],
+				Bubble:  bubble[id],
+			}
+		}
+
+		for id, inst := range x.Instances {
+			m.Instances[id] = &M.InstanceModel{
+				Id:    inst.Id,
+				Class: inst.Class.Id,
+				Name:  inst.Name,
+				Values: func() M.Values {
+					ret := make(M.Values)
+					for k, v := range inst.Values {
+						ret[k] = v
+					}
+					return ret
+				}(),
+			}
+		}
+		for k, v := range x.NounNames {
+			names := make(M.RankedStringIds, len(v))
+			for i, n := range v {
+				names[i] = n
+			}
+			m.Aliases[k] = names
+		}
+		for _, a := range x.ParserActions {
+			m.ParserActions = append(m.ParserActions, M.ParserAction{
+				a.Action,
+				a.Commands,
+			})
+		}
+		for id, rel := range x.Relations {
+			m.Relations[id] = &M.RelationModel{
+				Id:     rel.Id,
+				Name:   rel.Name,
+				Source: M.HalfRelation{rel.Source.Class, rel.Source.Property},
+				Dest:   M.HalfRelation{rel.Dest.Class, rel.Source.Property},
+				Style:  M.RelationStyle(rel.Style),
+			}
+		}
+		for k, v := range x.SingleToPlural {
+			m.SingleToPlural[k] = v
+		}
+		ret = m.Model
 	}
 	return
 }
+
+func propertyBase(prop X.IProperty) (ret M.PropertyModel) {
+	ret.Id = prop.GetId()
+	ret.Type = propertyType(prop)
+	ret.Name = prop.GetName()
+	ret.IsMany = propertyIsMany(prop)
+	return ret
+}
+
+func propertyType(prop X.IProperty) (ret M.PropertyType) {
+	switch prop.(type) {
+	case X.NumProperty:
+		ret = M.NumProperty
+	case X.TextProperty:
+		ret = M.TextProperty
+	case X.EnumProperty:
+		ret = M.EnumProperty
+	case X.PointerProperty:
+		ret = M.PointerProperty
+	case X.RelativeProperty:
+		ret = M.RelativeProperty
+	default:
+		panic("unknown x-model property type")
+	}
+	return
+}
+
+func propertyIsMany(prop X.IProperty) (ret bool) {
+	switch p := prop.(type) {
+	case X.NumProperty:
+		ret = p.IsMany
+	case X.TextProperty:
+		ret = p.IsMany
+	case X.EnumProperty:
+		ret = false
+	case X.PointerProperty:
+		ret = p.IsMany
+	case X.RelativeProperty:
+		ret = p.IsMany
+	default:
+		panic("unknown x-model property type")
+	}
+	return ret
+}
+
+func parents(cls *X.ClassInfo, list []ident.Id) (ret []ident.Id) {
+	if p := cls.Parent; p == nil {
+		ret = list
+	} else {
+		ret = parents(p, append(list, p.Id))
+	}
+	return
+}
+
+func (m converter) makeEnum(src *X.EnumProperty) ident.Id {
+	eid := src.Id
+	m.Enumerations[eid] = &M.EnumModel{
+		Choices: func() []ident.Id {
+			ret := make([]ident.Id, len(src.Values))
+			for i, v := range src.Values {
+				ret[i] = v.Id
+			}
+			return ret
+		}()}
+	return eid
+}
+
+// func (m converter) constrain(clsid ident.Id, cons *X.ConstraintSet) {
+// 	cls := m.Classes[clsid]
+// 	if parent := cls.Parent(); !parent.Empty() && cons.Parent != nil {
+// 		constrain(parent, classes, cons.Parent)
+// 	}
+// 	// changes constraints, which can appear at any level of a class below
+// 	// where a property was defined, into new properties.
+// 	// it's probably better to have this
+// 	for propId, c := range cons.Map {
+// 		switch ex := c.(type) {
+// 		case *X.EnumConstraint:
+// 			cls.Properties.EnumConstraints[pid] = M.EnumConstraint{
+// 				Only: ex.Only,
+// 				Never: func() (ret []ident.Id) {
+// 					for n, _ := range ex.Never {
+// 						ret = append(ret, n)
+// 					}
+// 					return
+// 				}(),
+// 				Usual:        ex.Usual,
+// 				UsuallyLocal: ex.UsuallyLocal,
+// 			}
+// 		default:
+// 			panic("unknown constraint type")
+// 		}
+// 	}
+//}
 
 type MemoryResult struct {
 	Model *M.Model

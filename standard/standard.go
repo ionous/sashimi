@@ -64,20 +64,15 @@ func (sc *StandardCore) SetRight(status string) {
 type ParentLookup struct{}
 
 var objects = ident.MakeId("objects")
-var containment = []ident.Id{
-	ident.MakeId("wearer"),
-	ident.MakeId("owner"),
-	ident.MakeId("whereabouts"),
-	ident.MakeId("support"),
-	ident.MakeId("enclosure")}
+var containment = []string{"wearer", "owner", "whereabouts", "support", "enclosure"}
 
-func (p ParentLookup) LookupParent(mdl api.Model, inst api.Instance) (ret api.Instance, rel ident.Id, okay bool) {
+func (p ParentLookup) LookupParent(mdl api.Model, inst api.Instance) (ret api.Instance, rel api.Property, okay bool) {
 	if mdl.AreCompatible(inst.GetParentClass().GetId(), objects) {
 		for _, wse := range containment {
-			if prop, ok := inst.GetProperty(wse); ok {
+			if prop, ok := inst.FindProperty(wse); ok {
 				if parent := prop.GetValue().GetObject(); !parent.Empty() {
 					if fini, ok := mdl.GetInstance(parent); ok {
-						ret, rel, okay = fini, wse, true
+						ret, rel, okay = fini, prop, true
 						break
 					}
 				}
@@ -97,17 +92,17 @@ func NewStandardGame(game R.Game) (ret StandardStart, err error) {
 			err = fmt.Errorf("couldn't find story")
 		} else if status, ok := api.FindFirstOf(game.Model, ident.MakeId("status bar instances")); !ok {
 			err = fmt.Errorf("couldn't find status bar")
-		} else if title, ok := story.GetProperty(ident.MakeId("name")); !ok {
-			err = fmt.Errorf("couldn't find title")
-		} else if author, ok := story.GetProperty(ident.MakeId("author")); !ok {
+		} else if author, ok := story.FindProperty("author"); !ok {
 			err = fmt.Errorf("couldn't find author")
-		} else if playerInput, ok := story.GetProperty(ident.MakeId("player input")); !ok {
+		} else if title, ok := story.FindProperty("name"); !ok {
+			err = fmt.Errorf("couldn't find title")
+		} else if playerInput, ok := story.FindProperty("player input"); !ok {
 			err = fmt.Errorf("couldn't find completed status")
 		} else if completed, ok := story.GetPropertyByChoice(ident.MakeId("completed")); !ok {
 			err = fmt.Errorf("couldn't find completed status")
-		} else if left, ok := status.GetProperty(ident.MakeId("left")); !ok {
+		} else if left, ok := status.FindProperty("left"); !ok {
 			err = fmt.Errorf("couldn't find left status")
-		} else if right, ok := status.GetProperty(ident.MakeId("right")); !ok {
+		} else if right, ok := status.FindProperty("right"); !ok {
 			err = fmt.Errorf("couldn't find right status")
 		} else {
 			core := StandardCore{game, parser,
@@ -132,7 +127,7 @@ func NewStandardGame(game R.Game) (ret StandardStart, err error) {
 func (sg *StandardStart) Start(immediate bool) (ret *StandardGame, err error) {
 	ret = &StandardGame{StandardCore: sg.StandardCore}
 	if immediate {
-		ret.endTurn("commencing")
+		ret.endTurn("commence")
 	}
 	return ret, err
 }
@@ -157,7 +152,7 @@ func (sg *StandardGame) Input(s string) (err error) {
 		} else {
 			if in == "start" && !sg.started {
 				sg.started = true
-				sg.endTurn("commencing")
+				sg.endTurn("commence")
 			} else {
 				if in == "commence" {
 					in = sg.lastInput
@@ -166,7 +161,7 @@ func (sg *StandardGame) Input(s string) (err error) {
 				}
 				if e := sg.playerInput.SetText(in); e != nil {
 					err = e
-				} else if act, e := sg.Game.QueueEvent("parsing player input", sg.story); e != nil {
+				} else if act, e := sg.Game.QueueAction("parse player input", sg.story); e != nil {
 					err = e
 				} else if e := sg.Game.ProcessEvents(); e != nil {
 					err = e
@@ -189,13 +184,14 @@ func (sg *StandardGame) Input(s string) (err error) {
 // EndTurn finishes the turn for the player.
 // ( This is normally called automatically by Input )
 func (sg *StandardGame) RunTurn(act api.Action, objs []api.Instance) {
-	sg.Game.QueueAction(act, objs)
-	sg.endTurn("ending the turn")
+	sg.Game.QueueActionInstances(act, objs)
+	sg.endTurn("end turn")
 }
 
-func (sg *StandardGame) endTurn(event string) {
-	sg.Game.QueueEvent(event, sg.story)
-	if e := sg.Game.ProcessEvents(); e != nil {
+func (sg *StandardGame) endTurn(action string) {
+	if _, e := sg.Game.QueueAction(action, sg.story); e != nil {
+		log.Println(e)
+	} else if e := sg.Game.ProcessEvents(); e != nil {
 		log.Println(e)
 	} else {
 		if sg.complete.GetState() == ident.MakeId("completed") {

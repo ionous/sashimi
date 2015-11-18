@@ -3,9 +3,9 @@ package internal
 import (
 	"fmt"
 	"github.com/ionous/sashimi/compiler/call"
+	M "github.com/ionous/sashimi/compiler/xmodel"
 	E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game"
-	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
@@ -332,7 +332,7 @@ func (ctx *Compiler) Compile() (*M.Model, error) {
 		if class, ok := ctx.Classes.findByPluralName(fields.Class); !ok {
 			e := ClassNotFound(fields.Class)
 			err = errutil.Append(err, SourceError(enum.Source(), e))
-		} else if _, e := class.addEnum(fields.Name, fields.Choices, fields.Expects); e != nil {
+		} else if _, e := class.addEnum(fields.Name, fields.Choices); e != nil {
 			err = errutil.Append(err, SourceError(enum.Source(), e))
 		}
 	}
@@ -393,6 +393,9 @@ func (ctx *Compiler) Compile() (*M.Model, error) {
 			}
 		}
 	}
+	if err != nil {
+		return nil, err
+	}
 
 	// make instances
 	ctx.Log.Println("making instances")
@@ -447,16 +450,19 @@ func (ctx *Compiler) Compile() (*M.Model, error) {
 
 	// FIX FIX FIX: set a generic "name" property to each instance based on "printed name"
 	// really, this should combine with "long name" etc.
-	directName, printedName := M.MakeStringId("name"), M.MakeStringId("printed name")
+	//
 	kinds, _ := classes.FindClass("kinds")
+	directName := ident.Join(kinds.Id, ident.MakeId("name"))
 	kinds.Properties[directName] = M.TextProperty{
 		Id:   directName,
 		Name: "name",
 	}
 	for _, i := range instances {
 		name := i.Name
-		if printed, ok := i.Values[printedName]; ok {
-			name = printed.(string)
+		if p, ok := i.Class.FindProperty("printed name"); ok {
+			if printed, ok := i.Values[p.GetId()]; ok {
+				name = printed.(string)
+			}
 		}
 		i.Values[directName] = name
 	}

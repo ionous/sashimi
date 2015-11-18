@@ -2,21 +2,21 @@ package internal
 
 import (
 	"fmt"
-	M "github.com/ionous/sashimi/model"
+	M "github.com/ionous/sashimi/compiler/xmodel"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 )
 
 type PendingClass struct {
-	classes  *ClassFactory
-	parent   *PendingClass
-	id       ident.Id
-	name     string
-	singular string
-	names    NameScope
-	props    PropertyBuilders
-	rules    PendingRules
+	classes      *ClassFactory
+	parent       *PendingClass
+	id           ident.Id
+	name         string
+	singular     string
+	enums, names NameScope
+	props        PropertyBuilders
+	rules        PendingRules
 }
 
 //
@@ -51,14 +51,15 @@ func (cls *PendingClass) addProperty(src S.Code, fields S.PropertyFields,
 	if id, e := cls.names.addRef(name, kind, src); e != nil {
 		err = e
 	} else {
+		id := ident.Join(cls.id, id)
 		switch kind {
 		case "text":
-			ret, err = cls.props.make(id, nil,
+			ret, err = cls.props.make(id, name, nil,
 				func() (IBuildProperty, error) {
 					return NewTextBuilder(id, name, isMany)
 				})
 		case "num":
-			ret, err = cls.props.make(id, nil,
+			ret, err = cls.props.make(id, name, nil,
 				func() (IBuildProperty, error) {
 					return NewNumBuilder(id, name, isMany)
 				})
@@ -66,7 +67,7 @@ func (cls *PendingClass) addProperty(src S.Code, fields S.PropertyFields,
 			if other, ok := cls.classes.findBySingularName(kind); !ok {
 				err = ClassNotFound(kind)
 			} else {
-				ret, err = cls.props.make(id,
+				ret, err = cls.props.make(id, name,
 					func(old IBuildProperty) (err error) {
 						ptr, existed := old.(PointerBuilder)
 						if !existed || ptr.Class != other.id {
@@ -88,26 +89,28 @@ func (cls *PendingClass) addProperty(src S.Code, fields S.PropertyFields,
 //
 func (cls *PendingClass) addEnum(name string,
 	choices []string,
-	expects []S.PropertyExpectation,
+
 ) (ret IBuildProperty,
 	err error,
 ) {
-	if id, e := cls.names.addName(name, "enum"); e != nil {
+	id := ident.Join(cls.id, ident.MakeId(name))
+	if _, e := cls.enums.addName(id.String(), cls.id.String()); e != nil {
 		err = e
 	} else {
-		ret, err = cls.props.make(id,
+		ret, err = cls.props.make(id, name,
 			func(_ IBuildProperty) error {
 				return EnumMultiplySpecified(cls.id, id)
 			},
 			func() (prop IBuildProperty, err error) {
 				return NewEnumBuilder(id, name, choices)
 			})
-		if err == nil {
-			for _, expect := range expects {
-				rule := PropertyRule{id, expect}
-				cls.rules = append(cls.rules, rule)
-			}
-		}
+		// FIX: disabled constraints:
+		// if err == nil {
+		// 	for _, expect := range expects {
+		// 		rule := PropertyRule{id, expect}
+		// 		cls.rules = append(cls.rules, rule)
+		// 	}
+		// }
 	}
 	return ret, err
 }
@@ -130,6 +133,7 @@ func (cls *PendingClass) addRelative(fields S.RelativeProperty, src S.Code,
 			if relId, e := relatives.addName(fields.Relation, "relation"); e != nil {
 				err = SourceError(src, e)
 			} else {
+				id := ident.Join(cls.id, id)
 				// create the relative property pointing to the generated relation data
 				rel := M.RelativeProperty{
 					Id:       id,       // property id in cls
@@ -139,7 +143,7 @@ func (cls *PendingClass) addRelative(fields S.RelativeProperty, src S.Code,
 					IsRev:    fields.Hint.IsReverse(),
 					IsMany:   isMany}
 				// .......
-				ret, err = cls.props.make(id,
+				ret, err = cls.props.make(id, name,
 					func(old IBuildProperty) (err error) {
 						if old, existed := old.(RelativeBuilder); existed {
 							if old.fields != rel {

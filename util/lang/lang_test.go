@@ -23,4 +23,6 @@ func TestStripArticle(t *testing.T) {
 		require.Equal(t, p.text, b, fmt.Sprintf("text: '%s'", p.src))
 		require.Equal(t, p.article, a, fmt.Sprintf("text: '%s'", p.src))
 	}
+
+	require.EqualValues(t, "article", StripArticle("the article"))
 }

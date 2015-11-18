@@ -12,7 +12,8 @@ import (
 type EventFrame func(E.ITarget, *E.Message) func()
 
 type LookupParents interface {
-	LookupParent(Model, Instance) (Instance, ident.Id, bool)
+	// parent instance, property used to find the parent, true if existed
+	LookupParent(Model, Instance) (Instance, Property, bool)
 }
 
 type LookupCallbacks interface {

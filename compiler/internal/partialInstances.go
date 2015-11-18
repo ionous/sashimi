@@ -2,7 +2,7 @@ package internal
 
 import (
 	"fmt"
-	M "github.com/ionous/sashimi/model"
+	M "github.com/ionous/sashimi/compiler/xmodel"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
@@ -67,7 +67,7 @@ func (part *PartialInstances) _addChoices(choices []S.ChoiceStatement) (err erro
 		} else if prop, index, ok := inst.class.PropertyByChoice(fields.Choice); !ok {
 			e := fmt.Errorf("no such choice: '%v'", choice)
 			err = errutil.Append(err, SourceError(choice.Source(), e))
-		} else if e := inst.setKeyValue(prop.GetName(), index); e != nil {
+		} else if e := inst.setKeyValue(prop.GetId(), index); e != nil {
 			err = errutil.Append(err, SourceError(choice.Source(), e))
 		}
 
@@ -86,7 +86,7 @@ func (part *PartialInstances) _addKeyValues(kvs []S.KeyValueStatement) (err erro
 		if inst, ok := part.partials[id]; !ok {
 			e := M.InstanceNotFound(fields.Owner)
 			err = errutil.Append(err, SourceError(kv.Source(), e))
-		} else if e := inst.setKeyValue(fields.Key, fields.Value); e != nil {
+		} else if e := inst.setNameValue(fields.Key, fields.Value); e != nil {
 			err = errutil.Append(err, SourceError(kv.Source(), e))
 		}
 	}

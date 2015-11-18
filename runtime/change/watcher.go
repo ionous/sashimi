@@ -33,10 +33,11 @@ func (iw iwatch) PropertyNum(i int) api.Property {
 	return pwatch{iw, p}
 }
 func (iw iwatch) GetProperty(id ident.Id) (ret api.Property, okay bool) {
-	if p, ok := iw.Instance.GetProperty(id); ok {
-		ret = pwatch{iw, p}
-		okay = true
-	}
+	panic("ok")
+	// if p, ok := iw.Instance.GetProperty(id); ok {
+	// 	ret = pwatch{iw, p}
+	// 	okay = true
+	// }
 	return
 }
 func (iw iwatch) GetPropertyByChoice(choice ident.Id) (ret api.Property, okay bool) {

@@ -36,12 +36,12 @@ func ApiTest(t *testing.T, mdl api.Model, instId ident.Id) {
 	}
 	//
 	require.True(t, inst.NumProperty() > 0, "need properties to test")
-	value := inst.PropertyNum(0)
-	if cls := inst.GetParentClass(); assert.NotNil(t, cls) {
-		if plookup, ok := cls.GetProperty(value.GetId()); assert.True(t, ok, "find instance property in class") {
-			require.True(t, plookup.GetId() == value.GetId())
-		}
-	}
+	// value := inst.PropertyNum(0)
+	// if cls := inst.GetParentClass(); assert.NotNil(t, cls) {
+	// 	if plookup, ok := cls.GetProperty(value.GetId()); assert.True(t, ok, "find instance property in class") {
+	// 		require.True(t, plookup.GetId() == value.GetId())
+	// 	}
+	// }
 
 	type TestValue struct {
 		MethodMaker
@@ -51,7 +51,7 @@ func ApiTest(t *testing.T, mdl api.Model, instId ident.Id) {
 	methods := []TestValue{
 		{MethodMaker("Num"), float32(0), float32(32)},
 		{MethodMaker("Text"), "", "text"},
-		{MethodMaker("State"), ident.Id("No"), ident.Id("Yes")},
+		{MethodMaker("State"), ident.MakeId("no"), ident.MakeId("yes")},
 		{MethodMaker("Object"), ident.Empty(), inst.GetId()},
 	}
 
@@ -60,7 +60,8 @@ func ApiTest(t *testing.T, mdl api.Model, instId ident.Id) {
 			// test getting the vaule of the appropriate type succeeds
 			require.NotPanics(t, func() {
 				prev := test.GetFrom(value)
-				require.EqualValues(t, prev, test.original, fmt.Sprintf("original value %s, %v", test, prev))
+				require.EqualValues(t, test.original, prev,
+					fmt.Sprintf("original value from %s", test))
 			}, fmt.Sprintf("get default value: %s", test.String()))
 
 			// custom testing for instances and classes
@@ -86,10 +87,8 @@ func ApiTest(t *testing.T, mdl api.Model, instId ident.Id) {
 		// test class values;
 		// test instance values
 		for _, test := range methods {
-			// for every property type: num, text, state
-			pid := ident.MakeId(test.String())
 			// get the property
-			if p, ok := src.GetProperty(pid); assert.True(t, ok, test.String()) {
+			if p, ok := src.FindProperty(test.String()); assert.True(t, ok, test.String()) {
 				// request the value from the property
 				var v api.Value
 				require.NotPanics(t, func() { v = p.GetValue() })
@@ -105,6 +104,7 @@ func ApiTest(t *testing.T, mdl api.Model, instId ident.Id) {
 		require.NotPanics(t, func() {
 			test.SetTo(value, test.value)
 		}, fmt.Sprintf("instance set value: %s", test))
+
 		require.NotPanics(t, func() {
 			next := test.GetFrom(value)
 			require.EqualValues(t, next, test.value, fmt.Sprintf("%v:%T should be %v:%T", next, next, test.value, test.value))
@@ -131,9 +131,9 @@ func ApiTest(t *testing.T, mdl api.Model, instId ident.Id) {
 				continue
 			}
 			// for every property type: num, text, state
-			pid := ident.MakeId(test.String() + "s")
+			name := test.String() + "s"
 			// get the property
-			if p, ok := src.GetProperty(pid); assert.True(t, ok, fmt.Sprintf("trying to get property %s.%s", src, pid)) {
+			if p, ok := src.FindProperty(name); assert.True(t, ok, fmt.Sprintf("trying to get property %s.%s", src, name)) {
 				// request the value from the property
 				var vs api.Values
 				require.Panics(t, func() { p.GetValue() })
@@ -141,7 +141,7 @@ func ApiTest(t *testing.T, mdl api.Model, instId ident.Id) {
 				var cnt int
 				require.NotPanics(t, func() {
 					cnt = vs.NumValue()
-				}, fmt.Sprintf("trying to num value %s.%s", src, pid))
+				}, fmt.Sprintf("trying to num value %s.%s", src, name))
 				require.Equal(t, 0, cnt)
 
 				eval(test, vs)

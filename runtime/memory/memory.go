@@ -11,78 +11,57 @@ import (
 
 type MemoryModel struct {
 	*M.Model
-	_actions        []*M.ActionInfo
-	_events         []*M.EventInfo
-	_classes        []*M.ClassInfo
-	_instances      []*M.InstanceInfo
-	_relations      []*M.Relation
-	_properties     map[ident.Id]PropertyList
-	objectValues    ObjectValue
-	tables          table.Tables
-	actions         DefaultActions
-	capture, bubble EventCallbacks
+	// objects ordered by index for linear travseral
+	_actions   []*M.ActionModel
+	_events    []*M.EventModel
+	_classes   []*M.ClassModel
+	_instances []*M.InstanceModel
+	_relations []*M.RelationModel
+	// flat cache of properties for each class
+	_properties  PropertyCache
+	objectValues ObjectValue
 }
 
 // actionId -> callbackId
 type DefaultActions map[ident.Id][]ident.Id
 
 // indexed by eventId
-type EventCallbacks map[ident.Id][]M.ListenerCallback
+type EventCallbacks map[ident.Id][]M.ListenerModel
 
-// array of properties ( for flat cache )
-type PropertyList []M.IProperty
+// array of properties ( for flat cache ) ordered for linear traversal.
+// children appear first; redudent properties are *not* removed.
+type PropertyRef *M.PropertyModel
+type PropertyList []PropertyRef
+type PropertyCache map[ident.Id]PropertyList
+
+// single/plural properties need some fixing
+var singular = ident.MakeId("singular")
+var plural = ident.MakeId("plural")
+
+func merge(base, more PropertyList) (ret PropertyList) {
+	ret = base
+	for i, _ := range more {
+		prop := more[i]
+		ret = append(ret, prop)
+	}
+	return ret
+}
 
 func NewMemoryModel(m *M.Model, v ObjectValue, t table.Tables) *MemoryModel {
-	actions := make(DefaultActions)
-
-	for _, handler := range m.ActionHandlers {
-		act, callback, useCapture := handler.Action, handler.Callback, handler.UseCapture()
-		arr := actions[act]
-		// FIX: for now treating target as bubble,
-		// really the compiler should hand off a sorted flat list based on three separate groups
-		// target growing in the same direction as after, but distinctly in the middle of things.
-		if !useCapture {
-			arr = append(arr, callback)
-		} else {
-			// prepend:
-			arr = append([]ident.Id{callback}, arr...)
-		}
-		actions[act] = arr
-	}
-
-	capture, bubble := make(EventCallbacks), make(EventCallbacks)
-	for _, l := range m.EventListeners {
-		e, cb := l.Event, l.ListenerCallback
-		var callbacks EventCallbacks
-		if cb.UseCapture() {
-			callbacks = capture
-		} else {
-			callbacks = bubble
-		}
-		// append
-		var arr = callbacks[e]
-		arr = append(arr, cb)
-		callbacks[e] = arr
-	}
-
-	flatCache := make(map[ident.Id]PropertyList)
 	return &MemoryModel{
 		Model:        m,
 		objectValues: v,
-		tables:       t,
-		_properties:  flatCache,
-		actions:      actions,
-		capture:      capture,
-		bubble:       bubble,
+		_properties:  make(PropertyCache),
 	}
 }
 
 func (mdl *MemoryModel) NumAction() int {
 	return len(mdl.Actions)
 }
+
 func (mdl *MemoryModel) ActionNum(i int) api.Action {
 	if mdl._actions == nil {
-		mdl._actions = make([]*M.ActionInfo, 0, len(mdl.Actions))
+		mdl._actions = make([]*M.ActionModel, 0, len(mdl.Actions))
 		for _, v := range mdl.Actions {
 			mdl._actions = append(mdl._actions, v)
 		}
@@ -105,7 +84,7 @@ func (mdl *MemoryModel) NumEvent() int {
 
 func (mdl *MemoryModel) EventNum(i int) api.Event {
 	if mdl._events == nil {
-		mdl._events = make([]*M.EventInfo, 0, len(mdl.Events))
+		mdl._events = make([]*M.EventModel, 0, len(mdl.Events))
 		for _, v := range mdl.Events {
 			mdl._events = append(mdl._events, v)
 		}
@@ -125,9 +104,10 @@ func (mdl *MemoryModel) GetEvent(id ident.Id) (ret api.Event, okay bool) {
 func (mdl MemoryModel) NumClass() int {
 	return len(mdl.Classes)
 }
+
 func (mdl *MemoryModel) ClassNum(i int) api.Class {
 	if mdl._classes == nil {
-		mdl._classes = make([]*M.ClassInfo, 0, len(mdl.Classes))
+		mdl._classes = make([]*M.ClassModel, 0, len(mdl.Classes))
 		for _, v := range mdl.Classes {
 			mdl._classes = append(mdl._classes, v)
 		}
@@ -150,7 +130,7 @@ func (mdl MemoryModel) NumInstance() int {
 
 func (mdl *MemoryModel) InstanceNum(i int) api.Instance {
 	if mdl._instances == nil {
-		mdl._instances = make([]*M.InstanceInfo, 0, len(mdl.Instances))
+		mdl._instances = make([]*M.InstanceModel, 0, len(mdl.Instances))
 		for _, v := range mdl.Instances {
 			mdl._instances = append(mdl._instances, v)
 		}
@@ -173,7 +153,7 @@ func (mdl MemoryModel) NumRelation() int {
 
 func (mdl *MemoryModel) RelationNum(i int) api.Relation {
 	if mdl._relations == nil {
-		mdl._relations = make([]*M.Relation, 0, len(mdl.Relations))
+		mdl._relations = make([]*M.RelationModel, 0, len(mdl.Relations))
 		for _, v := range mdl.Relations {
 			mdl._relations = append(mdl._relations, v)
 		}
@@ -211,19 +191,27 @@ func (mdl MemoryModel) Pluralize(single string) (plural string) {
 
 func (mdl MemoryModel) AreCompatible(child, parent ident.Id) (okay bool) {
 	if c, ok := mdl.Classes[child]; ok {
-		okay = c.CompatibleWith(parent)
+		if c.Id == parent {
+			okay = true
+		} else {
+			for _, pid := range c.Parents {
+				if pid == parent {
+					okay = true
+					break
+				}
+			}
+		}
 	}
 	return
 }
 
 // hrmmm...
 func (mdl MemoryModel) MatchNounName(n string, f func(ident.Id) bool) (int, bool) {
-	return mdl.NounNames.Try(n, f)
+	return mdl.Aliases.Try(n, f)
 }
 
-func (mdl *MemoryModel) makeInstance(n *M.InstanceInfo) api.Instance {
-	cls := classInfo{mdl, n.Class}
-	return instInfo{mdl, n, cls}
+func (mdl *MemoryModel) makeInstance(n *M.InstanceModel) api.Instance {
+	return instInfo{mdl, n}
 }
 
 func (mdl MemoryModel) getObjects(src, rel ident.Id, isRev bool) []ident.Id {
@@ -231,22 +219,29 @@ func (mdl MemoryModel) getObjects(src, rel ident.Id, isRev bool) []ident.Id {
 	return table.List(src, isRev)
 }
 
-func (mdl *MemoryModel) getPropertyList(cls *M.ClassInfo) (ret PropertyList) {
+func (mdl *MemoryModel) getPropertyList(cls *M.ClassModel) (ret PropertyList) {
 	if props, ok := mdl._properties[cls.Id]; ok {
 		ret = props
 	} else {
-		props := cls.AllProperties()
-		ret = make([]M.IProperty, 0, len(props))
-		for _, v := range props {
-			ret = append(ret, v)
+		ret = merge(ret, mdl.makePropertyList(cls))
+		for _, pid := range cls.Parents {
+			parent := mdl.Classes[pid]
+			ret = merge(ret, mdl.makePropertyList(parent))
 		}
 		mdl._properties[cls.Id] = ret
 	}
 	return
 }
 
+func (mdl *MemoryModel) makePropertyList(cls *M.ClassModel) (ret PropertyList) {
+	for i, _ := range cls.Properties {
+		ret = append(ret, &cls.Properties[i])
+	}
+	return
+}
+
 func (mdl MemoryModel) getTable(rel ident.Id) (ret *table.Table) {
-	if table, ok := mdl.tables[rel]; !ok {
+	if table, ok := mdl.Tables[rel]; !ok {
 		panic(fmt.Sprintf("internal error, no table found for relation %s", rel))
 	} else {
 		ret = table
@@ -254,17 +249,47 @@ func (mdl MemoryModel) getTable(rel ident.Id) (ret *table.Table) {
 	return
 }
 
+func (mdl MemoryModel) getZero(prop *M.PropertyModel) (ret interface{}) {
+	switch prop.Type {
+	case M.NumProperty:
+		if !prop.IsMany {
+			ret = float32(0)
+		} else {
+			ret = []interface{}{}
+		}
+	case M.TextProperty:
+		if !prop.IsMany {
+			ret = ""
+		} else {
+			ret = []interface{}{}
+		}
+	case M.EnumProperty:
+		//enum := mdl.Enumerations[prop.Id]
+		ret = 1 //enum.ChoiceToIndex(enum.Best())
+	case M.PointerProperty:
+		if !prop.IsMany {
+			ret = ident.Empty()
+		} else {
+			ret = []interface{}{}
+		}
+
+	default:
+		panic(fmt.Errorf("GetZero not supported for property %s type %v", prop.Id, prop.Type))
+	}
+	return ret
+}
+
 // returns error if not compatible.
-func (mdl MemoryModel) canAppend(dst, src ident.Id, rel M.RelativeProperty) (err error) {
+func (mdl MemoryModel) canAppend(dst, src ident.Id, rel *M.PropertyModel) (err error) {
 	if other, ok := mdl.Instances[dst]; !ok {
 		err = fmt.Errorf("no such instance '%s'", dst)
-	} else if !mdl.AreCompatible(other.Class.Id, rel.Relates) {
+	} else if !mdl.AreCompatible(other.Class, rel.Relates) {
 		err = fmt.Errorf("%s not compatible with %v in relation %v", other, rel.Relates, rel.Relation)
 	}
 	return err
 }
 
-func (mdl MemoryModel) appendObject(dst, src ident.Id, rel M.RelativeProperty) {
+func (mdl MemoryModel) appendObject(dst, src ident.Id, rel *M.PropertyModel) {
 	if rel.IsRev {
 		dst, src = src, dst
 	}

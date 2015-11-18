@@ -2,7 +2,7 @@ package internal
 
 import (
 	"fmt"
-	M "github.com/ionous/sashimi/model"
+	M "github.com/ionous/sashimi/compiler/xmodel"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/ionous/sashimi/util/lang"
@@ -13,14 +13,15 @@ type SingleToPlural map[string]ident.Id        // it kind of makes senses its si
 
 type ClassFactory struct {
 	allNames       NameSource
+	enumNames      NameScope
 	relatives      *RelativeFactory
 	pending        PendingClasses
 	singleToPlural SingleToPlural
 }
 
 //
-func NewClassFactory(names NameSource, rel *RelativeFactory) *ClassFactory {
-	res := &ClassFactory{names, rel, make(PendingClasses), make(SingleToPlural)}
+func NewClassFactory(names NameSource, enums NameScope, rel *RelativeFactory) *ClassFactory {
+	res := &ClassFactory{names, enums, rel, make(PendingClasses), make(SingleToPlural)}
 	res.addClassRef(nil, "kinds", "kind")
 	res.addClassRef(nil, "data", "data")
 	return res
@@ -104,7 +105,7 @@ func (fac *ClassFactory) addClassRef(parent *PendingClass, plural, single string
 		}
 		class = &PendingClass{
 			fac, parent, id, plural, singular,
-			fac.allNames.NewScope(plural),
+			fac.enumNames, fac.allNames.NewScope(plural),
 			NewProperties(parentProps),
 			make(PendingRules, 0),
 		}

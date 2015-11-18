@@ -1,7 +1,6 @@
 package memory
 
 import (
-	//"fmt"
 	"fmt"
 	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/model/table"
@@ -12,43 +11,47 @@ import (
 	"testing"
 )
 
+// go test -run TestMemory
 func TestMemory(t *testing.T) {
 	v := make(ObjectValueMap)
 	m := &M.Model{
-		Classes:   make(M.ClassMap),
-		Instances: make(M.InstanceMap),
+		Classes:      make(M.Classes),
+		Instances:    make(M.Instances),
+		Enumerations: make(M.Enumerations),
 	}
 	numProp, numsProp := ident.MakeId("Num"), ident.MakeId("Nums")
 	textProp, textsProp := ident.MakeId("Text"), ident.MakeId("Texts")
 	stateProp := ident.MakeId("State")
 	objectProp, objectsProp := ident.MakeId("Object"), ident.MakeId("Objects")
-	enum := M.NewEnumeration([]string{"no", "yes"})
+	m.Enumerations[stateProp] = &M.EnumModel{[]ident.Id{ident.MakeId("No"), ident.MakeId("Yes")}}
 
-	makeClass := func(single, plural string) *M.ClassInfo {
+	makeClass := func(single, plural string) *M.ClassModel {
 		clsId := ident.MakeId(plural)
-		c := &M.ClassInfo{
+		//
+		c := &M.ClassModel{
 			Id:       clsId,
 			Plural:   plural,
 			Singular: single,
-			Properties: M.PropertySet{
-				"Num":    M.NumProperty{Id: numProp},
-				"Text":   M.TextProperty{Id: textProp},
-				"State":  M.EnumProperty{Id: stateProp, Enumeration: enum},
-				"Object": M.PointerProperty{Id: objectProp, Class: clsId},
+			Properties: []M.PropertyModel{
+				M.PropertyModel{Id: numProp, Name: "Num", Type: M.NumProperty},
+				M.PropertyModel{Id: textProp, Name: "Text", Type: M.TextProperty},
+				M.PropertyModel{Id: objectProp, Name: "Object", Type: M.PointerProperty, Relates: clsId},
 				//
-				"Nums":    M.NumProperty{Id: numsProp, IsMany: true},
-				"Texts":   M.TextProperty{Id: textsProp, IsMany: true},
-				"Objects": M.PointerProperty{Id: objectsProp, Class: clsId, IsMany: true},
+				M.PropertyModel{Id: numsProp, Name: "Nums", Type: M.NumProperty, IsMany: true},
+				M.PropertyModel{Id: textsProp, Name: "Texts", Type: M.TextProperty, IsMany: true},
+				M.PropertyModel{Id: objectsProp, Name: "Objects", Type: M.PointerProperty, Relates: clsId, IsMany: true},
+				//
+				M.PropertyModel{Id: stateProp, Name: "State", Type: M.EnumProperty},
 			},
 			// Constraints,
 		}
 		m.Classes[clsId] = c
 		return c
 	}
-	makeInstance := func(name string, c *M.ClassInfo) *M.InstanceInfo {
-		inst := &M.InstanceInfo{
+	makeInstance := func(name string, c *M.ClassModel) *M.InstanceModel {
+		inst := &M.InstanceModel{
 			Id:    ident.MakeId(name),
-			Class: c,
+			Class: c.Id,
 			Name:  name,
 			// Values
 		}
@@ -57,14 +60,16 @@ func TestMemory(t *testing.T) {
 	}
 	i := makeInstance("i", makeClass("test class", "test classes"))
 	makeInstance("x", makeClass("test other", "test others"))
+	//m.PrintModel(t.Log)
+	//t.Fatal("")
 	mem := NewMemoryModel(m, v, make(table.Tables))
 	// test plural
-	if cls, ok := mem.GetClass("TestClasses"); assert.True(t, ok, "get test class") {
-		if p, ok := cls.GetProperty(ident.MakeId("plural")); assert.True(t, ok) {
-			require.EqualValues(t, i.Class.Plural, p.GetValue().GetText())
+	if cls, ok := mem.GetClass(ident.MakeId("TestClasses")); assert.True(t, ok, "get test class") {
+		if p, ok := cls.FindProperty("plural"); assert.True(t, ok) {
+			require.EqualValues(t, "test classes", p.GetValue().GetText())
 		}
-		if p, ok := cls.GetProperty(ident.MakeId("singular")); assert.True(t, ok) {
-			require.EqualValues(t, i.Class.Singular, p.GetValue().GetText())
+		if p, ok := cls.FindProperty("singular"); assert.True(t, ok) {
+			require.EqualValues(t, "test class", p.GetValue().GetText())
 		}
 	}
 	// test the api
@@ -80,9 +85,10 @@ func TestMemory(t *testing.T) {
 		require.EqualValues(t, "text", res)
 	}
 	if res, ok := v.GetValue(i.Id, stateProp); assert.True(t, ok) {
-		if c, e := enum.IndexToChoice(res.(int)); assert.NoError(t, e) {
-			require.EqualValues(t, ident.Id("Yes"), c)
-		}
+		// 1= No, 2= Yes.
+		// Why *does** GetValue return an integer anyway?
+		require.EqualValues(t, 2, res)
+
 	}
 	if res, ok := v.GetValue(i.Id, objectProp); assert.True(t, ok) {
 		require.EqualValues(t, i.Id, res)

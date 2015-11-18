@@ -88,7 +88,7 @@ func TestMoveGoing(t *testing.T) {
 
 type xMove struct {
 	cmd string
-	res ident.Id
+	res string
 }
 
 func testMoves(t *testing.T, test TestGame, moves ...xMove) (err error) {
@@ -99,8 +99,8 @@ func testMoves(t *testing.T, test TestGame, moves ...xMove) (err error) {
 			if out, e := test.RunInput(move.cmd); e != nil {
 				err = e
 				break
-			} else if res := where(test.Game, p); move.res != res {
-				err = fmt.Errorf("unexpected move result: %v %v", res, out)
+			} else if res := where(test.Game, p); res.String() != move.res {
+				err = fmt.Errorf("unexpected move result: %v(expected) != %v(actual); %v", move.res, res, out)
 				break
 			}
 		}
@@ -109,7 +109,7 @@ func testMoves(t *testing.T, test TestGame, moves ...xMove) (err error) {
 }
 
 func where(mdl api.Model, gobj api.Instance) (ret ident.Id) {
-	if prop, ok := gobj.GetProperty(ident.MakeId("whereabouts")); ok {
+	if prop, ok := gobj.FindProperty("whereabouts"); ok {
 		ret = prop.GetValue().GetObject()
 	}
 	return ret

@@ -9,7 +9,7 @@ import (
 
 type actionInfo struct {
 	mdl *MemoryModel
-	*M.ActionInfo
+	*M.ActionModel
 }
 
 func (a actionInfo) GetId() ident.Id {
@@ -17,7 +17,7 @@ func (a actionInfo) GetId() ident.Id {
 }
 
 func (a actionInfo) GetActionName() string {
-	return a.ActionName
+	return a.Name
 }
 
 func (a actionInfo) GetEvent() (ret api.Event) {
@@ -32,14 +32,11 @@ func (a actionInfo) GetEvent() (ret api.Event) {
 func (a actionInfo) GetNouns() api.Nouns {
 	ret := make(api.Nouns, len(a.NounTypes))
 	for i, c := range a.NounTypes {
-		ret[i] = c.Id
+		ret[i] = c
 	}
 	return ret
 }
 
-func (a actionInfo) GetCallbacks() (ret api.Callbacks, okay bool) {
-	if cbs, ok := a.mdl.actions[a.Id]; ok {
-		ret, okay = CallbackList{cbs}, true
-	}
-	return
+func (a actionInfo) GetCallbacks() (api.Callbacks, bool) {
+	return CallbackList{a.DefaultActions}, len(a.DefaultActions) > 0
 }

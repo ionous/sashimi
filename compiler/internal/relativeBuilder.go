@@ -2,7 +2,7 @@ package internal
 
 import (
 	"fmt"
-	M "github.com/ionous/sashimi/model"
+	M "github.com/ionous/sashimi/compiler/xmodel"
 	"github.com/ionous/sashimi/model/table"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/ident"

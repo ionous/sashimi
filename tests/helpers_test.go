@@ -45,8 +45,10 @@ func (out TestOutput) ScriptSays(lines []string) {
 }
 
 func (out TestOutput) ActorSays(whose api.Instance, lines []string) {
-	prop, _ := whose.GetProperty(ident.MakeId("name"))
-	name := prop.GetValue().GetText()
+	var name string
+	if prop, ok := whose.FindProperty("name"); ok {
+		name = prop.GetValue().GetText()
+	}
 
 	for _, l := range lines {
 		out.Println(name, ": ", l)
@@ -102,9 +104,13 @@ func (test *TestGame) RunInput(s string) (ret []string, err error) {
 			test.out.Log(fmt.Sprint("RunInput: no match: ", s, e))
 			err = e
 		} else {
-			test.Game.QueueAction(act, objs)
+			test.Game.QueueActionInstances(act, objs)
 			// the standard rules send an "ending the turn", we do not have to.
-			ret, err = test.FlushOutput()
+			if r, e := test.FlushOutput(); e != nil {
+				err = e
+			} else {
+				ret = r
+			}
 		}
 	}
 	return

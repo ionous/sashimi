@@ -2,15 +2,10 @@ package runtime
 
 import (
 	"fmt"
-	// E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game"
-	// M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/runtime/internal"
-	//"github.com/ionous/sashimi/runtime/memory"
 	"github.com/ionous/sashimi/util/ident"
-	//"log"
-	//"math/rand"
 )
 
 type Game struct {
@@ -29,26 +24,23 @@ func NullObject(name string) G.IObject {
 	return internal.NullObject(name)
 }
 
-func (g *Game) QueueAction(act api.Action, objects []api.Instance) *internal.RuntimeAction {
+func (g *Game) QueueActionInstances(act api.Action, objects []api.Instance) *internal.RuntimeAction {
 	tgt := internal.NewObjectTarget(g.game, objects[0])
-	data := internal.NewAction(g.game, act, objects)
+	data := internal.NewRuntimeAction(g.game, act, objects)
 	g.game.Queue.QueueEvent(tgt, act.GetEvent().GetId(), data)
 	return data
 }
 
-// mainly for testing; manual send of an event
-func (g *Game) QueueEvent(event string, nouns ...ident.Id,
-) (ret *internal.RuntimeAction, err error,
-) {
-	eventId := internal.MakeStringId(event)
-	if event, ok := g.GetEvent(eventId); !ok {
-		err = fmt.Errorf("couldnt find event %s", event)
-	} else if act, e := g.game.NewRuntimeAction(event.GetAction(), nouns...); e != nil {
+func (g *Game) QueueAction(action string, nouns ...ident.Id) (ret *internal.RuntimeAction, err error) {
+	actionId := internal.MakeStringId(action)
+	if act, ok := g.GetAction(actionId); !ok {
+		err = fmt.Errorf("couldnt find action %s", action)
+	} else if data, e := g.game.NewRuntimeAction(act, nouns...); e != nil {
 		err = e
 	} else {
-		tgt := internal.NewObjectTarget(g.game, act.GetTarget())
-		g.game.Queue.QueueEvent(tgt, event.GetId(), act)
-		ret = act
+		tgt := internal.NewObjectTarget(g.game, data.GetTarget())
+		g.game.Queue.QueueEvent(tgt, act.GetEvent().GetId(), data)
+		ret = data
 	}
 	return ret, err
 }

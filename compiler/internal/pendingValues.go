@@ -1,7 +1,7 @@
 package internal
 
 import (
-	M "github.com/ionous/sashimi/model"
+	M "github.com/ionous/sashimi/compiler/xmodel"
 	"github.com/ionous/sashimi/util/ident"
 	"reflect" // for type checking
 )

@@ -1,7 +1,6 @@
 package memory
 
 import (
-	"fmt"
 	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/util/ident"
@@ -9,7 +8,7 @@ import (
 
 type eventInfo struct {
 	mdl *MemoryModel
-	*M.EventInfo
+	*M.EventModel
 }
 
 func (e eventInfo) GetId() ident.Id {
@@ -17,29 +16,20 @@ func (e eventInfo) GetId() ident.Id {
 }
 
 func (e eventInfo) GetEventName() string {
-	return e.EventName
-}
-
-func (e eventInfo) GetAction() (ret api.Action) {
-	if a, ok := e.mdl.GetAction(e.ActionId); !ok {
-		panic(fmt.Sprintf("internal error, no action found for event %s", e.ActionId))
-	} else {
-		ret = a
-	}
-	return
+	return e.Name
 }
 
 func (e eventInfo) GetListeners(capture bool) (ret api.Listeners, okay bool) {
-	var callbacks EventCallbacks
+	var callbacks M.EventModelCallbacks
 	if !capture {
-		callbacks = e.mdl.bubble
+		callbacks = e.Bubble
 	} else {
-		callbacks = e.mdl.capture
+		callbacks = e.Capture
 	}
-	if cbs, ok := callbacks[e.Id]; !ok {
+	if len(callbacks) == 0 {
 		ret = api.NoListeners{}
 	} else {
-		ret = listenersInfo{e.mdl, e.EventInfo, cbs, capture}
+		ret = listenersInfo{e.mdl, e.EventModel, callbacks, capture}
 		okay = true
 	}
 	return

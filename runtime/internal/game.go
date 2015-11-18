@@ -4,26 +4,21 @@ import (
 	"fmt"
 	E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game"
-	M "github.com/ionous/sashimi/model"
-	"github.com/ionous/sashimi/model/table"
 	"github.com/ionous/sashimi/runtime/api"
-	//	"github.com/ionous/sashimi/runtime/memory"
 	"github.com/ionous/sashimi/util/ident"
 )
 
 type Game struct {
 	ModelApi api.Model
 	RuntimeCore
-	Queue  EventQueue
-	Tables table.Tables
+	Queue EventQueue
 }
 
-func NewGame(m api.Model, core RuntimeCore, tables table.Tables) *Game {
+func NewGame(core RuntimeCore, m api.Model) *Game {
 	return &Game{
 		m,
 		core,
 		EventQueue{E.NewQueue()},
-		tables,
 	}
 }
 
@@ -68,7 +63,7 @@ func (g *Game) NewRuntimeAction(action api.Action, nouns ...ident.Id,
 		for i, class := range types {
 			noun := nouns[i]
 			if gobj, ok := g.ModelApi.GetInstance(noun); !ok {
-				err = M.InstanceNotFound(noun.String())
+				err = InstanceNotFound(noun.String())
 				break
 			} else if !g.ModelApi.AreCompatible(gobj.GetParentClass().GetId(), class) {
 				err = TypeMismatch(noun.String(), class.String())
@@ -78,7 +73,7 @@ func (g *Game) NewRuntimeAction(action api.Action, nouns ...ident.Id,
 			}
 		}
 		if err == nil {
-			ret = &RuntimeAction{game: g, action: action, objs: objs}
+			ret = NewRuntimeAction(g, action, objs)
 		}
 	}
 	return ret, err

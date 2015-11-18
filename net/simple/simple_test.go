@@ -27,7 +27,7 @@ func TestSimpleStartup(t *testing.T) {
 	}
 }
 
-//
+// go test -run TestSimpleGame
 func TestSimpleGame(t *testing.T) {
 	// we need a story to play
 	AddScript(func(s *Script) {

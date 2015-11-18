@@ -56,7 +56,6 @@ func (mem QuipMemory) IsQuipDisallowed(g G.Play, quip G.IObject) (disallowed boo
 	return disallowed
 }
 
-// The("quip requirements", Table("fact", "permitted-property", "quip")...)
 func init() {
 	AddScript(func(s *Script) {
 		s.The("kinds", Called("facts"),

@@ -39,8 +39,8 @@ func (oa GameObject) FromClass(class string) (okay bool) {
 }
 
 func (oa GameObject) ParentRelation() (ret G.IObject, rel string) {
-	if p, r, ok := oa.game.LookupParent(oa.game.ModelApi, oa.gobj); ok {
-		ret, rel = NewGameObject(oa.game, p), r.String()
+	if parent, prop, ok := oa.game.LookupParent(oa.game.ModelApi, oa.gobj); ok {
+		ret, rel = NewGameObject(oa.game, parent), prop.GetName()
 	} else {
 		ret = NullObjectSource(NewPath(oa.Id()).Add("parent"), 1)
 	}
@@ -70,29 +70,28 @@ func (oa GameObject) IsNow(state string) {
 }
 
 func (oa GameObject) Get(prop string) (ret G.IValue) {
-	pid := MakeStringId(prop)
-	if p, ok := oa.gobj.GetProperty(pid); !ok {
+	if p, ok := oa.gobj.FindProperty(prop); !ok {
 		oa.log("Get(%s): no such property", prop)
+		panic(prop)
 		ret = nullValue{}
 	} else if p.GetType()&api.ArrayProperty != 0 {
 		oa.log("Get(%s): property is array", prop)
 		ret = nullValue{}
 	} else {
-		ret = gameValue{oa.game, NewPath(pid), p.GetType(), p.GetValue()}
+		ret = gameValue{oa.game, NewPath(p.GetId()), p.GetType(), p.GetValue()}
 	}
 	return
 }
 
 func (oa GameObject) List(prop string) (ret G.IList) {
-	pid := MakeStringId(prop)
-	if p, ok := oa.gobj.GetProperty(pid); !ok {
+	if p, ok := oa.gobj.FindProperty(prop); !ok {
 		oa.log("List(%s): no such property.", prop)
 		ret = nullList{}
 	} else if p.GetType()&api.ArrayProperty == 0 {
 		oa.log("List(%s): property is a value, not a list.", prop)
 		ret = nullList{}
 	} else {
-		ret = gameList{oa.game, NewPath(pid), p.GetType(), p.GetValues()}
+		ret = gameList{oa.game, NewPath(p.GetId()), p.GetType(), p.GetValues()}
 	}
 	return
 }
@@ -130,7 +129,7 @@ func (oa GameObject) Set(prop string, object G.IObject) {
 
 // ObjectList returns a list of related objects.
 func (oa GameObject) ObjectList(prop string) (ret []G.IObject) {
-	if p, ok := oa.gobj.GetProperty(MakeStringId(prop)); ok {
+	if p, ok := oa.gobj.FindProperty(prop); ok {
 		switch t := p.GetType(); t {
 		default:
 			oa.log("ObjectList(%s): invalid type(%d).", prop, t)

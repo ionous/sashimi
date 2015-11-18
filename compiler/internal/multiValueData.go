@@ -2,10 +2,11 @@ package internal
 
 import (
 	"fmt"
-	M "github.com/ionous/sashimi/model"
+	M "github.com/ionous/sashimi/compiler/xmodel"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
+	"strings"
 )
 
 type MultiValueTable struct {
@@ -22,7 +23,7 @@ type MultiValueData struct {
 	src        S.Code
 }
 
-var userNameColumn ident.Id = ident.MakeId("name")
+const userNameColumn = "name"
 
 func makeValueTable(classes *ClassFactory, class string, columns []string) (
 	ret MultiValueTable, err error,
@@ -39,11 +40,11 @@ func makeValueTable(classes *ClassFactory, class string, columns []string) (
 				dupes[name] = d + 1
 			} else {
 				dupes[name] = 1
-				id, idx := M.MakeStringId(name), idx+1
+				idx := idx + 1
 				// search for a column called "name"
-				if id == userNameColumn {
+				if strings.EqualFold(name, userNameColumn) {
 					ret.name = idx
-				} else if prop, ok := cls.props.propertyById(id); ok {
+				} else if prop, ok := cls.props.findProperty(name); ok {
 					ret.remap[idx] = prop
 				} else {
 					missing = append(missing, name)

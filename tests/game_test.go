@@ -31,7 +31,7 @@ func TestObjectSet(t *testing.T) {
 
 	test, err := NewTestGame(t, s)
 	if assert.NoError(t, err) && assert.NotNil(t, test.Model) {
-		if inst, ok := test.Model.Instances.FindInstance("test"); assert.True(t, ok) {
+		if inst, ok := test.Model.Instances[ident.MakeId("test")]; assert.True(t, ok) {
 			gobj, exists := test.Game.GetInstance(inst.Id)
 			if assert.True(t, exists, "test instance should exist") && assert.NotNil(t, gobj) {
 				obj := test.Game.NewGameObject(gobj)
@@ -82,7 +82,7 @@ func TestStartupText(t *testing.T) {
 	if test, err := NewTestGame(t, s); assert.NoError(t, err, "compile should work") {
 		if story, ok := api.FindFirstOf(test.Game, ident.MakeId("stories")); assert.True(t, ok, "should have test story") {
 			if _, ok := api.FindFirstOf(test.Game, ident.MakeId("rooms")); assert.True(t, ok, "should have room") {
-				_, err = test.Game.QueueEvent("commencing", story.GetId())
+				_, err = test.Game.QueueAction("commence", story.GetId())
 				require.NoError(t, err, "commencing")
 
 				expected := []string{

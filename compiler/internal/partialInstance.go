@@ -1,7 +1,7 @@
 package internal
 
 import (
-	M "github.com/ionous/sashimi/model"
+	M "github.com/ionous/sashimi/compiler/xmodel"
 	"github.com/ionous/sashimi/util/ident"
 )
 
@@ -20,12 +20,17 @@ type PartialInstance struct {
 	tables           TableRelations   // access to relation data
 }
 
-//
 // Helper to set instance property values
-//
-func (inst *PartialInstance) setKeyValue(name string, value interface{}) (err error) {
-	id := M.MakeStringId(name)
+func (inst *PartialInstance) setKeyValue(id ident.Id, value interface{}) (err error) {
 	if builder, ok := inst.propertyBuilders.propertyById(id); !ok {
+		err = PropertyNotFound(inst.class.Id, id.String())
+	} else {
+		err = inst.setProperty(builder, value)
+	}
+	return err
+}
+func (inst *PartialInstance) setNameValue(name string, value interface{}) (err error) {
+	if builder, ok := inst.propertyBuilders.findProperty(name); !ok {
 		err = PropertyNotFound(inst.class.Id, name)
 	} else {
 		err = inst.setProperty(builder, value)

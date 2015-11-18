@@ -2,7 +2,7 @@ package internal
 
 import (
 	"fmt"
-	M "github.com/ionous/sashimi/model"
+	M "github.com/ionous/sashimi/compiler/xmodel"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
 )
@@ -85,38 +85,38 @@ func (cr ClassResults) _makeClass(pending *PendingClass,
 
 		for _, rule := range pending.rules {
 			// find prop for the rule
-			prop, propFound := props[rule.fieldName]
+			prop, propFound := props[rule.propId]
 			if !propFound && parent != nil {
-				prop, propFound = parent.PropertyById(rule.fieldName)
+				prop, propFound = parent.PropertyById(rule.propId)
 			}
 
 			// apply rule to property
 			switch prop := prop.(type) {
 			case nil:
-				e := fmt.Errorf("rule specified for unknown field %s", rule.fieldName)
+				e := fmt.Errorf("rule specified for unknown field %s", rule.propId)
 				err = errutil.Append(err, e)
 
 			default:
-				e := fmt.Errorf("rule specified for non-enum field %s", rule.fieldName)
+				e := fmt.Errorf("rule specified for non-enum field %s", rule.propId)
 				err = errutil.Append(err, e)
 
 			case M.EnumProperty:
 				// find a constraint for the rule
 				var cons M.IConstrain
 				found := false
-				if c, ok := constraints[rule.fieldName]; ok {
+				if c, ok := constraints[prop.GetId()]; ok {
 					cons = c
 					found = true
 				} else if parent != nil {
-					if p, ok := parent.Constraints.ConstraintById(rule.fieldName); ok {
+					if p, ok := parent.Constraints.ConstraintById(prop.GetId()); ok {
 						cons = p.Copy()
-						constraints[rule.fieldName] = cons
+						constraints[prop.GetId()] = cons
 						found = true
 					}
 				}
 				if !found {
 					cons = M.NewConstraint(prop.Enumeration)
-					constraints[rule.fieldName] = cons
+					constraints[prop.GetId()] = cons
 				}
 				// add the new rule
 				switch rule.RuleType() {

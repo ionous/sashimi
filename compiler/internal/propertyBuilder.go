@@ -1,8 +1,9 @@
 package internal
 
 import (
-	M "github.com/ionous/sashimi/model"
+	M "github.com/ionous/sashimi/compiler/xmodel"
 	"github.com/ionous/sashimi/util/ident"
+	"strings"
 )
 
 //
@@ -33,10 +34,11 @@ type PropertyContext struct {
 type PropertyBuilders struct {
 	parent *PropertyBuilders
 	props  map[ident.Id]IBuildProperty
+	names  map[string]ident.Id
 }
 
 func NewProperties(parent *PropertyBuilders) PropertyBuilders {
-	return PropertyBuilders{parent, make(map[ident.Id]IBuildProperty)}
+	return PropertyBuilders{parent, make(map[ident.Id]IBuildProperty), make(map[string]ident.Id)}
 }
 
 //
@@ -44,6 +46,7 @@ func NewProperties(parent *PropertyBuilders) PropertyBuilders {
 //
 func (b *PropertyBuilders) make(
 	id ident.Id,
+	name string,
 	validator func(IBuildProperty) error,
 	creator func() (IBuildProperty, error),
 ) (
@@ -55,6 +58,7 @@ func (b *PropertyBuilders) make(
 			err = e
 		} else {
 			b.props[id] = p
+			b.names[name] = id
 			ret = p
 		}
 	} else {
@@ -71,9 +75,17 @@ func (b *PropertyBuilders) make(
 //
 // FindProperty returns the named property, searching upwards through the property hierarchy.
 //
-func (b *PropertyBuilders) findProperty(name string) (IBuildProperty, bool) {
-	id := M.MakeStringId(name)
-	return b.propertyById(id)
+func (b *PropertyBuilders) findProperty(name string) (ret IBuildProperty, okay bool) {
+	for k, v := range b.names {
+		if strings.EqualFold(name, k) {
+			ret, okay = b.props[v]
+			break
+		}
+	}
+	if !okay && b.parent != nil {
+		ret, okay = b.parent.findProperty(name)
+	}
+	return
 }
 
 //

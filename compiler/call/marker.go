@@ -3,16 +3,18 @@ package call
 import (
 	"crypto/md5"
 	"encoding/json"
+	"fmt"
 	G "github.com/ionous/sashimi/game"
 	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/util/ident"
+	"io"
 	"reflect"
 	"runtime"
 	"strings"
 )
 
 type Marker struct {
-	M.Callback
+	M.CallbackModel
 }
 
 func MakeMarker(cb G.Callback) Marker {
@@ -20,7 +22,7 @@ func MakeMarker(cb G.Callback) Marker {
 	pc := v.Pointer()
 	f := runtime.FuncForPC(pc)
 	file, line := f.FileLine(pc - 1)
-	return Marker{M.Callback{file, line, 0}}
+	return Marker{M.CallbackModel{file, line, 0}}
 }
 
 func (cfg Config) MakeMarker(cb G.Callback) Marker {
@@ -32,10 +34,17 @@ func (cfg Config) MakeMarker(cb G.Callback) Marker {
 }
 
 func (m Marker) Encode() (ret ident.Id, err error) {
-	if b, e := json.Marshal(m); e != nil {
+	if text, e := json.Marshal(m); e != nil {
 		err = e
 	} else {
-		ret = ident.Id(string(md5.New().Sum(b)))
+		hash := md5.New()
+		io.WriteString(hash, string(text))
+		b := hash.Sum(nil)
+		s := fmt.Sprintf("%x", b)
+		if len(s) > len("e2c569be17396eca2a2e3c11578123ed") {
+			panic(s)
+		}
+		ret = ident.MakeId(s)
 	}
 	return
 }

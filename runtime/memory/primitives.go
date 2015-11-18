@@ -1,10 +1,6 @@
 package memory
 
-import (
-	"fmt"
-	M "github.com/ionous/sashimi/model"
-	"github.com/ionous/sashimi/util/ident"
-)
+import "github.com/ionous/sashimi/util/ident"
 
 type numValue struct{ panicValue }
 
@@ -31,29 +27,6 @@ func (p textValue) GetText() string {
 }
 func (p textValue) SetText(t string) error {
 	return p.set(t)
-}
-
-type enumValue struct{ panicValue }
-
-func (p enumValue) GetState() (ret ident.Id) {
-	v := p.get()
-	if idx, ok := v.(int); !ok {
-		panic(fmt.Sprintf("internal error, couldnt convert state to int '%s.%s' %v(%T)", p.src, p.GetId(), v, v))
-	} else {
-		enum := p.prop.(M.EnumProperty)
-		c, _ := enum.IndexToChoice(idx)
-		ret = c
-	}
-	return
-}
-func (p enumValue) SetState(c ident.Id) (err error) {
-	enum := p.prop.(M.EnumProperty)
-	if idx, e := enum.ChoiceToIndex(c); e != nil {
-		err = e
-	} else {
-		p.set(idx)
-	}
-	return
 }
 
 type pointerValue struct {

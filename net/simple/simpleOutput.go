@@ -4,7 +4,6 @@ import (
 	"fmt"
 	C "github.com/ionous/sashimi/console"
 	"github.com/ionous/sashimi/runtime/api"
-	"github.com/ionous/sashimi/util/ident"
 	"os"
 )
 
@@ -24,8 +23,10 @@ func (this *SimpleOutput) ScriptSays(lines []string) {
 //
 func (this *SimpleOutput) ActorSays(whose api.Instance, lines []string) {
 	fmt.Println("Actor says", lines)
-	prop, _ := whose.GetProperty(ident.MakeId("name"))
-	name := prop.GetValue().GetText()
+	var name string
+	if prop, ok := whose.FindProperty("name"); ok {
+		name = prop.GetValue().GetText()
+	}
 	for _, l := range lines {
 		this.Println(name, ": ", l)
 	}

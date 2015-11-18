@@ -52,9 +52,6 @@ type Event interface {
 	GetId() ident.Id
 	// GetEventName returns the original name given by the scripter.
 	GetEventName() string
-	// GetAction: there shouldnt have to be a one to one mapping between actions ad events
-	// that's just how it is right now :(
-	GetAction() Action
 	// GetListeners returns the capture or bubbling callbacks associated with this event
 	// if GetListeners returns false, Listeners should be set to NoListeners.
 	GetListeners(capture bool) (Listeners, bool)
@@ -112,10 +109,15 @@ type Prototype interface {
 
 	NumProperty() int
 	PropertyNum(int) Property
+
+	// FindProperty by its user given name.
+	FindProperty(string) (Property, bool)
+
+	// GetProperty by the property unique id.
 	GetProperty(ident.Id) (Property, bool)
 
 	// GetPropertyByChoice evalutes all properties to find an enumeration which can store the passed choice
-	GetPropertyByChoice(choice ident.Id) (Property, bool)
+	GetPropertyByChoice(ident.Id) (Property, bool)
 }
 
 type Relation interface {

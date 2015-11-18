@@ -22,8 +22,12 @@ func ObjectResource(mdl api.Model, clsId ident.Id, serial *ObjectSerializer) res
 						// Find a relation in the object:
 						Finds: func(propertyName string) (ret resource.IResource, okay bool) {
 							// FIX: relations are stored in the model
-							propId := ident.MakeId(propertyName)
-							if prop, ok := inst.GetProperty(propId); ok {
+							prop, ok := inst.FindProperty(propertyName)
+							if !ok {
+								// propId := ident.MakeId(propertyName)
+								// prop, ok = inst.GetProperty(propId)
+							}
+							if ok {
 								if _, ok := prop.GetRelative(); ok {
 									okay, ret = true, resource.Wrapper{
 										// Return the list of related objects:
