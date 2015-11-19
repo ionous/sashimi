@@ -2,14 +2,14 @@ package parse
 
 import (
 	"fmt"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/parser"
-	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 )
 
 type MatchMaker struct {
-	mdl api.Model
+	mdl meta.Model
 	src ident.Id
 }
 
@@ -24,7 +24,7 @@ func (m MatchMaker) NewMatcher(id ident.Id) (ret parser.IMatch, err error) {
 
 // NewObjectParser and add all commands and patterns.
 // FIX-STORE: generate literals for all comprehensions
-func NewObjectParser(mdl api.Model, source ident.Id) (p parser.P, err error) {
+func NewObjectParser(mdl meta.Model, source ident.Id) (p parser.P, err error) {
 	if _, ok := mdl.GetInstance(source); !ok {
 		err = fmt.Errorf("couldnt find source", source)
 	} else {

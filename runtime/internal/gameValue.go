@@ -3,7 +3,7 @@ package internal
 import (
 	"fmt"
 	G "github.com/ionous/sashimi/game"
-	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 )
 
@@ -15,12 +15,12 @@ import (
 type gameValue struct {
 	game  *Game
 	path  PropertyPath
-	ptype api.PropertyType
-	value api.Value
+	ptype meta.PropertyType
+	value meta.Value
 }
 
 func (n gameValue) Num() (ret float32) {
-	if n.ptype != api.NumProperty {
+	if n.ptype != meta.NumProperty {
 		n.log("Num(): property is not a number.")
 	} else {
 		ret = n.value.GetNum()
@@ -29,7 +29,7 @@ func (n gameValue) Num() (ret float32) {
 }
 
 func (n gameValue) SetNum(value float32) {
-	if n.ptype != api.NumProperty {
+	if n.ptype != meta.NumProperty {
 		n.log("SetNum(): property is not a number.")
 	} else if e := n.value.SetNum(value); e != nil {
 		n.log("SetNum(): error setting value: %v.", e)
@@ -37,7 +37,7 @@ func (n gameValue) SetNum(value float32) {
 }
 
 func (n gameValue) Text() (ret string) {
-	if n.ptype != api.TextProperty {
+	if n.ptype != meta.TextProperty {
 		n.log("Text(): property is not text.")
 	} else {
 		ret = n.value.GetText()
@@ -46,7 +46,7 @@ func (n gameValue) Text() (ret string) {
 }
 
 func (n gameValue) SetText(text string) {
-	if n.ptype != api.TextProperty {
+	if n.ptype != meta.TextProperty {
 		n.log("SetText(): property is not text.")
 	} else if e := n.value.SetText(text); e != nil {
 		n.log("SetText(): error setting value: %v.", e)
@@ -56,7 +56,7 @@ func (n gameValue) SetText(text string) {
 // TBD: should these be logged? its sure nice to have be able to test objects generically for properties
 func (n gameValue) Object() G.IObject {
 	var res ident.Id
-	if n.ptype != api.ObjectProperty {
+	if n.ptype != meta.ObjectProperty {
 		n.log("Object(): property is not an object.")
 	} else {
 		res = n.value.GetObject()
@@ -65,7 +65,7 @@ func (n gameValue) Object() G.IObject {
 }
 
 func (n gameValue) SetObject(obj G.IObject) {
-	if n.ptype != api.ObjectProperty {
+	if n.ptype != meta.ObjectProperty {
 		n.log("SetObject(): property is not an object.")
 	} else {
 		var id ident.Id
@@ -85,7 +85,7 @@ func (n gameValue) log(format string, v ...interface{}) {
 
 // this was in SetObject, but that's impossible....
 // this could og in the adapter layer, but not here...
-// case api.ObjectProperty | api.ArrayProperty:
+// case meta.ObjectProperty | meta.ArrayProperty:
 // 	values := strings.Join(n.path, "").GetValues()
 // 	if other, ok := object.(GameObject); !ok {
 // 		if e := values.ClearValues(); e != nil {

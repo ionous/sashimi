@@ -4,17 +4,17 @@ import (
 	"fmt"
 	E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game"
-	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 )
 
 type Game struct {
-	ModelApi api.Model
+	Model meta.Model
 	RuntimeCore
 	Queue EventQueue
 }
 
-func NewGame(core RuntimeCore, m api.Model) *Game {
+func NewGame(core RuntimeCore, m meta.Model) *Game {
 	return &Game{
 		m,
 		core,
@@ -35,7 +35,7 @@ func (g *Game) Random(n int) int {
 
 // class or instance id
 func (g *Game) dispatch(evt E.IEvent, target ident.Id) (err error) {
-	if src, ok := g.ModelApi.GetEvent(evt.Id()); ok {
+	if src, ok := g.Model.GetEvent(evt.Id()); ok {
 		if ls, ok := src.GetListeners(true); ok {
 			err = E.Capture(evt, NewGameListeners(g, evt, target, ls))
 		}
@@ -49,7 +49,7 @@ func (g *Game) dispatch(evt E.IEvent, target ident.Id) (err error) {
 }
 
 // TODO: unwind this.
-func (g *Game) NewRuntimeAction(action api.Action, nouns ...ident.Id,
+func (g *Game) NewRuntimeAction(action meta.Action, nouns ...ident.Id,
 ) (ret *RuntimeAction, err error,
 ) {
 	types := action.GetNouns()
@@ -59,13 +59,13 @@ func (g *Game) NewRuntimeAction(action api.Action, nouns ...ident.Id,
 	case diff > 0:
 		err = fmt.Errorf("too many nouns specified for '%s', +%d", action, diff)
 	default:
-		objs := make([]api.Instance, len(types))
+		objs := make([]meta.Instance, len(types))
 		for i, class := range types {
 			noun := nouns[i]
-			if gobj, ok := g.ModelApi.GetInstance(noun); !ok {
+			if gobj, ok := g.Model.GetInstance(noun); !ok {
 				err = InstanceNotFound(noun.String())
 				break
-			} else if !g.ModelApi.AreCompatible(gobj.GetParentClass().GetId(), class) {
+			} else if !g.Model.AreCompatible(gobj.GetParentClass().GetId(), class) {
 				err = TypeMismatch(noun.String(), class.String())
 				break
 			} else {

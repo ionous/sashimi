@@ -1,15 +1,15 @@
-package memory
+package metal
 
 import (
 	"fmt"
-	M "github.com/ionous/sashimi/model"
-	"github.com/ionous/sashimi/model/table"
-	"github.com/ionous/sashimi/runtime/api"
+	M "github.com/ionous/sashimi/compiler/model"
+	"github.com/ionous/sashimi/compiler/model/table"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/ionous/sashimi/util/lang"
 )
 
-type MemoryModel struct {
+type Metal struct {
 	*M.Model
 	// objects ordered by index for linear travseral
 	_actions   []*M.ActionModel
@@ -47,19 +47,19 @@ func merge(base, more PropertyList) (ret PropertyList) {
 	return ret
 }
 
-func NewMemoryModel(m *M.Model, v ObjectValue, t table.Tables) *MemoryModel {
-	return &MemoryModel{
+func NewMetal(m *M.Model, v ObjectValue, t table.Tables) *Metal {
+	return &Metal{
 		Model:        m,
 		objectValues: v,
 		_properties:  make(PropertyCache),
 	}
 }
 
-func (mdl *MemoryModel) NumAction() int {
+func (mdl *Metal) NumAction() int {
 	return len(mdl.Actions)
 }
 
-func (mdl *MemoryModel) ActionNum(i int) api.Action {
+func (mdl *Metal) ActionNum(i int) meta.Action {
 	if mdl._actions == nil {
 		mdl._actions = make([]*M.ActionModel, 0, len(mdl.Actions))
 		for _, v := range mdl.Actions {
@@ -71,18 +71,18 @@ func (mdl *MemoryModel) ActionNum(i int) api.Action {
 	return actionInfo{mdl, a}
 }
 
-func (mdl *MemoryModel) GetAction(id ident.Id) (ret api.Action, okay bool) {
+func (mdl *Metal) GetAction(id ident.Id) (ret meta.Action, okay bool) {
 	if a, ok := mdl.Actions[id]; ok {
 		ret, okay = actionInfo{mdl, a}, true
 	}
 	return
 }
 
-func (mdl *MemoryModel) NumEvent() int {
+func (mdl *Metal) NumEvent() int {
 	return len(mdl.Events)
 }
 
-func (mdl *MemoryModel) EventNum(i int) api.Event {
+func (mdl *Metal) EventNum(i int) meta.Event {
 	if mdl._events == nil {
 		mdl._events = make([]*M.EventModel, 0, len(mdl.Events))
 		for _, v := range mdl.Events {
@@ -94,18 +94,18 @@ func (mdl *MemoryModel) EventNum(i int) api.Event {
 	return eventInfo{mdl, a}
 }
 
-func (mdl *MemoryModel) GetEvent(id ident.Id) (ret api.Event, okay bool) {
+func (mdl *Metal) GetEvent(id ident.Id) (ret meta.Event, okay bool) {
 	if a, ok := mdl.Events[id]; ok {
 		ret, okay = eventInfo{mdl, a}, true
 	}
 	return
 }
 
-func (mdl MemoryModel) NumClass() int {
+func (mdl Metal) NumClass() int {
 	return len(mdl.Classes)
 }
 
-func (mdl *MemoryModel) ClassNum(i int) api.Class {
+func (mdl *Metal) ClassNum(i int) meta.Class {
 	if mdl._classes == nil {
 		mdl._classes = make([]*M.ClassModel, 0, len(mdl.Classes))
 		for _, v := range mdl.Classes {
@@ -117,18 +117,18 @@ func (mdl *MemoryModel) ClassNum(i int) api.Class {
 	return classInfo{mdl, c}
 }
 
-func (mdl *MemoryModel) GetClass(id ident.Id) (ret api.Class, okay bool) {
+func (mdl *Metal) GetClass(id ident.Id) (ret meta.Class, okay bool) {
 	if c, ok := mdl.Classes[id]; ok {
 		ret, okay = classInfo{mdl, c}, true
 	}
 	return
 }
 
-func (mdl MemoryModel) NumInstance() int {
+func (mdl Metal) NumInstance() int {
 	return len(mdl.Instances)
 }
 
-func (mdl *MemoryModel) InstanceNum(i int) api.Instance {
+func (mdl *Metal) InstanceNum(i int) meta.Instance {
 	if mdl._instances == nil {
 		mdl._instances = make([]*M.InstanceModel, 0, len(mdl.Instances))
 		for _, v := range mdl.Instances {
@@ -140,18 +140,18 @@ func (mdl *MemoryModel) InstanceNum(i int) api.Instance {
 	return mdl.makeInstance(n)
 }
 
-func (mdl *MemoryModel) GetInstance(id ident.Id) (ret api.Instance, okay bool) {
+func (mdl *Metal) GetInstance(id ident.Id) (ret meta.Instance, okay bool) {
 	if n, ok := mdl.Instances[id]; ok {
 		ret, okay = mdl.makeInstance(n), true
 	}
 	return
 }
 
-func (mdl MemoryModel) NumRelation() int {
+func (mdl Metal) NumRelation() int {
 	return len(mdl.Relations)
 }
 
-func (mdl *MemoryModel) RelationNum(i int) api.Relation {
+func (mdl *Metal) RelationNum(i int) meta.Relation {
 	if mdl._relations == nil {
 		mdl._relations = make([]*M.RelationModel, 0, len(mdl.Relations))
 		for _, v := range mdl.Relations {
@@ -163,24 +163,24 @@ func (mdl *MemoryModel) RelationNum(i int) api.Relation {
 	return relInfo{mdl, r}
 }
 
-func (mdl *MemoryModel) GetRelation(id ident.Id) (ret api.Relation, okay bool) {
+func (mdl *Metal) GetRelation(id ident.Id) (ret meta.Relation, okay bool) {
 	if r, ok := mdl.Relations[id]; ok {
 		ret, okay = relInfo{mdl, r}, true
 	}
 	return
 }
 
-func (mdl *MemoryModel) ParserActionNum(i int) api.ParserAction {
+func (mdl *Metal) ParserActionNum(i int) meta.ParserAction {
 	// panics on out of range
 	p := mdl.ParserActions[i]
-	return api.ParserAction{p.Action, p.Commands}
+	return meta.ParserAction{p.Action, p.Commands}
 }
 
-func (mdl MemoryModel) NumParserAction() int {
+func (mdl Metal) NumParserAction() int {
 	return len(mdl.ParserActions)
 }
 
-func (mdl MemoryModel) Pluralize(single string) (plural string) {
+func (mdl Metal) Pluralize(single string) (plural string) {
 	if res, ok := mdl.SingleToPlural[single]; ok {
 		plural = res
 	} else {
@@ -189,7 +189,7 @@ func (mdl MemoryModel) Pluralize(single string) (plural string) {
 	return
 }
 
-func (mdl MemoryModel) AreCompatible(child, parent ident.Id) (okay bool) {
+func (mdl Metal) AreCompatible(child, parent ident.Id) (okay bool) {
 	if c, ok := mdl.Classes[child]; ok {
 		if c.Id == parent {
 			okay = true
@@ -206,20 +206,20 @@ func (mdl MemoryModel) AreCompatible(child, parent ident.Id) (okay bool) {
 }
 
 // hrmmm...
-func (mdl MemoryModel) MatchNounName(n string, f func(ident.Id) bool) (int, bool) {
+func (mdl Metal) MatchNounName(n string, f func(ident.Id) bool) (int, bool) {
 	return mdl.Aliases.Try(n, f)
 }
 
-func (mdl *MemoryModel) makeInstance(n *M.InstanceModel) api.Instance {
+func (mdl *Metal) makeInstance(n *M.InstanceModel) meta.Instance {
 	return instInfo{mdl, n}
 }
 
-func (mdl MemoryModel) getObjects(src, rel ident.Id, isRev bool) []ident.Id {
+func (mdl Metal) getObjects(src, rel ident.Id, isRev bool) []ident.Id {
 	table := mdl.getTable(rel)
 	return table.List(src, isRev)
 }
 
-func (mdl *MemoryModel) getPropertyList(cls *M.ClassModel) (ret PropertyList) {
+func (mdl *Metal) getPropertyList(cls *M.ClassModel) (ret PropertyList) {
 	if props, ok := mdl._properties[cls.Id]; ok {
 		ret = props
 	} else {
@@ -233,14 +233,14 @@ func (mdl *MemoryModel) getPropertyList(cls *M.ClassModel) (ret PropertyList) {
 	return
 }
 
-func (mdl *MemoryModel) makePropertyList(cls *M.ClassModel) (ret PropertyList) {
+func (mdl *Metal) makePropertyList(cls *M.ClassModel) (ret PropertyList) {
 	for i, _ := range cls.Properties {
 		ret = append(ret, &cls.Properties[i])
 	}
 	return
 }
 
-func (mdl MemoryModel) getTable(rel ident.Id) (ret *table.Table) {
+func (mdl Metal) getTable(rel ident.Id) (ret *table.Table) {
 	if table, ok := mdl.Tables[rel]; !ok {
 		panic(fmt.Sprintf("internal error, no table found for relation %s", rel))
 	} else {
@@ -249,7 +249,7 @@ func (mdl MemoryModel) getTable(rel ident.Id) (ret *table.Table) {
 	return
 }
 
-func (mdl MemoryModel) getZero(prop *M.PropertyModel) (ret interface{}) {
+func (mdl Metal) getZero(prop *M.PropertyModel) (ret interface{}) {
 	switch prop.Type {
 	case M.NumProperty:
 		if !prop.IsMany {
@@ -280,7 +280,7 @@ func (mdl MemoryModel) getZero(prop *M.PropertyModel) (ret interface{}) {
 }
 
 // returns error if not compatible.
-func (mdl MemoryModel) canAppend(dst, src ident.Id, rel *M.PropertyModel) (err error) {
+func (mdl Metal) canAppend(dst, src ident.Id, rel *M.PropertyModel) (err error) {
 	if other, ok := mdl.Instances[dst]; !ok {
 		err = fmt.Errorf("no such instance '%s'", dst)
 	} else if !mdl.AreCompatible(other.Class, rel.Relates) {
@@ -289,7 +289,7 @@ func (mdl MemoryModel) canAppend(dst, src ident.Id, rel *M.PropertyModel) (err e
 	return err
 }
 
-func (mdl MemoryModel) appendObject(dst, src ident.Id, rel *M.PropertyModel) {
+func (mdl Metal) appendObject(dst, src ident.Id, rel *M.PropertyModel) {
 	if rel.IsRev {
 		dst, src = src, dst
 	}

@@ -2,9 +2,9 @@ package standard
 
 import (
 	"fmt"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/parser"
 	R "github.com/ionous/sashimi/runtime"
-	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/runtime/parse"
 	"github.com/ionous/sashimi/util/ident"
 	"log"
@@ -38,7 +38,7 @@ type StandardCore struct {
 	playerInput,
 	complete,
 	statusLeft,
-	statusRight api.Value
+	statusRight meta.Value
 }
 
 // Left status bar text.
@@ -66,7 +66,7 @@ type ParentLookup struct{}
 var objects = ident.MakeId("objects")
 var containment = []string{"wearer", "owner", "whereabouts", "support", "enclosure"}
 
-func (p ParentLookup) LookupParent(mdl api.Model, inst api.Instance) (ret api.Instance, rel api.Property, okay bool) {
+func (p ParentLookup) LookupParent(mdl meta.Model, inst meta.Instance) (ret meta.Instance, rel meta.Property, okay bool) {
 	if mdl.AreCompatible(inst.GetParentClass().GetId(), objects) {
 		for _, wse := range containment {
 			if prop, ok := inst.FindProperty(wse); ok {
@@ -88,9 +88,9 @@ func NewStandardGame(game R.Game) (ret StandardStart, err error) {
 		err = e
 	} else {
 		//
-		if story, ok := api.FindFirstOf(game.Model, ident.MakeId("stories")); !ok {
+		if story, ok := meta.FindFirstOf(game.Model, ident.MakeId("stories")); !ok {
 			err = fmt.Errorf("couldn't find story")
-		} else if status, ok := api.FindFirstOf(game.Model, ident.MakeId("status bar instances")); !ok {
+		} else if status, ok := meta.FindFirstOf(game.Model, ident.MakeId("status bar instances")); !ok {
 			err = fmt.Errorf("couldn't find status bar")
 		} else if author, ok := story.FindProperty("author"); !ok {
 			err = fmt.Errorf("couldn't find author")
@@ -183,7 +183,7 @@ func (sg *StandardGame) Input(s string) (err error) {
 
 // EndTurn finishes the turn for the player.
 // ( This is normally called automatically by Input )
-func (sg *StandardGame) RunTurn(act api.Action, objs []api.Instance) {
+func (sg *StandardGame) RunTurn(act meta.Action, objs []meta.Instance) {
 	sg.Game.QueueActionInstances(act, objs)
 	sg.endTurn("end turn")
 }

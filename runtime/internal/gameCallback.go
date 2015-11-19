@@ -3,13 +3,13 @@ package internal
 import (
 	"fmt"
 	E "github.com/ionous/sashimi/event"
-	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 )
 
 // filter listeners to the events appropriate for this target
-func NewGameListeners(game *Game, evt E.IEvent, target ident.Id, ls api.Listeners) GameListeners {
-	filtered := []api.Listener{}
+func NewGameListeners(game *Game, evt E.IEvent, target ident.Id, ls meta.Listeners) GameListeners {
+	filtered := []meta.Listener{}
 	for i := 0; i < ls.NumListener(); i++ {
 		l := ls.ListenerNum(i)
 		if target == l.GetInstance() || target == l.GetClass() {
@@ -25,7 +25,7 @@ func NewGameListeners(game *Game, evt E.IEvent, target ident.Id, ls api.Listener
 // implements EventListeners
 type GameListeners struct {
 	game     *Game
-	filtered []api.Listener
+	filtered []meta.Listener
 }
 
 func (gl GameListeners) NumListener() int {
@@ -41,7 +41,7 @@ func (gl GameListeners) ListenerNum(i int) E.IListen {
 // ( by implementing E.IListen )
 type GameCallback struct {
 	game *Game
-	api.Listener
+	meta.Listener
 }
 
 // HandleEvent implements E.IListen.

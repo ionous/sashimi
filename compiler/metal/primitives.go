@@ -1,4 +1,4 @@
-package memory
+package metal
 
 import "github.com/ionous/sashimi/util/ident"
 

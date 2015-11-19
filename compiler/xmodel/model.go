@@ -1,7 +1,7 @@
 package xmodel
 
 import (
-	"github.com/ionous/sashimi/model/table"
+	"github.com/ionous/sashimi/compiler/model/table"
 )
 
 // Model: compiler's original output

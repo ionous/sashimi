@@ -3,8 +3,8 @@ package compiler
 import (
 	"github.com/ionous/sashimi/compiler/call"
 	i "github.com/ionous/sashimi/compiler/internal"
+	M "github.com/ionous/sashimi/compiler/model"
 	X "github.com/ionous/sashimi/compiler/xmodel"
-	M "github.com/ionous/sashimi/model"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/ident"
 	"io"

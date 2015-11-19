@@ -1,12 +1,12 @@
 package app
 
 import (
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/net/resource"
-	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/util/ident"
 )
 
-func ClassResource(mdl api.Model) resource.IResource {
+func ClassResource(mdl meta.Model) resource.IResource {
 	return resource.Wrapper{
 		// list all classes
 		Queries: func(doc resource.DocumentBuilder) {
@@ -31,14 +31,14 @@ func ClassResource(mdl api.Model) resource.IResource {
 	}
 }
 
-func classParents(cls api.Class, ar []string) []string {
+func classParents(cls meta.Class, ar []string) []string {
 	if p := cls.GetParentClass(); p != nil {
 		ar = append(classParents(p, ar), jsonId(p.GetId()))
 	}
 	return ar
 }
 
-func addClass(doc, sub resource.IBuildObjects, cls api.Class) {
+func addClass(doc, sub resource.IBuildObjects, cls meta.Class) {
 	var parent *resource.Object
 	if p := cls.GetParentClass(); p != nil {
 		//addClass(model, sub, sub, p)
@@ -64,13 +64,13 @@ func addClass(doc, sub resource.IBuildObjects, cls api.Class) {
 		prop := cls.PropertyNum(i)
 		typeName := "unknown"
 		switch prop.GetType() {
-		case api.ArrayProperty | api.ObjectProperty:
+		case meta.ArrayProperty | meta.ObjectProperty:
 			typeName = "rel"
-		case api.TextProperty:
+		case meta.TextProperty:
 			typeName = "text"
-		case api.NumProperty:
+		case meta.NumProperty:
 			typeName = "num"
-		case api.StateProperty:
+		case meta.StateProperty:
 			typeName = "enum"
 		}
 		props[jsonId(prop.GetId())] = typeName

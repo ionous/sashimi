@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"github.com/ionous/sashimi/compiler"
 	C "github.com/ionous/sashimi/console"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/parser"
 	R "github.com/ionous/sashimi/runtime"
-	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/runtime/parse"
 	. "github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/util/ident"
@@ -44,7 +44,7 @@ func (out TestOutput) ScriptSays(lines []string) {
 	}
 }
 
-func (out TestOutput) ActorSays(whose api.Instance, lines []string) {
+func (out TestOutput) ActorSays(whose meta.Instance, lines []string) {
 	var name string
 	if prop, ok := whose.FindProperty("name"); ok {
 		name = prop.GetValue().GetText()

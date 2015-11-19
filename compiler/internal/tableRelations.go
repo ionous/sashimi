@@ -1,8 +1,8 @@
 package internal
 
 import (
+	"github.com/ionous/sashimi/compiler/model/table"
 	M "github.com/ionous/sashimi/compiler/xmodel"
-	"github.com/ionous/sashimi/model/table"
 	"github.com/ionous/sashimi/util/ident"
 )
 

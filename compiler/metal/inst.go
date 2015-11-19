@@ -1,20 +1,20 @@
-package memory
+package metal
 
 import (
-	M "github.com/ionous/sashimi/model"
-	"github.com/ionous/sashimi/runtime/api"
+	M "github.com/ionous/sashimi/compiler/model"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 )
 
 type instInfo struct {
-	mdl *MemoryModel
+	mdl *Metal
 	*M.InstanceModel
 }
 
 func (n instInfo) GetId() ident.Id {
 	return n.Id
 }
-func (n instInfo) GetParentClass() api.Class {
+func (n instInfo) GetParentClass() meta.Class {
 	return n.getParentClass()
 }
 
@@ -31,33 +31,33 @@ func (n instInfo) NumProperty() int {
 	return n.getParentClass().NumProperty()
 }
 
-func (n instInfo) PropertyNum(i int) (ret api.Property) {
+func (n instInfo) PropertyNum(i int) (ret meta.Property) {
 	p := n.getParentClass().propertyNum(i)
 	return n.makeProperty(p)
 }
 
-func (n instInfo) GetProperty(id ident.Id) (ret api.Property, okay bool) {
+func (n instInfo) GetProperty(id ident.Id) (ret meta.Property, okay bool) {
 	if p, ok := n.getParentClass().getPropertyById(id); ok {
 		ret, okay = n.makeProperty(p), true
 	}
 	return
 }
 
-func (n instInfo) FindProperty(s string) (ret api.Property, okay bool) {
+func (n instInfo) FindProperty(s string) (ret meta.Property, okay bool) {
 	if p, ok := n.getParentClass().getPropertyByName(s); ok {
 		ret, okay = n.makeProperty(p), true
 	}
 	return
 }
 
-func (n instInfo) GetPropertyByChoice(id ident.Id) (ret api.Property, okay bool) {
+func (n instInfo) GetPropertyByChoice(id ident.Id) (ret meta.Property, okay bool) {
 	if p, ok := n.getParentClass().getPropertyByChoice(id); ok {
 		ret, okay = n.makeProperty(p), true
 	}
 	return
 }
 
-func (n instInfo) makeProperty(p *M.PropertyModel) api.Property {
+func (n instInfo) makeProperty(p *M.PropertyModel) meta.Property {
 	return &propBase{
 		mdl:      n.mdl,
 		src:      n.Id,

@@ -1,9 +1,9 @@
-package memory
+package metal
 
 import (
 	"fmt"
-	M "github.com/ionous/sashimi/model"
-	"github.com/ionous/sashimi/runtime/api"
+	M "github.com/ionous/sashimi/compiler/model"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 )
 
@@ -14,7 +14,7 @@ type objectList struct {
 	objs []ident.Id
 }
 
-func manyValue(p *propBase) api.Values {
+func manyValue(p *propBase) meta.Values {
 	objs := p.mdl.getObjects(p.src, p.prop.Relation, p.prop.IsRev)
 	return &objectList{panicValue{p}, objs}
 }
@@ -23,7 +23,7 @@ func (p objectList) NumValue() int {
 	return len(p.objs)
 }
 
-func (p objectList) ValueNum(i int) api.Value {
+func (p objectList) ValueNum(i int) meta.Value {
 	return objectReadValue{p.panicValue, p.objs[i]}
 }
 
@@ -50,7 +50,7 @@ func (p *objectList) AppendObject(id ident.Id) (err error) {
 	return
 }
 
-func (mdl MemoryModel) clearValues(src ident.Id, rel *M.PropertyModel) {
+func (mdl Metal) clearValues(src ident.Id, rel *M.PropertyModel) {
 	table := mdl.getTable(rel.Relation)
 	isRev := rel.IsRev
 	table.Remove(func(x, y ident.Id) bool {

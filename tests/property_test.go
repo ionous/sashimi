@@ -3,7 +3,7 @@ package tests
 import (
 	"fmt"
 	C "github.com/ionous/sashimi/compiler"
-	M "github.com/ionous/sashimi/model"
+	M "github.com/ionous/sashimi/compiler/model"
 	. "github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/stretchr/testify/assert"

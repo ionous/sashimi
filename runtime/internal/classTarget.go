@@ -2,7 +2,7 @@ package internal
 
 import (
 	E "github.com/ionous/sashimi/event"
-	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 )
 
@@ -12,8 +12,8 @@ import (
 //
 type ClassTarget struct {
 	host     ObjectTarget
-	class    api.Class
-	upObject api.Instance
+	class    meta.Class
+	upObject meta.Instance
 }
 
 //

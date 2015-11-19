@@ -2,7 +2,7 @@ package tests
 
 import (
 	"fmt"
-	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -14,12 +14,12 @@ import (
 // requires at least one instance and one class
 // the class valueerties should include "num", "text, "state", "object" of corresponding types
 // "state" should contain choices "yes" and "no"
-func ApiTest(t *testing.T, mdl api.Model, instId ident.Id) {
+func ApiTest(t *testing.T, mdl meta.Model, instId ident.Id) {
 	require.NotNil(t, mdl)
 	_, noExist := mdl.GetInstance(ident.MakeUniqueId())
 	require.False(t, noExist)
 	// find inst by index
-	var inst api.Instance
+	var inst meta.Instance
 	require.True(t, mdl.NumInstance() > 0, "need instances to test")
 	for i := 0; i < mdl.NumInstance(); i++ {
 		indirect := mdl.InstanceNum(i)
@@ -55,7 +55,7 @@ func ApiTest(t *testing.T, mdl api.Model, instId ident.Id) {
 		{MethodMaker("Object"), ident.Empty(), inst.GetId()},
 	}
 
-	testValue := func(v api.Value, test TestValue, eval func(TestValue, reflect.Value)) {
+	testValue := func(v meta.Value, test TestValue, eval func(TestValue, reflect.Value)) {
 		if value := reflect.ValueOf(v); assert.True(t, value.IsValid()) {
 			// test getting the vaule of the appropriate type succeeds
 			require.NotPanics(t, func() {
@@ -83,14 +83,14 @@ func ApiTest(t *testing.T, mdl api.Model, instId ident.Id) {
 		}
 	}
 
-	testMethods := func(src api.Prototype, eval func(TestValue, reflect.Value)) {
+	testMethods := func(src meta.Prototype, eval func(TestValue, reflect.Value)) {
 		// test class values;
 		// test instance values
 		for _, test := range methods {
 			// get the property
 			if p, ok := src.FindProperty(test.String()); assert.True(t, ok, test.String()) {
 				// request the value from the property
-				var v api.Value
+				var v meta.Value
 				require.NotPanics(t, func() { v = p.GetValue() })
 				require.Panics(t, func() { p.GetValues() })
 				testValue(v, test, eval)
@@ -99,7 +99,7 @@ func ApiTest(t *testing.T, mdl api.Model, instId ident.Id) {
 	}
 	_ = testMethods
 	// instances can get and set values
-	// value is reflect valueOf api.Value
+	// value is reflect valueOf meta.Value
 	testInstanceValue := func(test TestValue, value reflect.Value) {
 		require.NotPanics(t, func() {
 			test.SetTo(value, test.value)
@@ -113,7 +113,7 @@ func ApiTest(t *testing.T, mdl api.Model, instId ident.Id) {
 	testMethods(inst, testInstanceValue)
 
 	// classes disallow set values
-	// value is reflect valueOf api.Value
+	// value is reflect valueOf meta.Value
 	testClassValue := func(test TestValue, value reflect.Value) {
 		require.Panics(t, func() {
 			test.SetTo(value, test.value)
@@ -122,7 +122,7 @@ func ApiTest(t *testing.T, mdl api.Model, instId ident.Id) {
 	_ = testClassValue
 	testMethods(inst.GetParentClass(), testClassValue)
 
-	testArrays := func(src api.Prototype, eval func(TestValue, api.Values)) {
+	testArrays := func(src meta.Prototype, eval func(TestValue, meta.Values)) {
 		// test class values;
 		// test instance values
 		for _, test := range methods {
@@ -135,7 +135,7 @@ func ApiTest(t *testing.T, mdl api.Model, instId ident.Id) {
 			// get the property
 			if p, ok := src.FindProperty(name); assert.True(t, ok, fmt.Sprintf("trying to get property %s.%s", src, name)) {
 				// request the value from the property
-				var vs api.Values
+				var vs meta.Values
 				require.Panics(t, func() { p.GetValue() })
 				require.NotPanics(t, func() { vs = p.GetValues() })
 				var cnt int
@@ -160,7 +160,7 @@ func ApiTest(t *testing.T, mdl api.Model, instId ident.Id) {
 		}
 	}
 
-	testArrays(inst, func(test TestValue, vs api.Values) {
+	testArrays(inst, func(test TestValue, vs meta.Values) {
 		value := reflect.ValueOf(vs)
 
 		// append
@@ -187,7 +187,7 @@ func ApiTest(t *testing.T, mdl api.Model, instId ident.Id) {
 		test.Append(value, test.value)
 	})
 
-	testArrays(inst.GetParentClass(), func(test TestValue, vs api.Values) {
+	testArrays(inst.GetParentClass(), func(test TestValue, vs meta.Values) {
 		// classes disallow set values
 		value := reflect.ValueOf(vs)
 		require.Panics(t, func() {

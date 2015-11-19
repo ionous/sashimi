@@ -2,7 +2,7 @@ package internal
 
 import (
 	E "github.com/ionous/sashimi/event"
-	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 )
 
@@ -10,10 +10,10 @@ import (
 // The standard rules implement a hierarchy of objects based on containment; for instance: carried object => carrier=> container/supporter of the carrier => room of the contaniner.
 type ObjectTarget struct {
 	game *Game
-	obj  api.Instance // FIX? why is the target an instance and not adapter?
+	obj  meta.Instance // FIX? why is the target an instance and not adapter?
 }
 
-func NewObjectTarget(g *Game, o api.Instance) ObjectTarget {
+func NewObjectTarget(g *Game, o meta.Instance) ObjectTarget {
 	return ObjectTarget{g, o}
 }
 
@@ -35,7 +35,7 @@ func (ot ObjectTarget) String() string {
 // Parent walks up the the (externally defined) containment hierarchy (from event.ITarget.)
 func (ot ObjectTarget) Parent() (ret E.ITarget, ok bool) {
 	game, obj := ot.game, ot.obj
-	next, _, haveParent := game.LookupParent(game.ModelApi, obj)
+	next, _, haveParent := game.LookupParent(game.Model, obj)
 	cls := obj.GetParentClass()
 	if cls != nil || haveParent {
 		ret, ok = ClassTarget{ot, cls, next}, true

@@ -1,10 +1,10 @@
-package memory
+package metal
 
 import (
 	"fmt"
-	M "github.com/ionous/sashimi/model"
-	"github.com/ionous/sashimi/model/table"
-	"github.com/ionous/sashimi/runtime/api/tests"
+	M "github.com/ionous/sashimi/compiler/model"
+	"github.com/ionous/sashimi/compiler/model/table"
+	"github.com/ionous/sashimi/meta/tests"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -62,7 +62,7 @@ func TestMemory(t *testing.T) {
 	makeInstance("x", makeClass("test other", "test others"))
 	//m.PrintModel(t.Log)
 	//t.Fatal("")
-	mem := NewMemoryModel(m, v, make(table.Tables))
+	mem := NewMetal(m, v, make(table.Tables))
 	// test plural
 	if cls, ok := mem.GetClass(ident.MakeId("TestClasses")); assert.True(t, ok, "get test class") {
 		if p, ok := cls.FindProperty("plural"); assert.True(t, ok) {

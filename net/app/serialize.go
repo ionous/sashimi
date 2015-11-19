@@ -1,8 +1,8 @@
 package app
 
 import (
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/net/resource"
-	"github.com/ionous/sashimi/runtime/api"
 )
 
 //
@@ -20,7 +20,7 @@ func NewObjectSerializer() *ObjectSerializer {
 }
 
 //
-func (s *ObjectSerializer) IsKnown(gobj api.Instance) bool {
+func (s *ObjectSerializer) IsKnown(gobj meta.Instance) bool {
 	return gobj != nil && s.known[gobj.GetId()]
 }
 
@@ -31,7 +31,7 @@ func (s *ObjectSerializer) IsKnown(gobj api.Instance) bool {
 // The client will ask explicitly ask for the relation information it wants:
 // ex. /games/{session}/actors/player/inventory
 //
-func (s *ObjectSerializer) SerializeObject(out resource.IBuildObjects, gobj api.Instance, force bool) (obj *resource.Object) {
+func (s *ObjectSerializer) SerializeObject(out resource.IBuildObjects, gobj meta.Instance, force bool) (obj *resource.Object) {
 	if s.known.SetKnown(gobj) || force {
 		obj = s.NewObject(out, gobj)
 		//
@@ -40,13 +40,13 @@ func (s *ObjectSerializer) SerializeObject(out resource.IBuildObjects, gobj api.
 			prop := gobj.PropertyNum(i)
 			pid := jsonId(prop.GetId())
 			switch prop.GetType() {
-			case api.NumProperty:
+			case meta.NumProperty:
 				obj.SetAttr(pid, prop.GetValue().GetNum())
-			case api.TextProperty:
+			case meta.TextProperty:
 				obj.SetAttr(pid, prop.GetValue().GetText())
-			case api.StateProperty:
+			case meta.StateProperty:
 				obj.SetAttr(pid, jsonId(prop.GetValue().GetState()))
-			case api.ObjectProperty:
+			case meta.ObjectProperty:
 				obj.SetAttr(pid, jsonId(prop.GetValue().GetObject()))
 			default:
 				// ignore arrays for now....
@@ -64,11 +64,11 @@ func (s *ObjectSerializer) SerializeObject(out resource.IBuildObjects, gobj api.
 // Add a reference to the passed object into the passed refs list,
 // with a full seriaization into includes if the object is newly known.
 //
-func (s *ObjectSerializer) AddObjectRef(out resource.IBuildObjects, gobj api.Instance, include resource.IBuildObjects) (obj *resource.Object) {
+func (s *ObjectSerializer) AddObjectRef(out resource.IBuildObjects, gobj meta.Instance, include resource.IBuildObjects) (obj *resource.Object) {
 	s.SerializeObject(include, gobj, false)
 	return s.NewObject(out, gobj)
 }
 
-func (s *ObjectSerializer) NewObject(out resource.IBuildObjects, gobj api.Instance) (obj *resource.Object) {
+func (s *ObjectSerializer) NewObject(out resource.IBuildObjects, gobj meta.Instance) (obj *resource.Object) {
 	return out.NewObject(jsonId(gobj.GetId()), jsonId(gobj.GetParentClass().GetId()))
 }

@@ -1,14 +1,14 @@
-package memory
+package metal
 
 import (
-	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 )
 
-// implements api.Values
+// implements meta.Values
 type arrayValues struct {
 	*propBase
-	valueNum func(int) api.Value
+	valueNum func(int) meta.Value
 }
 
 func (ar arrayValues) NumValue() int {
@@ -16,7 +16,7 @@ func (ar arrayValues) NumValue() int {
 	return len(slice)
 }
 
-func (ar arrayValues) ValueNum(i int) api.Value {
+func (ar arrayValues) ValueNum(i int) meta.Value {
 	return ar.valueNum(i)
 }
 

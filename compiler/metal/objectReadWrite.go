@@ -1,7 +1,7 @@
-package memory
+package metal
 
 import (
-	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 )
 
@@ -16,7 +16,7 @@ func (p objectReadValue) GetObject() (ret ident.Id) {
 }
 
 // the one side of a many-to-one, one-to-one, or one-to-many relation.
-func singleValue(p *propBase) api.Value {
+func singleValue(p *propBase) meta.Value {
 	rel := p.prop
 	objs := p.mdl.getObjects(p.src, rel.Relation, rel.IsRev)
 	var v ident.Id

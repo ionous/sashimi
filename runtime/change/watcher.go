@@ -1,22 +1,22 @@
 package runtime
 
 import (
-	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 )
 
 // FIX: add some watcher tests?
 // ( needs some sort of mock or model )
 type ModelWatcher struct {
-	api.Model
+	meta.Model
 	PropertyChange
 }
 
-func NewModelWatcher(m api.Model, ch PropertyChange) api.Model {
+func NewModelWatcher(m meta.Model, ch PropertyChange) meta.Model {
 	return ModelWatcher{m, ch}
 }
 
-func (mw ModelWatcher) GetInstance(id ident.Id) (ret api.Instance, okay bool) {
+func (mw ModelWatcher) GetInstance(id ident.Id) (ret meta.Instance, okay bool) {
 	if i, ok := mw.Model.GetInstance(id); ok {
 		ret = iwatch{mw, i}
 	}
@@ -25,22 +25,21 @@ func (mw ModelWatcher) GetInstance(id ident.Id) (ret api.Instance, okay bool) {
 
 type iwatch struct {
 	mw ModelWatcher
-	api.Instance
+	meta.Instance
 }
 
-func (iw iwatch) PropertyNum(i int) api.Property {
+func (iw iwatch) PropertyNum(i int) meta.Property {
 	p := iw.Instance.PropertyNum(i)
 	return pwatch{iw, p}
 }
-func (iw iwatch) GetProperty(id ident.Id) (ret api.Property, okay bool) {
-	panic("ok")
-	// if p, ok := iw.Instance.GetProperty(id); ok {
-	// 	ret = pwatch{iw, p}
-	// 	okay = true
-	// }
+func (iw iwatch) GetProperty(id ident.Id) (ret meta.Property, okay bool) {
+	if p, ok := iw.Instance.GetProperty(id); ok {
+		ret = pwatch{iw, p}
+		okay = true
+	}
 	return
 }
-func (iw iwatch) GetPropertyByChoice(choice ident.Id) (ret api.Property, okay bool) {
+func (iw iwatch) GetPropertyByChoice(choice ident.Id) (ret meta.Property, okay bool) {
 	if p, ok := iw.Instance.GetPropertyByChoice(choice); ok {
 		ret = pwatch{iw, p}
 		okay = true
@@ -50,20 +49,20 @@ func (iw iwatch) GetPropertyByChoice(choice ident.Id) (ret api.Property, okay bo
 
 type pwatch struct {
 	iw iwatch
-	api.Property
+	meta.Property
 }
 
-func (pw pwatch) GetValue() api.Value {
+func (pw pwatch) GetValue() meta.Value {
 	return vwatch{pw, pw.Property.GetValue()}
 }
 
-func (pw pwatch) GetValues() api.Values {
+func (pw pwatch) GetValues() meta.Values {
 	return zwatch{pw, pw.Property.GetValues()}
 }
 
 type vwatch struct {
 	pw pwatch
-	api.Value
+	meta.Value
 }
 
 func (vw vwatch) SetNum(val float32) (err error) {
@@ -112,7 +111,7 @@ func (vw vwatch) SetObject(val ident.Id) (err error) {
 			err = e
 		} else {
 			// notify
-			var prev, next api.Instance
+			var prev, next meta.Instance
 			if !old.Empty() {
 				prev, _ = vw.pw.iw.mw.GetInstance(old)
 			}
@@ -137,7 +136,7 @@ func (vw vwatch) SetObject(val ident.Id) (err error) {
 
 type zwatch struct {
 	pw pwatch
-	api.Values
+	meta.Values
 }
 
 // func (zw zwatch) ClearValues() {

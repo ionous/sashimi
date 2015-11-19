@@ -3,7 +3,7 @@ package standard
 import (
 	"fmt"
 	C "github.com/ionous/sashimi/console"
-	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/meta"
 	"io"
 	"strings"
 	"unicode"
@@ -40,7 +40,7 @@ func (out *StandardOutput) ScriptSays(lines []string) {
 	}
 }
 
-func (out *StandardOutput) ActorSays(whose api.Instance, lines []string) {
+func (out *StandardOutput) ActorSays(whose meta.Instance, lines []string) {
 	if len(lines) > 0 {
 		// in other contexts ActorSays needs the instance for SerializeObject
 		// FIX: what about proper name?

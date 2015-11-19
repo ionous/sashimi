@@ -3,14 +3,14 @@ package internal
 import (
 	"fmt"
 	G "github.com/ionous/sashimi/game"
-	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 )
 
 type iList struct {
 	game      *Game
 	path      PropertyPath
-	instances []api.Instance
+	instances []meta.Instance
 }
 
 func (l iList) AppendNum(float32)      {}
@@ -28,7 +28,7 @@ func (l iList) Get(i int) (ret G.IValue) {
 		ret = nullValue(l.path.InvalidIndex(i))
 	} else {
 		val := iasv{l.instances[i]}
-		ret = gameValue{l.game, l.path.Index(i), api.ObjectProperty, val}
+		ret = gameValue{l.game, l.path.Index(i), meta.ObjectProperty, val}
 	}
 	return
 }
@@ -53,7 +53,7 @@ func (l iList) log(format string, v ...interface{}) {
 // ................
 
 type iasv struct {
-	api.Instance
+	meta.Instance
 }
 
 func (i iasv) GetObject() ident.Id {

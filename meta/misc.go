@@ -3,7 +3,6 @@ package api
 import (
 	E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game"
-	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 )
 
@@ -14,7 +13,7 @@ type EventFrame func(E.ITarget, *E.Message) func()
 
 type LookupParents interface {
 	// parent instance, property used to find the parent, true if existed
-	LookupParent(meta.Model, meta.Instance) (meta.Instance, meta.Property, bool)
+	LookupParent(Model, Instance) (Instance, Property, bool)
 }
 
 type LookupCallbacks interface {

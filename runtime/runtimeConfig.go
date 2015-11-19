@@ -2,11 +2,12 @@ package runtime
 
 import (
 	"fmt"
+	"github.com/ionous/sashimi/compiler/metal"
+	M "github.com/ionous/sashimi/compiler/model"
 	E "github.com/ionous/sashimi/event"
-	M "github.com/ionous/sashimi/model"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/runtime/internal"
-	"github.com/ionous/sashimi/runtime/memory"
 	"log"
 	"math/rand"
 )
@@ -22,7 +23,7 @@ func NewConfig() *RuntimeConfig {
 func (cfg RuntimeConfig) NewGame(model *M.Model) (Game, error) {
 	core := cfg.Finalize()
 	tables := model.Tables.Clone()
-	modelApi := memory.NewMemoryModel(model, make(memory.ObjectValueMap), tables)
+	modelApi := metal.NewMetal(model, make(metal.ObjectValueMap), tables)
 	return Game{modelApi, internal.NewGame(core, modelApi)}, nil
 }
 
@@ -49,7 +50,7 @@ func (cfg RuntimeConfig) Finalize() internal.RuntimeCore {
 
 type parentLookup struct{}
 
-func (parentLookup) LookupParent(api.Model, api.Instance) (inst api.Instance, rel api.Property, okay bool) {
+func (parentLookup) LookupParent(meta.Model, meta.Instance) (inst meta.Instance, rel meta.Property, okay bool) {
 	return
 }
 

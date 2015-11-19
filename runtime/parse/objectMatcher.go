@@ -2,20 +2,20 @@ package parse
 
 import (
 	"fmt"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/parser"
-	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/util/ident"
 )
 
 // ObjectMatcher returns nouns which matches an instance's string id
 type ObjectMatcher struct {
-	mdl     api.Model
-	act     api.Action
-	objects []api.Instance
+	mdl     meta.Model
+	act     meta.Action
+	objects []meta.Instance
 }
 
 // make sure the source class matches
-func NewObjectMatcher(act api.Action, src ident.Id, mdl api.Model) (ret *ObjectMatcher, err error) {
+func NewObjectMatcher(act meta.Action, src ident.Id, mdl meta.Model) (ret *ObjectMatcher, err error) {
 	om := &ObjectMatcher{mdl, act, nil}
 	if e := om.AddObject(src); e != nil {
 		err = e
@@ -45,7 +45,7 @@ func (om *ObjectMatcher) MatchNoun(name string, _ string) (err error) {
 	return err
 }
 
-func (om *ObjectMatcher) GetMatch() (act api.Action, ret []api.Instance, err error) {
+func (om *ObjectMatcher) GetMatch() (act meta.Action, ret []meta.Instance, err error) {
 	objects, nouns := om.objects, om.act.GetNouns()
 	if cnt, max := len(objects), nouns.GetNounCount(); cnt != max {
 		err = parser.MismatchedNouns(ident.MakeId("I"), max, cnt)

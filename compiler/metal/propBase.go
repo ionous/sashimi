@@ -1,16 +1,16 @@
-package memory
+package metal
 
 import (
 	"fmt"
-	M "github.com/ionous/sashimi/model"
-	"github.com/ionous/sashimi/runtime/api"
+	M "github.com/ionous/sashimi/compiler/model"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 )
 
 // FIX? to be comparable: would need to stop returning & of propBase,
 // and -- i suspect -- would need to change getValue and setValue into non-object methods
 type propBase struct {
-	mdl  *MemoryModel
+	mdl  *Metal
 	src  ident.Id
 	prop *M.PropertyModel
 	// life's a little complicated.
@@ -40,33 +40,33 @@ func (p *propBase) GetName() string {
 	return p.prop.Name
 }
 
-func (p *propBase) GetType() api.PropertyType {
+func (p *propBase) GetType() meta.PropertyType {
 	err := "invalid"
 	switch p.prop.Type {
 	case M.NumProperty:
-		x := api.NumProperty
+		x := meta.NumProperty
 		if p.prop.IsMany {
-			x |= api.ArrayProperty
+			x |= meta.ArrayProperty
 		}
 		return x
 	case M.TextProperty:
-		x := api.TextProperty
+		x := meta.TextProperty
 		if p.prop.IsMany {
-			x |= api.ArrayProperty
+			x |= meta.ArrayProperty
 		}
 		return x
 	case M.EnumProperty:
-		return api.StateProperty
+		return meta.StateProperty
 	case M.PointerProperty:
-		x := api.ObjectProperty
+		x := meta.ObjectProperty
 		if p.prop.IsMany {
-			x |= api.ArrayProperty
+			x |= meta.ArrayProperty
 		}
 		return x
 	case M.RelativeProperty:
-		x := api.ObjectProperty
+		x := meta.ObjectProperty
 		if p.prop.IsMany {
-			x |= api.ArrayProperty
+			x |= meta.ArrayProperty
 		}
 		return x
 	default:
@@ -75,7 +75,7 @@ func (p *propBase) GetType() api.PropertyType {
 	panic(fmt.Sprintf("GetType(%s.%s) has %s property type %T", p.src, p.prop.Id, err, p.prop))
 }
 
-func (p *propBase) GetValue() api.Value {
+func (p *propBase) GetValue() meta.Value {
 	err := "invalid"
 	switch p.prop.Type {
 	case M.NumProperty:
@@ -103,18 +103,18 @@ func (p *propBase) GetValue() api.Value {
 	panic(fmt.Sprintf("GetValue(%s.%s) has %s property type %T", p.src, p.prop.Id, err, p.prop))
 }
 
-func (p *propBase) GetValues() api.Values {
+func (p *propBase) GetValues() meta.Values {
 	err := "invalid"
 	switch p.prop.Type {
 	case M.NumProperty:
 		if p.prop.IsMany {
-			return arrayValues{p, func(i int) api.Value {
+			return arrayValues{p, func(i int) meta.Value {
 				return numElement{elementValue{panicValue{p}, i}}
 			}}
 		}
 	case M.TextProperty:
 		if p.prop.IsMany {
-			return arrayValues{p, func(i int) api.Value {
+			return arrayValues{p, func(i int) meta.Value {
 				return textElement{elementValue{panicValue{p}, i}}
 			}}
 		}
@@ -122,7 +122,7 @@ func (p *propBase) GetValues() api.Values {
 		//
 	case M.PointerProperty:
 		if p.prop.IsMany {
-			return arrayValues{p, func(i int) api.Value {
+			return arrayValues{p, func(i int) meta.Value {
 				return objectElement{elementValue{panicValue{p}, i}}
 			}}
 		}
@@ -136,7 +136,7 @@ func (p *propBase) GetValues() api.Values {
 	panic(fmt.Sprintf("GetValues(%s.%s) has %s property type %T", p.src, p.prop.Id, err, p.prop))
 }
 
-func (p *propBase) GetRelative() (ret api.Relative, okay bool) {
+func (p *propBase) GetRelative() (ret meta.Relative, okay bool) {
 	switch p.prop.Type {
 	case M.RelativeProperty:
 		// get the relation
@@ -145,7 +145,7 @@ func (p *propBase) GetRelative() (ret api.Relative, okay bool) {
 		// get the reverse property
 		other := relation.GetOther(p.prop.IsRev)
 
-		okay, ret = true, api.Relative{
+		okay, ret = true, meta.Relative{
 			Relation: p.prop.Relation,
 			Relates:  p.prop.Relates,
 			// FIX: this exists for backwards compatiblity with the client.

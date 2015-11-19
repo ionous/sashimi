@@ -4,7 +4,7 @@ import (
 	"fmt"
 	E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game"
-	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 	"strings"
 )
@@ -14,7 +14,7 @@ import (
 // it can't implement the interface as a pointer, and it cant have any cached values.
 type GameObject struct {
 	game *Game // for console, Go(), and relations
-	gobj api.Instance
+	gobj meta.Instance
 }
 
 // String helps debugging.
@@ -35,11 +35,11 @@ func (oa GameObject) Exists() bool {
 // FromClass returns true when the object is compatible with ( based on ) the named class. ( parent or other ancestor )
 func (oa GameObject) FromClass(class string) (okay bool) {
 	clsid := StripStringId(class)
-	return oa.game.ModelApi.AreCompatible(oa.gobj.GetParentClass().GetId(), clsid)
+	return oa.game.Model.AreCompatible(oa.gobj.GetParentClass().GetId(), clsid)
 }
 
 func (oa GameObject) ParentRelation() (ret G.IObject, rel string) {
-	if parent, prop, ok := oa.game.LookupParent(oa.game.ModelApi, oa.gobj); ok {
+	if parent, prop, ok := oa.game.LookupParent(oa.game.Model, oa.gobj); ok {
 		ret, rel = NewGameObject(oa.game, parent), prop.GetName()
 	} else {
 		ret = NullObjectSource(NewPath(oa.Id()).Add("parent"), 1)
@@ -74,7 +74,7 @@ func (oa GameObject) Get(prop string) (ret G.IValue) {
 		oa.log("Get(%s): no such property", prop)
 		panic(prop)
 		ret = nullValue{}
-	} else if p.GetType()&api.ArrayProperty != 0 {
+	} else if p.GetType()&meta.ArrayProperty != 0 {
 		oa.log("Get(%s): property is array", prop)
 		ret = nullValue{}
 	} else {
@@ -87,7 +87,7 @@ func (oa GameObject) List(prop string) (ret G.IList) {
 	if p, ok := oa.gobj.FindProperty(prop); !ok {
 		oa.log("List(%s): no such property.", prop)
 		ret = nullList{}
-	} else if p.GetType()&api.ArrayProperty == 0 {
+	} else if p.GetType()&meta.ArrayProperty == 0 {
 		oa.log("List(%s): property is a value, not a list.", prop)
 		ret = nullList{}
 	} else {
@@ -134,7 +134,7 @@ func (oa GameObject) ObjectList(prop string) (ret []G.IObject) {
 		default:
 			oa.log("ObjectList(%s): invalid type(%d).", prop, t)
 
-		case api.ObjectProperty | api.ArrayProperty:
+		case meta.ObjectProperty | meta.ArrayProperty:
 			vals := p.GetValues()
 			numobjects := vals.NumValue()
 			ret = make([]G.IObject, numobjects)
@@ -159,7 +159,7 @@ func (oa GameObject) Says(text string) {
 // @see also: Game.ProcessEventQueue
 func (oa GameObject) Go(run string, objects ...G.IObject) {
 	actionId := MakeStringId(run)
-	if action, ok := oa.game.ModelApi.GetAction(actionId); !ok {
+	if action, ok := oa.game.Model.GetAction(actionId); !ok {
 		oa.log("Go(%s): no such action", run)
 	} else {
 		// FIX, ugly: we need the props, even tho we already have the objects...

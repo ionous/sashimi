@@ -9,9 +9,9 @@ import (
 	"github.com/ionous/sashimi/_examples/stories"
 	"github.com/ionous/sashimi/compiler/call"
 	"github.com/ionous/sashimi/compiler/extract"
+	M "github.com/ionous/sashimi/compiler/model"
 	_ "github.com/ionous/sashimi/extensions"
 	G "github.com/ionous/sashimi/game"
-	M "github.com/ionous/sashimi/model"
 	"github.com/ionous/sashimi/net/app"
 	"github.com/ionous/sashimi/script"
 	_ "github.com/ionous/sashimi/standard"
@@ -213,7 +213,7 @@ func modelClasses(m *M.Model) (ret string, err error) {
 	const modelTemplate = `
 	package gen
 	import ( 
-		M "github.com/ionous/sashimi/model"
+		M "github.com/ionous/sashimi/compiler/model"
 		//"github.com/ionous/sashimi/util/ident"
 	)
 {{range $id, $cls :=  .Classes}}

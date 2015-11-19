@@ -1,7 +1,5 @@
 package api
 
-import "github.com/ionous/sashimi/meta"
-
 // Output requires an implementation to display text.
 type Output interface {
 	//
@@ -11,7 +9,7 @@ type Output interface {
 	//
 	// The actor or object with the passed name has something to say.
 	//
-	ActorSays(whose meta.Instance, lines []string)
+	ActorSays(whose Instance, lines []string)
 	//
 	// Debugging output.
 	//

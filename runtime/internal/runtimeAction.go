@@ -3,7 +3,7 @@ package internal
 import (
 	"fmt"
 	G "github.com/ionous/sashimi/game"
-	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 	"strings"
 )
@@ -13,17 +13,17 @@ var _ = fmt.Println
 // RuntimeAction contains data for event handlers and actions.
 type RuntimeAction struct {
 	game      *Game
-	action    api.Action
-	objs      []api.Instance
+	action    meta.Action
+	objs      []meta.Instance
 	after     []QueuedCallback
 	cancelled bool
 }
 
-func NewRuntimeAction(g *Game, act api.Action, objects []api.Instance) *RuntimeAction {
+func NewRuntimeAction(g *Game, act meta.Action, objects []meta.Instance) *RuntimeAction {
 	return &RuntimeAction{game: g, action: act, objs: objects}
 }
 
-func (act *RuntimeAction) GetTarget() api.Instance {
+func (act *RuntimeAction) GetTarget() meta.Instance {
 	return act.objs[0]
 }
 
@@ -108,7 +108,7 @@ func (act *RuntimeAction) findByExactClass(id ident.Id) (ret G.IObject, okay boo
 // findBySimilarClass; true if found
 func (act *RuntimeAction) findBySimilarClass(id ident.Id) (ret G.IObject, okay bool) {
 	for i, nounClass := range act.action.GetNouns() {
-		if similar := act.game.ModelApi.AreCompatible(id, nounClass); similar {
+		if similar := act.game.Model.AreCompatible(id, nounClass); similar {
 			ret, okay = act.getObject(i)
 			break
 		}

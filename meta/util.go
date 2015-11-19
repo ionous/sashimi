@@ -1,4 +1,4 @@
-package api
+package meta
 
 import "github.com/ionous/sashimi/util/ident"
 

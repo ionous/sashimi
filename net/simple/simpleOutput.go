@@ -3,7 +3,7 @@ package simple
 import (
 	"fmt"
 	C "github.com/ionous/sashimi/console"
-	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/meta"
 	"os"
 )
 
@@ -21,7 +21,7 @@ func (this *SimpleOutput) ScriptSays(lines []string) {
 }
 
 //
-func (this *SimpleOutput) ActorSays(whose api.Instance, lines []string) {
+func (this *SimpleOutput) ActorSays(whose meta.Instance, lines []string) {
 	fmt.Println("Actor says", lines)
 	var name string
 	if prop, ok := whose.FindProperty("name"); ok {

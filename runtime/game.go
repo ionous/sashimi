@@ -3,20 +3,20 @@ package runtime
 import (
 	"fmt"
 	G "github.com/ionous/sashimi/game"
-	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/runtime/internal"
 	"github.com/ionous/sashimi/util/ident"
 )
 
 type Game struct {
-	api.Model
+	meta.Model
 	game *internal.Game
 }
 
 func (g *Game) NewAdapter() G.Play {
 	return internal.NewGameAdapter(g.game)
 }
-func (g *Game) NewGameObject(inst api.Instance) G.IObject {
+func (g *Game) NewGameObject(inst meta.Instance) G.IObject {
 	return internal.NewGameObject(g.game, inst)
 }
 
@@ -24,7 +24,7 @@ func NullObject(name string) G.IObject {
 	return internal.NullObject(name)
 }
 
-func (g *Game) QueueActionInstances(act api.Action, objects []api.Instance) *internal.RuntimeAction {
+func (g *Game) QueueActionInstances(act meta.Action, objects []meta.Instance) *internal.RuntimeAction {
 	tgt := internal.NewObjectTarget(g.game, objects[0])
 	data := internal.NewRuntimeAction(g.game, act, objects)
 	g.game.Queue.QueueEvent(tgt, act.GetEvent().GetId(), data)

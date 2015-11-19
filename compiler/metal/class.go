@@ -1,15 +1,15 @@
-package memory
+package metal
 
 import (
 	"fmt"
-	M "github.com/ionous/sashimi/model"
-	"github.com/ionous/sashimi/runtime/api"
+	M "github.com/ionous/sashimi/compiler/model"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 	"strings"
 )
 
 type classInfo struct {
-	mdl *MemoryModel
+	mdl *Metal
 	*M.ClassModel
 }
 
@@ -17,7 +17,7 @@ func (c classInfo) GetId() ident.Id {
 	return c.Id
 }
 
-func (c classInfo) GetParentClass() (ret api.Class) {
+func (c classInfo) GetParentClass() (ret meta.Class) {
 	if p := c.Parent(); !p.Empty() {
 		parent := c.mdl.Classes[p]
 		ret = classInfo{c.mdl, parent}
@@ -34,7 +34,7 @@ func (c classInfo) NumProperty() int {
 	return len(props)
 }
 
-func (c classInfo) PropertyNum(i int) api.Property {
+func (c classInfo) PropertyNum(i int) meta.Property {
 	p := c.propertyNum(i)
 	return c.makeProperty(p)
 }
@@ -44,14 +44,14 @@ func (c classInfo) propertyNum(i int) *M.PropertyModel {
 	return props[i] // panics on out of range
 }
 
-func (c classInfo) GetProperty(id ident.Id) (ret api.Property, okay bool) {
+func (c classInfo) GetProperty(id ident.Id) (ret meta.Property, okay bool) {
 	if prop, ok := c.getPropertyById(id); ok {
 		ret, okay = c.makeProperty(prop), true
 	}
 	return
 }
 
-func (c classInfo) FindProperty(s string) (ret api.Property, okay bool) {
+func (c classInfo) FindProperty(s string) (ret meta.Property, okay bool) {
 	if prop, ok := c.getPropertyByName(s); ok {
 		ret, okay = c.makeProperty(prop), true
 	}
@@ -92,7 +92,7 @@ func (c classInfo) getPropertyById(id ident.Id) (ret *M.PropertyModel, okay bool
 	return
 }
 
-func (c classInfo) GetPropertyByChoice(choice ident.Id) (ret api.Property, okay bool) {
+func (c classInfo) GetPropertyByChoice(choice ident.Id) (ret meta.Property, okay bool) {
 	if p, ok := c.getPropertyByChoice(choice); ok {
 		ret, okay = c.makeProperty(p), true
 	}
@@ -113,7 +113,7 @@ func (c classInfo) getPropertyByChoice(id ident.Id) (ret *M.PropertyModel, okay 
 	return
 }
 
-func (c classInfo) makeProperty(p *M.PropertyModel) api.Property {
+func (c classInfo) makeProperty(p *M.PropertyModel) meta.Property {
 	return &propBase{
 		mdl:      c.mdl,
 		src:      c.Id,

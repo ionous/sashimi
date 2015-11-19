@@ -3,7 +3,7 @@ package internal
 import (
 	"fmt"
 	G "github.com/ionous/sashimi/game"
-	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/ionous/sashimi/util/lang"
 	"strings"
@@ -27,14 +27,14 @@ func NewGameAdapter(game *Game) *GameEventAdapter {
 // NewGameObject gives the passed game object the IObject interface.
 // Public for testing.
 func NewGameObjectFromId(game *Game, id ident.Id) (ret G.IObject) {
-	var inst api.Instance
-	if i, ok := game.ModelApi.GetInstance(id); ok {
+	var inst meta.Instance
+	if i, ok := game.Model.GetInstance(id); ok {
 		inst = i
 	}
 	return NewGameObject(game, inst)
 }
 
-func NewGameObject(game *Game, inst api.Instance) (ret G.IObject) {
+func NewGameObject(game *Game, inst meta.Instance) (ret G.IObject) {
 	if inst != nil {
 		ret = GameObject{game, inst}
 	} else {
@@ -64,11 +64,11 @@ func (ga *GameEventAdapter) Go(phrase G.RuntimePhrase) {
 }
 
 func (ga *GameEventAdapter) List(class string) (ret G.IList) {
-	instances := []api.Instance{}
+	instances := []meta.Instance{}
 	clsid := StripStringId(class)
-	for i := 0; i < ga.ModelApi.NumInstance(); i++ {
-		gobj := ga.ModelApi.InstanceNum(i)
-		if id := gobj.GetParentClass().GetId(); ga.ModelApi.AreCompatible(id, clsid) {
+	for i := 0; i < ga.Model.NumInstance(); i++ {
+		gobj := ga.Model.InstanceNum(i)
+		if id := gobj.GetParentClass().GetId(); ga.Model.AreCompatible(id, clsid) {
 			instances = append(instances, gobj)
 		}
 	}
@@ -104,7 +104,7 @@ var DebugGet = false
 // FUTURE: use dependency injection instead
 func (ga *GameEventAdapter) GetObject(name string) (ret G.IObject) {
 	id := StripStringId(name)
-	if gobj, ok := ga.ModelApi.GetInstance(id); ok {
+	if gobj, ok := ga.Model.GetInstance(id); ok {
 		ret = NewGameObject(ga.Game, gobj)
 	} else if ga.data != nil {
 		// testing against ga.data b/c sometimes the adapter isnt invoked via an event.
@@ -113,7 +113,7 @@ func (ga *GameEventAdapter) GetObject(name string) (ret G.IObject) {
 			ret = obj
 		} else {
 			found := false
-			clsid := MakeStringId(ga.ModelApi.Pluralize(lang.StripArticle(name)))
+			clsid := MakeStringId(ga.Model.Pluralize(lang.StripArticle(name)))
 			if clsid == ga.hint {
 				ret, found = ga.data.getObject(0)
 			} else {

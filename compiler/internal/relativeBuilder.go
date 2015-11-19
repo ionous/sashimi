@@ -2,8 +2,8 @@ package internal
 
 import (
 	"fmt"
+	"github.com/ionous/sashimi/compiler/model/table"
 	M "github.com/ionous/sashimi/compiler/xmodel"
-	"github.com/ionous/sashimi/model/table"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/ident"
 )

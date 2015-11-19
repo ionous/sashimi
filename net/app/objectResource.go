@@ -2,12 +2,12 @@ package app
 
 import (
 	"fmt"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/net/resource"
-	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/util/ident"
 )
 
-func ObjectResource(mdl api.Model, clsId ident.Id, serial *ObjectSerializer) resource.IResource {
+func ObjectResource(mdl meta.Model, clsId ident.Id, serial *ObjectSerializer) resource.IResource {
 	return resource.Wrapper{
 		// Find the id object.
 		Finds: func(name string) (ret resource.IResource, okay bool) {
@@ -34,7 +34,7 @@ func ObjectResource(mdl api.Model, clsId ident.Id, serial *ObjectSerializer) res
 										Queries: func(doc resource.DocumentBuilder) {
 											classes, includes := doc.NewObjects(), doc.NewIncludes()
 											//// UGH. for backwards compatibility (ex. whereabouts queries
-											if propType := prop.GetType(); propType&api.ArrayProperty == 0 {
+											if propType := prop.GetType(); propType&meta.ArrayProperty == 0 {
 												n := prop.GetValue().GetObject()
 												addObject(mdl, n, serial, classes, includes)
 											} else {
@@ -57,7 +57,7 @@ func ObjectResource(mdl api.Model, clsId ident.Id, serial *ObjectSerializer) res
 		},
 	}
 }
-func addObject(mdl api.Model, n ident.Id, serial *ObjectSerializer, classes, includes resource.IBuildObjects) {
+func addObject(mdl meta.Model, n ident.Id, serial *ObjectSerializer, classes, includes resource.IBuildObjects) {
 	if other, ok := mdl.GetInstance(n); !ok {
 		panic(fmt.Sprintf("internal error, couldnt find related object '%s'", n))
 	} else {

@@ -3,7 +3,7 @@ package internal
 import (
 	"fmt"
 	G "github.com/ionous/sashimi/game"
-	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 	"reflect"
 )
@@ -13,8 +13,8 @@ var floatType = reflect.TypeOf(float64(0))
 type gameList struct {
 	game   *Game // context needed for wrapping instances
 	path   PropertyPath
-	ptype  api.PropertyType
-	values api.Values
+	ptype  meta.PropertyType
+	values meta.Values
 }
 
 func (l gameList) Len() int {
@@ -29,7 +29,7 @@ func (l gameList) Get(i int) (ret G.IValue) {
 		ret = gameValue{
 			l.game,
 			l.path.Index(i),
-			l.ptype & ^api.ArrayProperty,
+			l.ptype & ^meta.ArrayProperty,
 			l.values.ValueNum(i)}
 	}
 	return
@@ -40,8 +40,8 @@ func (l gameList) Contains(in interface{}) (yes bool) {
 	default:
 		panic("internal error, unhandled type")
 
-	case api.NumProperty | api.ArrayProperty:
-		if v, ok := in.(gameValue); ok && v.ptype == api.NumProperty {
+	case meta.NumProperty | meta.ArrayProperty:
+		if v, ok := in.(gameValue); ok && v.ptype == meta.NumProperty {
 			yes = containsNum(l.values, v.value.GetNum())
 		} else {
 			r := reflect.ValueOf(v)
@@ -53,8 +53,8 @@ func (l gameList) Contains(in interface{}) (yes bool) {
 			}
 		}
 
-	case api.TextProperty | api.ArrayProperty:
-		if v, ok := in.(gameValue); ok && v.ptype == api.TextProperty {
+	case meta.TextProperty | meta.ArrayProperty:
+		if v, ok := in.(gameValue); ok && v.ptype == meta.TextProperty {
 			yes = containsText(l.values, v.value.GetText())
 		} else if s, ok := in.(string); ok {
 			yes = containsText(l.values, s)
@@ -62,12 +62,12 @@ func (l gameList) Contains(in interface{}) (yes bool) {
 			l.log("Contains, testing unknown value %v", in)
 		}
 
-	case api.ObjectProperty | api.ArrayProperty:
+	case meta.ObjectProperty | meta.ArrayProperty:
 		if in == nil {
 			yes = containsObject(l.values, ident.Empty())
 		} else if v, ok := in.(iasv); ok {
 			yes = containsObject(l.values, v.GetId())
-		} else if v, ok := in.(gameValue); ok && v.ptype == api.ObjectProperty {
+		} else if v, ok := in.(gameValue); ok && v.ptype == meta.ObjectProperty {
 			yes = containsObject(l.values, v.value.GetObject())
 		} else if v, ok := in.(GameObject); ok {
 			yes = containsObject(l.values, v.Id())
@@ -108,7 +108,7 @@ func (l gameList) log(format string, v ...interface{}) {
 
 //.................
 
-func containsNum(values api.Values, v float32) (yes bool) {
+func containsNum(values meta.Values, v float32) (yes bool) {
 	for i := 0; i < values.NumValue(); i++ {
 		if values.ValueNum(i).GetNum() == v {
 			yes = true
@@ -118,7 +118,7 @@ func containsNum(values api.Values, v float32) (yes bool) {
 	return
 }
 
-func containsText(values api.Values, v string) (yes bool) {
+func containsText(values meta.Values, v string) (yes bool) {
 	for i := 0; i < values.NumValue(); i++ {
 		if values.ValueNum(i).GetText() == v {
 			yes = true
@@ -128,7 +128,7 @@ func containsText(values api.Values, v string) (yes bool) {
 	return
 }
 
-func containsObject(values api.Values, v ident.Id) (yes bool) {
+func containsObject(values meta.Values, v ident.Id) (yes bool) {
 	for i := 0; i < values.NumValue(); i++ {
 		if values.ValueNum(i).GetObject() == v {
 			yes = true

@@ -2,8 +2,8 @@ package app
 
 import (
 	C "github.com/ionous/sashimi/console"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/net/resource"
-	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/util/ident"
 	"os"
 )
@@ -17,9 +17,9 @@ type CommandOutput struct {
 }
 
 // Includes all objects referenced by the CommandOutput.
-type Includes map[ident.Id]api.Instance
+type Includes map[ident.Id]meta.Instance
 
-func (inc Includes) Include(gobj api.Instance) {
+func (inc Includes) Include(gobj meta.Instance) {
 	inc[gobj.GetId()] = gobj
 }
 
@@ -30,7 +30,7 @@ type SerialOut struct {
 }
 
 // TryObjectRef only creates an object ref if the object is already known.
-func (serial *SerialOut) TryObjectRef(gobj api.Instance) (ret *resource.Object, okay bool) {
+func (serial *SerialOut) TryObjectRef(gobj meta.Instance) (ret *resource.Object, okay bool) {
 	if serial.IsKnown(gobj) {
 		ret = serial.NewObjectRef(gobj)
 		okay = true
@@ -38,7 +38,7 @@ func (serial *SerialOut) TryObjectRef(gobj api.Instance) (ret *resource.Object, 
 	return
 }
 
-func (serial *SerialOut) NewObjectRef(gobj api.Instance) *resource.Object {
+func (serial *SerialOut) NewObjectRef(gobj meta.Instance) *resource.Object {
 	serial.includes.Include(gobj)
 	return serial.NewObject(resource.ObjectList{}, gobj)
 }
@@ -60,7 +60,7 @@ func NewCommandOutput(id string) *CommandOutput {
 }
 
 // ActorSays adds a command for an actor's line of dialog.
-func (out *CommandOutput) ActorSays(who api.Instance, lines []string) {
+func (out *CommandOutput) ActorSays(who meta.Instance, lines []string) {
 	out.flushPending()
 	tgt := out.serial.NewObjectRef(who)
 	out.events.AddAction("say", tgt, lines)
@@ -101,7 +101,7 @@ func (out *CommandOutput) flushFrame(header, included resource.IBuildObjects) {
 	}
 }
 
-func (out *CommandOutput) NumChange(gobj api.Instance, prop ident.Id, prev, next float32) {
+func (out *CommandOutput) NumChange(gobj meta.Instance, prop ident.Id, prev, next float32) {
 	if obj, ok := out.serial.TryObjectRef(gobj); ok {
 		data := struct {
 			Prop  string  `json:"prop"`
@@ -111,7 +111,7 @@ func (out *CommandOutput) NumChange(gobj api.Instance, prop ident.Id, prev, next
 	}
 }
 
-func (out *CommandOutput) TextChange(gobj api.Instance, prop ident.Id, prev, next string) {
+func (out *CommandOutput) TextChange(gobj meta.Instance, prop ident.Id, prev, next string) {
 	if obj, ok := out.serial.TryObjectRef(gobj); ok {
 		data := struct {
 			Prop  string `json:"prop"`
@@ -120,7 +120,7 @@ func (out *CommandOutput) TextChange(gobj api.Instance, prop ident.Id, prev, nex
 		out.events.AddAction("x-txt", obj, data)
 	}
 }
-func (out *CommandOutput) StateChange(gobj api.Instance, prop ident.Id, prev, next ident.Id) {
+func (out *CommandOutput) StateChange(gobj meta.Instance, prop ident.Id, prev, next ident.Id) {
 	if obj, ok := out.serial.TryObjectRef(gobj); ok {
 		data := struct {
 			Prop string `json:"prop"`
@@ -132,7 +132,7 @@ func (out *CommandOutput) StateChange(gobj api.Instance, prop ident.Id, prev, ne
 		out.events.AddAction("x-set", obj, data)
 	}
 }
-func (out *CommandOutput) ReferenceChange(gobj api.Instance, prop, other ident.Id, prev, next api.Instance) {
+func (out *CommandOutput) ReferenceChange(gobj meta.Instance, prop, other ident.Id, prev, next meta.Instance) {
 	if out.serial.IsKnown(gobj) || out.serial.IsKnown(prev) || out.serial.IsKnown(next) {
 		obj := out.serial.NewObjectRef(gobj)
 		relChange := struct {

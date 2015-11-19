@@ -1,12 +1,12 @@
-package memory
+package metal
 
 import (
-	M "github.com/ionous/sashimi/model"
+	M "github.com/ionous/sashimi/compiler/model"
 	"github.com/ionous/sashimi/util/ident"
 )
 
 type relInfo struct {
-	mdl *MemoryModel
+	mdl *Metal
 	*M.RelationModel
 }
 

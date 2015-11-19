@@ -1,12 +1,12 @@
 package app
 
 import (
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/net/resource"
-	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/util/ident"
 )
 
-func ParserResource(mdl api.Model) resource.IResource {
+func ParserResource(mdl meta.Model) resource.IResource {
 	return resource.Wrapper{
 		Queries: func(doc resource.DocumentBuilder) {
 			objects := doc.NewObjects()

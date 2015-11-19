@@ -2,7 +2,7 @@ package tests
 
 import (
 	"fmt"
-	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/meta"
 	. "github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/standard"
 	"github.com/ionous/sashimi/util/ident"
@@ -108,7 +108,7 @@ func testMoves(t *testing.T, test TestGame, moves ...xMove) (err error) {
 	return err
 }
 
-func where(mdl api.Model, gobj api.Instance) (ret ident.Id) {
+func where(mdl meta.Model, gobj meta.Instance) (ret ident.Id) {
 	if prop, ok := gobj.FindProperty("whereabouts"); ok {
 		ret = prop.GetValue().GetObject()
 	}

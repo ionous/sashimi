@@ -2,7 +2,7 @@ package model
 
 import (
 	"encoding/json"
-	"github.com/ionous/sashimi/model/table"
+	"github.com/ionous/sashimi/compiler/model/table"
 	"github.com/ionous/sashimi/util/ident"
 )
 
