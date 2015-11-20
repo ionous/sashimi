@@ -3,8 +3,11 @@ package datastore
 import (
 	// 	"appengine/aetest"
 	// 	"github.com/stretchr/testify/assert"
+	"github.com/ionous/sashimi/meta"
 	"testing"
 )
+
+// https://golang.org/pkg/encoding/binary/#Write
 
 func TestDataStore(t *testing.T) {
 	// if c, err := aetest.NewContext(nil); assert.NoError(t, err) {
