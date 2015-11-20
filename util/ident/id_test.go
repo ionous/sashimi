@@ -46,3 +46,9 @@ func TestToString(t *testing.T) {
 	assert.Exactly(t, []string{"apple", "turnover"}, MakeId("AppleTurnover").Split())
 	assert.Exactly(t, []string{"title"}, MakeId("Title").Split())
 }
+
+func TestDash(t *testing.T) {
+	assert.EqualValues(t, "apple-turnover", Dash(MakeId("apple turnover")))
+	assert.EqualValues(t, "dash-identity", Dash(MakeId("dash-identity")))
+	assert.EqualValues(t, "dash-it-all", Dash(MakeId("DashItAll")))
+}

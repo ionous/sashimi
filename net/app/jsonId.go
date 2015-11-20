@@ -1,10 +1,5 @@
 package app
 
-import (
-	"github.com/ionous/sashimi/util/ident"
-	"strings"
-)
+import "github.com/ionous/sashimi/util/ident"
 
-func jsonId(id ident.Id) string {
-	return strings.Join(id.Split(), "-")
-}
+var jsonId = ident.Dash

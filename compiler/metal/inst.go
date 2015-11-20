@@ -11,6 +11,9 @@ type instInfo struct {
 	*M.InstanceModel
 }
 
+func (n instInfo) String() string {
+	return n.Id.String()
+}
 func (n instInfo) GetId() ident.Id {
 	return n.Id
 }

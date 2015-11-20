@@ -9,6 +9,8 @@ import (
 	"github.com/ionous/sashimi/util/lang"
 )
 
+type GenericValue interface{}
+
 type Metal struct {
 	*M.Model
 	// objects ordered by index for linear travseral
@@ -255,24 +257,23 @@ func (mdl Metal) getZero(prop *M.PropertyModel) (ret interface{}) {
 		if !prop.IsMany {
 			ret = float32(0)
 		} else {
-			ret = []interface{}{}
+			ret = []float32{}
 		}
 	case M.TextProperty:
 		if !prop.IsMany {
 			ret = ""
 		} else {
-			ret = []interface{}{}
+			ret = []string{}
 		}
 	case M.EnumProperty:
-		//enum := mdl.Enumerations[prop.Id]
-		ret = 1 //enum.ChoiceToIndex(enum.Best())
+		enum := mdl.Enumerations[prop.Id]
+		ret = enum.Best()
 	case M.PointerProperty:
 		if !prop.IsMany {
 			ret = ident.Empty()
 		} else {
-			ret = []interface{}{}
+			ret = []ident.Id{}
 		}
-
 	default:
 		panic(fmt.Errorf("GetZero not supported for property %s type %v", prop.Id, prop.Type))
 	}

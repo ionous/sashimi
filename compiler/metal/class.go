@@ -13,6 +13,10 @@ type classInfo struct {
 	*M.ClassModel
 }
 
+func (c classInfo) String() string {
+	return c.Id.String()
+}
+
 func (c classInfo) GetId() ident.Id {
 	return c.Id
 }

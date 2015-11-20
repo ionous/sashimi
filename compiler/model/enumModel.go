@@ -35,24 +35,25 @@ func (e *EnumModel) IndexToChoice(idx int) (ret ident.Id) {
 // 	UsuallyLocal bool // usual set for cons constraint, or for some ancestor?
 // }
 
-// func (e *EnumModel) Best() (ret ident.Id) {
-// 	switch {
-// 	case !e.Only.Empty():
-// 		ret = e.Only
+func (e *EnumModel) Best() (ret ident.Id) {
+	return e.Choices[0]
+	// 	switch {
+	// 	case !e.Only.Empty():
+	// 		ret = e.Only
 
-// 	case !e.Usual.Empty():
-// 		ret = e.Usual
+	// 	case !e.Usual.Empty():
+	// 		ret = e.Usual
 
-// 	default:
-// 		for _, choice := range e.Choices {
-// 			if !e.IsNever(choice) {
-// 				ret = choice
-// 				break
-// 			}
-// 		}
-// 	}
-// 	return
-// }
+	// 	default:
+	// 		for _, choice := range e.Choices {
+	// 			if !e.IsNever(choice) {
+	// 				ret = choice
+	// 				break
+	// 			}
+	// 		}
+	// 	}
+	// 	return
+}
 
 // func (e *EnumModel) IsNever(id ident.Id) (ret bool) {
 // 	for _, n := range e.Never {

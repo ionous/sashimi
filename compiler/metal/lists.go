@@ -3,17 +3,20 @@ package metal
 import (
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
+	"reflect"
 )
 
 // implements meta.Values
 type arrayValues struct {
 	*propBase
+	// valueNum constructs a new meta.Value wrapper
+	// (a num, a text, an object) for the passed index.
 	valueNum func(int) meta.Value
 }
 
 func (ar arrayValues) NumValue() int {
-	slice := ar.get().([]interface{})
-	return len(slice)
+	slice := reflect.ValueOf(ar.get())
+	return slice.Len()
 }
 
 func (ar arrayValues) ValueNum(i int) meta.Value {
@@ -21,23 +24,21 @@ func (ar arrayValues) ValueNum(i int) meta.Value {
 }
 
 func (ar arrayValues) ClearValues() error {
-	return ar.set([]interface{}{})
+	empty := ar.mdl.getZero(ar.prop)
+	return ar.set(empty)
 }
 
-func (ar arrayValues) AppendNum(f float32) error {
-	return ar.append(f)
+func (ar arrayValues) AppendNum(v float32) error {
+	slice := ar.get().([]float32)
+	return ar.set(append(slice, v))
 }
 
-func (ar arrayValues) AppendText(t string) error {
-	return ar.append(t)
+func (ar arrayValues) AppendText(v string) error {
+	slice := ar.get().([]string)
+	return ar.set(append(slice, v))
 }
 
-func (ar arrayValues) AppendObject(n ident.Id) error {
-	return ar.append(n)
-}
-
-func (ar arrayValues) append(x interface{}) error {
-	slice := ar.get().([]interface{})
-	slice = append(slice, GenericValue(x))
-	return ar.set(slice)
+func (ar arrayValues) AppendObject(v ident.Id) error {
+	slice := ar.get().([]ident.Id)
+	return ar.set(append(slice, v))
 }
