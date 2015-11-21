@@ -37,3 +37,5 @@ _examples/webapp
 _examples/compile
 
 _examples/$gen/gen.go
+
+_examples/out.txt

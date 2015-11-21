@@ -7,8 +7,6 @@ import (
 )
 
 type listenersInfo struct {
-	mdl       *Metal
-	evt       *M.EventModel
 	callbacks []M.ListenerModel
 	captures  bool
 }

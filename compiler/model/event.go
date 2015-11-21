@@ -12,5 +12,4 @@ func (e EventModel) String() string {
 	return e.Name
 }
 
-// indexed by eventId
 type EventModelCallbacks []ListenerModel

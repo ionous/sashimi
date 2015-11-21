@@ -1,6 +1,11 @@
 package event
 
-import "github.com/ionous/sashimi/util/ident"
+import (
+	"fmt"
+	"github.com/ionous/sashimi/util/ident"
+)
+
+var _ = fmt.Sprintf
 
 type Message struct {
 	Id          ident.Id
@@ -9,8 +14,11 @@ type Message struct {
 	CantCancel  bool
 }
 
-//
-// returns true if the default action is desired
+func (msg *Message) String() string {
+	return msg.Id.String()
+}
+
+// Send returns true if the default action is desired.
 func (msg *Message) Send(path PathList) (bool, error) {
 	okay := true
 	if path.Len() > 0 {
@@ -23,7 +31,7 @@ func (msg *Message) Send(path PathList) (bool, error) {
 			proc.phase = CapturingPhase
 			for it := path.Front(); it != path.Back(); it = it.Next() {
 				loc := path.Cast(it)
-				//fmt.Println(proc.phase, loc)
+				//fmt.Println("event.Messge", proc.phase, loc)
 				if e := proc.sendToTarget(loc); e != nil {
 					return false, e
 				}
@@ -37,7 +45,7 @@ func (msg *Message) Send(path PathList) (bool, error) {
 		if !proc.stopMore {
 			proc.phase = TargetPhase
 			loc := proc.target
-			//fmt.Println(proc.phase, loc)
+			//fmt.Println("event.Messge", proc.phase, loc)
 			if e := proc.sendToTarget(loc); e != nil {
 				return false, e
 			}
@@ -48,7 +56,7 @@ func (msg *Message) Send(path PathList) (bool, error) {
 			proc.phase = BubblingPhase
 			for it := path.Back().Prev(); it != nil; it = it.Prev() {
 				loc := path.Cast(it)
-				//fmt.Println(proc.phase, loc)
+				//fmt.Println("event.Messge", proc.phase, loc)
 				if e := proc.sendToTarget(loc); e != nil {
 					return false, e
 				}

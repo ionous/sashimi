@@ -99,7 +99,9 @@ You shake your head. No time for fantasy. Must feed fish.`)
 		Contains("some cloths"))
 	// [35b-36)
 	s.The("prop", Called("paints"),
-		Has("description", "A bunch of tubes of oil paint, most of them in some state of grunginess, some with the tops twisted partway off."))
+		Has("description", "A bunch of tubes of oil paint, most of them in some state of grunginess, some with the tops twisted partway off."),
+		Is("plural-named"), //articles, and plurals named items should be used as hints, but arent currently.
+	)
 	// [37-39)
 	s.The("paints",
 		When("reporting take").Always(func(g G.Play) {
@@ -118,6 +120,7 @@ You shake your head. No time for fantasy. Must feed fish.`)
 	s.The("prop", Called("cloths"),
 		Has("description", "Various colors of drapery that Britney uses to set up backgrounds and clothe her models. She does a lot of portraiture, so this comes in handy. It's all a big messy wad at the moment. Organized is not her middle name."),
 		IsKnownAs("drapery").And("cloth"),
+		Is("plural-named"), //articles, and plurals named items should be used as hints, but arent currently.
 	)
 	// 46: **** The indefinite article of the cloths is "a heap of".
 	// [47-52)
@@ -164,6 +167,7 @@ You shake your head. No time for fantasy. Must feed fish.`)
 		Has("description", "A vehemently orange canister of fish food."),
 		Is("hidden").And("opaque"),
 		IsKnownAs("can"),
+		Is("plural-named"), // some fish food
 	)
 	// [63-56]
 	s.The("fish food",

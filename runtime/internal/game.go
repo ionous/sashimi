@@ -33,7 +33,9 @@ func (g *Game) Random(n int) int {
 	return g.Rand.Intn(n)
 }
 
-// class or instance id
+// target: class or instance id
+// note: we get dispatch multiple times for each event:
+// on the capture, target, and bubble cycles.
 func (g *Game) dispatch(evt E.IEvent, target ident.Id) (err error) {
 	if src, ok := g.Model.GetEvent(evt.Id()); ok {
 		if ls, ok := src.GetListeners(true); ok {
@@ -84,7 +86,7 @@ func (g *Game) SendMessage(tgt E.ITarget, msg *E.Message) (err error) {
 	defer g.Frame(tgt, msg)()
 	path := E.NewPathTo(tgt)
 
-	// game.log.Printf("sending `%s` to: %s", msg.Name, path)
+	g.Printf("sending `%s` to: %s", msg, path)
 	if runDefault, e := msg.Send(path); e != nil {
 		err = e
 	} else {

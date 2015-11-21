@@ -9,13 +9,12 @@ import (
 
 // MockKeyGen implements sashimi/datastore/KeyGen.
 type MockKeyGen struct {
-	mdl    meta.Model
 	c      A.Context
 	parent *D.Key
 }
 
-func NewKeyGen(mdl meta.Model, c A.Context, parent *D.Key) MockKeyGen {
-	return MockKeyGen{mdl, c, parent}
+func NewKeyGen(c A.Context, parent *D.Key) MockKeyGen {
+	return MockKeyGen{c, parent}
 }
 
 func (f MockKeyGen) NewKey(inst meta.Instance) *D.Key {

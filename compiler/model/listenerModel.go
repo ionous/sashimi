@@ -18,8 +18,7 @@ type ListenerModel struct {
 type ListenerOptions int
 
 const (
-	EventCapture ListenerOptions = 1 << iota
-	EventTargetOnly
+	EventTargetOnly ListenerOptions = 1 << iota
 	EventQueueAfter
 	EventPreventDefault
 )
@@ -32,11 +31,6 @@ func (cb ListenerModel) GetId() (ret ident.Id) {
 		ret = cb.Class
 	}
 	return
-}
-
-// UseCapture if the listener wants to participate in the capture cycle ( default is bubble. )
-func (cb ListenerModel) UseCapture() bool {
-	return cb.Options&EventCapture != 0
 }
 
 // UseTargetOnly if the listener wants callback only when directly targeted.

@@ -21,15 +21,15 @@ func (e eventInfo) GetEventName() string {
 
 func (e eventInfo) GetListeners(capture bool) (ret meta.Listeners, okay bool) {
 	var callbacks M.EventModelCallbacks
-	if !capture {
-		callbacks = e.Bubble
-	} else {
+	if capture {
 		callbacks = e.Capture
+	} else {
+		callbacks = e.Bubble
 	}
 	if len(callbacks) == 0 {
 		ret = meta.NoListeners{}
 	} else {
-		ret = listenersInfo{e.mdl, e.EventModel, callbacks, capture}
+		ret = listenersInfo{callbacks, capture}
 		okay = true
 	}
 	return

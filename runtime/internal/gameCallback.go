@@ -10,13 +10,26 @@ import (
 // filter listeners to the events appropriate for this target
 func NewGameListeners(game *Game, evt E.IEvent, target ident.Id, ls meta.Listeners) GameListeners {
 	filtered := []meta.Listener{}
+
+	cls, isClassTarget := evt.CurrentTarget().(ClassTarget)
+	isTargetPhase := evt.Phase() == E.TargetPhase
+	//
 	for i := 0; i < ls.NumListener(); i++ {
 		l := ls.ListenerNum(i)
-		if target == l.GetInstance() || target == l.GetClass() {
-			// callbacks from scripts can ask to be limited to the "target" phase,
-			if trigger := !l.GetOptions().UseTargetOnly() || isTargetPhase(evt); trigger {
-				filtered = append(filtered, l)
+		trigger := false
+		if isClassTarget {
+			if l.GetInstance().Empty() && target == l.GetClass() {
+				// expands the target phase to include the instance's class.
+				isTargetPhase := isTargetPhase || cls.host == evt.Target()
+				trigger = l.GetOptions().UseTargetOnly() == isTargetPhase
 			}
+		} else {
+			if target == l.GetInstance() {
+				trigger = l.GetOptions().UseTargetOnly() == isTargetPhase
+			}
+		}
+		if trigger {
+			filtered = append(filtered, l)
 		}
 	}
 	return GameListeners{game, filtered}
@@ -64,17 +77,4 @@ func (cb GameCallback) HandleEvent(evt E.IEvent) (err error) {
 		}
 	}
 	return err
-}
-
-// isTargetPhase expands the target phase to include the target instance and the instance's class.
-func isTargetPhase(evt E.IEvent) bool {
-	targetPhase := evt.Phase() == E.TargetPhase
-	if !targetPhase {
-		if clsTarget, ok := evt.CurrentTarget().(ClassTarget); ok {
-			if clsTarget.host == evt.Target() {
-				targetPhase = true
-			}
-		}
-	}
-	return targetPhase
 }

@@ -136,7 +136,7 @@ func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 				Instance: cb.Instance,
 				Class:    cb.Class,
 				Callback: cb.Callback,
-				Options:  M.ListenerOptions(cb.Options),
+				Options:  eventOptions(cb.Options),
 			})
 			callbacks[e] = arr
 		}
@@ -267,6 +267,27 @@ func (c converter) flattenTable(srcProp ident.Id) (err error) {
 				}
 			}
 		}
+	}
+	return
+}
+
+func eventOptions(opts X.ListenerOptions) (ret M.ListenerOptions) {
+	for _, flag := range []struct {
+		x X.ListenerOptions
+		m M.ListenerOptions
+	}{
+		{X.EventCapture, 0}, // we split the list into capture and bubble: dont need this tracked
+		{X.EventTargetOnly, M.EventTargetOnly},
+		{X.EventQueueAfter, M.EventQueueAfter},
+		{X.EventPreventDefault, M.EventPreventDefault},
+	} {
+		if opts&flag.x != 0 {
+			ret |= flag.m
+			opts &= ^flag.x
+		}
+	}
+	if opts != 0 {
+		panic(fmt.Sprintf("uncopied event options remain %x", opts))
 	}
 	return
 }

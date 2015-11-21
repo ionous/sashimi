@@ -89,17 +89,19 @@ func TestEncodeDecode(t *testing.T) {
 
 // go test -run TestStoreData
 func TestStoreData(t *testing.T) {
-	kvs := &KeyValues{}
-	mdl := metal.NewMetal(modeltest.NewModel(), kvs)
 
 	if ctx, err := aetest.NewContext(nil); assert.NoError(t, err) {
 		defer ctx.Close()
 
-		// yuck! if we shadowed the meta, we could avoid this.
+		// yuck!  mdl uses kvs ( for value lookup ), kvs uses mdl  (for keycreation and the load saver objects); if we shadowed the meta, we could avoid this.
+		kvs := &KeyValues{}
+		mdl := metal.NewMetal(modeltest.NewModel(), kvs)
 		kvs.mdl = mdl
 		kvs.KeyGen = dstest.NewKeyGen(mdl, ctx, nil)
 		kvs.ctx = ctx
 		kvs.Reset()
+
+		//
 		ctx.Infof("running api test..")
 		metatest.ApiTest(t, mdl, modeltest.TestInstance)
 		ctx.Infof("saving...")
