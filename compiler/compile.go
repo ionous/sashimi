@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"fmt"
 	"github.com/ionous/sashimi/compiler/call"
 	i "github.com/ionous/sashimi/compiler/internal"
 	M "github.com/ionous/sashimi/compiler/model"
@@ -17,7 +18,8 @@ type Config struct {
 }
 
 type converter struct {
-	*M.Model
+	m *M.Model
+	x *X.Model
 }
 
 func newConverter(x *X.Model) converter {
@@ -31,9 +33,8 @@ func newConverter(x *X.Model) converter {
 		ParserActions:  make([]M.ParserAction, 0, len(x.ParserActions)),
 		Relations:      make(M.Relations),
 		SingleToPlural: make(M.SingleToPlural),
-		Tables:         x.Tables.Clone(),
 	}
-	return converter{m}
+	return converter{m, x}
 }
 
 // Compile script statements into a "model", a form usable by the runtime.
@@ -52,7 +53,7 @@ func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 	if x, e := ctx.Compile(); e != nil {
 		err = e
 	} else {
-		m := newConverter(x)
+		c := newConverter(x)
 
 		// actionId -> callbackId
 		actions := make(map[ident.Id][]ident.Id)
@@ -72,7 +73,7 @@ func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 		}
 
 		for id, a := range x.Actions {
-			m.Actions[id] = &M.ActionModel{
+			c.m.Actions[id] = &M.ActionModel{
 				Id:      a.Id,
 				Name:    a.ActionName,
 				EventId: a.EventId,
@@ -90,7 +91,7 @@ func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 			// if srcClass.Constraints.Len() > 0 {
 			// 	panic("constraints not implemented")
 			// }
-			m.Classes[id] = &M.ClassModel{
+			c.m.Classes[id] = &M.ClassModel{
 				Id:       srcClass.Id,
 				Parents:  parents(srcClass, nil),
 				Plural:   srcClass.Plural,
@@ -105,12 +106,11 @@ func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 								ret.Relates = p.Class
 
 							case X.EnumProperty:
-								ret.Id = m.makeEnum(&p)
+								ret.Id = c.makeEnum(&p)
 
 							case X.RelativeProperty:
 								ret.Relation = p.Relation
 								ret.Relates = p.Relates
-								ret.IsRev = p.IsRev
 							}
 							return ret
 						}())
@@ -142,7 +142,7 @@ func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 		}
 
 		for id, evt := range x.Events {
-			m.Events[id] = &M.EventModel{
+			c.m.Events[id] = &M.EventModel{
 				Id:   evt.Id,
 				Name: evt.EventName,
 				// Type: makes perfect sense: the parameters associated with the action.
@@ -155,13 +155,28 @@ func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 		}
 
 		for id, inst := range x.Instances {
-			m.Instances[id] = &M.InstanceModel{
+			c.m.Instances[id] = &M.InstanceModel{
 				Id:    inst.Id,
 				Class: inst.Class.Id,
 				Name:  inst.Name,
 				Values: func() M.Values {
 					ret := make(M.Values)
 					for k, v := range inst.Values {
+						// the compiler originally stored ints for enums
+						// but storing choices (ids) is easier to debug
+						// even at the cost of a little more storage
+						if i, ok := v.(int); ok {
+							if p, ok := inst.Class.GetProperty(k); !ok {
+								panic("couldnt find property for integer enum")
+							} else {
+								enum := p.(X.EnumProperty)
+								if c, e := enum.IndexToChoice(i); e != nil {
+									panic(e)
+								} else {
+									v = c
+								}
+							}
+						}
 						ret[k] = v
 					}
 					return ret
@@ -173,27 +188,85 @@ func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 			for i, n := range v {
 				names[i] = n
 			}
-			m.Aliases[k] = names
+			c.m.Aliases[k] = names
 		}
 		for _, a := range x.ParserActions {
-			m.ParserActions = append(m.ParserActions, M.ParserAction{
+			c.m.ParserActions = append(c.m.ParserActions, M.ParserAction{
 				a.Action,
 				a.Commands,
 			})
 		}
 		for id, rel := range x.Relations {
-			m.Relations[id] = &M.RelationModel{
+			if rel.Source.Property.Empty() || rel.Dest.Property.Empty() {
+				panic(fmt.Sprintf("unsupported relation %s %s %s %s", id, rel.Style, rel.Source.Property, rel.Dest.Property))
+			}
+			c.m.Relations[id] = &M.RelationModel{
 				Id:     rel.Id,
 				Name:   rel.Name,
-				Source: M.HalfRelation{rel.Source.Class, rel.Source.Property},
-				Dest:   M.HalfRelation{rel.Dest.Class, rel.Source.Property},
+				Source: rel.Source.Property,
+				Target: rel.Dest.Property,
 				Style:  M.RelationStyle(rel.Style),
 			}
+
+			switch rel.Style {
+			case X.ManyToMany:
+				panic(fmt.Sprintf("unsupported relation %s %s %s %s", id, rel.Style, rel.Source.Property, rel.Dest.Property))
+			case X.OneToOne:
+				c.flattenTable(rel.Dest.Property)
+				c.flattenTable(rel.Source.Property)
+			case X.OneToMany:
+				c.flattenTable(rel.Dest.Property)
+			case X.ManyToOne:
+				c.flattenTable(rel.Source.Property)
+			}
+
 		}
 		for k, v := range x.SingleToPlural {
-			m.SingleToPlural[k] = v
+			c.m.SingleToPlural[k] = v
 		}
-		ret = m.Model
+		ret = c.m
+	}
+	return
+}
+
+// set that one item as a value.
+func (c converter) flattenTable(srcProp ident.Id) (err error) {
+	for k, v := range c.x.Instances {
+		// for all instances of type source
+		if p, ok := v.Class.GetProperty(srcProp); ok {
+			// 	find the one item they point to
+			// 		via the table and their relative property is rev
+			if rel, ok := p.(X.RelativeProperty); !ok {
+				err = fmt.Errorf("not a relative property? %s.%s(%T)", k, srcProp, p)
+				break
+			} else if rel.IsMany {
+				err = fmt.Errorf("relative property is many; want one %s.%s(%T)", k, srcProp)
+				break
+			} else if table, ok := c.x.Tables[rel.Relation]; !ok {
+				err = fmt.Errorf("missing table? %s", rel.Relation)
+				break
+			} else if lst := table.List(k, rel.IsRev); len(lst) > 1 {
+				err = fmt.Errorf("expected at most one item %s.%s: %v", k, srcProp, lst)
+				break
+			} else {
+				// note: we always set a value, even if its empty.
+				// metal would normally panic on getZero for relation values
+				// but, because we have a blank value, not an nil value -- getZero wont get called.
+				var other ident.Id
+				if len(lst) != 0 {
+					other = lst[0]
+				}
+				if dst, ok := c.m.Instances[k]; !ok {
+					err = fmt.Errorf("couldnt find target instance %s", k)
+					break
+				} else if old, ok := dst.Values[srcProp]; ok {
+					err = fmt.Errorf("value being set twice %s.%s (was:%v; now:%v", k, srcProp, old, other)
+					break
+				} else {
+					dst.Values[srcProp] = other
+				}
+			}
+		}
 	}
 	return
 }
@@ -214,10 +287,8 @@ func propertyType(prop X.IProperty) (ret M.PropertyType) {
 		ret = M.TextProperty
 	case X.EnumProperty:
 		ret = M.EnumProperty
-	case X.PointerProperty:
+	case X.PointerProperty, X.RelativeProperty:
 		ret = M.PointerProperty
-	case X.RelativeProperty:
-		ret = M.RelativeProperty
 	default:
 		panic("unknown x-model property type")
 	}
@@ -251,9 +322,9 @@ func parents(cls *X.ClassInfo, list []ident.Id) (ret []ident.Id) {
 	return
 }
 
-func (m converter) makeEnum(src *X.EnumProperty) ident.Id {
+func (c converter) makeEnum(src *X.EnumProperty) ident.Id {
 	eid := src.Id
-	m.Enumerations[eid] = &M.EnumModel{
+	c.m.Enumerations[eid] = &M.EnumModel{
 		Choices: func() []ident.Id {
 			ret := make([]ident.Id, len(src.Values))
 			for i, v := range src.Values {
@@ -265,7 +336,7 @@ func (m converter) makeEnum(src *X.EnumProperty) ident.Id {
 }
 
 // func (m converter) constrain(clsid ident.Id, cons *X.ConstraintSet) {
-// 	cls := m.Classes[clsid]
+// 	cls := c.m.Classes[clsid]
 // 	if parent := cls.Parent(); !parent.Empty() && cons.Parent != nil {
 // 		constrain(parent, classes, cons.Parent)
 // 	}

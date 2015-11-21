@@ -104,6 +104,7 @@ type Prototype interface {
 
 	// GetParentClass returns nil for classes if no parent;
 	// panics if no class can be found for an instnace.
+	// FIX? switch to classId?
 	GetParentClass() Class
 	GetOriginalName() string
 
@@ -134,8 +135,8 @@ const (
 	NumProperty                  // float32
 	TextProperty                 // string
 	StateProperty                // string.Id
-	ObjectProperty
-	ArrayProperty = 1 << 16
+	ObjectProperty               // string.Id
+	ArrayProperty   = 1 << 16
 )
 
 type Property interface {
@@ -146,15 +147,14 @@ type Property interface {
 	// or maybe IsCompatible(inst) bool
 	GetValue() Value
 	GetValues() Values
-	// GetRelative returns false if there is no relation -- a pure array or object value.
+	// GetRelative returns false if there is no relation, for example: a pure array or object value.
 	GetRelative() (Relative, bool)
 }
 
 type Relative struct {
-	Relation ident.Id
-	Relates  ident.Id
-	From     ident.Id
-	IsRev    bool // in this future this may include a "projection" or "field name"
+	Relation ident.Id // Relation
+	Relates  ident.Id // Relates class
+	From     ident.Id // From property
 }
 
 // get and set panic if the value is not of the requested type; set can return error when the value, when of the correct type, violates a property constraint
@@ -168,7 +168,6 @@ type Value interface {
 	GetState() ident.Id
 	SetState(ident.Id) error
 
-	// FIX : Relations relate Objects -> instances
 	GetObject() ident.Id
 	SetObject(ident.Id) error
 }
@@ -182,10 +181,10 @@ type Values interface {
 	AppendText(string) error
 	AppendObject(ident.Id) error
 
-	// RemoveValue(int)
+	// RemoveValue(int)?
 }
 
-// NOTE: ParserActions aren't id'd so, they are represented as structs.
+// NOTE: ParserActions aren't id'd, so they are represented as structs.
 type ParserAction struct {
 	Action   ident.Id
 	Commands []string

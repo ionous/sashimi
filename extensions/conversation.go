@@ -120,8 +120,12 @@ func init() {
 		s.The("conversation global", Called("conversation"), Exists())
 
 		// note: currently storing both quips and facts in the player's recollection.
-		s.The("actors",
-			HaveMany("recollections", "kinds"))
+		// FIX: many-to-many doesnt exist so we are hacking the actors to allow for the player's recollection; traversing all kinds would be heavy: so just usting a flag.
+		//
+		// s.The("actors",
+		// 	HaveMany("recollections", "kinds").
+		// 		Implying("kinds", HaveMany("recallers", "actor")))
+		s.The("kinds", AreEither("recollected").Or("not recollected").Usually("not recollected"))
 
 		s.The("actors",
 			Can("depart").And("departing").RequiresNothing(),

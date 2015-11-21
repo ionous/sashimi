@@ -5,6 +5,7 @@ import (
 )
 
 // Model: compiler's original output
+// FIX: as much as possible this should, overtime, become the compiler/model format.
 type Model struct {
 	// rule like:
 	Classes       ClassMap

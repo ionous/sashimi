@@ -6,19 +6,25 @@ import (
 )
 
 type QuipMemory struct {
-	G.IList
+	g G.Play
 }
 
 func PlayerMemory(g G.Play) QuipMemory {
-	return QuipMemory{g.The("player").List("recollections")}
+	//g.The("player").List("recollections")
+	return QuipMemory{g}
 }
 
 func (mem QuipMemory) TriesToLearn(quip G.IObject) (newlyLearned bool) {
-	if recollects := mem.Recollects(quip); !recollects {
-		mem.Learns(quip)
+	// if recollects := mem.Recollects(quip); !recollects {
+	// 	mem.Learns(quip)
+	// 	newlyLearned = true
+	// }
+	// return newlyLearned
+	if recollects := quip.Is("recollected"); !recollects {
+		quip.IsNow("recollected")
 		newlyLearned = true
 	}
-	return newlyLearned
+	return
 }
 
 // LearnQuip causes actors to recollect the passed quip.
@@ -26,12 +32,14 @@ func (mem QuipMemory) TriesToLearn(quip G.IObject) (newlyLearned bool) {
 // mostly the player will need this -- so just a table with precese is enough
 // but it could also be actor, id
 func (mem QuipMemory) Learns(quip G.IObject) {
-	mem.AppendObject(quip)
+	//mem.AppendObject(quip)
+	quip.IsNow("recollected")
 }
 
 // RecollectsQuip determines if the passed quip has been spoken.
 func (mem QuipMemory) Recollects(quip G.IObject) bool {
-	return mem.Contains(quip)
+	//return mem.Contains(quip)
+	return quip.Is("recollected")
 }
 
 func (mem QuipMemory) IsQuipAllowed(g G.Play, quip G.IObject) bool {

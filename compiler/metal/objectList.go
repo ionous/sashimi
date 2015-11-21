@@ -2,8 +2,9 @@ package metal
 
 import (
 	"fmt"
-	M "github.com/ionous/sashimi/compiler/model"
+	//	M "github.com/ionous/sashimi/compiler/model"
 	"github.com/ionous/sashimi/meta"
+	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 )
 
@@ -11,12 +12,35 @@ var _ = fmt.Println
 
 type objectList struct {
 	panicValue
-	objs []ident.Id
+	targetProp ident.Id
+	objs       []ident.Id
 }
 
-func manyValue(p *propBase) meta.Values {
-	objs := p.mdl.getObjects(p.src, p.prop.Relation, p.prop.IsRev)
-	return &objectList{panicValue{p}, objs}
+// the many side of a many-to-one, or one-to-many relation;
+// returns a list.
+func newManyValues(p *propBase) (ret meta.Values) {
+	var objs []ident.Id
+	rel, ok := p.mdl.Relations[p.prop.Relation]
+	if !ok {
+		panic(fmt.Sprintf("missing relation '%s'", p.prop.Relation))
+	}
+	// check instance because newManyValues can be called by class values ( getZero )
+	var targetProp ident.Id
+	if _, ok := p.mdl.Instances[p.src]; ok {
+		// FIX: would rather make this a datastore query;
+		// ( would require changing from ObjectValue interface to a full shadow model. )
+		targetProp = rel.GetOther(p.prop.Id)
+		// use the meta interface in order to get latest data
+		for i := 0; i < p.mdl.NumInstance(); i++ {
+			target := p.mdl.InstanceNum(i)
+			if t, ok := target.GetProperty(targetProp); ok {
+				if v := t.GetValue(); v.GetObject() == p.src {
+					objs = append(objs, target.GetId())
+				}
+			}
+		}
+	}
+	return &objectList{panicValue{p}, targetProp, objs}
 }
 
 func (p objectList) NumValue() int {
@@ -28,39 +52,41 @@ func (p objectList) ValueNum(i int) meta.Value {
 }
 
 func (p *objectList) ClearValues() (err error) {
-	p.mdl.clearValues(p.src, p.prop)
+	for _, id := range p.objs {
+		if v, e := p.mdl.getFarPointer(id, p.targetProp); e != nil {
+			err = errutil.Append(err, e)
+		} else {
+			// possible, if unlikely, that its changed.
+			if v.GetObject() == p.src {
+				v.SetObject(ident.Empty())
+			}
+		}
+	}
 	p.objs = nil
 	return
 }
 
-func (objectList) AppendNum(float32) error {
-	panic("not implemented")
-}
-func (p objectList) AppendText(string) error {
-	panic("not implemented")
-}
-
+// AppendObject writes *this* object into the destination
+// ( and updates our list of objects )
 func (p *objectList) AppendObject(id ident.Id) (err error) {
-	if e := p.mdl.canAppend(id, p.src, p.prop); e != nil {
+	// have to use the meta interface in order to trigger shadow properties
+	if v, e := p.mdl.getFarPointer(id, p.targetProp); e != nil {
 		err = e
 	} else {
-		p.mdl.appendObject(id, p.src, p.prop)
-		p.objs = append(p.objs, id)
+		found := false
+		for _, already := range p.objs {
+			if already == id {
+				found = true
+				break
+			}
+		}
+		if !found {
+			if e := v.SetObject(p.src); e != nil {
+				err = errutil.Append(err, e)
+			} else {
+				p.objs = append(p.objs, id)
+			}
+		}
 	}
 	return
-}
-
-func (mdl Metal) clearValues(src ident.Id, rel *M.PropertyModel) {
-	table := mdl.getTable(rel.Relation)
-	isRev := rel.IsRev
-	table.Remove(func(x, y ident.Id) bool {
-		var test, other ident.Id
-		if isRev {
-			test, other = y, x
-		} else {
-			test, other = x, y
-		}
-		_ = other
-		return src == test
-	})
 }

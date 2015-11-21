@@ -34,10 +34,8 @@ func testField(
 
 	if prop.Type == M.EnumProperty {
 		if enum, ok := res.Model.Enumerations[prop.Id]; assert.True(t, ok, fmt.Sprintf("'%s.%v' missing enum", instName, prop.Id)) {
-			if valExisted {
-				val = enum.IndexToChoice(val.(int))
-			} else {
-				val = enum.Choices[0]
+			if !valExisted {
+				val = enum.Best()
 				valExisted = true
 			}
 		}

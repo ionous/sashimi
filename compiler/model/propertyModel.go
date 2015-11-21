@@ -5,11 +5,10 @@ import "github.com/ionous/sashimi/util/ident"
 type PropertyType string
 
 const (
-	NumProperty      PropertyType = "NumProperty"
-	TextProperty                  = "TextProperty"
-	PointerProperty               = "PointerProperty"
-	EnumProperty                  = "EnumProperty"
-	RelativeProperty              = "RelativeProperty"
+	NumProperty     PropertyType = "NumProperty"
+	TextProperty                 = "TextProperty"
+	PointerProperty              = "PointerProperty"
+	EnumProperty                 = "EnumProperty"
 )
 
 type PropertyModel struct {
@@ -19,9 +18,7 @@ type PropertyModel struct {
 	// pointer, relation
 	Relates ident.Id `json:"relates,omitempty"`
 	// relation
-	Relation ident.Id `json:"relation,omitempty"` // relation id
-	// num, text, pointer
+	Relation ident.Id `json:"relation,omitempty"`
+	// num, text, pointer, relation; but, not enum
 	IsMany bool `json:"many,omitempty"`
-	// relation
-	IsRev bool `json:"rev,omitempty"`
 }

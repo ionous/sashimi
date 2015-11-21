@@ -3,7 +3,6 @@ package metal
 import (
 	"fmt"
 	M "github.com/ionous/sashimi/compiler/model"
-	"github.com/ionous/sashimi/compiler/model/table"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/ionous/sashimi/util/lang"
@@ -49,7 +48,7 @@ func merge(base, more PropertyList) (ret PropertyList) {
 	return ret
 }
 
-func NewMetal(m *M.Model, v ObjectValue, t table.Tables) *Metal {
+func NewMetal(m *M.Model, v ObjectValue) *Metal {
 	return &Metal{
 		Model:        m,
 		objectValues: v,
@@ -216,11 +215,6 @@ func (mdl *Metal) makeInstance(n *M.InstanceModel) meta.Instance {
 	return instInfo{mdl, n}
 }
 
-func (mdl Metal) getObjects(src, rel ident.Id, isRev bool) []ident.Id {
-	table := mdl.getTable(rel)
-	return table.List(src, isRev)
-}
-
 func (mdl *Metal) getPropertyList(cls *M.ClassModel) (ret PropertyList) {
 	if props, ok := mdl._properties[cls.Id]; ok {
 		ret = props
@@ -238,15 +232,6 @@ func (mdl *Metal) getPropertyList(cls *M.ClassModel) (ret PropertyList) {
 func (mdl *Metal) makePropertyList(cls *M.ClassModel) (ret PropertyList) {
 	for i, _ := range cls.Properties {
 		ret = append(ret, &cls.Properties[i])
-	}
-	return
-}
-
-func (mdl Metal) getTable(rel ident.Id) (ret *table.Table) {
-	if table, ok := mdl.Tables[rel]; !ok {
-		panic(fmt.Sprintf("internal error, no table found for relation %s", rel))
-	} else {
-		ret = table
 	}
 	return
 }
@@ -278,22 +263,4 @@ func (mdl Metal) getZero(prop *M.PropertyModel) (ret interface{}) {
 		panic(fmt.Errorf("GetZero not supported for property %s type %v", prop.Id, prop.Type))
 	}
 	return ret
-}
-
-// returns error if not compatible.
-func (mdl Metal) canAppend(dst, src ident.Id, rel *M.PropertyModel) (err error) {
-	if other, ok := mdl.Instances[dst]; !ok {
-		err = fmt.Errorf("no such instance '%s'", dst)
-	} else if !mdl.AreCompatible(other.Class, rel.Relates) {
-		err = fmt.Errorf("%s not compatible with %v in relation %v", other, rel.Relates, rel.Relation)
-	}
-	return err
-}
-
-func (mdl Metal) appendObject(dst, src ident.Id, rel *M.PropertyModel) {
-	if rel.IsRev {
-		dst, src = src, dst
-	}
-	table := mdl.getTable(rel.Relation)
-	table.Add(src, dst)
 }

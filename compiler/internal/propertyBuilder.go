@@ -89,7 +89,7 @@ func (b *PropertyBuilders) findProperty(name string) (ret IBuildProperty, okay b
 }
 
 //
-// PropertyById returns the id'd property, searching upwards through the property hierarchy.
+// GetProperty returns the id'd property, searching upwards through the property hierarchy.
 //
 func (b *PropertyBuilders) propertyById(id ident.Id) (IBuildProperty, bool) {
 	prop, okay := b.props[id]

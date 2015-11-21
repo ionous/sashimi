@@ -63,19 +63,13 @@ func (p *propBase) GetType() meta.PropertyType {
 			x |= meta.ArrayProperty
 		}
 		return x
-	case M.RelativeProperty:
-		x := meta.ObjectProperty
-		if p.prop.IsMany {
-			x |= meta.ArrayProperty
-		}
-		return x
 	default:
 		err = "unknown"
 	}
 	panic(fmt.Sprintf("GetType(%s.%s) has %s property type %T", p.src, p.prop.Id, err, p.prop))
 }
 
-func (p *propBase) GetValue() meta.Value {
+func (p *propBase) GetValue() (ret meta.Value) {
 	err := "invalid"
 	switch p.prop.Type {
 	case M.NumProperty:
@@ -87,20 +81,26 @@ func (p *propBase) GetValue() meta.Value {
 			return textValue{panicValue{p}}
 		}
 	case M.EnumProperty:
-		return enumValue{panicValue{p}}
+		if !p.prop.IsMany {
+			return enumValue{panicValue{p}}
+		}
 
 	case M.PointerProperty:
 		if !p.prop.IsMany {
-			return pointerValue{panicValue{p}}
-		}
-	case M.RelativeProperty:
-		if !p.prop.IsMany {
-			return singleValue(p)
+			// we are not many, since we dont have many to many
+			// the far side must be either one or many.
+			// many values are "views" onto this objet's own properties
+			// one values are real properties, and need to be set.
+			if rel, ok := p.mdl.Relations[p.prop.Relation]; ok && rel.Style == M.OneToOne {
+				return newRelatedValue(p, rel)
+			} else {
+				return pointerValue{panicValue{p}}
+			}
 		}
 	default:
 		err = "unknown"
 	}
-	panic(fmt.Sprintf("GetValue(%s.%s) has %s property type %T", p.src, p.prop.Id, err, p.prop))
+	panic(fmt.Sprintf("GetValue(%s.%s) has %s property type %v", p.src, p.prop.Id, err, p.prop.Type))
 }
 
 func (p *propBase) GetValues() meta.Values {
@@ -122,13 +122,13 @@ func (p *propBase) GetValues() meta.Values {
 		//
 	case M.PointerProperty:
 		if p.prop.IsMany {
-			return arrayValues{p, func(i int) meta.Value {
-				return objectElement{elementValue{panicValue{p}, i}}
-			}}
-		}
-	case M.RelativeProperty:
-		if p.prop.IsMany {
-			return manyValue(p)
+			if !p.prop.Relation.Empty() {
+				return newManyValues(p)
+			} else {
+				return arrayValues{p, func(i int) meta.Value {
+					return objectElement{elementValue{panicValue{p}, i}}
+				}}
+			}
 		}
 	default:
 		err = "unknown"
@@ -136,23 +136,17 @@ func (p *propBase) GetValues() meta.Values {
 	panic(fmt.Sprintf("GetValues(%s.%s) has %s property type %T", p.src, p.prop.Id, err, p.prop))
 }
 
+// FIX: this exists for backwards compatiblity with the client.
+// the reality is, a relation effects a table, there may be multiple views that need updating. either the client could do this by seeing the relation and pulling new data,
+// or we could push all of thep. this pushes just one. ( client pulling might be best )
 func (p *propBase) GetRelative() (ret meta.Relative, okay bool) {
-	switch p.prop.Type {
-	case M.RelativeProperty:
-		// get the relation
-		relation := p.mdl.Relations[p.prop.Relation]
-
+	// get the relation
+	if relation, ok := p.mdl.Relations[p.prop.Relation]; ok {
 		// get the reverse property
-		other := relation.GetOther(p.prop.IsRev)
-
 		okay, ret = true, meta.Relative{
 			Relation: p.prop.Relation,
 			Relates:  p.prop.Relates,
-			// FIX: this exists for backwards compatiblity with the client.
-			// the reality is, a relation effects a table, there may be multiple views that need updating. either the client could do this by seeing the relation and pulling new data,
-			// or we could push all of thep. this pushes just one. ( client pulling might be best )
-			From:  other.Property,
-			IsRev: p.prop.IsRev,
+			From:     relation.GetOther(p.prop.Id),
 		}
 	}
 	return

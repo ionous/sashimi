@@ -24,8 +24,8 @@ func ObjectResource(mdl meta.Model, clsId ident.Id, serial *ObjectSerializer) re
 							// FIX: relations are stored in the model
 							prop, ok := inst.FindProperty(propertyName)
 							if !ok {
-								// propId := ident.MakeId(propertyName)
-								// prop, ok = inst.GetProperty(propId)
+								propId := ident.MakeId(propertyName)
+								prop, ok = inst.GetProperty(propId)
 							}
 							if ok {
 								if _, ok := prop.GetRelative(); ok {

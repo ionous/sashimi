@@ -58,11 +58,12 @@ func ApiTest(t *testing.T, mdl meta.Model, instId ident.Id) {
 	testValue := func(v meta.Value, test TestValue, eval func(TestValue, reflect.Value)) {
 		if value := reflect.ValueOf(v); assert.True(t, value.IsValid()) {
 			// test getting the vaule of the appropriate type succeeds
+			var prev interface{}
 			require.NotPanics(t, func() {
-				prev := test.GetFrom(value)
-				require.EqualValues(t, test.original, prev,
-					fmt.Sprintf("original value from %s", test))
+				prev = test.GetFrom(value)
 			}, fmt.Sprintf("get default value: %s", test.String()))
+			require.EqualValues(t, test.original, prev,
+				fmt.Sprintf("original value from %s", test))
 
 			// custom testing for instances and classes
 			eval(test, value)
@@ -75,9 +76,11 @@ func ApiTest(t *testing.T, mdl meta.Model, instId ident.Id) {
 					require.Panics(t, func() {
 						v = m.GetFrom(value)
 					}, fmt.Sprintf("trying to get %s from %s; returned %v", m, test, v))
+					var err error
 					require.Panics(t, func() {
-						m.SetTo(value, m.value)
+						err = m.SetTo(value, m.value)
 					}, fmt.Sprintf("trying to set %s to %s", m, test))
+					assert.NoError(t, err)
 				}
 			}
 		}
@@ -101,23 +104,28 @@ func ApiTest(t *testing.T, mdl meta.Model, instId ident.Id) {
 	// instances can get and set values
 	// value is reflect valueOf meta.Value
 	testInstanceValue := func(test TestValue, value reflect.Value) {
+		var err error
 		require.NotPanics(t, func() {
-			test.SetTo(value, test.value)
-		}, fmt.Sprintf("instance set value: %s", test))
+			err = test.SetTo(value, test.value)
+		}, fmt.Sprintf("instance set value panic: %s", test))
+		require.NoError(t, err, fmt.Sprintf("instance set value error: %s", test))
 
+		var next interface{}
 		require.NotPanics(t, func() {
-			next := test.GetFrom(value)
-			require.EqualValues(t, next, test.value, fmt.Sprintf("%v:%T should be %v:%T", next, next, test.value, test.value))
+			next = test.GetFrom(value)
 		}, fmt.Sprintf("get changed value: %s", test))
+		require.EqualValues(t, next, test.value, fmt.Sprintf("%v:%T should be %v:%T", next, next, test.value, test.value))
 	}
 	testMethods(inst, testInstanceValue)
 
 	// classes disallow set values
 	// value is reflect valueOf meta.Value
 	testClassValue := func(test TestValue, value reflect.Value) {
+		var err error
 		require.Panics(t, func() {
-			test.SetTo(value, test.value)
+			err = test.SetTo(value, test.value)
 		}, fmt.Sprintf("class set value: %s", test))
+		require.NoError(t, err, fmt.Sprintf("class set value error: %s", test))
 	}
 	_ = testClassValue
 	testMethods(inst.GetParentClass(), testClassValue)
@@ -212,20 +220,28 @@ func (m MethodMaker) GetFrom(value reflect.Value) (ret interface{}) {
 	return
 }
 
-func (m MethodMaker) SetTo(value reflect.Value, v interface{}) {
+func (m MethodMaker) SetTo(value reflect.Value, v interface{}) (err error) {
 	name := "Set" + m.String()
 	if n := value.MethodByName(name); !n.IsValid() {
 		panic(fmt.Sprintf("method didnt exist %s", name))
 	} else {
-		n.Call([]reflect.Value{reflect.ValueOf(v)})
+		ret := n.Call([]reflect.Value{reflect.ValueOf(v)})
+		if v := ret[0]; !v.IsNil() {
+			err = v.Interface().(error)
+		}
 	}
+	return
 }
 
-func (m MethodMaker) Append(value reflect.Value, v interface{}) {
+func (m MethodMaker) Append(value reflect.Value, v interface{}) (err error) {
 	name := "Append" + m.String()
 	if n := value.MethodByName(name); !n.IsValid() {
 		panic(fmt.Sprintf("method didnt exist %s", name))
 	} else {
-		n.Call([]reflect.Value{reflect.ValueOf(v)})
+		ret := n.Call([]reflect.Value{reflect.ValueOf(v)})
+		if v := ret[0]; !v.IsNil() {
+			err = v.Interface().(error)
+		}
 	}
+	return
 }

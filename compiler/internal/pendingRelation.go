@@ -62,7 +62,6 @@ func (p PendingRelation) makeRelation(id ident.Id) (rel *M.Relation, err error) 
 		src := M.HalfRelation{p.src.Class, p.src.Id}
 		dst := M.HalfRelation{p.src.Relates, ident.Empty()}
 		rel = M.NewRelation(id, p.name, src, dst, p.style())
-
 	} else {
 		src := M.HalfRelation{p.src.Class, p.src.Id}
 		dst := M.HalfRelation{p.dst.Class, p.dst.Id}

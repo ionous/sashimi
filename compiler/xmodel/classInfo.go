@@ -34,7 +34,7 @@ func (cls *ClassInfo) AllProperties() PropertySet {
 	return props
 }
 
-// PropertyById searches through the class hierarchy for the property matching the passed name.
+// GetProperty searches through the class hierarchy for the property matching the passed name.
 func (cls *ClassInfo) FindProperty(name string) (prop IProperty, okay bool) {
 	for _, p := range cls.Properties {
 		if strings.EqualFold(name, p.GetName()) {
@@ -47,11 +47,11 @@ func (cls *ClassInfo) FindProperty(name string) (prop IProperty, okay bool) {
 	return prop, okay
 }
 
-// PropertyById searches through the class hierarchy for the property matching the passed id.
-func (cls *ClassInfo) PropertyById(id ident.Id) (IProperty, bool) {
+// GetProperty searches through the class hierarchy for the property matching the passed id.
+func (cls *ClassInfo) GetProperty(id ident.Id) (IProperty, bool) {
 	prop, okay := cls.Properties[id]
 	if !okay && cls.Parent != nil {
-		prop, okay = cls.Parent.PropertyById(id)
+		prop, okay = cls.Parent.GetProperty(id)
 	}
 	return prop, okay
 }

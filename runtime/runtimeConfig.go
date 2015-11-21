@@ -22,8 +22,7 @@ func NewConfig() *RuntimeConfig {
 
 func (cfg RuntimeConfig) NewGame(model *M.Model) (Game, error) {
 	core := cfg.Finalize()
-	tables := model.Tables.Clone()
-	modelApi := metal.NewMetal(model, make(metal.ObjectValueMap), tables)
+	modelApi := metal.NewMetal(model, make(metal.ObjectValueMap))
 	return Game{modelApi, internal.NewGame(core, modelApi)}, nil
 }
 

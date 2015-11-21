@@ -47,8 +47,8 @@ func TestTableDecl(t *testing.T) {
 				//-property
 				if prop, ok := cls.FindProperty("delicious"); assert.True(t, ok, "find deliciousness") {
 					if val, ok := inst.Values[prop.Id]; assert.True(t, ok, "find value") {
-						if enum, ok := m.Enumerations[prop.Id]; assert.True(t, ok, "found enum") {
-							val := enum.IndexToChoice(val.(int))
+						if _, ok := m.Enumerations[prop.Id]; assert.True(t, ok, "found enum") {
+							//val := enum.IndexToChoice(val.(int))
 							assert.EqualValues(t, val, ident.MakeId("acceptable"))
 						}
 					}

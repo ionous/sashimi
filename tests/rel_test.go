@@ -30,8 +30,8 @@ func TestRelation(t *testing.T) {
 		model.PrintModel(t.Log)
 		assert.Equal(t, 1, len(model.Relations))
 		for _, v := range model.Relations {
-			assert.EqualValues(t, "Gremlins", v.Source.Class.String())
-			assert.EqualValues(t, "Rocks", v.Dest.Class.String())
+			assert.EqualValues(t, "GremlinsPets", v.Source.String())
+			assert.EqualValues(t, "RocksOBeneficentOne", v.Target.String())
 			assert.EqualValues(t, M.OneToMany, v.Style)
 		}
 	}
@@ -66,22 +66,19 @@ func TestRelates(t *testing.T) {
 
 		petsrel, ok := gremlins.FindProperty("pets")
 		assert.True(t, ok)
+		assert.True(t, !petsrel.Relation.Empty())
 
 		loofah, ok := model.Instances[ident.MakeId("Loofah")]
 		assert.True(t, ok, "found loofah")
 
-		table, ok := model.Tables[petsrel.Relation]
-		assert.True(t, ok, "found table")
-		assert.EqualValues(t, []ident.Id{loofah.Id}, table.List(claire.Id, petsrel.IsRev))
-
 		rocks, ok := model.Classes[loofah.Class]
 		require.True(t, ok, "found rocks")
 
-		revProp, ok := rocks.FindProperty("o beneficent one")
-		assert.True(t, ok, "rev property")
+		gremlinrel, ok := rocks.FindProperty("o beneficent one")
+		require.True(t, ok, "found benes")
 
-		if !assert.Exactly(t, []ident.Id{ident.MakeId("claire")}, table.List(loofah.Id, revProp.IsRev)) {
-			model.PrintModel(t.Log)
-		}
+		omygremlin, ok := loofah.Values[gremlinrel.Id]
+		require.True(t, ok, "found grem")
+		assert.EqualValues(t, claire.Id, omygremlin)
 	}
 }

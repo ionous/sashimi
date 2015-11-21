@@ -217,9 +217,9 @@ func TestQuipFactFinding(t *testing.T) {
 
 		red := g.The("red")
 		require.True(t, red.Exists())
-		require.False(t, qm.Contains(red), "before learning, doesnt contain red")
+		require.False(t, qm.Recollects(red), "before learning, doesnt contain red")
 		qm.Learns(red)
-		require.True(t, qm.Contains(red), "after learning contains red")
+		require.True(t, qm.Recollects(red), "after learning contains red")
 
 		assert.True(t, qm.IsQuipAllowed(g, g.The("orbital wonder")))
 		assert.False(t, qm.IsQuipAllowed(g, g.The("smoothie request")))

@@ -42,7 +42,7 @@ func (inst *InstanceInfo) FindValue(name string) (ret interface{}, okay bool) {
 // Value returns the (default) value of the identified property.
 // By design, there is no equivalent SetValue.
 func (inst *InstanceInfo) Value(id ident.Id) (ret interface{}, okay bool) {
-	if prop, ok := inst.Class.PropertyById(id); ok {
+	if prop, ok := inst.Class.GetProperty(id); ok {
 		ret, okay = inst._value(prop)
 	}
 	return

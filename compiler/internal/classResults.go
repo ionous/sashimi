@@ -87,7 +87,7 @@ func (cr ClassResults) _makeClass(pending *PendingClass,
 			// find prop for the rule
 			prop, propFound := props[rule.propId]
 			if !propFound && parent != nil {
-				prop, propFound = parent.PropertyById(rule.propId)
+				prop, propFound = parent.GetProperty(rule.propId)
 			}
 
 			// apply rule to property

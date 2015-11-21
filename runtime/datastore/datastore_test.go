@@ -7,7 +7,6 @@ import (
 	"github.com/ionous/sashimi/compiler/metal"
 	"github.com/ionous/sashimi/compiler/metal/metaltest"
 	"github.com/ionous/sashimi/compiler/model/modeltest"
-	"github.com/ionous/sashimi/compiler/model/table"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/meta/metatest"
 	"github.com/ionous/sashimi/runtime/datastore/dstest"
@@ -48,7 +47,6 @@ func TestStoreIds(t *testing.T) {
 	stream := new(bytes.Buffer)
 	require.NoError(t, writeIds(stream, vals))
 	b := stream.Bytes()
-	t.Log(b)
 	buf := bytes.NewBuffer(b)
 	if res, e := readIds(buf); assert.NoError(t, e) {
 		require.EqualValues(t, vals, res)
@@ -92,7 +90,7 @@ func TestEncodeDecode(t *testing.T) {
 // go test -run TestStoreData
 func TestStoreData(t *testing.T) {
 	kvs := &KeyValues{}
-	mdl := metal.NewMetal(modeltest.NewModel(), kvs, make(table.Tables))
+	mdl := metal.NewMetal(modeltest.NewModel(), kvs)
 
 	if ctx, err := aetest.NewContext(nil); assert.NoError(t, err) {
 		defer ctx.Close()

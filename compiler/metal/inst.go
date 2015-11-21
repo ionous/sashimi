@@ -77,7 +77,7 @@ func (n instInfo) getValue(p *M.PropertyModel) (ret GenericValue) {
 	} else if v, ok := n.Values[p.Id]; ok {
 		ret = v
 	} else {
-		// and from there to class ( chain )
+		// future: and from there to class defaults ( chain ), currently: zero.
 		ret = n.mdl.getZero(p)
 	}
 	return

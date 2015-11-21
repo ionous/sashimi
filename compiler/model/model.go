@@ -2,7 +2,6 @@ package model
 
 import (
 	"encoding/json"
-	"github.com/ionous/sashimi/compiler/model/table"
 	"github.com/ionous/sashimi/util/ident"
 )
 
@@ -17,7 +16,6 @@ type Model struct {
 	ParserActions  []ParserAction
 	Relations      Relations
 	SingleToPlural SingleToPlural
-	Tables         table.Tables
 }
 
 type Actions map[ident.Id]*ActionModel
