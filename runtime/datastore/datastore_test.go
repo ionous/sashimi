@@ -4,12 +4,10 @@ import (
 	"appengine/aetest"
 	"bytes"
 	"fmt"
-	"github.com/ionous/sashimi/compiler/metal"
 	"github.com/ionous/sashimi/compiler/metal/metaltest"
 	"github.com/ionous/sashimi/compiler/model/modeltest"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/meta/metatest"
-	"github.com/ionous/sashimi/runtime/datastore/dstest"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -89,26 +87,18 @@ func TestEncodeDecode(t *testing.T) {
 
 // go test -run TestStoreData
 func TestStoreData(t *testing.T) {
-
 	if ctx, err := aetest.NewContext(nil); assert.NoError(t, err) {
 		defer ctx.Close()
-
-		// yuck!  mdl uses kvs ( for value lookup ), kvs uses mdl  (for keycreation and the load saver objects); if we shadowed the meta, we could avoid this.
-		kvs := &KeyValues{}
-		mdl := metal.NewMetal(modeltest.NewModel(), kvs)
-		kvs.mdl = mdl
-		kvs.KeyGen = dstest.NewKeyGen(mdl, ctx, nil)
-		kvs.ctx = ctx
-		kvs.Reset()
-
+		test := modeltest.NewModel()
+		ds := NewDataStore(ctx, test)
 		//
 		ctx.Infof("running api test..")
-		metatest.ApiTest(t, mdl, modeltest.TestInstance)
+		metatest.ApiTest(t, ds.mdl, modeltest.TestInstance)
 		ctx.Infof("saving...")
-		err := kvs.Save()
+		err := ds.Flush()
 		require.NoError(t, err, "saving db")
-		kvs.Reset()
+		ds.kvs.Reset()
 		ctx.Infof("testing post conditions...")
-		metaltest.PostConditions(t, kvs)
+		metaltest.PostConditions(t, ds.kvs)
 	}
 }

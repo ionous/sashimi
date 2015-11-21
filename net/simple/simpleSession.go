@@ -1,6 +1,7 @@
 package simple
 
 import (
+	"github.com/ionous/sashimi/compiler/metal"
 	M "github.com/ionous/sashimi/compiler/model"
 	"github.com/ionous/sashimi/net/session"
 	R "github.com/ionous/sashimi/runtime"
@@ -11,7 +12,8 @@ import (
 func NewSimpleSession(calls api.LookupCallbacks, model *M.Model) (ret *SimpleSession, err error) {
 	out := &SimpleOutput{}
 	cfg := R.NewConfig().SetCalls(calls).SetOutput(out).SetParentLookup(standard.ParentLookup{})
-	if game, e := cfg.NewGame(model); e != nil {
+	modelApi := metal.NewMetal(model, make(metal.ObjectValueMap))
+	if game, e := cfg.NewGame(modelApi); e != nil {
 		err = e
 	} else if game, e := standard.NewStandardGame(game); e != nil {
 		err = e

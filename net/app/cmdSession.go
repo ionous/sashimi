@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/ionous/sashimi/compiler/metal"
 	M "github.com/ionous/sashimi/compiler/model"
 	E "github.com/ionous/sashimi/event"
 	"github.com/ionous/sashimi/net/resource"
@@ -19,9 +20,7 @@ import (
 
 var playerId = ident.MakeId("player")
 
-//
-// Create a session.
-//
+// NewCommandSession create a web session which uses jsonapi style commands.
 func NewCommandSession(id string, model *M.Model, calls api.LookupCallbacks) (ret *CommandSession, err error) {
 	output := NewCommandOutput(id)
 	// event start/end frame
@@ -37,7 +36,8 @@ func NewCommandSession(id string, model *M.Model, calls api.LookupCallbacks) (re
 		}
 	}
 	cfg := R.NewConfig().SetCalls(calls).SetFrame(frame).SetOutput(output).SetParentLookup(standard.ParentLookup{})
-	if game, e := cfg.NewGame(model); e != nil {
+	modelApi := metal.NewMetal(model, make(metal.ObjectValueMap))
+	if game, e := cfg.NewGame(modelApi); e != nil {
 	} else {
 		// after creating the game, but vefore running it --
 		if game, e := standard.NewStandardGame(game); e != nil {

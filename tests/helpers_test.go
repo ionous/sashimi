@@ -3,6 +3,7 @@ package tests
 import (
 	"fmt"
 	"github.com/ionous/sashimi/compiler"
+	"github.com/ionous/sashimi/compiler/metal"
 	C "github.com/ionous/sashimi/console"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/parser"
@@ -65,7 +66,8 @@ func NewTestGameSource(t *testing.T, s *Script, source string) (ret TestGame, er
 	} else {
 		cons := TestOutput{t, &C.BufferedOutput{}}
 		cfg := R.NewConfig().SetCalls(model.Calls).SetOutput(cons)
-		if game, e := cfg.NewGame(model.Model); e != nil {
+		modelApi := metal.NewMetal(model.Model, make(metal.ObjectValueMap))
+		if game, e := cfg.NewGame(modelApi); e != nil {
 			err = e
 		} else if parser, e := parse.NewObjectParser(game, ident.MakeId(source)); e != nil {
 			err = e

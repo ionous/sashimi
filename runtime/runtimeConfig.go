@@ -2,8 +2,6 @@ package runtime
 
 import (
 	"fmt"
-	"github.com/ionous/sashimi/compiler/metal"
-	M "github.com/ionous/sashimi/compiler/model"
 	E "github.com/ionous/sashimi/event"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/runtime/api"
@@ -20,10 +18,10 @@ func NewConfig() *RuntimeConfig {
 	return &RuntimeConfig{}
 }
 
-func (cfg RuntimeConfig) NewGame(model *M.Model) (Game, error) {
+//modelApi := metal.NewMetal(model, make(metal.ObjectValueMap))
+func (cfg RuntimeConfig) NewGame(m meta.Model) (Game, error) {
 	core := cfg.Finalize()
-	modelApi := metal.NewMetal(model, make(metal.ObjectValueMap))
-	return Game{modelApi, internal.NewGame(core, modelApi)}, nil
+	return Game{m, internal.NewGame(core, m)}, nil
 }
 
 func (cfg RuntimeConfig) Finalize() internal.RuntimeCore {

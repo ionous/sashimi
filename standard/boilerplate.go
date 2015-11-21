@@ -2,6 +2,7 @@ package standard
 
 import (
 	"fmt"
+	"github.com/ionous/sashimi/compiler/metal"
 	C "github.com/ionous/sashimi/console"
 	"github.com/ionous/sashimi/minicon"
 	R "github.com/ionous/sashimi/runtime"
@@ -36,15 +37,6 @@ func RunGame(opt Options) (err error) {
 func RunScript(script *script.Script, opt Options) (err error) {
 	// tease out options settings:
 	cons, verbose, dump := opt.cons, opt.verbose, opt.dump
-	if !opt.hasConsole {
-		if opt.text {
-			cons = C.NewConsole()
-		} else {
-			mini := MiniConsole{minicon.NewMiniCon()}
-			defer mini.Close()
-			cons = mini
-		}
-	}
 	var writer io.Writer
 	if verbose {
 		writer = os.Stderr
@@ -53,64 +45,78 @@ func RunScript(script *script.Script, opt Options) (err error) {
 	}
 	if model, e := script.Compile(writer); e != nil {
 		err = e
+	} else if dump {
+		model.Model.PrintModel(func(args ...interface{}) { fmt.Println(args...) })
 	} else {
-		if dump {
-			model.Model.PrintModel(func(args ...interface{}) { fmt.Println(args...) })
-			return
+		if !opt.hasConsole {
+			if opt.text {
+				cons = C.NewConsole()
+			} else {
+				mini := MiniConsole{minicon.NewMiniCon()}
+				defer mini.Close()
+				cons = mini
+			}
 		}
 		cfg := R.NewConfig().SetCalls(model.Calls).SetOutput(NewStandardOutput(cons, writer)).SetParentLookup(ParentLookup{})
-		if g, e := cfg.NewGame(model.Model); e != nil {
-			err = e
-		} else if game, e := NewStandardGame(g); e != nil {
+		modelApi := metal.NewMetal(model.Model, make(metal.ObjectValueMap))
+		if g, e := cfg.NewGame(modelApi); e != nil {
 			err = e
 		} else {
-			left := game.title.GetText()
-			right := fmt.Sprint(" by ", game.author.GetText())
-			game.SetLeft(left)
-			game.SetRight(right)
-			immediate := true
-			if game, e := game.Start(immediate); e != nil {
-				err = e
-			} else {
-				for {
-					// update the status bar as needed....
-					// ( FIX: status change before the text associated with the change has been teletyped )
-					// ( control code handlers -- needed for changing color in text -- might be better )
-					newleft, newright := game.Left(), game.Right()
-					if left != newleft || right != newright {
-						if mini, ok := cons.(MiniConsole); ok {
-							mini.Status.Left, mini.Status.Right = newleft, newright
-							mini.RefreshDisplay()
-						}
+			err = PlayGame(cons, g)
+		}
+	}
+	if err != nil {
+		panic(err)
+	}
+	return
+}
+
+func PlayGame(cons C.IConsole, g R.Game) (err error) {
+	if game, e := NewStandardGame(g); e != nil {
+		err = e
+	} else {
+		left := game.title.GetText()
+		right := fmt.Sprint(" by ", game.author.GetText())
+		game.SetLeft(left)
+		game.SetRight(right)
+		immediate := true
+		if game, e := game.Start(immediate); e != nil {
+			err = e
+		} else {
+			for {
+				// update the status bar as needed....
+				// ( FIX: status change before the text associated with the change has been teletyped )
+				// ( control code handlers -- needed for changing color in text -- might be better )
+				newleft, newright := game.Left(), game.Right()
+				if left != newleft || right != newright {
+					if mini, ok := cons.(MiniConsole); ok {
+						mini.Status.Left, mini.Status.Right = newleft, newright
+						mini.RefreshDisplay()
+					}
+				}
+
+				// read new input
+				if s, ok := cons.Readln(); !ok {
+					break
+				} else {
+					mini, useMini := cons.(MiniConsole)
+					if useMini {
+						mini.Flush() // print all remaining teletype text
+						mini.Println()
+						mini.Println(">", s)
 					}
 
-					// read new input
-					if s, ok := cons.Readln(); !ok {
+					if e := game.Input(s); e != nil {
+						cons.Println(e.Error())
+					} else if game.IsFinished() {
+						if useMini && !game.IsQuit() {
+							mini.Update()
+						}
 						break
-					} else {
-						mini, useMini := cons.(MiniConsole)
-						if useMini {
-							mini.Flush() // print all remaining teletype text
-							mini.Println()
-							mini.Println(">", s)
-						}
-
-						if e := game.Input(s); e != nil {
-							cons.Println(e.Error())
-						} else if game.IsFinished() {
-							if useMini && !game.IsQuit() {
-								mini.Update()
-							}
-							break
-						}
 					}
 				}
 			}
 		}
-	}
-
-	if err != nil {
-		panic(err)
 	}
 	return err
 }
