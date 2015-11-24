@@ -1,1054 +1,1054 @@
 package fishgen
 
 var Data = `{
- "Actions": {
+ "actions": {
   "acquire-it": {
-   "Id": "acquire-it",
-   "Name": "acquire it",
-   "EventId": "acquiring-it",
-   "NounTypes": [
+   "id": "acquire-it",
+   "name": "acquire it",
+   "event": "acquiring-it",
+   "nouns": [
     "actors",
     "props"
    ],
-   "DefaultActions": [
+   "actions": [
     "a38fd7888ecbfb8e121d362dbfed"
    ]
   },
   "attack-it": {
-   "Id": "attack-it",
-   "Name": "attack it",
-   "EventId": "attacking-it",
-   "NounTypes": [
+   "id": "attack-it",
+   "name": "attack it",
+   "event": "attacking-it",
+   "nouns": [
     "actors",
     "objects"
    ],
-   "DefaultActions": [
+   "actions": [
     "e1067e858bff37ff95ed58744c3655e0"
    ]
   },
   "be-acquired": {
-   "Id": "be-acquired",
-   "Name": "be acquired",
-   "EventId": "being-acquired",
-   "NounTypes": [
+   "id": "be-acquired",
+   "name": "be acquired",
+   "event": "being-acquired",
+   "nouns": [
     "props",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "aa0f3ad3144d3b009591e22f4f7f9aa2"
    ]
   },
   "be-closed-by": {
-   "Id": "be-closed-by",
-   "Name": "be closed by",
-   "EventId": "being-closed-by",
-   "NounTypes": [
+   "id": "be-closed-by",
+   "name": "be closed by",
+   "event": "being-closed-by",
+   "nouns": [
     "props",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "cddd2b508635fcd0fcc15232ddfee0d9"
    ]
   },
   "be-discussed": {
-   "Id": "be-discussed",
-   "Name": "be discussed",
-   "EventId": "being-discussed",
-   "NounTypes": [
+   "id": "be-discussed",
+   "name": "be discussed",
+   "event": "being-discussed",
+   "nouns": [
     "quips",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "e8ea14871dd41a378b7d216c974bfdd0"
    ]
   },
   "be-examined": {
-   "Id": "be-examined",
-   "Name": "be examined",
-   "EventId": "being-examined",
-   "NounTypes": [
+   "id": "be-examined",
+   "name": "be examined",
+   "event": "being-examined",
+   "nouns": [
     "objects",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "f5982891e7ebdc570e12599f257d70ea"
    ]
   },
   "be-inserted": {
-   "Id": "be-inserted",
-   "Name": "be inserted",
-   "EventId": "being-inserted",
-   "NounTypes": [
+   "id": "be-inserted",
+   "name": "be inserted",
+   "event": "being-inserted",
+   "nouns": [
     "props",
     "actors",
     "containers"
    ],
-   "DefaultActions": [
+   "actions": [
     "e8b94915f1dace4e2b2f59f3a9162c"
    ]
   },
   "be-opened-by": {
-   "Id": "be-opened-by",
-   "Name": "be opened by",
-   "EventId": "being-opened-by",
-   "NounTypes": [
+   "id": "be-opened-by",
+   "name": "be opened by",
+   "event": "being-opened-by",
+   "nouns": [
     "props",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "cce18d15e14eddefbd4c7741dce6f5ce"
    ]
   },
   "be-passed-through": {
-   "Id": "be-passed-through",
-   "Name": "be passed through",
-   "EventId": "being-passed-through",
-   "NounTypes": [
+   "id": "be-passed-through",
+   "name": "be passed through",
+   "event": "being-passed-through",
+   "nouns": [
     "doors",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "fe407e25d67b995683a4497a99da6e5e"
    ]
   },
   "close-it": {
-   "Id": "close-it",
-   "Name": "close it",
-   "EventId": "closing-it",
-   "NounTypes": [
+   "id": "close-it",
+   "name": "close it",
+   "event": "closing-it",
+   "nouns": [
     "actors",
     "props"
    ],
-   "DefaultActions": [
+   "actions": [
     "a028e313823833dd7dad493203bd86fc"
    ]
   },
   "commence": {
-   "Id": "commence",
-   "Name": "commence",
-   "EventId": "commencing",
-   "NounTypes": [
+   "id": "commence",
+   "name": "commence",
+   "event": "commencing",
+   "nouns": [
     "stories"
    ],
-   "DefaultActions": [
+   "actions": [
     "be2fb26f4dfcdf76f7d89ab1a25c254"
    ]
   },
   "comment": {
-   "Id": "comment",
-   "Name": "comment",
-   "EventId": "commenting",
-   "NounTypes": [
+   "id": "comment",
+   "name": "comment",
+   "event": "commenting",
+   "nouns": [
     "actors",
     "quips"
    ],
-   "DefaultActions": [
+   "actions": [
     "efb9c6008baa5f297da22b6b88a69ae"
    ]
   },
   "debug-contents": {
-   "Id": "debug-contents",
-   "Name": "debug contents",
-   "EventId": "debugging-contents",
-   "NounTypes": [
+   "id": "debug-contents",
+   "name": "debug contents",
+   "event": "debugging-contents",
+   "nouns": [
     "actors",
     "objects"
    ],
-   "DefaultActions": [
+   "actions": [
     "e27d852c08e661f57fed7a37fb44b6"
    ]
   },
   "debug-direct-parent": {
-   "Id": "debug-direct-parent",
-   "Name": "debug direct parent",
-   "EventId": "debugging-direct-parent",
-   "NounTypes": [
+   "id": "debug-direct-parent",
+   "name": "debug direct parent",
+   "event": "debugging-direct-parent",
+   "nouns": [
     "actors",
     "objects"
    ],
-   "DefaultActions": [
+   "actions": [
     "bb4ae3b5d6669a4eb5d919a52800816"
    ]
   },
   "debug-room-contents": {
-   "Id": "debug-room-contents",
-   "Name": "debug room contents",
-   "EventId": "debugging-room-contents",
-   "NounTypes": [
+   "id": "debug-room-contents",
+   "name": "debug room contents",
+   "event": "debugging-room-contents",
+   "nouns": [
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "efb794467ebba90fb9d54e3f0332632e"
    ]
   },
   "depart": {
-   "Id": "depart",
-   "Name": "depart",
-   "EventId": "departing",
-   "NounTypes": [
+   "id": "depart",
+   "name": "depart",
+   "event": "departing",
+   "nouns": [
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "ab0570189d883833d088ab9206526dc3"
    ]
   },
   "describe-the-first-room": {
-   "Id": "describe-the-first-room",
-   "Name": "describe the first room",
-   "EventId": "describing-the-first-room",
-   "NounTypes": [
+   "id": "describe-the-first-room",
+   "name": "describe the first room",
+   "event": "describing-the-first-room",
+   "nouns": [
     "stories",
     "rooms"
    ],
-   "DefaultActions": [
+   "actions": [
     "d4983e203d6eeadd7b989e46d6"
    ]
   },
   "discuss": {
-   "Id": "discuss",
-   "Name": "discuss",
-   "EventId": "discussing",
-   "NounTypes": [
+   "id": "discuss",
+   "name": "discuss",
+   "event": "discussing",
+   "nouns": [
     "actors",
     "quips"
    ],
-   "DefaultActions": [
+   "actions": [
     "b703927b07424ab1a58cc61fc9287c"
    ]
   },
   "eat-it": {
-   "Id": "eat-it",
-   "Name": "eat it",
-   "EventId": "eating-it",
-   "NounTypes": [
+   "id": "eat-it",
+   "name": "eat it",
+   "event": "eating-it",
+   "nouns": [
     "actors",
     "props"
    ],
-   "DefaultActions": [
+   "actions": [
     "dc5f2a70d4f8b2f822f0d4f669c330b"
    ]
   },
   "end-the-story": {
-   "Id": "end-the-story",
-   "Name": "end the story",
-   "EventId": "ending-the-story",
-   "NounTypes": [
+   "id": "end-the-story",
+   "name": "end the story",
+   "event": "ending-the-story",
+   "nouns": [
     "stories"
    ],
-   "DefaultActions": [
+   "actions": [
     "a1157c67ba6d0bacc2a189d6ac0f88"
    ]
   },
   "end-turn": {
-   "Id": "end-turn",
-   "Name": "end turn",
-   "EventId": "ending-the-turn",
-   "NounTypes": [
+   "id": "end-turn",
+   "name": "end turn",
+   "event": "ending-the-turn",
+   "nouns": [
     "stories"
    ],
-   "DefaultActions": [
+   "actions": [
     "e549441d59279c1801dcd222a57f"
    ]
   },
   "examine-it": {
-   "Id": "examine-it",
-   "Name": "examine it",
-   "EventId": "examining-it",
-   "NounTypes": [
+   "id": "examine-it",
+   "name": "examine it",
+   "event": "examining-it",
+   "nouns": [
     "actors",
     "objects"
    ],
-   "DefaultActions": [
+   "actions": [
     "f3d54a0c2d53c10de008fb6ab276670f"
    ]
   },
   "feed-it": {
-   "Id": "feed-it",
-   "Name": "feed it",
-   "EventId": "feeding-it",
-   "NounTypes": [
+   "id": "feed-it",
+   "name": "feed it",
+   "event": "feeding-it",
+   "nouns": [
     "actors",
     "objects"
    ],
-   "DefaultActions": [
-    "fd94e1c858c8c951a08e2bf2fad194e5"
+   "actions": [
+    "d87a6fc604d8a034efb8a192199a1a"
    ]
   },
   "give-it-to": {
-   "Id": "give-it-to",
-   "Name": "give it to",
-   "EventId": "giving-it-to",
-   "NounTypes": [
+   "id": "give-it-to",
+   "name": "give it to",
+   "event": "giving-it-to",
+   "nouns": [
     "actors",
     "actors",
     "props"
    ],
-   "DefaultActions": [
+   "actions": [
     "c1cd32951100ecf601c99e78a416faa"
    ]
   },
   "go-through-it": {
-   "Id": "go-through-it",
-   "Name": "go through it",
-   "EventId": "going-through-it",
-   "NounTypes": [
+   "id": "go-through-it",
+   "name": "go through it",
+   "event": "going-through-it",
+   "nouns": [
     "actors",
     "doors"
    ],
-   "DefaultActions": [
+   "actions": [
     "f147fff0a14762b6527a8f71240cdf00"
    ]
   },
   "go-to": {
-   "Id": "go-to",
-   "Name": "go to",
-   "EventId": "going-to",
-   "NounTypes": [
+   "id": "go-to",
+   "name": "go to",
+   "event": "going-to",
+   "nouns": [
     "actors",
     "directions"
    ],
-   "DefaultActions": [
+   "actions": [
     "a279a3ec2a6f0098be46df9a674f96f"
    ]
   },
   "greet": {
-   "Id": "greet",
-   "Name": "greet",
-   "EventId": "greeting",
-   "NounTypes": [
+   "id": "greet",
+   "name": "greet",
+   "event": "greeting",
+   "nouns": [
     "actors",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "d73f8083c58056e0b106f0330cabd14e"
    ]
   },
   "impress": {
-   "Id": "impress",
-   "Name": "impress",
-   "EventId": "impressing",
-   "NounTypes": [
+   "id": "impress",
+   "name": "impress",
+   "event": "impressing",
+   "nouns": [
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "a4e06ed8921a1c0e863719f30eed2"
    ]
   },
   "insert-it-into": {
-   "Id": "insert-it-into",
-   "Name": "insert it into",
-   "EventId": "inserting-it-into",
-   "NounTypes": [
+   "id": "insert-it-into",
+   "name": "insert it into",
+   "event": "inserting-it-into",
+   "nouns": [
     "actors",
     "containers",
     "props"
    ],
-   "DefaultActions": [
+   "actions": [
     "e7456c6895a9da6aa"
    ]
   },
   "jump": {
-   "Id": "jump",
-   "Name": "jump",
-   "EventId": "jumping",
-   "NounTypes": [
+   "id": "jump",
+   "name": "jump",
+   "event": "jumping",
+   "nouns": [
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "c7e571f4cb23c1766247c3657077f3b9"
    ]
   },
   "kiss-it": {
-   "Id": "kiss-it",
-   "Name": "kiss it",
-   "EventId": "kissing-it",
-   "NounTypes": [
+   "id": "kiss-it",
+   "name": "kiss it",
+   "event": "kissing-it",
+   "nouns": [
     "actors",
     "objects"
    ],
-   "DefaultActions": [
+   "actions": [
     "dbc0e2eebefb53eb032ffd9e2de"
    ]
   },
   "listen": {
-   "Id": "listen",
-   "Name": "listen",
-   "EventId": "listening",
-   "NounTypes": [
+   "id": "listen",
+   "name": "listen",
+   "event": "listening",
+   "nouns": [
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "fce05a152a90e9075438ca19ce7c6"
    ]
   },
   "listen-to": {
-   "Id": "listen-to",
-   "Name": "listen to",
-   "EventId": "listening-to",
-   "NounTypes": [
+   "id": "listen-to",
+   "name": "listen to",
+   "event": "listening-to",
+   "nouns": [
     "actors",
     "kinds"
    ],
-   "DefaultActions": [
+   "actions": [
     "fa673c29457c2a9ac47c49658685"
    ]
   },
   "look": {
-   "Id": "look",
-   "Name": "look",
-   "EventId": "looking",
-   "NounTypes": [
+   "id": "look",
+   "name": "look",
+   "event": "looking",
+   "nouns": [
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "dba636750406cd8d7bd0da3"
    ]
   },
   "look-under-it": {
-   "Id": "look-under-it",
-   "Name": "look under it",
-   "EventId": "looking-under-it",
-   "NounTypes": [
+   "id": "look-under-it",
+   "name": "look under it",
+   "event": "looking-under-it",
+   "nouns": [
     "actors",
     "objects"
    ],
-   "DefaultActions": [
+   "actions": [
     "b0d267fe6bec1f08710b46623fe815b"
    ]
   },
   "open-it": {
-   "Id": "open-it",
-   "Name": "open it",
-   "EventId": "opening-it",
-   "NounTypes": [
+   "id": "open-it",
+   "name": "open it",
+   "event": "opening-it",
+   "nouns": [
     "actors",
     "props"
    ],
-   "DefaultActions": [
+   "actions": [
     "b6e604472836e917e8ad1dd6ba2b93"
    ]
   },
   "parse-player-input": {
-   "Id": "parse-player-input",
-   "Name": "parse player input",
-   "EventId": "parsing-player-input",
-   "NounTypes": [
+   "id": "parse-player-input",
+   "name": "parse player input",
+   "event": "parsing-player-input",
+   "nouns": [
     "stories"
    ],
-   "DefaultActions": null
+   "actions": null
   },
   "print-contents": {
-   "Id": "print-contents",
-   "Name": "print contents",
-   "EventId": "printing-contents",
-   "NounTypes": [
+   "id": "print-contents",
+   "name": "print contents",
+   "event": "printing-contents",
+   "nouns": [
     "objects"
    ],
-   "DefaultActions": null
+   "actions": null
   },
   "print-conversation-choices": {
-   "Id": "print-conversation-choices",
-   "Name": "print conversation choices",
-   "EventId": "printing-conversation-choices",
-   "NounTypes": [
+   "id": "print-conversation-choices",
+   "name": "print conversation choices",
+   "event": "printing-conversation-choices",
+   "nouns": [
     "actors",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "e2d83166d1ece71900065119ffe42599"
    ]
   },
   "print-description": {
-   "Id": "print-description",
-   "Name": "print description",
-   "EventId": "describing",
-   "NounTypes": [
+   "id": "print-description",
+   "name": "print description",
+   "event": "describing",
+   "nouns": [
     "objects"
    ],
-   "DefaultActions": [
+   "actions": [
     "cabe59e7088cb62f7dceba9b137394"
    ]
   },
   "print-details": {
-   "Id": "print-details",
-   "Name": "print details",
-   "EventId": "printing-details",
-   "NounTypes": [
+   "id": "print-details",
+   "name": "print details",
+   "event": "printing-details",
+   "nouns": [
     "objects"
    ],
-   "DefaultActions": [
+   "actions": [
     "e5d3985209c83582a8cec2119c5f808"
    ]
   },
   "print-name": {
-   "Id": "print-name",
-   "Name": "print name",
-   "EventId": "printing-name-text",
-   "NounTypes": [
+   "id": "print-name",
+   "name": "print name",
+   "event": "printing-name-text",
+   "nouns": [
     "objects"
    ],
-   "DefaultActions": [
+   "actions": [
     "f3a039df8a36cf28033c549d1d"
    ]
   },
   "print-the-banner": {
-   "Id": "print-the-banner",
-   "Name": "print the banner",
-   "EventId": "printing-the-banner",
-   "NounTypes": [
+   "id": "print-the-banner",
+   "name": "print the banner",
+   "event": "printing-the-banner",
+   "nouns": [
     "stories"
    ],
-   "DefaultActions": [
+   "actions": [
     "f80bca4a7a24cc9ee42067363ecda08"
    ]
   },
   "put-it-onto": {
-   "Id": "put-it-onto",
-   "Name": "put it onto",
-   "EventId": "putting-it-onto",
-   "NounTypes": [
+   "id": "put-it-onto",
+   "name": "put it onto",
+   "event": "putting-it-onto",
+   "nouns": [
     "actors",
     "supporters",
     "props"
    ],
-   "DefaultActions": [
+   "actions": [
     "c7ebd1166c4885183f433a6de51411e1"
    ]
   },
   "receive-insertion": {
-   "Id": "receive-insertion",
-   "Name": "receive insertion",
-   "EventId": "receiving-insertion",
-   "NounTypes": [
+   "id": "receive-insertion",
+   "name": "receive insertion",
+   "event": "receiving-insertion",
+   "nouns": [
     "containers",
     "props",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "bd9ceebcdcc7ebb57be7187da0b3916"
    ]
   },
   "report-already-closed": {
-   "Id": "report-already-closed",
-   "Name": "report already closed",
-   "EventId": "reporting-already-closed",
-   "NounTypes": [
+   "id": "report-already-closed",
+   "name": "report already closed",
+   "event": "reporting-already-closed",
+   "nouns": [
     "props",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "a0cf32d8daa137026c62f8494129"
    ]
   },
   "report-already-off": {
-   "Id": "report-already-off",
-   "Name": "report already off",
-   "EventId": "reporting-already-off",
-   "NounTypes": [
+   "id": "report-already-off",
+   "name": "report already off",
+   "event": "reporting-already-off",
+   "nouns": [
     "devices",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "e54bc28e4a6d6ee8f15cde43d041f41"
    ]
   },
   "report-already-on": {
-   "Id": "report-already-on",
-   "Name": "report already on",
-   "EventId": "reporting-already-on",
-   "NounTypes": [
+   "id": "report-already-on",
+   "name": "report already on",
+   "event": "reporting-already-on",
+   "nouns": [
     "devices",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "b44ad3f16c77942ddebfbcbbdb1381c"
    ]
   },
   "report-already-open": {
-   "Id": "report-already-open",
-   "Name": "report already open",
-   "EventId": "reporting-already-opened",
-   "NounTypes": [
+   "id": "report-already-open",
+   "name": "report already open",
+   "event": "reporting-already-opened",
+   "nouns": [
     "props",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "f15ec508566495ef319bda0247c3ba"
    ]
   },
   "report-attack": {
-   "Id": "report-attack",
-   "Name": "report attack",
-   "EventId": "reporting-attack",
-   "NounTypes": [
+   "id": "report-attack",
+   "name": "report attack",
+   "event": "reporting-attack",
+   "nouns": [
     "objects",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "e092832c33702a363a16fa5d40421bf"
    ]
   },
   "report-comment": {
-   "Id": "report-comment",
-   "Name": "report comment",
-   "EventId": "reporting-comment",
-   "NounTypes": [
+   "id": "report-comment",
+   "name": "report comment",
+   "event": "reporting-comment",
+   "nouns": [
     "quips",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "f1487317dd37aafc7fdc5f81a5296e88"
    ]
   },
   "report-currently-closed": {
-   "Id": "report-currently-closed",
-   "Name": "report currently closed",
-   "EventId": "reporting-currently-closed",
-   "NounTypes": [
+   "id": "report-currently-closed",
+   "name": "report currently closed",
+   "event": "reporting-currently-closed",
+   "nouns": [
     "doors",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "fdb1dc013d4b6490c6586654cf3"
    ]
   },
   "report-eat": {
-   "Id": "report-eat",
-   "Name": "report eat",
-   "EventId": "reporting-eat",
-   "NounTypes": [
+   "id": "report-eat",
+   "name": "report eat",
+   "event": "reporting-eat",
+   "nouns": [
     "props",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "f4d2a3f2bc4ff9069889a9299b"
    ]
   },
   "report-gave": {
-   "Id": "report-gave",
-   "Name": "report gave",
-   "EventId": "reporting-gave",
-   "NounTypes": [
+   "id": "report-gave",
+   "name": "report gave",
+   "event": "reporting-gave",
+   "nouns": [
     "props",
     "actors",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "f820558419c997630a2044117eacd4b9"
    ]
   },
   "report-give": {
-   "Id": "report-give",
-   "Name": "report give",
-   "EventId": "reporting-give",
-   "NounTypes": [
+   "id": "report-give",
+   "name": "report give",
+   "event": "reporting-give",
+   "nouns": [
     "actors",
     "props",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "bb5aa921e7bf8a1a2a243bc496da3d37"
    ]
   },
   "report-inoperable": {
-   "Id": "report-inoperable",
-   "Name": "report inoperable",
-   "EventId": "reporting-inoperable",
-   "NounTypes": [
+   "id": "report-inoperable",
+   "name": "report inoperable",
+   "event": "reporting-inoperable",
+   "nouns": [
     "props"
    ],
-   "DefaultActions": [
+   "actions": [
     "fdcb93cc0324bd63a08f6415d5f62e3"
    ]
   },
   "report-inventory": {
-   "Id": "report-inventory",
-   "Name": "report inventory",
-   "EventId": "reporting-inventory",
-   "NounTypes": [
+   "id": "report-inventory",
+   "name": "report inventory",
+   "event": "reporting-inventory",
+   "nouns": [
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "fa0bacce6442c0445e80e1fea52eb2"
    ]
   },
   "report-jump": {
-   "Id": "report-jump",
-   "Name": "report jump",
-   "EventId": "reporting-jump",
-   "NounTypes": [
+   "id": "report-jump",
+   "name": "report jump",
+   "event": "reporting-jump",
+   "nouns": [
     "kinds",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "fd97981f521bc27a06faf20b0d5053da"
    ]
   },
   "report-kiss": {
-   "Id": "report-kiss",
-   "Name": "report kiss",
-   "EventId": "reporting-kiss",
-   "NounTypes": [
+   "id": "report-kiss",
+   "name": "report kiss",
+   "event": "reporting-kiss",
+   "nouns": [
     "objects",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "a03c941d25050d3a9974d9165bb8f1"
    ]
   },
   "report-listen": {
-   "Id": "report-listen",
-   "Name": "report listen",
-   "EventId": "reporting-listen",
-   "NounTypes": [
+   "id": "report-listen",
+   "name": "report listen",
+   "event": "reporting-listen",
+   "nouns": [
     "kinds",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "b0b8e208c4cc475e100e14fbcf2f4ae"
    ]
   },
   "report-locked": {
-   "Id": "report-locked",
-   "Name": "report locked",
-   "EventId": "reporting-locked",
-   "NounTypes": [
+   "id": "report-locked",
+   "name": "report locked",
+   "event": "reporting-locked",
+   "nouns": [
     "props",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "b53ef45a3e1238a3aa47a2bdc8d9da4"
    ]
   },
   "report-look-under": {
-   "Id": "report-look-under",
-   "Name": "report look under",
-   "EventId": "reporting-look-under",
-   "NounTypes": [
+   "id": "report-look-under",
+   "name": "report look under",
+   "event": "reporting-look-under",
+   "nouns": [
     "objects",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "eecdc7b5555289906c2b415fb201cb9b"
    ]
   },
   "report-not-closeable": {
-   "Id": "report-not-closeable",
-   "Name": "report not closeable",
-   "EventId": "reporting-not-closeable",
-   "NounTypes": [
+   "id": "report-not-closeable",
+   "name": "report not closeable",
+   "event": "reporting-not-closeable",
+   "nouns": [
     "props",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "d621a08c3de87b0ee4cfe7971a9"
    ]
   },
   "report-now-closed": {
-   "Id": "report-now-closed",
-   "Name": "report now closed",
-   "EventId": "reporting-now-closed",
-   "NounTypes": [
+   "id": "report-now-closed",
+   "name": "report now closed",
+   "event": "reporting-now-closed",
+   "nouns": [
     "props",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "a14a3d5d1cca145f13f50ca1309af311"
    ]
   },
   "report-now-off": {
-   "Id": "report-now-off",
-   "Name": "report now off",
-   "EventId": "reporting-now-off",
-   "NounTypes": [
+   "id": "report-now-off",
+   "name": "report now off",
+   "event": "reporting-now-off",
+   "nouns": [
     "devices",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "bc33e94a52fffabe6b20bcc54955ce3"
    ]
   },
   "report-now-on": {
-   "Id": "report-now-on",
-   "Name": "report now on",
-   "EventId": "reporting-now-on",
-   "NounTypes": [
+   "id": "report-now-on",
+   "name": "report now on",
+   "event": "reporting-now-on",
+   "nouns": [
     "devices",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "f13522698fb406b905407ccdfec39"
    ]
   },
   "report-now-open": {
-   "Id": "report-now-open",
-   "Name": "report now open",
-   "EventId": "reporting-now-open",
-   "NounTypes": [
+   "id": "report-now-open",
+   "name": "report now open",
+   "event": "reporting-now-open",
+   "nouns": [
     "props",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "cd40d14902a558771bcc65444bc871f"
    ]
   },
   "report-placed": {
-   "Id": "report-placed",
-   "Name": "report placed",
-   "EventId": "reporting-placed",
-   "NounTypes": [
+   "id": "report-placed",
+   "name": "report placed",
+   "event": "reporting-placed",
+   "nouns": [
     "props",
     "actors",
     "supporters"
    ],
-   "DefaultActions": [
+   "actions": [
     "a0ca28fd1e1f6003219b799c59e5925"
    ]
   },
   "report-put": {
-   "Id": "report-put",
-   "Name": "report put",
-   "EventId": "reporting-put",
-   "NounTypes": [
+   "id": "report-put",
+   "name": "report put",
+   "event": "reporting-put",
+   "nouns": [
     "supporters",
     "props",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "eba487ee4a161c0ed3a629161b612e"
    ]
   },
   "report-search": {
-   "Id": "report-search",
-   "Name": "report search",
-   "EventId": "reporting-search",
-   "NounTypes": [
+   "id": "report-search",
+   "name": "report search",
+   "event": "reporting-search",
+   "nouns": [
     "props",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "c346a8302cd8e56c361e834a576fde7"
    ]
   },
   "report-show": {
-   "Id": "report-show",
-   "Name": "report show",
-   "EventId": "reporting-show",
-   "NounTypes": [
+   "id": "report-show",
+   "name": "report show",
+   "event": "reporting-show",
+   "nouns": [
     "actors",
     "props",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "ea0713e6af256dfe532c004ff5a23f5"
    ]
   },
   "report-shown": {
-   "Id": "report-shown",
-   "Name": "report shown",
-   "EventId": "reporting-shown",
-   "NounTypes": [
+   "id": "report-shown",
+   "name": "report shown",
+   "event": "reporting-shown",
+   "nouns": [
     "props",
     "actors",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "e460183c17f770fec808d132736f24e"
    ]
   },
   "report-smell": {
-   "Id": "report-smell",
-   "Name": "report smell",
-   "EventId": "reporting-smell",
-   "NounTypes": [
+   "id": "report-smell",
+   "name": "report smell",
+   "event": "reporting-smell",
+   "nouns": [
     "kinds",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "fe0b565e4a5208b37419400dbbaea13"
    ]
   },
   "report-switch-off": {
-   "Id": "report-switch-off",
-   "Name": "report switch off",
-   "EventId": "reporting-switch-off",
-   "NounTypes": [
+   "id": "report-switch-off",
+   "name": "report switch off",
+   "event": "reporting-switch-off",
+   "nouns": [
     "devices"
    ],
-   "DefaultActions": [
+   "actions": [
     "ef7b600f685b87fcd10d15cb21a3"
    ]
   },
   "report-switched-on": {
-   "Id": "report-switched-on",
-   "Name": "report switched on",
-   "EventId": "reporting-switched-on",
-   "NounTypes": [
+   "id": "report-switched-on",
+   "name": "report switched on",
+   "event": "reporting-switched-on",
+   "nouns": [
     "devices",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "b703969791fe6a4b4b43764fe9215df0"
    ]
   },
   "report-take": {
-   "Id": "report-take",
-   "Name": "report take",
-   "EventId": "reporting-take",
-   "NounTypes": [
+   "id": "report-take",
+   "name": "report take",
+   "event": "reporting-take",
+   "nouns": [
     "props",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "c9d7e290147df7748f2222edd327fcb2"
    ]
   },
   "report-the-view": {
-   "Id": "report-the-view",
-   "Name": "report the view",
-   "EventId": "reporting-the-view",
-   "NounTypes": [
+   "id": "report-the-view",
+   "name": "report the view",
+   "event": "reporting-the-view",
+   "nouns": [
     "rooms"
    ],
-   "DefaultActions": [
-    "dbd65ae410d57513e4ddb3770accff"
+   "actions": [
+    "be3c2951941a98acc45dfd2d4705308"
    ]
   },
   "report-unopenable": {
-   "Id": "report-unopenable",
-   "Name": "report unopenable",
-   "EventId": "reporting-unopenable",
-   "NounTypes": [
+   "id": "report-unopenable",
+   "name": "report unopenable",
+   "event": "reporting-unopenable",
+   "nouns": [
     "props",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "c76bb26a42aa9719a9a0313b2ec1193d"
    ]
   },
   "report-wear": {
-   "Id": "report-wear",
-   "Name": "report wear",
-   "EventId": "reporting-wear",
-   "NounTypes": [
+   "id": "report-wear",
+   "name": "report wear",
+   "event": "reporting-wear",
+   "nouns": [
     "props",
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "dba3f28c029c8ebf74fe7ac2d94e0ac0"
    ]
   },
   "search-it": {
-   "Id": "search-it",
-   "Name": "search it",
-   "EventId": "searching-it",
-   "NounTypes": [
+   "id": "search-it",
+   "name": "search it",
+   "event": "searching-it",
+   "nouns": [
     "actors",
     "props"
    ],
-   "DefaultActions": [
+   "actions": [
     "ed97f386ce027a2ff676ef7a8a302e1"
    ]
   },
   "set-initial-position": {
-   "Id": "set-initial-position",
-   "Name": "set initial position",
-   "EventId": "setting-initial-position",
-   "NounTypes": [
+   "id": "set-initial-position",
+   "name": "set initial position",
+   "event": "setting-initial-position",
+   "nouns": [
     "stories",
     "actors",
     "rooms"
    ],
-   "DefaultActions": [
+   "actions": [
     "f6b153d8dfbb91bec15a99f842d2"
    ]
   },
   "show-it-to": {
-   "Id": "show-it-to",
-   "Name": "show it to",
-   "EventId": "showing-it-to",
-   "NounTypes": [
+   "id": "show-it-to",
+   "name": "show it to",
+   "event": "showing-it-to",
+   "nouns": [
     "actors",
     "actors",
     "props"
    ],
-   "DefaultActions": [
+   "actions": [
     "b5bd6ab4d4df9616f49967630082b1e"
    ]
   },
   "smell": {
-   "Id": "smell",
-   "Name": "smell",
-   "EventId": "smelling",
-   "NounTypes": [
+   "id": "smell",
+   "name": "smell",
+   "event": "smelling",
+   "nouns": [
     "actors"
    ],
-   "DefaultActions": [
+   "actions": [
     "bd1fabe270be6ab6a4724cc8f142da1"
    ]
   },
   "smell-it": {
-   "Id": "smell-it",
-   "Name": "smell it",
-   "EventId": "smelling-it",
-   "NounTypes": [
+   "id": "smell-it",
+   "name": "smell it",
+   "event": "smelling-it",
+   "nouns": [
     "actors",
     "kinds"
    ],
-   "DefaultActions": [
+   "actions": [
     "f1eb81a12f8e22e8c9964742f7a703"
    ]
   },
   "switch-it-off": {
-   "Id": "switch-it-off",
-   "Name": "switch it off",
-   "EventId": "switching-it-off",
-   "NounTypes": [
+   "id": "switch-it-off",
+   "name": "switch it off",
+   "event": "switching-it-off",
+   "nouns": [
     "actors",
     "props"
    ],
-   "DefaultActions": [
+   "actions": [
     "d61637c94b5914263b9b2e888c6ee3f0"
    ]
   },
   "switch-it-on": {
-   "Id": "switch-it-on",
-   "Name": "switch it on",
-   "EventId": "switching-it-on",
-   "NounTypes": [
+   "id": "switch-it-on",
+   "name": "switch it on",
+   "event": "switching-it-on",
+   "nouns": [
     "actors",
     "props"
    ],
-   "DefaultActions": [
+   "actions": [
     "c8f1338cac6671fc5d6920c2c0f7b893"
    ]
   },
   "take-it": {
-   "Id": "take-it",
-   "Name": "take it",
-   "EventId": "taking-it",
-   "NounTypes": [
+   "id": "take-it",
+   "name": "take it",
+   "event": "taking-it",
+   "nouns": [
     "actors",
     "props"
    ],
-   "DefaultActions": [
+   "actions": [
     "ad645ba09d5207de6d3ab358466b7355"
    ]
   },
   "wear-it": {
-   "Id": "wear-it",
-   "Name": "wear it",
-   "EventId": "wearing-it",
-   "NounTypes": [
+   "id": "wear-it",
+   "name": "wear it",
+   "event": "wearing-it",
+   "nouns": [
     "actors",
     "props"
    ],
-   "DefaultActions": [
+   "actions": [
     "a2afcc3585516a895061346c3d5fa3f"
    ]
   }
  },
- "Classes": {
+ "classes": {
   "actors": {
    "id": "actors",
    "parents": [
@@ -1058,6 +1058,11 @@ var Data = `{
    "plural": "actors",
    "singular": "actor",
    "properties": [
+    {
+     "id": "actors-not-inputing-dialog",
+     "type": "EnumProperty",
+     "name": "not inputing dialog"
+    },
     {
      "id": "actors-clothing",
      "type": "PointerProperty",
@@ -1085,11 +1090,6 @@ var Data = `{
      "type": "PointerProperty",
      "name": "next quip",
      "relates": "quips"
-    },
-    {
-     "id": "actors-not-inputing-dialog",
-     "type": "EnumProperty",
-     "name": "not inputing dialog"
     }
    ]
   },
@@ -1135,14 +1135,6 @@ var Data = `{
    "singular": "container",
    "properties": [
     {
-     "id": "containers-contents",
-     "type": "PointerProperty",
-     "name": "contents",
-     "relates": "objects",
-     "relation": "containers-contents-relation",
-     "many": true
-    },
-    {
      "id": "containers-opaque",
      "type": "EnumProperty",
      "name": "opaque"
@@ -1156,6 +1148,14 @@ var Data = `{
      "id": "containers-locked",
      "type": "EnumProperty",
      "name": "locked"
+    },
+    {
+     "id": "containers-contents",
+     "type": "PointerProperty",
+     "name": "contents",
+     "relates": "objects",
+     "relation": "containers-contents-relation",
+     "many": true
     }
    ]
   },
@@ -1167,6 +1167,13 @@ var Data = `{
    "plural": "conversation globals",
    "singular": "conversation global",
    "properties": [
+    {
+     "id": "conversation-globals-queue",
+     "type": "PointerProperty",
+     "name": "queue",
+     "relates": "quips",
+     "many": true
+    },
     {
      "id": "conversation-globals-interlocutor",
      "type": "PointerProperty",
@@ -1190,13 +1197,6 @@ var Data = `{
      "type": "PointerProperty",
      "name": "greatgrand",
      "relates": "quips"
-    },
-    {
-     "id": "conversation-globals-queue",
-     "type": "PointerProperty",
-     "name": "queue",
-     "relates": "quips",
-     "many": true
     }
    ]
   },
@@ -1258,14 +1258,6 @@ var Data = `{
    "singular": "door",
    "properties": [
     {
-     "id": "doors-x-via-up",
-     "type": "PointerProperty",
-     "name": "x-via-up",
-     "relates": "rooms",
-     "relation": "rooms-up-via-relation",
-     "many": true
-    },
-    {
      "id": "doors-x-via-down",
      "type": "PointerProperty",
      "name": "x-via-down",
@@ -1319,6 +1311,14 @@ var Data = `{
      "relates": "rooms",
      "relation": "rooms-west-via-relation",
      "many": true
+    },
+    {
+     "id": "doors-x-via-up",
+     "type": "PointerProperty",
+     "name": "x-via-up",
+     "relates": "rooms",
+     "relation": "rooms-up-via-relation",
+     "many": true
     }
    ]
   },
@@ -1371,6 +1371,16 @@ var Data = `{
    "singular": "kind",
    "properties": [
     {
+     "id": "kinds-printed-name",
+     "type": "TextProperty",
+     "name": "printed name"
+    },
+    {
+     "id": "kinds-indefinite-article",
+     "type": "TextProperty",
+     "name": "indefinite article"
+    },
+    {
      "id": "kinds-singular-named",
      "type": "EnumProperty",
      "name": "singular-named"
@@ -1384,16 +1394,6 @@ var Data = `{
      "id": "kinds-recollected",
      "type": "EnumProperty",
      "name": "recollected"
-    },
-    {
-     "id": "kinds-printed-name",
-     "type": "TextProperty",
-     "name": "printed name"
-    },
-    {
-     "id": "kinds-indefinite-article",
-     "type": "TextProperty",
-     "name": "indefinite article"
     },
     {
      "id": "kinds-name",
@@ -1411,16 +1411,23 @@ var Data = `{
    "singular": "object",
    "properties": [
     {
-     "id": "objects-whereabouts",
+     "id": "objects-wearer",
      "type": "PointerProperty",
-     "name": "whereabouts",
-     "relates": "rooms",
-     "relation": "rooms-contents-relation"
+     "name": "wearer",
+     "relates": "actors",
+     "relation": "actors-clothing-relation"
     },
     {
-     "id": "objects-description",
-     "type": "TextProperty",
-     "name": "description"
+     "id": "objects-unhandled",
+     "type": "EnumProperty",
+     "name": "unhandled"
+    },
+    {
+     "id": "objects-enclosure",
+     "type": "PointerProperty",
+     "name": "enclosure",
+     "relates": "containers",
+     "relation": "containers-contents-relation"
     },
     {
      "id": "objects-brief",
@@ -1433,23 +1440,11 @@ var Data = `{
      "name": "scenery"
     },
     {
-     "id": "objects-wearer",
+     "id": "objects-whereabouts",
      "type": "PointerProperty",
-     "name": "wearer",
-     "relates": "actors",
-     "relation": "actors-clothing-relation"
-    },
-    {
-     "id": "objects-enclosure",
-     "type": "PointerProperty",
-     "name": "enclosure",
-     "relates": "containers",
-     "relation": "containers-contents-relation"
-    },
-    {
-     "id": "objects-unhandled",
-     "type": "EnumProperty",
-     "name": "unhandled"
+     "name": "whereabouts",
+     "relates": "rooms",
+     "relation": "rooms-contents-relation"
     },
     {
      "id": "objects-owner",
@@ -1464,6 +1459,11 @@ var Data = `{
      "name": "support",
      "relates": "supporters",
      "relation": "supporters-contents-relation"
+    },
+    {
+     "id": "objects-description",
+     "type": "TextProperty",
+     "name": "description"
     }
    ]
   },
@@ -1478,6 +1478,11 @@ var Data = `{
    "singular": "opener",
    "properties": [
     {
+     "id": "openers-unlocked",
+     "type": "EnumProperty",
+     "name": "unlocked"
+    },
+    {
      "id": "openers-open",
      "type": "EnumProperty",
      "name": "open"
@@ -1491,11 +1496,6 @@ var Data = `{
      "id": "openers-locakable",
      "type": "EnumProperty",
      "name": "locakable"
-    },
-    {
-     "id": "openers-unlocked",
-     "type": "EnumProperty",
-     "name": "unlocked"
     }
    ]
   },
@@ -1535,14 +1535,14 @@ var Data = `{
    "singular": "prop",
    "properties": [
     {
-     "id": "props-portable",
-     "type": "EnumProperty",
-     "name": "portable"
-    },
-    {
      "id": "props-wearable",
      "type": "EnumProperty",
      "name": "wearable"
+    },
+    {
+     "id": "props-portable",
+     "type": "EnumProperty",
+     "name": "portable"
     }
    ]
   },
@@ -1555,11 +1555,6 @@ var Data = `{
    "singular": "quip requirement",
    "properties": [
     {
-     "id": "quip-requirements-permitted",
-     "type": "EnumProperty",
-     "name": "permitted"
-    },
-    {
      "id": "quip-requirements-fact",
      "type": "PointerProperty",
      "name": "fact",
@@ -1570,6 +1565,11 @@ var Data = `{
      "type": "PointerProperty",
      "name": "quip",
      "relates": "quips"
+    },
+    {
+     "id": "quip-requirements-permitted",
+     "type": "EnumProperty",
+     "name": "permitted"
     }
    ]
   },
@@ -1581,11 +1581,6 @@ var Data = `{
    "plural": "quips",
    "singular": "quip",
    "properties": [
-    {
-     "id": "quips-restrictive",
-     "type": "EnumProperty",
-     "name": "restrictive"
-    },
     {
      "id": "quips-planned",
      "type": "EnumProperty",
@@ -1611,6 +1606,11 @@ var Data = `{
      "id": "quips-repeatable",
      "type": "EnumProperty",
      "name": "repeatable"
+    },
+    {
+     "id": "quips-restrictive",
+     "type": "EnumProperty",
+     "name": "restrictive"
     }
    ]
   },
@@ -1622,6 +1622,37 @@ var Data = `{
    "plural": "rooms",
    "singular": "room",
    "properties": [
+    {
+     "id": "rooms-description",
+     "type": "TextProperty",
+     "name": "description"
+    },
+    {
+     "id": "rooms-west-via",
+     "type": "PointerProperty",
+     "name": "west-via",
+     "relates": "doors",
+     "relation": "rooms-west-via-relation"
+    },
+    {
+     "id": "rooms-down-via",
+     "type": "PointerProperty",
+     "name": "down-via",
+     "relates": "doors",
+     "relation": "rooms-down-via-relation"
+    },
+    {
+     "id": "rooms-south-via",
+     "type": "PointerProperty",
+     "name": "south-via",
+     "relates": "doors",
+     "relation": "rooms-south-via-relation"
+    },
+    {
+     "id": "rooms-visited",
+     "type": "EnumProperty",
+     "name": "visited"
+    },
     {
      "id": "rooms-contents",
      "type": "PointerProperty",
@@ -1638,37 +1669,6 @@ var Data = `{
      "relation": "rooms-north-via-relation"
     },
     {
-     "id": "rooms-description",
-     "type": "TextProperty",
-     "name": "description"
-    },
-    {
-     "id": "rooms-south-via",
-     "type": "PointerProperty",
-     "name": "south-via",
-     "relates": "doors",
-     "relation": "rooms-south-via-relation"
-    },
-    {
-     "id": "rooms-up-via",
-     "type": "PointerProperty",
-     "name": "up-via",
-     "relates": "doors",
-     "relation": "rooms-up-via-relation"
-    },
-    {
-     "id": "rooms-down-via",
-     "type": "PointerProperty",
-     "name": "down-via",
-     "relates": "doors",
-     "relation": "rooms-down-via-relation"
-    },
-    {
-     "id": "rooms-visited",
-     "type": "EnumProperty",
-     "name": "visited"
-    },
-    {
      "id": "rooms-east-via",
      "type": "PointerProperty",
      "name": "east-via",
@@ -1676,11 +1676,11 @@ var Data = `{
      "relation": "rooms-east-via-relation"
     },
     {
-     "id": "rooms-west-via",
+     "id": "rooms-up-via",
      "type": "PointerProperty",
-     "name": "west-via",
+     "name": "up-via",
      "relates": "doors",
-     "relation": "rooms-west-via-relation"
+     "relation": "rooms-up-via-relation"
     }
    ]
   },
@@ -1713,6 +1713,21 @@ var Data = `{
    "singular": "story",
    "properties": [
     {
+     "id": "stories-player-input",
+     "type": "TextProperty",
+     "name": "player input"
+    },
+    {
+     "id": "stories-scored",
+     "type": "EnumProperty",
+     "name": "scored"
+    },
+    {
+     "id": "stories-playing",
+     "type": "EnumProperty",
+     "name": "playing"
+    },
+    {
      "id": "stories-author",
      "type": "TextProperty",
      "name": "author"
@@ -1736,21 +1751,6 @@ var Data = `{
      "id": "stories-turn-count",
      "type": "NumProperty",
      "name": "turn count"
-    },
-    {
-     "id": "stories-player-input",
-     "type": "TextProperty",
-     "name": "player input"
-    },
-    {
-     "id": "stories-scored",
-     "type": "EnumProperty",
-     "name": "scored"
-    },
-    {
-     "id": "stories-playing",
-     "type": "EnumProperty",
-     "name": "playing"
     }
    ]
   },
@@ -1775,211 +1775,201 @@ var Data = `{
    ]
   }
  },
- "Enumerations": {
+ "enums": {
   "actors-not-inputing-dialog": {
-   "Choices": [
+   "choices": [
     "not-inputing-dialog",
     "inputing-dialog"
    ]
   },
   "canisters-hidden": {
-   "Choices": [
+   "choices": [
     "hidden",
     "found"
    ]
   },
   "containers-lockable": {
-   "Choices": [
+   "choices": [
     "not-lockable",
     "lockable"
    ]
   },
   "containers-locked": {
-   "Choices": [
+   "choices": [
     "unlocked",
     "locked"
    ]
   },
   "containers-opaque": {
-   "Choices": [
+   "choices": [
     "opaque",
     "transparent"
    ]
   },
   "devices-operable": {
-   "Choices": [
+   "choices": [
     "operable",
     "inoperable"
    ]
   },
   "devices-switched-off": {
-   "Choices": [
+   "choices": [
     "switched-off",
     "switched-on"
    ]
   },
   "following-quips-indirectly-following": {
-   "Choices": [
+   "choices": [
     "indirectly-following",
     "directly-following"
    ]
   },
   "kinds-common-named": {
-   "Choices": [
+   "choices": [
     "common-named",
     "proper-named"
    ]
   },
   "kinds-recollected": {
-   "Choices": [
+   "choices": [
     "not-recollected",
     "recollected"
    ]
   },
   "kinds-singular-named": {
-   "Choices": [
+   "choices": [
     "singular-named",
     "plural-named"
    ]
   },
   "objects-scenery": {
-   "Choices": [
+   "choices": [
     "not-scenery",
     "scenery"
    ]
   },
   "objects-unhandled": {
-   "Choices": [
+   "choices": [
     "unhandled",
     "handled"
    ]
   },
   "openers-hinged": {
-   "Choices": [
+   "choices": [
     "hinged",
     "hingeless"
    ]
   },
   "openers-locakable": {
-   "Choices": [
+   "choices": [
     "not-lockable",
     "locakable"
    ]
   },
   "openers-open": {
-   "Choices": [
+   "choices": [
     "open",
     "closed"
    ]
   },
   "openers-unlocked": {
-   "Choices": [
+   "choices": [
     "unlocked",
     "locked"
    ]
   },
   "pending-quips-immediate": {
-   "Choices": [
+   "choices": [
     "immediate",
     "postponed"
    ]
   },
   "pending-quips-obligatory": {
-   "Choices": [
+   "choices": [
     "obligatory",
     "optional"
    ]
   },
   "props-portable": {
-   "Choices": [
+   "choices": [
     "portable",
     "fixed-in-place"
    ]
   },
   "props-wearable": {
-   "Choices": [
+   "choices": [
     "not-wearable",
     "wearable"
    ]
   },
   "quip-requirements-permitted": {
-   "Choices": [
+   "choices": [
     "permitted",
     "prohibited"
    ]
   },
   "quips-planned": {
-   "Choices": [
+   "choices": [
     "planned",
     "casual"
    ]
   },
   "quips-repeatable": {
-   "Choices": [
+   "choices": [
     "one-time",
     "repeatable"
    ]
   },
   "quips-restrictive": {
-   "Choices": [
+   "choices": [
     "unrestricted",
     "restrictive"
    ]
   },
   "rooms-visited": {
-   "Choices": [
+   "choices": [
     "unvisited",
     "visited"
    ]
   },
   "stories-playing": {
-   "Choices": [
+   "choices": [
     "playing",
     "completed"
    ]
   },
   "stories-scored": {
-   "Choices": [
+   "choices": [
     "unscored",
     "scored"
    ]
   }
  },
- "Events": {
+ "events": {
   "acquiring-it": {
-   "Id": "acquiring-it",
-   "Name": "acquiring it",
-   "Capture": null,
-   "Bubble": null
+   "id": "acquiring-it",
+   "name": "acquiring it"
   },
   "attacking-it": {
-   "Id": "attacking-it",
-   "Name": "attacking it",
-   "Capture": null,
-   "Bubble": null
+   "id": "attacking-it",
+   "name": "attacking it"
   },
   "being-acquired": {
-   "Id": "being-acquired",
-   "Name": "being acquired",
-   "Capture": null,
-   "Bubble": null
+   "id": "being-acquired",
+   "name": "being acquired"
   },
   "being-closed-by": {
-   "Id": "being-closed-by",
-   "Name": "being closed by",
-   "Capture": null,
-   "Bubble": null
+   "id": "being-closed-by",
+   "name": "being closed by"
   },
   "being-discussed": {
-   "Id": "being-discussed",
-   "Name": "being discussed",
-   "Capture": null,
-   "Bubble": null
+   "id": "being-discussed",
+   "name": "being discussed"
   },
   "being-examined": {
-   "Id": "being-examined",
-   "Name": "being examined",
-   "Capture": [
+   "id": "being-examined",
+   "name": "being examined",
+   "capture": [
     {
      "Instance": "paints",
      "Class": "props",
@@ -1995,182 +1985,155 @@ var Data = `{
     {
      "Instance": "painting",
      "Class": "props",
-     "Callback": "c67b0b4d7d698d094c906154",
+     "Callback": "bb18d25b98660857d88e5f8d3747cdd",
      "Options": 1
     },
     {
      "Instance": "painting",
      "Class": "props",
-     "Callback": "ec6f223e7791279fda070c1800163efb",
+     "Callback": "f5a8b9fe48a05ba88d82829dc5e83",
      "Options": 3
     },
     {
      "Instance": "table",
      "Class": "supporters",
-     "Callback": "f1004c0b7326249efe3f65557fabb9f4",
+     "Callback": "f7de12be85b890ff8a18141f91c5c976",
      "Options": 3
     },
     {
      "Instance": "telegram",
      "Class": "props",
-     "Callback": "e69b7d9edaeed0a36460207695",
+     "Callback": "a27a04f5b30dcdb2fb3bca460ffa83a3",
      "Options": 3
     },
     {
      "Instance": "gravel",
      "Class": "props",
-     "Callback": "bf01d4248f78ebe97c2271f32858372c",
+     "Callback": "f18bf4192989ca36ad6671e40b253546",
      "Options": 3
     },
     {
      "Instance": "seaweed",
      "Class": "props",
-     "Callback": "dcd93e8528fa26a2d76ff388e12b05",
+     "Callback": "d01cb53d42b7e1ff4ae8bf8f8c468188",
      "Options": 3
     },
     {
      "Instance": "evil-fish",
      "Class": "animals",
-     "Callback": "b5220b2fe33551f0f16fcb86e43b",
+     "Callback": "afe1549f4f3744702939c3f69275690",
      "Options": 3
     },
     {
      "Instance": "bouquet",
      "Class": "props",
-     "Callback": "a1f234db8a0aac739ec97f31970dc",
+     "Callback": "deb7efe1826c5a9b5819f6073fbc089a",
      "Options": 3
     },
     {
      "Instance": "lingerie-bag",
      "Class": "props",
-     "Callback": "c490a9a325bf86d652e6f8ae46f",
+     "Callback": "f6f9049ec302b58175ad90021534b902",
      "Options": 3
     }
    ],
-   "Bubble": [
+   "bubble": [
     {
      "Instance": "aquarium",
      "Class": "containers",
-     "Callback": "ce5b032afbe64e94fbb24b1cb91",
+     "Callback": "e9cbdbcdcc4ceac8f98fc99adca7268",
      "Options": 1
     }
    ]
   },
   "being-inserted": {
-   "Id": "being-inserted",
-   "Name": "being inserted",
-   "Capture": null,
-   "Bubble": [
+   "id": "being-inserted",
+   "name": "being inserted",
+   "bubble": [
     {
      "Instance": "fish-food",
      "Class": "canisters",
-     "Callback": "f3b6951a9a4afccf925531d9527d552e",
+     "Callback": "f383a1073f44b75c602b1e7b404e",
      "Options": 1
     }
    ]
   },
   "being-opened-by": {
-   "Id": "being-opened-by",
-   "Name": "being opened by",
-   "Capture": null,
-   "Bubble": [
+   "id": "being-opened-by",
+   "name": "being opened by",
+   "bubble": [
     {
      "Instance": "fish-food",
      "Class": "canisters",
-     "Callback": "e06a20281952b2e90d79adf1a13caa4",
+     "Callback": "c3955aa0d0fc455e328e1faa99333f88",
      "Options": 1
     }
    ]
   },
   "being-passed-through": {
-   "Id": "being-passed-through",
-   "Name": "being passed through",
-   "Capture": null,
-   "Bubble": null
+   "id": "being-passed-through",
+   "name": "being passed through"
   },
   "closing-it": {
-   "Id": "closing-it",
-   "Name": "closing it",
-   "Capture": null,
-   "Bubble": null
+   "id": "closing-it",
+   "name": "closing it"
   },
   "commencing": {
-   "Id": "commencing",
-   "Name": "commencing",
-   "Capture": null,
-   "Bubble": [
+   "id": "commencing",
+   "name": "commencing",
+   "bubble": [
     {
      "Instance": "day-for-fresh-sushi",
      "Class": "stories",
-     "Callback": "d973ac60ad949239200a0ded1e608380",
+     "Callback": "f386909950f2484579711506a8baff3f",
      "Options": 1
     }
    ]
   },
   "commenting": {
-   "Id": "commenting",
-   "Name": "commenting",
-   "Capture": null,
-   "Bubble": null
+   "id": "commenting",
+   "name": "commenting"
   },
   "debugging-contents": {
-   "Id": "debugging-contents",
-   "Name": "debugging contents",
-   "Capture": null,
-   "Bubble": null
+   "id": "debugging-contents",
+   "name": "debugging contents"
   },
   "debugging-direct-parent": {
-   "Id": "debugging-direct-parent",
-   "Name": "debugging direct parent",
-   "Capture": null,
-   "Bubble": null
+   "id": "debugging-direct-parent",
+   "name": "debugging direct parent"
   },
   "debugging-room-contents": {
-   "Id": "debugging-room-contents",
-   "Name": "debugging room contents",
-   "Capture": null,
-   "Bubble": null
+   "id": "debugging-room-contents",
+   "name": "debugging room contents"
   },
   "departing": {
-   "Id": "departing",
-   "Name": "departing",
-   "Capture": null,
-   "Bubble": null
+   "id": "departing",
+   "name": "departing"
   },
   "describing": {
-   "Id": "describing",
-   "Name": "describing",
-   "Capture": null,
-   "Bubble": null
+   "id": "describing",
+   "name": "describing"
   },
   "describing-the-first-room": {
-   "Id": "describing-the-first-room",
-   "Name": "describing the first room",
-   "Capture": null,
-   "Bubble": null
+   "id": "describing-the-first-room",
+   "name": "describing the first room"
   },
   "discussing": {
-   "Id": "discussing",
-   "Name": "discussing",
-   "Capture": null,
-   "Bubble": null
+   "id": "discussing",
+   "name": "discussing"
   },
   "eating-it": {
-   "Id": "eating-it",
-   "Name": "eating it",
-   "Capture": null,
-   "Bubble": null
+   "id": "eating-it",
+   "name": "eating it"
   },
   "ending-the-story": {
-   "Id": "ending-the-story",
-   "Name": "ending the story",
-   "Capture": null,
-   "Bubble": null
+   "id": "ending-the-story",
+   "name": "ending the story"
   },
   "ending-the-turn": {
-   "Id": "ending-the-turn",
-   "Name": "ending the turn",
-   "Capture": [
+   "id": "ending-the-turn",
+   "name": "ending the turn",
+   "capture": [
     {
      "Instance": "",
      "Class": "stories",
@@ -2178,7 +2141,7 @@ var Data = `{
      "Options": 1
     }
    ],
-   "Bubble": [
+   "bubble": [
     {
      "Instance": "",
      "Class": "stories",
@@ -2188,47 +2151,45 @@ var Data = `{
     {
      "Instance": "",
      "Class": "stories",
-     "Callback": "b1e679677e49de176b715c792ab9ef",
+     "Callback": "d3d7b2c9b0c8ddbc95756b981d73e5f",
      "Options": 1
     }
    ]
   },
   "examining-it": {
-   "Id": "examining-it",
-   "Name": "examining it",
-   "Capture": null,
-   "Bubble": null
+   "id": "examining-it",
+   "name": "examining it"
   },
   "feeding-it": {
-   "Id": "feeding-it",
-   "Name": "feeding it",
-   "Capture": [
+   "id": "feeding-it",
+   "name": "feeding it",
+   "capture": [
     {
      "Instance": "",
      "Class": "actors",
-     "Callback": "b3ce757fe1ce243e795a95b8a480",
+     "Callback": "cfa04e62556a30555426ce11",
      "Options": 1
     }
    ],
-   "Bubble": [
+   "bubble": [
     {
      "Instance": "",
      "Class": "actors",
-     "Callback": "f62ee471906ed55e81c1e249d3a4651",
+     "Callback": "ec0f84674c17bbc66902dfe2b2ab284",
      "Options": 1
     },
     {
      "Instance": "",
      "Class": "actors",
-     "Callback": "f933c558efc4b3edc240d80b1f4f91d3",
+     "Callback": "b35f0712de0ecce8238feaa309229a9",
      "Options": 1
     }
    ]
   },
   "giving-it-to": {
-   "Id": "giving-it-to",
-   "Name": "giving it to",
-   "Capture": [
+   "id": "giving-it-to",
+   "name": "giving it to",
+   "capture": [
     {
      "Instance": "",
      "Class": "actors",
@@ -2247,37 +2208,28 @@ var Data = `{
      "Callback": "d81e1bcae38ca5faa6da34c0abc814e",
      "Options": 0
     }
-   ],
-   "Bubble": null
+   ]
   },
   "going-through-it": {
-   "Id": "going-through-it",
-   "Name": "going through it",
-   "Capture": null,
-   "Bubble": null
+   "id": "going-through-it",
+   "name": "going through it"
   },
   "going-to": {
-   "Id": "going-to",
-   "Name": "going to",
-   "Capture": null,
-   "Bubble": null
+   "id": "going-to",
+   "name": "going to"
   },
   "greeting": {
-   "Id": "greeting",
-   "Name": "greeting",
-   "Capture": null,
-   "Bubble": null
+   "id": "greeting",
+   "name": "greeting"
   },
   "impressing": {
-   "Id": "impressing",
-   "Name": "impressing",
-   "Capture": null,
-   "Bubble": null
+   "id": "impressing",
+   "name": "impressing"
   },
   "inserting-it-into": {
-   "Id": "inserting-it-into",
-   "Name": "inserting it into",
-   "Capture": [
+   "id": "inserting-it-into",
+   "name": "inserting it into",
+   "capture": [
     {
      "Instance": "",
      "Class": "actors",
@@ -2296,14 +2248,12 @@ var Data = `{
      "Callback": "c092ea1a525fdfe12f7b255a354",
      "Options": 0
     }
-   ],
-   "Bubble": null
+   ]
   },
   "jumping": {
-   "Id": "jumping",
-   "Name": "jumping",
-   "Capture": null,
-   "Bubble": [
+   "id": "jumping",
+   "name": "jumping",
+   "bubble": [
     {
      "Instance": "player",
      "Class": "actors",
@@ -2313,53 +2263,41 @@ var Data = `{
    ]
   },
   "kissing-it": {
-   "Id": "kissing-it",
-   "Name": "kissing it",
-   "Capture": [
+   "id": "kissing-it",
+   "name": "kissing it",
+   "capture": [
     {
      "Instance": "",
      "Class": "actors",
      "Callback": "f9baafd0c928bb023c1ae00466c0464f",
      "Options": 0
     }
-   ],
-   "Bubble": null
+   ]
   },
   "listening": {
-   "Id": "listening",
-   "Name": "listening",
-   "Capture": null,
-   "Bubble": null
+   "id": "listening",
+   "name": "listening"
   },
   "listening-to": {
-   "Id": "listening-to",
-   "Name": "listening to",
-   "Capture": null,
-   "Bubble": null
+   "id": "listening-to",
+   "name": "listening to"
   },
   "looking": {
-   "Id": "looking",
-   "Name": "looking",
-   "Capture": null,
-   "Bubble": null
+   "id": "looking",
+   "name": "looking"
   },
   "looking-under-it": {
-   "Id": "looking-under-it",
-   "Name": "looking under it",
-   "Capture": null,
-   "Bubble": null
+   "id": "looking-under-it",
+   "name": "looking under it"
   },
   "opening-it": {
-   "Id": "opening-it",
-   "Name": "opening it",
-   "Capture": null,
-   "Bubble": null
+   "id": "opening-it",
+   "name": "opening it"
   },
   "parsing-player-input": {
-   "Id": "parsing-player-input",
-   "Name": "parsing player input",
-   "Capture": null,
-   "Bubble": [
+   "id": "parsing-player-input",
+   "name": "parsing player input",
+   "bubble": [
     {
      "Instance": "",
      "Class": "stories",
@@ -2369,10 +2307,9 @@ var Data = `{
    ]
   },
   "printing-contents": {
-   "Id": "printing-contents",
-   "Name": "printing contents",
-   "Capture": null,
-   "Bubble": [
+   "id": "printing-contents",
+   "name": "printing contents",
+   "bubble": [
     {
      "Instance": "",
      "Class": "containers",
@@ -2388,16 +2325,13 @@ var Data = `{
    ]
   },
   "printing-conversation-choices": {
-   "Id": "printing-conversation-choices",
-   "Name": "printing conversation choices",
-   "Capture": null,
-   "Bubble": null
+   "id": "printing-conversation-choices",
+   "name": "printing conversation choices"
   },
   "printing-details": {
-   "Id": "printing-details",
-   "Name": "printing details",
-   "Capture": null,
-   "Bubble": [
+   "id": "printing-details",
+   "name": "printing details",
+   "bubble": [
     {
      "Instance": "studio",
      "Class": "rooms",
@@ -2407,16 +2341,15 @@ var Data = `{
     {
      "Instance": "window",
      "Class": "openers",
-     "Callback": "bf33e6851af7c5602ee19fc40c4ac",
+     "Callback": "a5c72be52c4f2336436967baf5754621",
      "Options": 1
     }
    ]
   },
   "printing-name-text": {
-   "Id": "printing-name-text",
-   "Name": "printing name text",
-   "Capture": null,
-   "Bubble": [
+   "id": "printing-name-text",
+   "name": "printing name text",
+   "bubble": [
     {
      "Instance": "",
      "Class": "containers",
@@ -2426,7 +2359,7 @@ var Data = `{
     {
      "Instance": "",
      "Class": "doors",
-     "Callback": "a23027802673435b37f0098b3dcb5cfc",
+     "Callback": "fbe785a6bfa575e678ea90da0211546",
      "Options": 1
     },
     {
@@ -2438,15 +2371,13 @@ var Data = `{
    ]
   },
   "printing-the-banner": {
-   "Id": "printing-the-banner",
-   "Name": "printing the banner",
-   "Capture": null,
-   "Bubble": null
+   "id": "printing-the-banner",
+   "name": "printing the banner"
   },
   "putting-it-onto": {
-   "Id": "putting-it-onto",
-   "Name": "putting it onto",
-   "Capture": [
+   "id": "putting-it-onto",
+   "name": "putting it onto",
+   "capture": [
     {
      "Instance": "",
      "Class": "actors",
@@ -2471,13 +2402,12 @@ var Data = `{
      "Callback": "adc65b6c27ecd7b4aabf6bdd973b",
      "Options": 0
     }
-   ],
-   "Bubble": null
+   ]
   },
   "receiving-insertion": {
-   "Id": "receiving-insertion",
-   "Name": "receiving insertion",
-   "Capture": [
+   "id": "receiving-insertion",
+   "name": "receiving insertion",
+   "capture": [
     {
      "Instance": "",
      "Class": "containers",
@@ -2485,137 +2415,107 @@ var Data = `{
      "Options": 0
     }
    ],
-   "Bubble": [
+   "bubble": [
     {
      "Instance": "vase",
      "Class": "containers",
-     "Callback": "ba81c1a9607db24dfe523984dce6a",
+     "Callback": "f12f24b77e1c05dfffb8569d4a8cb088",
      "Options": 1
     }
    ]
   },
   "reporting-already-closed": {
-   "Id": "reporting-already-closed",
-   "Name": "reporting already closed",
-   "Capture": null,
-   "Bubble": null
+   "id": "reporting-already-closed",
+   "name": "reporting already closed"
   },
   "reporting-already-off": {
-   "Id": "reporting-already-off",
-   "Name": "reporting already off",
-   "Capture": null,
-   "Bubble": null
+   "id": "reporting-already-off",
+   "name": "reporting already off"
   },
   "reporting-already-on": {
-   "Id": "reporting-already-on",
-   "Name": "reporting already on",
-   "Capture": null,
-   "Bubble": null
+   "id": "reporting-already-on",
+   "name": "reporting already on"
   },
   "reporting-already-opened": {
-   "Id": "reporting-already-opened",
-   "Name": "reporting already opened",
-   "Capture": null,
-   "Bubble": null
+   "id": "reporting-already-opened",
+   "name": "reporting already opened"
   },
   "reporting-attack": {
-   "Id": "reporting-attack",
-   "Name": "reporting attack",
-   "Capture": null,
-   "Bubble": [
+   "id": "reporting-attack",
+   "name": "reporting attack",
+   "bubble": [
     {
      "Instance": "evil-fish",
      "Class": "animals",
-     "Callback": "bfe132582370c1a1242feeb43c5208",
+     "Callback": "dfc7b1de160d5dea8bc04e39ff06899c",
      "Options": 1
     }
    ]
   },
   "reporting-comment": {
-   "Id": "reporting-comment",
-   "Name": "reporting comment",
-   "Capture": null,
-   "Bubble": null
+   "id": "reporting-comment",
+   "name": "reporting comment"
   },
   "reporting-currently-closed": {
-   "Id": "reporting-currently-closed",
-   "Name": "reporting currently closed",
-   "Capture": null,
-   "Bubble": null
+   "id": "reporting-currently-closed",
+   "name": "reporting currently closed"
   },
   "reporting-eat": {
-   "Id": "reporting-eat",
-   "Name": "reporting eat",
-   "Capture": null,
-   "Bubble": null
+   "id": "reporting-eat",
+   "name": "reporting eat"
   },
   "reporting-gave": {
-   "Id": "reporting-gave",
-   "Name": "reporting gave",
-   "Capture": null,
-   "Bubble": [
+   "id": "reporting-gave",
+   "name": "reporting gave",
+   "bubble": [
     {
      "Instance": "fish-food",
      "Class": "canisters",
-     "Callback": "e00bf959e49b44bce2d5e2ee91dd99e",
+     "Callback": "b9f230f5cf3e2fed1850f455e7",
      "Options": 1
     }
    ]
   },
   "reporting-give": {
-   "Id": "reporting-give",
-   "Name": "reporting give",
-   "Capture": null,
-   "Bubble": null
+   "id": "reporting-give",
+   "name": "reporting give"
   },
   "reporting-inoperable": {
-   "Id": "reporting-inoperable",
-   "Name": "reporting inoperable",
-   "Capture": null,
-   "Bubble": null
+   "id": "reporting-inoperable",
+   "name": "reporting inoperable"
   },
   "reporting-inventory": {
-   "Id": "reporting-inventory",
-   "Name": "reporting inventory",
-   "Capture": null,
-   "Bubble": null
+   "id": "reporting-inventory",
+   "name": "reporting inventory"
   },
   "reporting-jump": {
-   "Id": "reporting-jump",
-   "Name": "reporting jump",
-   "Capture": null,
-   "Bubble": null
+   "id": "reporting-jump",
+   "name": "reporting jump"
   },
   "reporting-kiss": {
-   "Id": "reporting-kiss",
-   "Name": "reporting kiss",
-   "Capture": null,
-   "Bubble": [
+   "id": "reporting-kiss",
+   "name": "reporting kiss",
+   "bubble": [
     {
      "Instance": "evil-fish",
      "Class": "animals",
-     "Callback": "dc02c3a20d531a66f5db42562bb2cc2",
+     "Callback": "a5003a18e42eccfb92e40558889d715",
      "Options": 1
     }
    ]
   },
   "reporting-listen": {
-   "Id": "reporting-listen",
-   "Name": "reporting listen",
-   "Capture": null,
-   "Bubble": null
+   "id": "reporting-listen",
+   "name": "reporting listen"
   },
   "reporting-locked": {
-   "Id": "reporting-locked",
-   "Name": "reporting locked",
-   "Capture": null,
-   "Bubble": null
+   "id": "reporting-locked",
+   "name": "reporting locked"
   },
   "reporting-look-under": {
-   "Id": "reporting-look-under",
-   "Name": "reporting look under",
-   "Capture": null,
-   "Bubble": [
+   "id": "reporting-look-under",
+   "name": "reporting look under",
+   "bubble": [
     {
      "Instance": "cabinet",
      "Class": "containers",
@@ -2631,22 +2531,19 @@ var Data = `{
     {
      "Instance": "table",
      "Class": "supporters",
-     "Callback": "c6a67fbc6f638cb3d52658d053f1",
+     "Callback": "cf141e4b8a35226dfdb1ea917e278a",
      "Options": 1
     }
    ]
   },
   "reporting-not-closeable": {
-   "Id": "reporting-not-closeable",
-   "Name": "reporting not closeable",
-   "Capture": null,
-   "Bubble": null
+   "id": "reporting-not-closeable",
+   "name": "reporting not closeable"
   },
   "reporting-now-closed": {
-   "Id": "reporting-now-closed",
-   "Name": "reporting now closed",
-   "Capture": null,
-   "Bubble": [
+   "id": "reporting-now-closed",
+   "name": "reporting now closed",
+   "bubble": [
     {
      "Instance": "cabinet",
      "Class": "containers",
@@ -2656,22 +2553,17 @@ var Data = `{
    ]
   },
   "reporting-now-off": {
-   "Id": "reporting-now-off",
-   "Name": "reporting now off",
-   "Capture": null,
-   "Bubble": null
+   "id": "reporting-now-off",
+   "name": "reporting now off"
   },
   "reporting-now-on": {
-   "Id": "reporting-now-on",
-   "Name": "reporting now on",
-   "Capture": null,
-   "Bubble": null
+   "id": "reporting-now-on",
+   "name": "reporting now on"
   },
   "reporting-now-open": {
-   "Id": "reporting-now-open",
-   "Name": "reporting now open",
-   "Capture": null,
-   "Bubble": [
+   "id": "reporting-now-open",
+   "name": "reporting now open",
+   "bubble": [
     {
      "Instance": "cabinet",
      "Class": "containers",
@@ -2681,28 +2573,23 @@ var Data = `{
     {
      "Instance": "window",
      "Class": "openers",
-     "Callback": "dbb2267e60b061fa54065b480b4e3e3",
+     "Callback": "a60e331213831e69ad2e4bc2294f1",
      "Options": 1
     }
    ]
   },
   "reporting-placed": {
-   "Id": "reporting-placed",
-   "Name": "reporting placed",
-   "Capture": null,
-   "Bubble": null
+   "id": "reporting-placed",
+   "name": "reporting placed"
   },
   "reporting-put": {
-   "Id": "reporting-put",
-   "Name": "reporting put",
-   "Capture": null,
-   "Bubble": null
+   "id": "reporting-put",
+   "name": "reporting put"
   },
   "reporting-search": {
-   "Id": "reporting-search",
-   "Name": "reporting search",
-   "Capture": null,
-   "Bubble": [
+   "id": "reporting-search",
+   "name": "reporting search",
+   "bubble": [
     {
      "Instance": "cloths",
      "Class": "props",
@@ -2712,16 +2599,13 @@ var Data = `{
    ]
   },
   "reporting-show": {
-   "Id": "reporting-show",
-   "Name": "reporting show",
-   "Capture": null,
-   "Bubble": null
+   "id": "reporting-show",
+   "name": "reporting show"
   },
   "reporting-shown": {
-   "Id": "reporting-shown",
-   "Name": "reporting shown",
-   "Capture": null,
-   "Bubble": [
+   "id": "reporting-shown",
+   "name": "reporting shown",
+   "bubble": [
     {
      "Instance": "cloths",
      "Class": "props",
@@ -2731,10 +2615,9 @@ var Data = `{
    ]
   },
   "reporting-smell": {
-   "Id": "reporting-smell",
-   "Name": "reporting smell",
-   "Capture": null,
-   "Bubble": [
+   "id": "reporting-smell",
+   "name": "reporting smell",
+   "bubble": [
     {
      "Instance": "studio",
      "Class": "rooms",
@@ -2744,27 +2627,23 @@ var Data = `{
     {
      "Instance": "bouquet",
      "Class": "props",
-     "Callback": "b2256ccb5b70980396f772a35a7571ec",
+     "Callback": "ea5f6c77ffaf10b74b109e760",
      "Options": 1
     }
    ]
   },
   "reporting-switch-off": {
-   "Id": "reporting-switch-off",
-   "Name": "reporting switch off",
-   "Capture": null,
-   "Bubble": null
+   "id": "reporting-switch-off",
+   "name": "reporting switch off"
   },
   "reporting-switched-on": {
-   "Id": "reporting-switched-on",
-   "Name": "reporting switched on",
-   "Capture": null,
-   "Bubble": null
+   "id": "reporting-switched-on",
+   "name": "reporting switched on"
   },
   "reporting-take": {
-   "Id": "reporting-take",
-   "Name": "reporting take",
-   "Capture": [
+   "id": "reporting-take",
+   "name": "reporting take",
+   "capture": [
     {
      "Instance": "",
      "Class": "doors",
@@ -2772,7 +2651,7 @@ var Data = `{
      "Options": 1
     }
    ],
-   "Bubble": [
+   "bubble": [
     {
      "Instance": "paints",
      "Class": "props",
@@ -2782,51 +2661,41 @@ var Data = `{
     {
      "Instance": "painting",
      "Class": "props",
-     "Callback": "b6e04bb9c5925c8ab1d90d67b4ca5",
+     "Callback": "de68b28196dad365db8afd062982",
      "Options": 1
     },
     {
      "Instance": "evil-fish",
      "Class": "animals",
-     "Callback": "d74b3b09863c03d984b9a52db6b38447",
+     "Callback": "e81a1f6706715fbda9c4a073ca7ef98",
      "Options": 1
     }
    ]
   },
   "reporting-the-view": {
-   "Id": "reporting-the-view",
-   "Name": "reporting the view",
-   "Capture": null,
-   "Bubble": null
+   "id": "reporting-the-view",
+   "name": "reporting the view"
   },
   "reporting-unopenable": {
-   "Id": "reporting-unopenable",
-   "Name": "reporting unopenable",
-   "Capture": null,
-   "Bubble": null
+   "id": "reporting-unopenable",
+   "name": "reporting unopenable"
   },
   "reporting-wear": {
-   "Id": "reporting-wear",
-   "Name": "reporting wear",
-   "Capture": null,
-   "Bubble": null
+   "id": "reporting-wear",
+   "name": "reporting wear"
   },
   "searching-it": {
-   "Id": "searching-it",
-   "Name": "searching it",
-   "Capture": null,
-   "Bubble": null
+   "id": "searching-it",
+   "name": "searching it"
   },
   "setting-initial-position": {
-   "Id": "setting-initial-position",
-   "Name": "setting initial position",
-   "Capture": null,
-   "Bubble": null
+   "id": "setting-initial-position",
+   "name": "setting initial position"
   },
   "showing-it-to": {
-   "Id": "showing-it-to",
-   "Name": "showing it to",
-   "Capture": [
+   "id": "showing-it-to",
+   "name": "showing it to",
+   "capture": [
     {
      "Instance": "",
      "Class": "actors",
@@ -2839,52 +2708,39 @@ var Data = `{
      "Callback": "c2f1521949bf2b49274bdf1aacd83349",
      "Options": 0
     }
-   ],
-   "Bubble": null
+   ]
   },
   "smelling": {
-   "Id": "smelling",
-   "Name": "smelling",
-   "Capture": null,
-   "Bubble": null
+   "id": "smelling",
+   "name": "smelling"
   },
   "smelling-it": {
-   "Id": "smelling-it",
-   "Name": "smelling it",
-   "Capture": null,
-   "Bubble": null
+   "id": "smelling-it",
+   "name": "smelling it"
   },
   "switching-it-off": {
-   "Id": "switching-it-off",
-   "Name": "switching it off",
-   "Capture": null,
-   "Bubble": null
+   "id": "switching-it-off",
+   "name": "switching it off"
   },
   "switching-it-on": {
-   "Id": "switching-it-on",
-   "Name": "switching it on",
-   "Capture": null,
-   "Bubble": null
+   "id": "switching-it-on",
+   "name": "switching it on"
   },
   "taking-it": {
-   "Id": "taking-it",
-   "Name": "taking it",
-   "Capture": null,
-   "Bubble": null
+   "id": "taking-it",
+   "name": "taking it"
   },
   "wearing-it": {
-   "Id": "wearing-it",
-   "Name": "wearing it",
-   "Capture": null,
-   "Bubble": null
+   "id": "wearing-it",
+   "name": "wearing it"
   }
  },
- "Instances": {
+ "instances": {
   "aquarium": {
    "id": "aquarium",
    "type": "containers",
    "name": "aquarium",
-   "Values": {
+   "values": {
     "containers-opaque": "transparent",
     "kinds-name": "aquarium",
     "objects-brief": "In one corner of the room, a large aquarium bubbles in menacing fashion.",
@@ -2903,7 +2759,7 @@ var Data = `{
    "id": "bouquet",
    "type": "props",
    "name": "bouquet",
-   "Values": {
+   "values": {
     "kinds-name": "bouquet",
     "objects-description": "Okay, so it's silly and sentimental and no doubt a waste of money, of which there is never really enough, but: you miss her. You've missed her since ten seconds after she stepped aboard the shuttle to Luna Prime, and when you saw these -- her favorites, pure golden tulips like springtime -- you had to have them.",
     "objects-enclosure": "",
@@ -2917,7 +2773,7 @@ var Data = `{
    "id": "britney",
    "type": "actors",
    "name": "Britney",
-   "Values": {
+   "values": {
     "kinds-name": "Britney",
     "objects-enclosure": "",
     "objects-owner": "",
@@ -2930,7 +2786,7 @@ var Data = `{
    "id": "cabinet",
    "type": "containers",
    "name": "cabinet",
-   "Values": {
+   "values": {
     "kinds-name": "cabinet",
     "objects-brief": "A huge cabinet, in the guise of an armoire, stands between the windows.",
     "objects-description": "Large, and with a bit of an Art Nouveau theme going on in the shape of the doors.",
@@ -2948,7 +2804,7 @@ var Data = `{
    "id": "chef-hat",
    "type": "props",
    "name": "chef hat",
-   "Values": {
+   "values": {
     "kinds-name": "chef hat",
     "objects-description": "A big white chef hat of the kind worn by chefs. In this case, you. Just goes to show what a hurry you were in on the way out of the restaurant.",
     "objects-enclosure": "",
@@ -2962,7 +2818,7 @@ var Data = `{
    "id": "closed-cabinet",
    "type": "facts",
    "name": "closedCabinet",
-   "Values": {
+   "values": {
     "kinds-name": "closedCabinet"
    }
   },
@@ -2970,7 +2826,7 @@ var Data = `{
    "id": "cloths",
    "type": "props",
    "name": "cloths",
-   "Values": {
+   "values": {
     "kinds-name": "cloths",
     "kinds-singular-named": "plural-named",
     "objects-description": "Various colors of drapery that Britney uses to set up backgrounds and clothe her models. She does a lot of portraiture, so this comes in handy. It's all a big messy wad at the moment. Organized is not her middle name.",
@@ -2985,7 +2841,7 @@ var Data = `{
    "id": "conversation",
    "type": "conversation-globals",
    "name": "conversation",
-   "Values": {
+   "values": {
     "kinds-name": "conversation"
    }
   },
@@ -2993,7 +2849,7 @@ var Data = `{
    "id": "day-for-fresh-sushi",
    "type": "stories",
    "name": "Day For Fresh Sushi",
-   "Values": {
+   "values": {
     "kinds-name": "Day For Fresh Sushi",
     "stories-author": "Emily Short",
     "stories-headline": "Your basic surreal gay fish romance",
@@ -3005,7 +2861,7 @@ var Data = `{
    "id": "down",
    "type": "directions",
    "name": "down",
-   "Values": {
+   "values": {
     "directions-opposite": "up",
     "directions-x-opposite": "up",
     "kinds-name": "down"
@@ -3015,7 +2871,7 @@ var Data = `{
    "id": "easel",
    "type": "supporters",
    "name": "easel",
-   "Values": {
+   "values": {
     "kinds-name": "easel",
     "objects-enclosure": "",
     "objects-owner": "",
@@ -3029,7 +2885,7 @@ var Data = `{
    "id": "east",
    "type": "directions",
    "name": "east",
-   "Values": {
+   "values": {
     "directions-opposite": "west",
     "directions-x-opposite": "west",
     "kinds-name": "east"
@@ -3039,7 +2895,7 @@ var Data = `{
    "id": "evil-fish",
    "type": "animals",
    "name": "evil fish",
-   "Values": {
+   "values": {
     "kinds-name": "evil fish",
     "objects-description": "Even if you had had no prior experience with him, you would be able to see at a glance that this is an evil fish. From his sharkish nose to his razor fins, every inch of his compact body exudes hatred and danger.",
     "objects-enclosure": "aquarium",
@@ -3053,7 +2909,7 @@ var Data = `{
    "id": "examined-bag-once",
    "type": "facts",
    "name": "examinedBagOnce",
-   "Values": {
+   "values": {
     "kinds-name": "examinedBagOnce"
    }
   },
@@ -3061,7 +2917,7 @@ var Data = `{
    "id": "examined-bag-twice",
    "type": "facts",
    "name": "examinedBagTwice",
-   "Values": {
+   "values": {
     "kinds-name": "examinedBagTwice"
    }
   },
@@ -3069,7 +2925,7 @@ var Data = `{
    "id": "examined-bouquet",
    "type": "facts",
    "name": "examinedBouquet",
-   "Values": {
+   "values": {
     "kinds-name": "examinedBouquet"
    }
   },
@@ -3077,7 +2933,7 @@ var Data = `{
    "id": "examined-cloths",
    "type": "facts",
    "name": "examinedCloths",
-   "Values": {
+   "values": {
     "kinds-name": "examinedCloths"
    }
   },
@@ -3085,7 +2941,7 @@ var Data = `{
    "id": "examined-fish-once",
    "type": "facts",
    "name": "examinedFishOnce",
-   "Values": {
+   "values": {
     "kinds-name": "examinedFishOnce"
    }
   },
@@ -3093,7 +2949,7 @@ var Data = `{
    "id": "examined-fish-twice",
    "type": "facts",
    "name": "examinedFishTwice",
-   "Values": {
+   "values": {
     "kinds-name": "examinedFishTwice"
    }
   },
@@ -3101,7 +2957,7 @@ var Data = `{
    "id": "examined-gravel",
    "type": "facts",
    "name": "examinedGravel",
-   "Values": {
+   "values": {
     "kinds-name": "examinedGravel"
    }
   },
@@ -3109,7 +2965,7 @@ var Data = `{
    "id": "examined-painting",
    "type": "facts",
    "name": "examinedPainting",
-   "Values": {
+   "values": {
     "kinds-name": "examinedPainting"
    }
   },
@@ -3117,7 +2973,7 @@ var Data = `{
    "id": "examined-paints",
    "type": "facts",
    "name": "examinedPaints",
-   "Values": {
+   "values": {
     "kinds-name": "examinedPaints"
    }
   },
@@ -3125,7 +2981,7 @@ var Data = `{
    "id": "examined-seaweed",
    "type": "facts",
    "name": "examinedSeaweed",
-   "Values": {
+   "values": {
     "kinds-name": "examinedSeaweed"
    }
   },
@@ -3133,7 +2989,7 @@ var Data = `{
    "id": "examined-telegraph",
    "type": "facts",
    "name": "examinedTelegraph",
-   "Values": {
+   "values": {
     "kinds-name": "examinedTelegraph"
    }
   },
@@ -3141,7 +2997,7 @@ var Data = `{
    "id": "fish-food",
    "type": "canisters",
    "name": "fish food",
-   "Values": {
+   "values": {
     "canisters-hidden": "hidden",
     "containers-opaque": "opaque",
     "kinds-name": "fish food",
@@ -3151,14 +3007,16 @@ var Data = `{
     "objects-owner": "",
     "objects-support": "",
     "objects-wearer": "",
-    "objects-whereabouts": ""
+    "objects-whereabouts": "",
+    "openers-hinged": "hingeless",
+    "openers-open": "closed"
    }
   },
   "gravel": {
    "id": "gravel",
    "type": "props",
    "name": "gravel",
-   "Values": {
+   "values": {
     "kinds-name": "gravel",
     "kinds-singular-named": "plural-named",
     "objects-description": "A lot of very small grey rocks.",
@@ -3173,7 +3031,7 @@ var Data = `{
    "id": "inserted-flowers",
    "type": "facts",
    "name": "insertedFlowers",
-   "Values": {
+   "values": {
     "kinds-name": "insertedFlowers"
    }
   },
@@ -3181,7 +3039,7 @@ var Data = `{
    "id": "lingerie-bag",
    "type": "props",
    "name": "lingerie bag",
-   "Values": {
+   "values": {
     "kinds-name": "lingerie bag",
     "objects-description": "You grant yourself the satisfaction of a little peek inside. You went with a pale, silky ivory this time -- it has that kind of sophisticated innocence, and it goes well with the purple of your skin. A small smirk of anticipation crosses your lips.",
     "objects-enclosure": "",
@@ -3195,7 +3053,7 @@ var Data = `{
    "id": "looked-under-cabinet",
    "type": "facts",
    "name": "lookedUnderCabinet",
-   "Values": {
+   "values": {
     "kinds-name": "lookedUnderCabinet"
    }
   },
@@ -3203,7 +3061,7 @@ var Data = `{
    "id": "looked-under-table",
    "type": "facts",
    "name": "lookedUnderTable",
-   "Values": {
+   "values": {
     "kinds-name": "lookedUnderTable"
    }
   },
@@ -3211,7 +3069,7 @@ var Data = `{
    "id": "north",
    "type": "directions",
    "name": "north",
-   "Values": {
+   "values": {
     "directions-opposite": "south",
     "directions-x-opposite": "south",
     "kinds-name": "north"
@@ -3221,7 +3079,7 @@ var Data = `{
    "id": "opened-cabinet",
    "type": "facts",
    "name": "openedCabinet",
-   "Values": {
+   "values": {
     "kinds-name": "openedCabinet"
    }
   },
@@ -3229,7 +3087,7 @@ var Data = `{
    "id": "opened-window",
    "type": "facts",
    "name": "openedWindow",
-   "Values": {
+   "values": {
     "kinds-name": "openedWindow"
    }
   },
@@ -3237,7 +3095,7 @@ var Data = `{
    "id": "painting",
    "type": "props",
    "name": "painting",
-   "Values": {
+   "values": {
     "kinds-name": "painting",
     "objects-description": "Only partway finished, but you can tell what it is: Britney's mother. You only met the old woman once, before she faded out of existence in a little hospice in Salzburg.\n\nIn the picture, her hands are grasping tightly at a small grey bottle, the pills to which she became addicted in her old age, and strange, gargoyle-like forms clutch at her arms and whisper in her ears.\n\nBut the disturbing thing, the truly awful thing, is the small figure of Britney herself, down in the corner, unmistakable: she is walking away. Her back turned.\n\nYou thought she'd finally talked this out, but evidently not. Still feels guilty for leaving. You only barely stop yourself from tracing, with your finger, those tiny slumped shoulders...\n",
     "objects-enclosure": "",
@@ -3251,7 +3109,7 @@ var Data = `{
    "id": "paints",
    "type": "props",
    "name": "paints",
-   "Values": {
+   "values": {
     "kinds-name": "paints",
     "kinds-singular-named": "plural-named",
     "objects-description": "A bunch of tubes of oil paint, most of them in some state of grunginess, some with the tops twisted partway off.",
@@ -3266,7 +3124,7 @@ var Data = `{
    "id": "player",
    "type": "actors",
    "name": "player",
-   "Values": {
+   "values": {
     "kinds-name": "player",
     "objects-enclosure": "",
     "objects-owner": "",
@@ -3280,7 +3138,7 @@ var Data = `{
    "id": "seaweed",
    "type": "props",
    "name": "seaweed",
-   "Values": {
+   "values": {
     "kinds-name": "seaweed",
     "kinds-singular-named": "plural-named",
     "objects-description": "Fake plastic seaweed of the kind generally bought in stores for exactly this purpose.",
@@ -3295,7 +3153,7 @@ var Data = `{
    "id": "smelled-bouquet",
    "type": "facts",
    "name": "smelledBouquet",
-   "Values": {
+   "values": {
     "kinds-name": "smelledBouquet"
    }
   },
@@ -3303,7 +3161,7 @@ var Data = `{
    "id": "south",
    "type": "directions",
    "name": "south",
-   "Values": {
+   "values": {
     "directions-opposite": "north",
     "directions-x-opposite": "north",
     "kinds-name": "south"
@@ -3313,7 +3171,7 @@ var Data = `{
    "id": "status-bar",
    "type": "status-bar-instances",
    "name": "status bar",
-   "Values": {
+   "values": {
     "kinds-name": "status bar"
    }
   },
@@ -3321,7 +3179,7 @@ var Data = `{
    "id": "studio",
    "type": "rooms",
    "name": "studio",
-   "Values": {
+   "values": {
     "kinds-name": "Studio",
     "kinds-printed-name": "Studio",
     "rooms-down-via": "",
@@ -3336,7 +3194,7 @@ var Data = `{
    "id": "table",
    "type": "supporters",
    "name": "table",
-   "Values": {
+   "values": {
     "kinds-name": "table",
     "objects-description": "A monstrosity of poor taste and bad design: made of some heavy, French-empire sort of wood, with a single pillar for a central leg, carved in the image of Poseidon surrounded by nymphs. It's all scaley, and whenever you sit down, the trident has a tendency to stab you in the knee. But Britney assures you it's worth a fortune.",
     "objects-enclosure": "",
@@ -3351,7 +3209,7 @@ var Data = `{
    "id": "telegram",
    "type": "props",
    "name": "telegram",
-   "Values": {
+   "values": {
     "kinds-name": "telegram",
     "objects-description": "A telegram, apparently. And dated three days ago. TRIUMPH OURS STOP BACK SOON STOP BE SURE TO FEED FISH STOP",
     "objects-enclosure": "",
@@ -3365,7 +3223,7 @@ var Data = `{
    "id": "took-paints",
    "type": "facts",
    "name": "tookPaints",
-   "Values": {
+   "values": {
     "kinds-name": "tookPaints"
    }
   },
@@ -3373,7 +3231,7 @@ var Data = `{
    "id": "up",
    "type": "directions",
    "name": "up",
-   "Values": {
+   "values": {
     "directions-opposite": "down",
     "directions-x-opposite": "down",
     "kinds-name": "up"
@@ -3383,7 +3241,7 @@ var Data = `{
    "id": "vase",
    "type": "containers",
    "name": "vase",
-   "Values": {
+   "values": {
     "kinds-name": "vase",
     "objects-description": "A huge vase -- what you saw once described in a Regency romance as an epergne, maybe -- something so big that it would block someone sitting at the table from seeing anyone else also sitting at the table. But it does function nicely as a receptacle for hugeass bouquets of flowers.",
     "objects-enclosure": "",
@@ -3399,7 +3257,7 @@ var Data = `{
    "id": "west",
    "type": "directions",
    "name": "west",
-   "Values": {
+   "values": {
     "directions-opposite": "east",
     "directions-x-opposite": "east",
     "kinds-name": "west"
@@ -3409,7 +3267,7 @@ var Data = `{
    "id": "window",
    "type": "openers",
    "name": "window",
-   "Values": {
+   "values": {
     "kinds-name": "window",
     "objects-enclosure": "",
     "objects-owner": "",
@@ -3422,7 +3280,7 @@ var Data = `{
    }
   }
  },
- "Aliases": {
+ "aliases": {
   "aquarium": [
    "aquarium",
    "aquarium"
@@ -3443,9 +3301,9 @@ var Data = `{
   ],
   "bouquet": [
    "bouquet",
+   "bouquet",
    "examined-bouquet",
-   "smelled-bouquet",
-   "bouquet"
+   "smelled-bouquet"
   ],
   "britney": [
    "britney",
@@ -3453,10 +3311,10 @@ var Data = `{
   ],
   "cabinet": [
    "cabinet",
-   "looked-under-cabinet",
    "closed-cabinet",
+   "opened-cabinet",
    "cabinet",
-   "opened-cabinet"
+   "looked-under-cabinet"
   ],
   "can": [
    "fish-food"
@@ -3484,8 +3342,8 @@ var Data = `{
   ],
   "cloths": [
    "cloths",
-   "cloths",
-   "examined-cloths"
+   "examined-cloths",
+   "cloths"
   ],
   "conversation": [
    "conversation",
@@ -3525,17 +3383,17 @@ var Data = `{
    "evil-fish"
   ],
   "examined": [
-   "examined-bouquet",
-   "examined-fish-twice",
-   "examined-bag-twice",
-   "examined-telegraph",
-   "examined-fish-once",
-   "examined-bag-once",
-   "examined-painting",
-   "examined-seaweed",
-   "examined-paints",
    "examined-gravel",
-   "examined-cloths"
+   "examined-bag-twice",
+   "examined-bag-once",
+   "examined-cloths",
+   "examined-paints",
+   "examined-fish-once",
+   "examined-bouquet",
+   "examined-telegraph",
+   "examined-fish-twice",
+   "examined-seaweed",
+   "examined-painting"
   ],
   "examined bag once": [
    "examined-bag-once"
@@ -3573,9 +3431,9 @@ var Data = `{
   "fish": [
    "evil-fish",
    "evil-fish",
-   "examined-fish-twice",
+   "fish-food",
    "examined-fish-once",
-   "fish-food"
+   "examined-fish-twice"
   ],
   "fish food": [
    "fish-food"
@@ -3637,12 +3495,12 @@ var Data = `{
    "north"
   ],
   "once": [
-   "examined-fish-once",
-   "examined-bag-once"
+   "examined-bag-once",
+   "examined-fish-once"
   ],
   "opened": [
-   "opened-cabinet",
-   "opened-window"
+   "opened-window",
+   "opened-cabinet"
   ],
   "opened cabinet": [
    "opened-cabinet"
@@ -3652,13 +3510,13 @@ var Data = `{
   ],
   "painting": [
    "painting",
-   "painting",
-   "examined-painting"
+   "examined-painting",
+   "painting"
   ],
   "paints": [
    "paints",
-   "paints",
    "took-paints",
+   "paints",
    "examined-paints"
   ],
   "player": [
@@ -3673,8 +3531,8 @@ var Data = `{
   ],
   "seaweed": [
    "seaweed",
-   "examined-seaweed",
-   "seaweed"
+   "seaweed",
+   "examined-seaweed"
   ],
   "smelled": [
    "smelled-bouquet"
@@ -3727,8 +3585,8 @@ var Data = `{
    "bouquet"
   ],
   "twice": [
-   "examined-fish-twice",
-   "examined-bag-twice"
+   "examined-bag-twice",
+   "examined-fish-twice"
   ],
   "u": [
    "up"
@@ -3770,7 +3628,7 @@ var Data = `{
    "telegram"
   ]
  },
- "ParserActions": [
+ "parsings": [
   {
    "Action": "attack-it",
    "Commands": [
@@ -3968,100 +3826,100 @@ var Data = `{
    ]
   }
  ],
- "Relations": {
+ "relation": {
   "actors-clothing-relation": {
-   "Id": "actors-clothing-relation",
-   "Name": "actors-clothing-relation",
-   "Style": "OneToMany",
-   "Source": "actors-clothing",
-   "Target": "objects-wearer"
+   "id": "actors-clothing-relation",
+   "name": "actors-clothing-relation",
+   "style": "OneToMany",
+   "src": "actors-clothing",
+   "tgt": "objects-wearer"
   },
   "actors-inventory-relation": {
-   "Id": "actors-inventory-relation",
-   "Name": "actors-inventory-relation",
-   "Style": "OneToMany",
-   "Source": "actors-inventory",
-   "Target": "objects-owner"
+   "id": "actors-inventory-relation",
+   "name": "actors-inventory-relation",
+   "style": "OneToMany",
+   "src": "actors-inventory",
+   "tgt": "objects-owner"
   },
   "containers-contents-relation": {
-   "Id": "containers-contents-relation",
-   "Name": "containers-contents-relation",
-   "Style": "OneToMany",
-   "Source": "containers-contents",
-   "Target": "objects-enclosure"
+   "id": "containers-contents-relation",
+   "name": "containers-contents-relation",
+   "style": "OneToMany",
+   "src": "containers-contents",
+   "tgt": "objects-enclosure"
   },
   "directions-opposite-relation": {
-   "Id": "directions-opposite-relation",
-   "Name": "directions-opposite-relation",
-   "Style": "OneToOne",
-   "Source": "directions-opposite",
-   "Target": "directions-x-opposite"
+   "id": "directions-opposite-relation",
+   "name": "directions-opposite-relation",
+   "style": "OneToOne",
+   "src": "directions-opposite",
+   "tgt": "directions-x-opposite"
   },
   "doors-destination-relation": {
-   "Id": "doors-destination-relation",
-   "Name": "doors-destination-relation",
-   "Style": "ManyToOne",
-   "Source": "doors-destination",
-   "Target": "doors-sources"
+   "id": "doors-destination-relation",
+   "name": "doors-destination-relation",
+   "style": "ManyToOne",
+   "src": "doors-destination",
+   "tgt": "doors-sources"
   },
   "rooms-contents-relation": {
-   "Id": "rooms-contents-relation",
-   "Name": "rooms-contents-relation",
-   "Style": "OneToMany",
-   "Source": "rooms-contents",
-   "Target": "objects-whereabouts"
+   "id": "rooms-contents-relation",
+   "name": "rooms-contents-relation",
+   "style": "OneToMany",
+   "src": "rooms-contents",
+   "tgt": "objects-whereabouts"
   },
   "rooms-down-via-relation": {
-   "Id": "rooms-down-via-relation",
-   "Name": "rooms-down-via-relation",
-   "Style": "ManyToOne",
-   "Source": "rooms-down-via",
-   "Target": "doors-x-via-down"
+   "id": "rooms-down-via-relation",
+   "name": "rooms-down-via-relation",
+   "style": "ManyToOne",
+   "src": "rooms-down-via",
+   "tgt": "doors-x-via-down"
   },
   "rooms-east-via-relation": {
-   "Id": "rooms-east-via-relation",
-   "Name": "rooms-east-via-relation",
-   "Style": "ManyToOne",
-   "Source": "rooms-east-via",
-   "Target": "doors-x-via-east"
+   "id": "rooms-east-via-relation",
+   "name": "rooms-east-via-relation",
+   "style": "ManyToOne",
+   "src": "rooms-east-via",
+   "tgt": "doors-x-via-east"
   },
   "rooms-north-via-relation": {
-   "Id": "rooms-north-via-relation",
-   "Name": "rooms-north-via-relation",
-   "Style": "ManyToOne",
-   "Source": "rooms-north-via",
-   "Target": "doors-x-via-north"
+   "id": "rooms-north-via-relation",
+   "name": "rooms-north-via-relation",
+   "style": "ManyToOne",
+   "src": "rooms-north-via",
+   "tgt": "doors-x-via-north"
   },
   "rooms-south-via-relation": {
-   "Id": "rooms-south-via-relation",
-   "Name": "rooms-south-via-relation",
-   "Style": "ManyToOne",
-   "Source": "rooms-south-via",
-   "Target": "doors-x-via-south"
+   "id": "rooms-south-via-relation",
+   "name": "rooms-south-via-relation",
+   "style": "ManyToOne",
+   "src": "rooms-south-via",
+   "tgt": "doors-x-via-south"
   },
   "rooms-up-via-relation": {
-   "Id": "rooms-up-via-relation",
-   "Name": "rooms-up-via-relation",
-   "Style": "ManyToOne",
-   "Source": "rooms-up-via",
-   "Target": "doors-x-via-up"
+   "id": "rooms-up-via-relation",
+   "name": "rooms-up-via-relation",
+   "style": "ManyToOne",
+   "src": "rooms-up-via",
+   "tgt": "doors-x-via-up"
   },
   "rooms-west-via-relation": {
-   "Id": "rooms-west-via-relation",
-   "Name": "rooms-west-via-relation",
-   "Style": "ManyToOne",
-   "Source": "rooms-west-via",
-   "Target": "doors-x-via-west"
+   "id": "rooms-west-via-relation",
+   "name": "rooms-west-via-relation",
+   "style": "ManyToOne",
+   "src": "rooms-west-via",
+   "tgt": "doors-x-via-west"
   },
   "supporters-contents-relation": {
-   "Id": "supporters-contents-relation",
-   "Name": "supporters-contents-relation",
-   "Style": "OneToMany",
-   "Source": "supporters-contents",
-   "Target": "objects-support"
+   "id": "supporters-contents-relation",
+   "name": "supporters-contents-relation",
+   "style": "OneToMany",
+   "src": "supporters-contents",
+   "tgt": "objects-support"
   }
  },
- "SingleToPlural": {
+ "plurals": {
   "actor": "actors",
   "animal": "animals",
   "canister": "canisters",

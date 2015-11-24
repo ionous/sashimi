@@ -1,27 +1,24 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
+	"fmt"
+	"github.com/ionous/sashimi/_examples/fishgen"
 	"github.com/ionous/sashimi/_examples/stories"
 	"github.com/ionous/sashimi/compiler/extract"
-	//"github.com/ionous/sashimi/compiler/metal"
-	//R "github.com/ionous/sashimi/runtime"
-	"fmt"
+	"github.com/ionous/sashimi/compiler/metal"
+	M "github.com/ionous/sashimi/compiler/model"
+	G "github.com/ionous/sashimi/game"
+	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/standard"
+	"github.com/ionous/sashimi/util/ident"
 	"io"
 	"os"
 	"path"
 )
 
-// 1. extract the story callbacks and data into something like
-// 	_gen/gofish/.....go
-// the data requires a compiled script.
-// until you come up with another plan, its not terrible if the current file has to compile, and its responsible, in a given mode, for extracting itself.
-
-// 2. include them here
-// 3. replace the model with a json decode of the data
-// 4. replace calls with the extracted literal
 // 5. try it out
 // 6. replace internals with data store that occasionally flushes itself out.
 //go:generate go extract %GOPATH/src/github.com/ionous/sashimi/_examples/stories/fishy.go
@@ -38,21 +35,38 @@ func main() {
 			panic(e)
 		}
 	} else {
-		// cons := standard.GetConsole(opt)
-		// defer cons.Close()
-		// //
-		// out := standard.NewStandardOutput(cons, writer)
-		// parents := standard.ParentLookup{}
-		// //
-		// cfg := R.NewConfig().SetCalls(model.Calls).SetOutput(out).SetParentLookup(parents)
-		// modelApi := metal.NewMetal(model.Model, make(metal.ObjectValueMap))
-		// //
-		// if g, e := cfg.NewGame(modelApi); e != nil {
-		// 	panic(e)
-		// } else if e := standard.PlayGame(cons, g); e != nil {
-		// 	panic(e)
-		// }
+		var model *M.Model
+		if e := json.Unmarshal([]byte(fishgen.Data), &model); e != nil {
+			panic(e)
+		}
+		calls := CodeCalls(fishgen.Callbacks)
+		//
+		cons := standard.GetConsole(opt)
+		defer cons.Close()
+		//
+		out := standard.NewStandardOutput(cons, writer)
+		parents := standard.ParentLookup{}
+		//
+		cfg := R.NewConfig().SetCalls(calls).SetOutput(out).SetParentLookup(parents)
+		modelApi := metal.NewMetal(model, make(metal.ObjectValueMap))
+		//
+		if g, e := cfg.NewGame(modelApi); e != nil {
+			panic(e)
+		} else if e := standard.PlayGame(cons, g); e != nil {
+			panic(e)
+		}
 	}
+}
+
+type CodeCalls map[ident.Id]G.Callback
+
+func (m CodeCalls) LookupCallback(id ident.Id) (ret G.Callback, okay bool) {
+	if r, ok := m[id]; !ok {
+		panic(fmt.Sprintf("couldnt find callback %s", id))
+	} else {
+		ret, okay = r, ok
+	}
+	return
 }
 
 // 1. run go generate on this file

@@ -39,6 +39,7 @@ G "github.com/ionous/sashimi/game"
 . "github.com/ionous/sashimi/standard"
 . "github.com/ionous/sashimi/extensions"
 "github.com/ionous/sashimi/util/lang"
+"github.com/ionous/sashimi/util/ident"
 "fmt"
 "strings"
 )
@@ -48,7 +49,7 @@ func Lines(a ...string) string {
 	return strings.Join(a, "\n")
 }
 
-var callbacks = map[string]G.Callback {
+var Callbacks = map[ident.Id]G.Callback {
 	{{ range $id, $snippet := .Snippets }}
 		// {{$snippet.File}}:{{$snippet.Line}}
 		"{{ $id }}" : {{$snippet.Content}},
