@@ -330,9 +330,13 @@ func init() {
 				// put this on doors for now.
 				text := ArticleName(g, "container", func(obj G.IObject) (status string) {
 					if obj.Is("closed") {
-						status = "closed"
+						if obj.Is("hinged") {
+							status = "closed"
+						}
 					} else if list := obj.ObjectList("contents"); len(list) == 0 {
-						status = "empty"
+						if obj.Is("transparent") || obj.Is("open") {
+							status = "empty"
+						}
 					}
 					return status
 				})

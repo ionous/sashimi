@@ -167,6 +167,7 @@ You shake your head. No time for fantasy. Must feed fish.`)
 		Has("description", "A vehemently orange canister of fish food."),
 		Is("hidden").And("opaque"),
 		IsKnownAs("can"),
+		Is("closed").And("hingeless"),
 		Is("plural-named"), // some fish food
 	)
 	// [63-56]
