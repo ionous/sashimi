@@ -11,6 +11,7 @@ type IConsole interface {
 	Print(...interface{})
 	Println(...interface{})
 	Readln() (string, bool)
+	Close()
 }
 
 //
@@ -40,26 +41,30 @@ type SimpleConsole struct {
 }
 
 //
-func (this SimpleConsole) Print(args ...interface{}) {
+func (c SimpleConsole) Print(args ...interface{}) {
 	fmt.Print(args...)
 	fmt.Print(" ")
 }
 
 //
-func (this SimpleConsole) Println(args ...interface{}) {
+func (c SimpleConsole) Println(args ...interface{}) {
 	fmt.Print(args...)
 	fmt.Println()
 }
 
 //
-func (this SimpleConsole) Readln() (ret string, okay bool) {
-	okay = this.scanner != nil
+func (c SimpleConsole) Readln() (ret string, okay bool) {
+	okay = c.scanner != nil
 	if okay {
 		fmt.Print(">")
-		okay = this.scanner.Scan()
+		okay = c.scanner.Scan()
 		if okay {
-			ret = this.scanner.Text()
+			ret = c.scanner.Text()
 		}
 	}
 	return ret, okay
+}
+
+//
+func (c SimpleConsole) Close() {
 }

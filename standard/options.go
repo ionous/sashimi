@@ -22,24 +22,24 @@ func ParseCommandLine() Options {
 	return Options{verbose: *verbose, text: *text, dump: *dump}
 }
 
-func (this Options) SetVerbose(okay bool) Options {
-	this.verbose = okay
-	return this
+func (opt Options) SetVerbose(okay bool) Options {
+	opt.verbose = okay
+	return opt
 }
 
-func (this Options) UseTextConsole(okay bool) Options {
-	this.text = okay
-	return this
+func (opt Options) UseTextConsole(okay bool) Options {
+	opt.text = okay
+	return opt
 }
 
-func (this Options) DumpModelAndExit(okay bool) Options {
-	this.dump = okay
-	return this
+func (opt Options) DumpModelAndExit(okay bool) Options {
+	opt.dump = okay
+	return opt
 }
 
 // override console with some external instance
-func (this Options) SetConsole(cons C.IConsole) Options {
-	this.cons = cons
-	this.hasConsole = true
-	return this
+func (opt Options) SetConsole(cons C.IConsole) Options {
+	opt.cons = cons
+	opt.hasConsole = true
+	return opt
 }

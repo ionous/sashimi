@@ -34,29 +34,36 @@ func RunGame(opt Options) (err error) {
 	return RunScript(script, opt)
 }
 
-func RunScript(script *script.Script, opt Options) (err error) {
-	// tease out options settings:
-	cons, verbose, dump := opt.cons, opt.verbose, opt.dump
-	var writer io.Writer
-	if verbose {
-		writer = os.Stderr
+func GetWriter(opt Options) (ret io.Writer) {
+	if opt.verbose {
+		ret = os.Stderr
 	} else {
-		writer = ioutil.Discard
+		ret = ioutil.Discard
 	}
+	return
+}
+
+func GetConsole(opt Options) (ret C.IConsole) {
+	if opt.hasConsole {
+		ret = opt.cons
+	} else if opt.text {
+		ret = C.NewConsole()
+	} else {
+		ret = MiniConsole{minicon.NewMiniCon()}
+	}
+	return
+}
+
+func RunScript(script *script.Script, opt Options) (err error) {
+	writer := GetWriter(opt)
 	if model, e := script.Compile(writer); e != nil {
 		err = e
-	} else if dump {
+	} else if opt.dump {
 		model.Model.PrintModel(func(args ...interface{}) { fmt.Println(args...) })
 	} else {
-		if !opt.hasConsole {
-			if opt.text {
-				cons = C.NewConsole()
-			} else {
-				mini := MiniConsole{minicon.NewMiniCon()}
-				defer mini.Close()
-				cons = mini
-			}
-		}
+		cons := GetConsole(opt)
+		defer cons.Close()
+
 		cfg := R.NewConfig().SetCalls(model.Calls).SetOutput(NewStandardOutput(cons, writer)).SetParentLookup(ParentLookup{})
 		modelApi := metal.NewMetal(model.Model, make(metal.ObjectValueMap))
 		if g, e := cfg.NewGame(modelApi); e != nil {

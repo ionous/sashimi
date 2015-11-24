@@ -17,16 +17,27 @@ type Marker struct {
 	M.CallbackModel
 }
 
+func MarkFileLine(file string, line int) Marker {
+	return Marker{M.CallbackModel{file, line, 0}}
+}
+
 func MakeMarker(cb G.Callback) Marker {
 	v := reflect.ValueOf(cb)
 	pc := v.Pointer()
 	f := runtime.FuncForPC(pc)
-	file, line := f.FileLine(pc - 1)
-	return Marker{M.CallbackModel{file, line, 0}}
+	return MarkFileLine(f.FileLine(pc - 1))
 }
 
 func (cfg Config) MakeMarker(cb G.Callback) Marker {
 	m := MakeMarker(cb)
+	if strings.HasPrefix(m.File, cfg.BasePath+"/") {
+		m.File = m.File[len(cfg.BasePath)+1:]
+	}
+	return m
+}
+
+func (cfg Config) MarkFileLine(file string, line int) Marker {
+	m := MarkFileLine(file, line)
 	if strings.HasPrefix(m.File, cfg.BasePath+"/") {
 		m.File = m.File[len(cfg.BasePath)+1:]
 	}

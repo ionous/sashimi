@@ -7,16 +7,16 @@ import (
 	"go/token"
 )
 
-type CB func(file string, line int, bytes []byte) error
+type Snip func(file string, line int, snippet []byte) error
 
-// extract callbacks
-func Extract(file string, bytes []byte, cb CB) (err error) {
+// ParseSource, the original .go files on disk, and generate file, line, and source code snippers for every callback encountered.
+func ParseSource(file string, bytes []byte, snip Snip) (err error) {
 	fset := token.NewFileSet()
 	// filename is a label for src is not nil ( and is: string, []byte, or io.Reader)
 	if f, e := parser.ParseFile(fset, file, bytes, 0); e != nil {
 		err = e
 	} else {
-		literally := VisitorStruct{}
+		literally := visitorStruct{}
 		literally.visit = func(n ast.Node) (w ast.Visitor) {
 			if literal, ok := n.(*ast.FuncLit); ok {
 				rets, params := literal.Type.Results, literal.Type.Params
@@ -29,7 +29,7 @@ func Extract(file string, bytes []byte, cb CB) (err error) {
 							start, end := fset.Position(n.Pos()), fset.Position(n.End())
 							sub := bytes[start.Offset:end.Offset]
 							//blockStart := fset.Position(block.Pos()).Line
-							if e := cb(file, start.Line, sub); e != nil {
+							if e := snip(file, start.Line, sub); e != nil {
 								err = errutil.Append(err, e)
 							}
 							return nil // dont go deeper than the literal
@@ -49,10 +49,10 @@ func Extract(file string, bytes []byte, cb CB) (err error) {
 	return err
 }
 
-type VisitorStruct struct {
+type visitorStruct struct {
 	visit func(ast.Node) (w ast.Visitor)
 }
 
-func (v VisitorStruct) Visit(n ast.Node) (w ast.Visitor) {
+func (v visitorStruct) Visit(n ast.Node) (w ast.Visitor) {
 	return v.visit(n)
 }

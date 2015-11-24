@@ -35,7 +35,7 @@ func TestExtract(t *testing.T) {
 
 			if bytes, e := ioutil.ReadFile(filename); assert.NoError(t, e, "couldnt load file") {
 				file := path.Base(filename)
-				e := extract.Extract(file, bytes, func(f string, l int, sub []byte) error {
+				e := extract.ParseSource(file, bytes, func(f string, l int, sub []byte) error {
 					t.Log(f, l, string(sub))
 					return nil
 				})

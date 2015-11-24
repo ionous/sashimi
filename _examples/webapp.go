@@ -4,8 +4,12 @@ import (
 	"flag"
 	"fmt"
 	"github.com/ionous/sashimi/_examples/stories"
+	"github.com/ionous/sashimi/compiler/call"
 	"github.com/ionous/sashimi/net/app"
+	"github.com/ionous/sashimi/net/session"
 	"github.com/ionous/sashimi/net/support"
+	"github.com/ionous/sashimi/script"
+	"io/ioutil"
 	"log"
 	"net/http"
 )
@@ -29,7 +33,7 @@ func main() {
 	} else {
 		fmt.Println("listening on http://localhost:8080")
 		handler := support.NewServeMux()
-		calls := call.MakeMemoryStorage()
+		calls := call.MakeMarkerStorage()
 
 		sessions := session.NewSessions(
 			func(id string) (ret session.SessionData, err error) {
@@ -38,7 +42,7 @@ func main() {
 				if m, e := script.InitScripts().CompileCalls(ioutil.Discard, calls); e != nil {
 					err = e
 				} else {
-					ret, err = NewCommandSession(id, m, calls)
+					ret, err = app.NewCommandSession(id, m, calls)
 				}
 				return ret, err
 			})

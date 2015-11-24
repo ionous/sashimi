@@ -24,6 +24,7 @@ func (s *Script) Compile(writer io.Writer) (res compiler.MemoryResult, err error
 }
 
 // Compile the current script into a model which can be used by the runtime.
+// writer used for logging.
 func (s *Script) CompileCalls(writer io.Writer, calls call.Compiler) (res *M.Model, err error) {
 	if s.err != nil {
 		err = s.err

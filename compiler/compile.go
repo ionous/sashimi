@@ -386,11 +386,11 @@ func (c converter) makeEnum(src *X.EnumProperty) ident.Id {
 
 type MemoryResult struct {
 	Model *M.Model
-	Calls call.MemoryStorage
+	Calls call.MarkerStorage
 }
 
 func Compile(out io.Writer, src S.Statements) (res MemoryResult, err error) {
-	calls := call.MakeMemoryStorage()
+	calls := call.MakeMarkerStorage()
 	cfg := Config{calls, out}
 	if m, e := cfg.Compile(src); e != nil {
 		err = e

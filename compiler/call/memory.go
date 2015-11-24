@@ -5,23 +5,23 @@ import (
 	"github.com/ionous/sashimi/util/ident"
 )
 
-// MakeMemoryStorage implements a simple callback compiler and lookup
-func MakeMemoryStorage() MemoryStorage {
-	return MemoryStorage{
+// MakeMarkerStorage implements a simple callback compiler and lookup
+func MakeMarkerStorage() MarkerStorage {
+	return MarkerStorage{
 		Config{},
 		make(map[ident.Id]G.Callback),
 		make(map[string]int),
 	}
 }
 
-type MemoryStorage struct {
+type MarkerStorage struct {
 	Config
 	callbacks  map[ident.Id]G.Callback
 	iterations map[string]int
 }
 
 // Compile provides the call.Compiler interface
-func (m MemoryStorage) CompileCallback(cb G.Callback) (ret ident.Id, err error) {
+func (m MarkerStorage) CompileCallback(cb G.Callback) (ret ident.Id, err error) {
 	marker := m.MakeMarker(cb)
 	it := marker.String()
 	cnt := m.iterations[it]
@@ -36,7 +36,7 @@ func (m MemoryStorage) CompileCallback(cb G.Callback) (ret ident.Id, err error) 
 }
 
 // LookupCallback provides, via duck-typing, the runtime.Callbacks interface
-func (m MemoryStorage) LookupCallback(id ident.Id) (ret G.Callback, okay bool) {
+func (m MarkerStorage) LookupCallback(id ident.Id) (ret G.Callback, okay bool) {
 	if r, ok := m.callbacks[id]; ok {
 		ret, okay = r, ok
 	}

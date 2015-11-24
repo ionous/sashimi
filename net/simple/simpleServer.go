@@ -13,7 +13,7 @@ import (
 )
 
 func NewSimpleServer() *http.ServeMux {
-	calls := call.MakeMemoryStorage()
+	calls := call.MakeMarkerStorage()
 	sessions := session.NewSessions(
 		func(string) (ret session.SessionData, err error) {
 			// FIX: it's very silly to have to init and compile each time.

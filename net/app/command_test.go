@@ -22,7 +22,7 @@ import (
 func TestNetApp(t *testing.T) {
 	stories.Select("lab")
 
-	calls := call.MakeMemoryStorage()
+	calls := call.MakeMarkerStorage()
 	sessions := session.NewSessions(
 		func(id string) (ret session.SessionData, err error) {
 			// FIX: it's very silly to have to init and compile each time.
