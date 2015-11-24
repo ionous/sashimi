@@ -4,7 +4,7 @@ import "github.com/ionous/sashimi/util/ident"
 
 // An indexed set of values.
 type EnumModel struct {
-	Choices []ident.Id
+	Choices []ident.Id `json:"choices"`
 }
 
 // 1 based

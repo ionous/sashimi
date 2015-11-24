@@ -9,7 +9,7 @@ type InstanceModel struct {
 	Id     ident.Id `json:"id"`
 	Class  ident.Id `json:"type"`
 	Name   string   `json:"name"`
-	Values Values
+	Values Values   `json:"values,omitempty"`
 }
 
 type Values map[ident.Id]Value

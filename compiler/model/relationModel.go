@@ -14,10 +14,11 @@ const (
 // Relation represents a property-pair.
 // Each relation becomes one table.
 type RelationModel struct {
-	Id             ident.Id // unique id
-	Name           string   // user specified name
-	Style          RelationStyle
-	Source, Target ident.Id // property ids
+	Id     ident.Id      `json:"id"`   // unique id
+	Name   string        `json:"name"` // user specified name
+	Style  RelationStyle `json:"style"`
+	Source ident.Id      `json:"src"` // property ids
+	Target ident.Id      `json:"tgt"` // property ids
 }
 
 func (r RelationModel) String() string {

@@ -7,15 +7,15 @@ import (
 
 // Model: Compiled results of a sashimi story.
 type Model struct {
-	Actions        Actions
-	Classes        Classes
-	Enumerations   Enumerations
-	Events         Events
-	Instances      Instances
-	Aliases        Aliases
-	ParserActions  []ParserAction
-	Relations      Relations
-	SingleToPlural SingleToPlural
+	Actions        Actions        `json:"actions"`
+	Classes        Classes        `json:"classes"`
+	Enumerations   Enumerations   `json:"enums"`
+	Events         Events         `json:"events"`
+	Instances      Instances      `json:"instances"`
+	Aliases        Aliases        `json:"aliases"`
+	ParserActions  []ParserAction `json:"parsings"`
+	Relations      Relations      `json:"relation"`
+	SingleToPlural SingleToPlural `json:"plurals"`
 }
 
 type Actions map[ident.Id]*ActionModel
