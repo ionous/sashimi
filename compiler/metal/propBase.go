@@ -22,11 +22,44 @@ type propBase struct {
 	setValue func(*M.PropertyModel, GenericValue) error
 }
 
-func (p *propBase) get() GenericValue {
-	return p.getValue(p.prop)
-}
 func (p *propBase) set(v GenericValue) error {
 	return p.setValue(p.prop, v)
+}
+
+// mainly for arrays, but arrays dont have instance data storage
+// if we need them, we probably will want to write a decoder on the instance json data.
+func (p *propBase) getGeneric() GenericValue {
+	return p.getValue(p.prop)
+}
+
+// we want to keep values as ident.Id;
+// values from json come in as string.
+func (p *propBase) getId() (ret ident.Id) {
+	v := p.getValue(p.prop)
+	if id, ok := v.(ident.Id); ok {
+		ret = id
+	} else {
+		ret = ident.Id(v.(string))
+	}
+	return
+}
+
+// we want to keep values as float32;
+// values from json come in as float64.
+func (p *propBase) getNum() (ret float32) {
+	v := p.getValue(p.prop)
+	if id, ok := v.(float32); ok {
+		ret = id
+	} else {
+		ret = float32(v.(float64))
+	}
+	return
+}
+
+// we want to keep values as string
+func (p *propBase) getString() string {
+	v := p.getValue(p.prop)
+	return v.(string)
 }
 
 func (p *propBase) String() string {

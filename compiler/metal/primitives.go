@@ -11,7 +11,7 @@ func (p numValue) SetNum(f float32) error {
 	return p.set(f)
 }
 func (p numValue) GetNum() float32 {
-	return p.get().(float32)
+	return p.getNum()
 }
 
 type numValues struct{ panicValue }
@@ -20,13 +20,13 @@ func (p numValues) SetNum(f float32) error {
 	return p.set(f)
 }
 func (p numValues) GetNum() float32 {
-	return p.get().(float32)
+	return p.getNum()
 }
 
 type textValue struct{ panicValue }
 
 func (p textValue) GetText() string {
-	return p.get().(string)
+	return p.getString()
 }
 func (p textValue) SetText(t string) error {
 	return p.set(t)
@@ -37,7 +37,7 @@ type pointerValue struct {
 }
 
 func (p pointerValue) GetObject() ident.Id {
-	return p.get().(ident.Id)
+	return p.getId()
 }
 
 func (p pointerValue) SetObject(id ident.Id) (err error) {

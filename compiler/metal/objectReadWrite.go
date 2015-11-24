@@ -32,7 +32,7 @@ type objectWriteValue struct {
 }
 
 func (p objectWriteValue) GetObject() ident.Id {
-	return p.get().(ident.Id)
+	return p.getId()
 }
 
 func (p objectWriteValue) SetObject(id ident.Id) (err error) {
