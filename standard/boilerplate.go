@@ -79,6 +79,10 @@ func RunScript(script *script.Script, opt Options) (err error) {
 }
 
 func PlayGame(cons C.IConsole, g R.Game) (err error) {
+	return PlayGameUpdate(cons, g, nil)
+}
+
+func PlayGameUpdate(cons C.IConsole, g R.Game, endFrame func()) (err error) {
 	if game, e := NewStandardGame(g); e != nil {
 		err = e
 	} else {
@@ -120,6 +124,9 @@ func PlayGame(cons C.IConsole, g R.Game) (err error) {
 							mini.Update()
 						}
 						break
+					}
+					if endFrame != nil {
+						endFrame()
 					}
 				}
 			}
