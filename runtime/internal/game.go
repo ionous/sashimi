@@ -91,7 +91,6 @@ func (g *Game) SendMessage(tgt E.ITarget, msg *E.Message) (err error) {
 			if act, ok := msg.Data.(*RuntimeAction); !ok {
 				err = fmt.Errorf("unknown action data %T", msg.Data)
 			} else {
-				frame.RunDefault()
 				err = act.runDefaultActions()
 			}
 		}

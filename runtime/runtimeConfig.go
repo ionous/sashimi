@@ -102,9 +102,6 @@ func (d defaultFrame) BeginEvent(_ E.ITarget, path E.PathList, msg *E.Message) a
 	return d
 }
 
-func (d defaultFrame) RunDefault() {
-}
-
 func (d defaultFrame) EndEvent() {
 }
 

@@ -23,28 +23,15 @@ import (
 
 // EventStream provides hierarchical event output.
 type EventStream struct {
-	list   *list.List //PendingEvent
+	list   *list.List //EventBlock
 	events []*EventBlock
 }
 
-type PendingEvent struct {
-	*EventBlock
-	runningDefaults bool
-}
-
 type EventBlock struct {
-	Evt      string           `json:"evt,omitempty"`
-	Tgt      *resource.Object `json:"tgt,omitempty"`
-	Data     interface{}      `json:"data,omitempty"`
-	Actions  []*ActionBlock   `json:"actions,omitempty"`
-	Events   []*EventBlock    `json:"events,omitempty"`
-	Defaults []*ActionBlock   `json:"defaults,omitempty"`
-}
-
-type ActionBlock struct {
-	Act  string           `json:"act,omitempty"`
-	Tgt  *resource.Object `json:"tgt,omitempty"`
-	Data interface{}      `json:"data,omitempty"`
+	Evt    string           `json:"evt,omitempty"`
+	Tgt    *resource.Object `json:"tgt,omitempty"`
+	Data   interface{}      `json:"data,omitempty"`
+	Events []*EventBlock    `json:"events,omitempty"`
 }
 
 func NewEventStream() *EventStream {
@@ -56,39 +43,42 @@ func (evs *EventStream) Flush() (ret []*EventBlock) {
 	return ret
 }
 
-func (evs *EventStream) CurrentEvent() (ret *PendingEvent) {
+func (evs *EventStream) CurrentEvent() (ret *EventBlock) {
 	if back := evs.list.Back(); back != nil {
-		ret = (back.Value).(*PendingEvent)
+		ret = (back.Value).(*EventBlock)
 	}
 	return ret
 }
 
-func (evs *EventStream) PushEvent(evt ident.Id, tgt E.ITarget, data interface{}) (ret *PendingEvent) {
-	parent := evs.CurrentEvent()
+func (evs *EventStream) PushEvent(evt ident.Id, tgt E.ITarget, data interface{}) (ret *EventBlock) {
 	// create a new event block, and add it ( as the current event )
 	noRef := resource.ObjectList{}.NewObject(
 		jsonId(tgt.Id()),
 		jsonId(tgt.Class()))
-	block := &EventBlock{Evt: jsonId(evt), Tgt: noRef, Data: data}
-	evs.list.PushBack(&PendingEvent{EventBlock: block})
+	return evs.push(evt, noRef, data)
+}
+
+func (evs *EventStream) push(evt ident.Id, tgt *resource.Object, data interface{}) (ret *EventBlock) {
+	// get parent before push
+	parent := evs.CurrentEvent()
+	block := &EventBlock{Evt: jsonId(evt), Tgt: tgt, Data: data}
 	// link this event into its parent (if any)
 	if parent != nil {
 		parent.Events = append(parent.Events, block)
 	} else {
 		evs.events = append(evs.events, block)
 	}
+	// set this event as the new current event
+	evs.list.PushBack(block)
 	// return the new event
-	return evs.CurrentEvent()
+	return block
 }
 
+// AddAction adds an event without hierarchy
 func (evs *EventStream) AddAction(act string, tgt *resource.Object, data interface{}) {
-	b := &ActionBlock{act, tgt, data}
-	curr := evs.CurrentEvent()
-	if curr.runningDefaults {
-		curr.Defaults = append(curr.Defaults, b)
-	} else {
-		curr.Actions = append(curr.Actions, b)
-	}
+	evt := ident.MakeId(act)
+	evs.push(evt, tgt, data)
+	evs.PopEvent()
 }
 
 func (evs *EventStream) PopEvent() {

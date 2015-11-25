@@ -33,6 +33,5 @@ type EventFrame interface {
 }
 
 type IEndEvent interface {
-	RunDefault()
 	EndEvent()
 }

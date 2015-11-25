@@ -86,11 +86,6 @@ func (out *CommandOutput) BeginEvent(tgt E.ITarget, _ E.PathList, msg *E.Message
 	return out
 }
 
-func (out *CommandOutput) RunDefault() {
-	out.flushPending()
-	out.events.CurrentEvent().runningDefaults = true
-}
-
 func (out *CommandOutput) EndEvent() {
 	out.flushPending()
 	out.events.PopEvent()
