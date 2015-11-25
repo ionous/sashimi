@@ -8,13 +8,12 @@ import (
 	"text/template"
 )
 
-func WriteSnippets(w io.Writer, cx *CallExtractor) (err error) {
-	fmt.Println("writing snippets")
+func WriteSnippets(w io.Writer, cx *CallExtractor, packages ...string) (err error) {
 	if t, e := template.New("pkg").Parse(templateText); e != nil {
 		err = fmt.Errorf("error parsing template: %s", e)
 	} else {
 		b := new(bytes.Buffer)
-		s := templateData{cx.pkgname, cx.snippets}
+		s := templateData{cx.pkgname, packages, cx.snippets}
 		if e := t.Execute(b, s); e != nil {
 			err = fmt.Errorf("error executing template: %s", e)
 		} else {
@@ -41,7 +40,8 @@ G "github.com/ionous/sashimi/game"
 "github.com/ionous/sashimi/util/lang"
 "github.com/ionous/sashimi/util/ident"
 "fmt"
-"strings"
+"strings"{{ range .Packages }}
+"{{.}}"{{ end }}
 )
 
 // from script...
@@ -59,5 +59,6 @@ var Callbacks = map[ident.Id]G.Callback {
 
 type templateData struct {
 	PkgName  string
+	Packages []string
 	Snippets map[string]Snippet
 }
