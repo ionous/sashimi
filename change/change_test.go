@@ -47,10 +47,8 @@ func (p *ChangeMock) ReferenceChange(obj meta.Instance, prop, other ident.Id, pr
 }
 
 func TestChange(t *testing.T) {
-	src := make(metal.ObjectValueMap)
-	m := metal.NewMetal(modeltest.NewModel(), src)
 	ch := &ChangeMock{t: t, values: make(metal.ObjectValueMap)}
-	watched := change.NewModelWatcher(m, ch)
+	watched := change.NewModelWatcher(ch, metal.NewMetal(modeltest.NewModel(), make(metal.ObjectValueMap)))
 	metatest.ApiTest(t, watched, modeltest.TestInstance)
 	require.True(t, ch.nums > 0, "nums")
 	require.True(t, ch.texts > 0, "texts")

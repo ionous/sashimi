@@ -8,12 +8,12 @@ import (
 
 // FIX: add a generic shadow factory which creates instances, etc. from the api.
 type ModelWatcher struct {
-	meta.Model
 	PropertyChange
+	meta.Model
 }
 
-func NewModelWatcher(m meta.Model, ch PropertyChange) meta.Model {
-	return ModelWatcher{m, ch}
+func NewModelWatcher(ch PropertyChange, m meta.Model) meta.Model {
+	return ModelWatcher{ch, m}
 }
 
 func (mw ModelWatcher) GetInstance(id ident.Id) (ret meta.Instance, okay bool) {

@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/ionous/sashimi/change"
 	M "github.com/ionous/sashimi/compiler/model"
 	E "github.com/ionous/sashimi/event"
 	"github.com/ionous/sashimi/metal"
@@ -36,15 +37,13 @@ func NewCommandSession(id string, model *M.Model, calls api.LookupCallbacks) (re
 		}
 	}
 	cfg := R.NewConfig().SetCalls(calls).SetFrame(frame).SetOutput(output).SetParentLookup(standard.ParentLookup{})
-	modelApi := metal.NewMetal(model, make(metal.ObjectValueMap))
-	if game, e := cfg.NewGame(modelApi); e != nil {
+	watched := change.NewModelWatcher(output, metal.NewMetal(model, make(metal.ObjectValueMap)))
+	if game, e := cfg.NewGame(watched); e != nil {
 	} else {
 		// after creating the game, but vefore running it --
 		if game, e := standard.NewStandardGame(game); e != nil {
 			err = e
 		} else {
-			// STORE-FIX: add watchers for property changes --
-			// game.Properties.AddWatcher(output)
 			// now start the game, and start receiving changes --
 			immediate := false
 			if game, e := game.Start(immediate); e != nil {
