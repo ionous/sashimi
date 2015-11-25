@@ -365,6 +365,10 @@ func init() {
 
 		s.The("rooms",
 			Can("report the view").And("reporting the view").RequiresNothing(),
+			After("reporting the view").Always(func(g G.Play) {
+				room := g.The("room")
+				room.IsNow("visited")
+			}),
 			To("report the view", func(g G.Play) {
 				room := g.The("room")
 				// sometines a blank like is printed without this
@@ -381,7 +385,6 @@ func init() {
 					}
 				}
 				// FIX: duplicated in stories describe the first room
-				room.IsNow("visited")
 				g.The("status bar").SetText("left", lang.Titleize(room.Text("Name")))
 			}))
 	})
