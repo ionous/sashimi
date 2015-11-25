@@ -2,8 +2,10 @@ package app
 
 import (
 	C "github.com/ionous/sashimi/console"
+	E "github.com/ionous/sashimi/event"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/net/resource"
+	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/util/ident"
 	"os"
 )
@@ -66,12 +68,32 @@ func (out *CommandOutput) ActorSays(who meta.Instance, lines []string) {
 	out.events.AddAction("say", tgt, lines)
 }
 
-// ScriptSays add a command for passed script lines.
-// ( The implementation actually consolidates consecutive script says into a single command. )
+// ScriptSays adds a command for passed script lines.
+// ( The implementation actually consolidates consecutive script says into a single command.
+// which gets written during flushPending() )
 func (out *CommandOutput) ScriptSays(lines []string) {
 	for _, l := range lines {
 		out.Println(l)
 	}
+}
+
+func (out *CommandOutput) BeginEvent(tgt E.ITarget, _ E.PathList, msg *E.Message) api.IEndEvent {
+	out.flushPending()
+	// msg.Data == RunTimeAction
+	// theres not really parameters for events right now
+	// other than tgt, src, ctx right now.
+	out.events.PushEvent(msg.Id, tgt, nil)
+	return out
+}
+
+func (out *CommandOutput) RunDefault() {
+	out.flushPending()
+	out.events.CurrentEvent().runningDefaults = true
+}
+
+func (out *CommandOutput) EndEvent() {
+	out.flushPending()
+	out.events.PopEvent()
 }
 
 // Log the passed message locally, doesn't generate a client command.
@@ -83,14 +105,13 @@ func (out *CommandOutput) Log(message string) {
 // FlushDocument containing all commands to the passed document builder.
 func (out *CommandOutput) FlushDocument(doc resource.DocumentBuilder) {
 	out.flushPending()
-	// techinically, it'd be some sort of 201 location of the new frame url.
 	out.flushFrame(doc, doc.NewIncludes())
 }
 
 // FlushFrame NOTE: Both header and included may be the same list -- as is true of the first frame.
 func (out *CommandOutput) flushFrame(header, included resource.IBuildObjects) {
 	// create a new frame
-	//include all events for out new frame
+	// include all events for out new frame
 	game := header.NewObject(out.id, "game")
 	if events := out.events.Flush(); len(events) > 0 {
 		game.SetAttr("events", events)
@@ -156,8 +177,8 @@ func (out *CommandOutput) ReferenceChange(gobj meta.Instance, prop, other ident.
 }
 
 // flushPending buffered lines into the fake display object.
+// ( so long as theres a flush before push and pop. )
 func (out *CommandOutput) flushPending() {
-	// only if theres a flush before push and pop.
 	if lines := out.BufferedOutput.Flush(); len(lines) > 0 {
 		// FIXFIXIX: theres some sort of bug in the buffered output or the code that uses it,
 		// leading to empty, and unconsolidated, "say" staements

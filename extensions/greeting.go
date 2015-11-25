@@ -53,7 +53,7 @@ func greetActor(g G.Play, greeter, greeted, greeting G.IObject) {
 	if standard.Debugging {
 		g.Log("!", "introducing", greeter, "to", greeted, "with", greeting)
 	}
-	if greeter == g.The("player") && greeted.Exists() && greeting.Exists() {
+	if greeter == g.The("player") && greeted.Exists() {
 		con := TheConversation(g)
 		interlocutor := con.Interlocutor()
 		if npc := interlocutor.Object(); !npc.Exists() {

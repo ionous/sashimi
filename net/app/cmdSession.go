@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/ionous/sashimi/change"
 	M "github.com/ionous/sashimi/compiler/model"
-	E "github.com/ionous/sashimi/event"
 	"github.com/ionous/sashimi/metal"
 	"github.com/ionous/sashimi/net/resource"
 	"github.com/ionous/sashimi/net/session"
@@ -24,19 +23,7 @@ var playerId = ident.MakeId("player")
 // NewCommandSession create a web session which uses jsonapi style commands.
 func NewCommandSession(id string, model *M.Model, calls api.LookupCallbacks) (ret *CommandSession, err error) {
 	output := NewCommandOutput(id)
-	// event start/end frame
-	frame := func(tgt E.ITarget, msg *E.Message) func() {
-		// msg.Data is RuntimeAction -- theres not really parameters for events right now
-		// other than tgt, src, ctx right now.
-		output.flushPending()
-		//msg.Data == RunTimeAction
-		output.events.PushEvent(msg.Id, tgt, nil)
-		return func() {
-			output.flushPending()
-			output.events.PopEvent()
-		}
-	}
-	cfg := R.NewConfig().SetCalls(calls).SetFrame(frame).SetOutput(output).SetParentLookup(standard.ParentLookup{})
+	cfg := R.NewConfig().SetCalls(calls).SetOutput(output).SetFrame(output).SetParentLookup(standard.ParentLookup{})
 	watched := change.NewModelWatcher(output, metal.NewMetal(model, make(metal.ObjectValueMap)))
 	if game, e := cfg.NewGame(watched); e != nil {
 	} else {

@@ -45,7 +45,9 @@ func (s *ObjectSerializer) SerializeObject(out resource.IBuildObjects, gobj meta
 			case meta.TextProperty:
 				obj.SetAttr(pid, prop.GetValue().GetText())
 			case meta.StateProperty:
-				obj.SetAttr(pid, jsonId(prop.GetValue().GetState()))
+				choice := jsonId(prop.GetValue().GetState())
+				states = append(states, choice)
+				obj.SetAttr(pid, choice)
 			case meta.ObjectProperty:
 				obj.SetAttr(pid, jsonId(prop.GetValue().GetObject()))
 			default:
@@ -53,8 +55,7 @@ func (s *ObjectSerializer) SerializeObject(out resource.IBuildObjects, gobj meta
 			}
 		}
 
-		// FIX: shouldnt this be GetProperty("name") ???
-		obj.SetMeta("name", gobj.GetId().String())
+		obj.SetMeta("name", gobj.GetOriginalName())
 		obj.SetMeta("states", states)
 	}
 	return obj

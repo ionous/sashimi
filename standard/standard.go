@@ -166,7 +166,7 @@ func (sg *StandardGame) Input(s string) (err error) {
 				} else if e := sg.Game.ProcessEvents(); e != nil {
 					err = e
 				} else if act.Cancelled() {
-					log.Print("input cancelled")
+					sg.endTurn("end turn")
 					err = nil // input cancelling is not an error
 				} else if _, matcher, e := sg.Parser.ParseInput(in); e != nil {
 					err = e

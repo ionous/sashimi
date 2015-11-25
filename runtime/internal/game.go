@@ -81,12 +81,9 @@ func (g *Game) NewRuntimeAction(action meta.Action, nouns ...ident.Id,
 	return ret, err
 }
 
-// TODO: add interfaces for start and end
 func (g *Game) SendMessage(tgt E.ITarget, msg *E.Message) (err error) {
-	defer g.Frame(tgt, msg)()
 	path := E.NewPathTo(tgt)
-
-	g.Printf("sending `%s` to: %s", msg, path)
+	frame := g.Frame.BeginEvent(tgt, path, msg)
 	if runDefault, e := msg.Send(path); e != nil {
 		err = e
 	} else {
@@ -94,9 +91,11 @@ func (g *Game) SendMessage(tgt E.ITarget, msg *E.Message) (err error) {
 			if act, ok := msg.Data.(*RuntimeAction); !ok {
 				err = fmt.Errorf("unknown action data %T", msg.Data)
 			} else {
+				frame.RunDefault()
 				err = act.runDefaultActions()
 			}
 		}
 	}
+	frame.EndEvent()
 	return err
 }

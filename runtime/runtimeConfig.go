@@ -37,7 +37,7 @@ func (cfg RuntimeConfig) Finalize() internal.RuntimeCore {
 			}}
 	}
 	if core.Frame == nil {
-		core.Frame = defaultFrame
+		core.Frame = defaultFrame{core.Log}
 	}
 	if core.LookupParents == nil {
 		core.LookupParents = parentLookup{}
@@ -93,8 +93,19 @@ func (cfg *RuntimeConfig) SetRand(rand *rand.Rand) *RuntimeConfig {
 	return cfg
 }
 
-func defaultFrame(E.ITarget, *E.Message) func() {
-	return func() {}
+type defaultFrame struct {
+	log api.Log
+}
+
+func (d defaultFrame) BeginEvent(_ E.ITarget, path E.PathList, msg *E.Message) api.IEndEvent {
+	d.log.Printf("sending `%s` to: %s.", msg, path)
+	return d
+}
+
+func (d defaultFrame) RunDefault() {
+}
+
+func (d defaultFrame) EndEvent() {
 }
 
 type LogAdapter struct {
