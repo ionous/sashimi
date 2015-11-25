@@ -35,6 +35,46 @@ func (l gameList) Get(i int) (ret G.IValue) {
 	return
 }
 
+// FIX!!!!
+func (l gameList) Pop() (ret G.IValue) {
+	if cnt := l.values.NumValue(); cnt > 0 {
+		l.log("Pop() on empty list.")
+		ret = nullValue{}
+	} else {
+		ret = l.Get(0)
+		switch l.ptype {
+		case meta.NumProperty:
+			n := make([]float32, cnt-1)
+			for i := 0; i < cnt-1; i++ {
+				n[i] = l.values.ValueNum(i + 1).GetNum()
+			}
+			l.values.ClearValues()
+			for _, v := range n {
+				l.values.AppendNum(v)
+			}
+		case meta.TextProperty:
+			n := make([]string, cnt-1)
+			for i := 0; i < cnt-1; i++ {
+				n[i] = l.values.ValueNum(i + 1).GetText()
+			}
+			l.values.ClearValues()
+			for _, v := range n {
+				l.values.AppendText(v)
+			}
+		case meta.ObjectProperty:
+			n := make([]ident.Id, cnt-1)
+			for i := 0; i < cnt-1; i++ {
+				n[i] = l.values.ValueNum(i + 1).GetObject()
+			}
+			l.values.ClearValues()
+			for _, v := range n {
+				l.values.AppendObject(v)
+			}
+		}
+	}
+	return ret
+}
+
 func (l gameList) Contains(in interface{}) (yes bool) {
 	switch l.ptype {
 	default:

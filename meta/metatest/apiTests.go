@@ -10,10 +10,9 @@ import (
 	"testing"
 )
 
-// tests some api things
-// requires at least one instance and one class
-// the class valueerties should include "num", "text, "state", "object" of corresponding types
-// "state" should contain choices "yes" and "no"
+// ApiTest allows implementations of the meta interface to share tests.
+// It requires at least one instance and one class. The source data should include "num/s", "text/s", "state", "object/s" of corresponding types.
+// "State" should contain choices "yes" and "no"
 func ApiTest(t *testing.T, mdl meta.Model, instId ident.Id) {
 	require.NotNil(t, mdl)
 	_, noExist := mdl.GetInstance(ident.MakeUniqueId())
@@ -100,11 +99,12 @@ func ApiTest(t *testing.T, mdl meta.Model, instId ident.Id) {
 			}
 		}
 	}
-	_ = testMethods
+
 	// instances can get and set values
 	// value is reflect valueOf meta.Value
 	testInstanceValue := func(test TestValue, value reflect.Value) {
 		var err error
+		//err = test.SetTo(value, test.value)
 		require.NotPanics(t, func() {
 			err = test.SetTo(value, test.value)
 		}, fmt.Sprintf("instance set value panic: %s", test))

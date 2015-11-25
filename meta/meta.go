@@ -182,6 +182,7 @@ type Values interface {
 	AppendObject(ident.Id) error
 
 	// RemoveValue(int)?
+	// Slice?
 }
 
 // NOTE: ParserActions aren't id'd, so they are represented as structs.

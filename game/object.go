@@ -58,6 +58,7 @@ type IValue interface {
 type IList interface {
 	Len() int
 	Get(int) IValue
+	Pop() IValue
 
 	// IValue, IObject, numbers, text
 	Contains(interface{}) bool

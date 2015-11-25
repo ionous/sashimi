@@ -13,3 +13,4 @@ func (n nullList) AppendNum(float32)         {}
 func (n nullList) AppendText(string)         {}
 func (n nullList) AppendObject(G.IObject)    {}
 func (n nullList) Reset()                    {}
+func (n nullList) Pop() G.IValue             { return n.Get(0) }

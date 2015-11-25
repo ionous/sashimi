@@ -13,10 +13,15 @@ type iList struct {
 	instances []meta.Instance
 }
 
+// FIX: with so little implemented it doesnt make sense to implement list
+// maybe declare a base "ReadList", use that here, and extend the current list from ReadList.
 func (l iList) AppendNum(float32)      {}
 func (l iList) AppendText(string)      {}
 func (l iList) AppendObject(G.IObject) {}
 func (l iList) Reset()                 {}
+func (l iList) Pop() (ret G.IValue) {
+	panic("cant remove from instance list")
+}
 
 func (l iList) Len() int {
 	return len(l.instances)

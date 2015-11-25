@@ -35,6 +35,9 @@ func (oa GameObject) Exists() bool {
 // FromClass returns true when the object is compatible with ( based on ) the named class. ( parent or other ancestor )
 func (oa GameObject) FromClass(class string) (okay bool) {
 	clsid := StripStringId(class)
+	if _, found := oa.game.Model.GetClass(clsid); !found {
+		oa.game.Println("FromClass: no such class found", clsid)
+	}
 	return oa.game.Model.AreCompatible(oa.gobj.GetParentClass().GetId(), clsid)
 }
 

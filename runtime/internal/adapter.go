@@ -66,10 +66,14 @@ func (ga *GameEventAdapter) Go(phrase G.RuntimePhrase) {
 func (ga *GameEventAdapter) List(class string) (ret G.IList) {
 	instances := []meta.Instance{}
 	clsid := StripStringId(class)
-	for i := 0; i < ga.Model.NumInstance(); i++ {
-		gobj := ga.Model.InstanceNum(i)
-		if id := gobj.GetParentClass().GetId(); ga.Model.AreCompatible(id, clsid) {
-			instances = append(instances, gobj)
+	if _, found := ga.Model.GetClass(clsid); !found {
+		ga.Game.Println("List: couldnt find class", clsid)
+	} else {
+		for i := 0; i < ga.Model.NumInstance(); i++ {
+			gobj := ga.Model.InstanceNum(i)
+			if id := gobj.GetParentClass().GetId(); ga.Model.AreCompatible(id, clsid) {
+				instances = append(instances, gobj)
+			}
 		}
 	}
 	return iList{ga.Game, NewPath(clsid), instances}
