@@ -1,8 +1,8 @@
 package simple
 
 import (
-	"github.com/ionous/sashimi/compiler/metal"
 	M "github.com/ionous/sashimi/compiler/model"
+	"github.com/ionous/sashimi/metal"
 	"github.com/ionous/sashimi/net/session"
 	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/runtime/api"

@@ -3,9 +3,9 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/ionous/sashimi/compiler/metal"
 	M "github.com/ionous/sashimi/compiler/model"
 	E "github.com/ionous/sashimi/event"
+	"github.com/ionous/sashimi/metal"
 	"github.com/ionous/sashimi/net/resource"
 	"github.com/ionous/sashimi/net/session"
 	R "github.com/ionous/sashimi/runtime"

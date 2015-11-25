@@ -3,9 +3,9 @@ package tests
 import (
 	"fmt"
 	"github.com/ionous/sashimi/compiler"
-	"github.com/ionous/sashimi/compiler/metal"
 	C "github.com/ionous/sashimi/console"
 	"github.com/ionous/sashimi/meta"
+	"github.com/ionous/sashimi/metal"
 	"github.com/ionous/sashimi/parser"
 	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/runtime/parse"

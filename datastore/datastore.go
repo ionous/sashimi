@@ -2,9 +2,9 @@ package datastore
 
 import (
 	A "appengine"
-	"github.com/ionous/sashimi/compiler/metal"
 	M "github.com/ionous/sashimi/compiler/model"
 	"github.com/ionous/sashimi/meta"
+	"github.com/ionous/sashimi/metal"
 )
 
 func NewDataStore(ctx A.Context, m *M.Model) *DataStore {

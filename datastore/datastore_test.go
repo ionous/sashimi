@@ -4,10 +4,10 @@ import (
 	"appengine/aetest"
 	"bytes"
 	"fmt"
-	"github.com/ionous/sashimi/compiler/metal/metaltest"
 	"github.com/ionous/sashimi/compiler/model/modeltest"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/meta/metatest"
+	"github.com/ionous/sashimi/metal/metaltest"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -99,6 +99,6 @@ func TestStoreData(t *testing.T) {
 		require.NoError(t, err, "saving db")
 		ds.kvs.Reset()
 		ctx.Infof("testing post conditions...")
-		metaltest.PostConditions(t, ds.kvs)
+		metaltest.VerifyPostConditions(t, ds.kvs)
 	}
 }

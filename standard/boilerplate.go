@@ -2,8 +2,8 @@ package standard
 
 import (
 	"fmt"
-	"github.com/ionous/sashimi/compiler/metal"
 	C "github.com/ionous/sashimi/console"
+	"github.com/ionous/sashimi/metal"
 	"github.com/ionous/sashimi/minicon"
 	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/script"

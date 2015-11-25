@@ -1,9 +1,9 @@
 package metaltest
 
 import (
-	"github.com/ionous/sashimi/compiler/metal"
 	"github.com/ionous/sashimi/compiler/model/modeltest"
 	"github.com/ionous/sashimi/meta/metatest"
+	"github.com/ionous/sashimi/metal"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -26,5 +26,5 @@ func TestMetal(t *testing.T) {
 	}
 
 	metatest.ApiTest(t, m, modeltest.TestInstance)
-	PostConditions(t, src)
+	VerifyPostConditions(t, src)
 }
