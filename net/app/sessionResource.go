@@ -10,17 +10,12 @@ const (
 	frameKey = "frame"
 )
 
-//
-// Transparently wraps a session resource, and all of its children.
-//
+// SessionResource wraps a session as a resource, along with its children.
 type SessionResource struct {
 	session  *CommandSession
 	endpoint resource.IResource
 }
 
-//
-// Helper to create a session and set its initial frame count.
-//
 func NewSessionResource(sessions *session.Sessions) resource.IResource {
 	return &resource.Wrapper{
 		Posts: func(_ io.Reader, doc resource.DocumentBuilder) (err error) {
@@ -30,48 +25,41 @@ func NewSessionResource(sessions *session.Sessions) resource.IResource {
 				session := sd.(*CommandSession)
 				session.out.FlushDocument(doc)
 				// now returning frames.
-				doc.SetMeta(frameKey, session.frameCount)
+				doc.SetMeta(frameKey, session.FrameCount())
 			}
 			return err
 		}}
 }
 
-//
-// Finds the sub-resource, and updates the internal endpoint
-// Always returns "this".
-//
-func (this *SessionResource) Find(name string) (resource.IResource, bool) {
-	child, okay := this.endpoint.Find(name)
-	this.endpoint = child
-	return this, okay
+// Find the sub-resource, and updates the internal endpoint
+// Always returns "res".
+func (res *SessionResource) Find(name string) (resource.IResource, bool) {
+	child, okay := res.endpoint.Find(name)
+	res.endpoint = child
+	return res, okay
 }
 
-//
-// Run a query on the endpoint, but do it inside a read lock
+// Query the endpoint, but do it inside a read lock.
 // And, add our turn-metadata to every document
-//
-func (this *SessionResource) Query() resource.Document {
-	defer this.session.RUnlock()
-	this.session.RLock()
-	doc := this.endpoint.Query()
-	resource.NewDocumentBuilder(&doc).SetMeta(frameKey, this.session.frameCount)
+func (res *SessionResource) Query() resource.Document {
+	defer res.session.RUnlock()
+	res.session.RLock()
+	doc := res.endpoint.Query()
+	resource.NewDocumentBuilder(&doc).SetMeta(frameKey, res.session.FrameCount())
 	return doc
 }
 
-//
-// Run a post on the endpoint, but do it inside a write lock.
-//
-func (this *SessionResource) Post(reader io.Reader) (resource.Document, error) {
+// Post to the endpoint, but do it inside a write lock.
+func (res *SessionResource) Post(reader io.Reader) (ret resource.Document, err error) {
 	// FIX? because the interface takes a reader,
 	// we have to sit on the write lock for the duration of the read.
-	defer this.session.Unlock()
-	this.session.Lock()
-	doc, err := this.endpoint.Post(reader)
-	if err == nil {
-		// by updating the frame first,
-		// the response overrides any gets which may have happened just moments ago.
-		this.session.frameCount++
-		resource.NewDocumentBuilder(&doc).SetMeta(frameKey, this.session.frameCount)
+	defer res.session.Unlock()
+	res.session.Lock()
+	if d, e := res.endpoint.Post(reader); e != nil {
+		err = e
+	} else {
+		resource.NewDocumentBuilder(&d).SetMeta(frameKey, res.session.FrameCount())
+		ret = d
 	}
-	return doc, err
+	return
 }

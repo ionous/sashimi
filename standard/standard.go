@@ -24,6 +24,7 @@ type StandardCore struct {
 	author,
 	playerInput,
 	complete,
+	turnCount,
 	statusLeft,
 	statusRight meta.Value
 }
@@ -56,6 +57,11 @@ func (sc *StandardCore) SetRight(status string) {
 	sc.statusRight.SetText(status)
 }
 
+// frame is the turn count + 1 ( so that it's never zero )
+func (sc *StandardCore) Frame() int {
+	return int(sc.turnCount.GetNum()) + 1
+}
+
 // NewStandardGame creates a game which is based on the standard rules.
 func NewStandardCore(game R.Game) (ret *StandardCore, err error) {
 	//
@@ -67,6 +73,8 @@ func NewStandardCore(game R.Game) (ret *StandardCore, err error) {
 		err = fmt.Errorf("couldn't find author")
 	} else if title, ok := story.FindProperty("name"); !ok {
 		err = fmt.Errorf("couldn't find title")
+	} else if turnCount, ok := story.FindProperty("turn count"); !ok {
+		err = fmt.Errorf("couldn't find turn count")
 	} else if playerInput, ok := story.FindProperty("player input"); !ok {
 		err = fmt.Errorf("couldn't find completed status")
 	} else if completed, ok := story.GetPropertyByChoice(ident.MakeId("completed")); !ok {
@@ -76,14 +84,17 @@ func NewStandardCore(game R.Game) (ret *StandardCore, err error) {
 	} else if right, ok := status.FindProperty("right"); !ok {
 		err = fmt.Errorf("couldn't find right status")
 	} else {
-		core := &StandardCore{game, nil,
-			story.GetId(),
-			title.GetValue(),
-			author.GetValue(),
-			playerInput.GetValue(),
-			completed.GetValue(),
-			left.GetValue(),
-			right.GetValue()}
+		core := &StandardCore{
+			Game:        game,
+			parser:      nil,
+			story:       story.GetId(),
+			title:       title.GetValue(),
+			author:      author.GetValue(),
+			playerInput: playerInput.GetValue(),
+			complete:    completed.GetValue(),
+			turnCount:   turnCount.GetValue(),
+			statusLeft:  left.GetValue(),
+			statusRight: right.GetValue()}
 		core.SetLeft(title.GetValue().GetText())
 		core.SetRight(fmt.Sprintf(`"%s" by %s.`, title.GetValue().GetText(), author.GetValue().GetText()))
 		ret = core

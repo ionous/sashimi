@@ -17,13 +17,11 @@ func NewSimpleSession(calls api.LookupCallbacks, model *M.Model) (ret *SimpleSes
 		err = e
 	} else if game, e := standard.NewStandardGame(game); e != nil {
 		err = e
+	} else if game, e := game.Start(); e != nil {
+		err = e
 	} else {
-		immediate := true
-		if game, e := game.Start(immediate); e != nil {
-			err = e
-		} else {
-			ret = &SimpleSession{game, out, out.Flush()}
-		}
+		ret = &SimpleSession{game, out, out.Flush()}
+
 	}
 	return ret, err
 }
@@ -38,15 +36,15 @@ type SimpleSession struct {
 }
 
 //
-func (this *SimpleSession) HandleInput(in string) (err error) {
-	if this.game.IsQuit() {
+func (s *SimpleSession) HandleInput(in string) (err error) {
+	if s.game.IsQuit() {
 		err = session.SessionClosed{"player quit"}
-	} else if this.game.IsFinished() {
+	} else if s.game.IsComplete() {
 		err = session.SessionClosed{"game finished"}
 	} else {
-		this.game.Input(in)
-		newLines := this.out.Flush()
-		this.lines = append(this.lines, newLines...)
+		s.game.Input(in)
+		newLines := s.out.Flush()
+		s.lines = append(s.lines, newLines...)
 	}
 	return err
 }

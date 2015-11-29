@@ -30,7 +30,7 @@ func NewCommandSession(id string, model *M.Model, calls api.LookupCallbacks) (re
 	if s, e := NewPartialSession(out, metal, calls); e != nil {
 		err = e
 	} else {
-		ret = &CommandSession{s, 1, &sync.RWMutex{}}
+		ret = &CommandSession{s, &sync.RWMutex{}}
 	}
 	return ret, err
 }
@@ -73,7 +73,6 @@ func NewPartialSession(out *CommandOutput, m meta.Model, calls api.LookupCallbac
 // we have
 type CommandSession struct {
 	*PartialSession
-	frameCount int
 	*sync.RWMutex
 	// type RWMutex provides:
 	//    func (rw *RWMutex) RLock()
@@ -83,7 +82,7 @@ type CommandSession struct {
 }
 
 func (s *CommandSession) FrameCount() int {
-	return s.frameCount
+	return s.game.Frame()
 }
 
 func (s *CommandSession) Post(reader io.Reader) (ret resource.Document, err error) {
@@ -91,7 +90,6 @@ func (s *CommandSession) Post(reader io.Reader) (ret resource.Document, err erro
 		err = e
 	} else {
 		ret = r
-		s.frameCount++
 	}
 	return
 }
