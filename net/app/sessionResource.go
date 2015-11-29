@@ -28,7 +28,7 @@ func NewSessionResource(sessions *session.Sessions) resource.IResource {
 				err = e
 			} else {
 				session := sd.(*CommandSession)
-				session.output.FlushDocument(doc)
+				session.out.FlushDocument(doc)
 				// now returning frames.
 				doc.SetMeta(frameKey, session.frameCount)
 			}

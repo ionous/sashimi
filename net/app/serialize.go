@@ -3,37 +3,58 @@ package app
 import (
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/net/resource"
+	"github.com/ionous/sashimi/util/ident"
 )
 
-//
-// Generates object documents which include a turn counter.
+// ObjectSerializer generates object documents which include a turn counter.
 // A document contains refs to objects, and optionally includes serialization of those referenced objects.
-// This uses state to determine which objects we've already told the client about.
-//
 type ObjectSerializer struct {
-	known KnownObjects
+	KnownObjects
+	includes Includes
 }
 
-//
-func NewObjectSerializer() *ObjectSerializer {
-	return &ObjectSerializer{known: make(KnownObjects)}
+// Includes all objects referenced by the CommandOutput.
+type Includes map[ident.Id]meta.Instance
+
+func (inc Includes) Include(gobj meta.Instance) {
+	inc[gobj.GetId()] = gobj
 }
 
-//
-func (s *ObjectSerializer) IsKnown(gobj meta.Instance) bool {
-	return gobj != nil && s.known[gobj.GetId()]
+// NewObjectSerializer uses known objects to determine which objects we've already told the client about.
+func NewObjectSerializer(known KnownObjects) *ObjectSerializer {
+	return &ObjectSerializer{known, make(Includes)}
 }
 
-//
-// Add the object to the passed document data as the primary object.
-//
+// TryObjectRef only creates an object ref if the object is already known.
+func (s *ObjectSerializer) TryObjectRef(gobj meta.Instance) (ret *resource.Object, okay bool) {
+	if s.IsKnown(gobj) {
+		ret = s.NewObjectRef(gobj)
+		okay = true
+	}
+	return
+}
+
+// NewObjectRef always adds the object to the includes
+func (s *ObjectSerializer) NewObjectRef(gobj meta.Instance) *resource.Object {
+	s.includes.Include(gobj)
+	out := resource.ObjectList{}
+	return out.NewObject(jsonId(gobj.GetId()), jsonId(gobj.GetParentClass().GetId()))
+}
+
+// Flush returns the objects we needed to include.
+func (s *ObjectSerializer) Flush() Includes {
+	ret := s.includes
+	s.includes = make(Includes)
+	return ret
+}
+
+// SerializeObject to the passed document data as the primary object.
 // NOTE: unlike, jsonapi/rest we omit the existance and contents of relationships.
-// The client will ask explicitly ask for the relation information it wants:
+// The client explicitly asks for the relation information it wants:
 // ex. /games/{session}/actors/player/inventory
-//
 func (s *ObjectSerializer) SerializeObject(out resource.IBuildObjects, gobj meta.Instance, force bool) (obj *resource.Object) {
-	if s.known.SetKnown(gobj) || force {
-		obj = s.NewObject(out, gobj)
+	if s.SetKnown(gobj) || force {
+		obj = out.NewObject(jsonId(gobj.GetId()), jsonId(gobj.GetParentClass().GetId()))
 		//
 		states := []string{}
 		for i := 0; i < gobj.NumProperty(); i++ {
@@ -61,15 +82,14 @@ func (s *ObjectSerializer) SerializeObject(out resource.IBuildObjects, gobj meta
 	return obj
 }
 
-//
-// Add a reference to the passed object into the passed refs list,
+// AddObjectRef adds the passed object into the passed list of references,
 // with a full seriaization into includes if the object is newly known.
-//
 func (s *ObjectSerializer) AddObjectRef(out resource.IBuildObjects, gobj meta.Instance, include resource.IBuildObjects) (obj *resource.Object) {
 	s.SerializeObject(include, gobj, false)
-	return s.NewObject(out, gobj)
-}
-
-func (s *ObjectSerializer) NewObject(out resource.IBuildObjects, gobj meta.Instance) (obj *resource.Object) {
 	return out.NewObject(jsonId(gobj.GetId()), jsonId(gobj.GetParentClass().GetId()))
 }
+
+// NewObject adds a reference to the object into the current document.
+// func (s *ObjectSerializer) NewObject(out resource.IBuildObjects, gobj meta.Instance) (obj *resource.Object) {
+// 	return out.NewObject(jsonId(gobj.GetId()), jsonId(gobj.GetParentClass().GetId()))
+//}

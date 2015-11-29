@@ -15,23 +15,10 @@ import (
 // you would want this tied to session, if at all possible.
 var Debugging bool
 
-// StardardStart assists the creation of a standard game.
-// see: NewStandardGame()
-type StandardStart struct {
-	StandardCore
-}
-
-// StandardGame wraps the runtime.Game with the standard rules.
-type StandardGame struct {
-	StandardCore
-	started, quit, completed bool
-	lastInput                string
-}
-
 // StandardCore assists the transformation of a StandardStart into a StandardGame.
 type StandardCore struct {
 	R.Game
-	Parser parser.P
+	parser *parser.P // P is a struct, cached via getParser()
 	story  ident.Id
 	title,
 	author,
@@ -39,6 +26,14 @@ type StandardCore struct {
 	complete,
 	statusLeft,
 	statusRight meta.Value
+}
+
+func (sg *StandardCore) IsComplete() bool {
+	return sg.complete.GetState() == ident.MakeId("completed")
+}
+
+func (sg *StandardCore) Started() bool {
+	return sg.complete.GetState() != ident.MakeId("starting")
 }
 
 // Left status bar text.
@@ -61,141 +56,107 @@ func (sc *StandardCore) SetRight(status string) {
 	sc.statusRight.SetText(status)
 }
 
-type ParentLookup struct{}
-
-var objects = ident.MakeId("objects")
-var containment = []string{"wearer", "owner", "whereabouts", "support", "enclosure"}
-
-func (p ParentLookup) LookupParent(mdl meta.Model, inst meta.Instance) (ret meta.Instance, rel meta.Property, okay bool) {
-	if mdl.AreCompatible(inst.GetParentClass().GetId(), objects) {
-		for _, wse := range containment {
-			if prop, ok := inst.FindProperty(wse); ok {
-				if parent := prop.GetValue().GetObject(); !parent.Empty() {
-					if fini, ok := mdl.GetInstance(parent); ok {
-						ret, rel, okay = fini, prop, true
-						break
-					}
-				}
-			}
-		}
+// NewStandardGame creates a game which is based on the standard rules.
+func NewStandardCore(game R.Game) (ret *StandardCore, err error) {
+	//
+	if story, ok := meta.FindFirstOf(game.Model, ident.MakeId("stories")); !ok {
+		err = fmt.Errorf("couldn't find story")
+	} else if status, ok := meta.FindFirstOf(game.Model, ident.MakeId("status bar instances")); !ok {
+		err = fmt.Errorf("couldn't find status bar")
+	} else if author, ok := story.FindProperty("author"); !ok {
+		err = fmt.Errorf("couldn't find author")
+	} else if title, ok := story.FindProperty("name"); !ok {
+		err = fmt.Errorf("couldn't find title")
+	} else if playerInput, ok := story.FindProperty("player input"); !ok {
+		err = fmt.Errorf("couldn't find completed status")
+	} else if completed, ok := story.GetPropertyByChoice(ident.MakeId("completed")); !ok {
+		err = fmt.Errorf("couldn't find completed status")
+	} else if left, ok := status.FindProperty("left"); !ok {
+		err = fmt.Errorf("couldn't find left status")
+	} else if right, ok := status.FindProperty("right"); !ok {
+		err = fmt.Errorf("couldn't find right status")
+	} else {
+		core := &StandardCore{game, nil,
+			story.GetId(),
+			title.GetValue(),
+			author.GetValue(),
+			playerInput.GetValue(),
+			completed.GetValue(),
+			left.GetValue(),
+			right.GetValue()}
+		core.SetLeft(title.GetValue().GetText())
+		core.SetRight(fmt.Sprintf(`"%s" by %s.`, title.GetValue().GetText(), author.GetValue().GetText()))
+		ret = core
 	}
 	return
 }
 
-// NewStandardGame creates a game which is based on the standard rules.
-func NewStandardGame(game R.Game) (ret StandardStart, err error) {
-	if parser, e := parse.NewObjectParser(game.Model, ident.MakeId("player")); e != nil {
-		err = e
+// NOTE: input should be normalized!
+func (sg *StandardCore) HandleInput(in string) (err error) {
+	if sg.IsComplete() {
+		log.Println("complete")
 	} else {
-		//
-		if story, ok := meta.FindFirstOf(game.Model, ident.MakeId("stories")); !ok {
-			err = fmt.Errorf("couldn't find story")
-		} else if status, ok := meta.FindFirstOf(game.Model, ident.MakeId("status bar instances")); !ok {
-			err = fmt.Errorf("couldn't find status bar")
-		} else if author, ok := story.FindProperty("author"); !ok {
-			err = fmt.Errorf("couldn't find author")
-		} else if title, ok := story.FindProperty("name"); !ok {
-			err = fmt.Errorf("couldn't find title")
-		} else if playerInput, ok := story.FindProperty("player input"); !ok {
-			err = fmt.Errorf("couldn't find completed status")
-		} else if completed, ok := story.GetPropertyByChoice(ident.MakeId("completed")); !ok {
-			err = fmt.Errorf("couldn't find completed status")
-		} else if left, ok := status.FindProperty("left"); !ok {
-			err = fmt.Errorf("couldn't find left status")
-		} else if right, ok := status.FindProperty("right"); !ok {
-			err = fmt.Errorf("couldn't find right status")
+		if in == "start" && !sg.Started() {
+			//log.Println("starting")
+			sg.EndTurn("commence")
 		} else {
-			core := StandardCore{game, parser,
-				story.GetId(),
-				title.GetValue(),
-				author.GetValue(),
-				playerInput.GetValue(),
-				completed.GetValue(),
-				left.GetValue(),
-				right.GetValue()}
-
-			core.SetLeft(title.GetValue().GetText())
-			core.SetRight(fmt.Sprintf(`"%s" by %s.`, title.GetValue().GetText(), author.GetValue().GetText()))
-			ret = StandardStart{core}
-		}
-	}
-	return ret, err
-}
-
-// Start sends commencing, and returns a new StandardGame.
-// FIX: no longer sends commencing, that's done by input "start"
-func (sg *StandardStart) Start(immediate bool) (ret *StandardGame, err error) {
-	ret = &StandardGame{StandardCore: sg.StandardCore}
-	if immediate {
-		ret.endTurn("commence")
-	}
-	return ret, err
-}
-
-// IsQuit when the user has requested to quit the game.
-func (sg *StandardGame) IsQuit() bool {
-	return sg.quit
-}
-
-// IsFinished when the user has completed the game or quit the game.
-func (sg *StandardGame) IsFinished() bool {
-	return sg.quit || sg.completed
-}
-
-// Input turns the passed user input to a game command.
-// (automatically ends the turn )
-func (sg *StandardGame) Input(s string) (err error) {
-	if !sg.IsFinished() {
-		in := parser.NormalizeInput(s)
-		if in == "q" || in == "quit" {
-			sg.quit = true
-		} else {
-			if in == "start" && !sg.started {
-				sg.started = true
-				sg.endTurn("commence")
+			if in == "commence" {
+				in = sg.playerInput.GetText()
+				//log.Println("commence reseting input to", in)
+			}
+			//
+			if e := sg.playerInput.SetText(in); e != nil {
+				err = e
+			} else if act, e := sg.Game.QueueAction("parse player input", sg.story); e != nil {
+				err = e
+			} else if e := sg.Game.ProcessEvents(); e != nil {
+				err = e
+			} else if act.Cancelled() {
+				sg.EndTurn("end turn")
+				// NOTE: canceling is not an error
+			} else if parser, e := sg.getParser(); e != nil {
+				err = e
+				//log.Println("error getting parser", err)
 			} else {
-				if in == "commence" {
-					in = sg.lastInput
-				} else {
-					sg.lastInput = in
-				}
-				if e := sg.playerInput.SetText(in); e != nil {
+				if _, matcher, e := parser.ParseInput(in); e != nil {
 					err = e
-				} else if act, e := sg.Game.QueueAction("parse player input", sg.story); e != nil {
-					err = e
-				} else if e := sg.Game.ProcessEvents(); e != nil {
-					err = e
-				} else if act.Cancelled() {
-					sg.endTurn("end turn")
-					err = nil // input cancelling is not an error
-				} else if _, matcher, e := sg.Parser.ParseInput(in); e != nil {
-					err = e
+					//log.Println("error parsing input", err)
 				} else if act, objs, e := matcher.(*parse.ObjectMatcher).GetMatch(); e != nil {
 					err = e
+					//log.Println("error matching input", err)
 				} else {
-					sg.RunTurn(act, objs)
+					sg.Game.QueueActionInstances(act, objs)
+					sg.EndTurn("end turn")
 				}
 			}
+
 		}
 	}
 	return err
 }
 
-// EndTurn finishes the turn for the player.
-// ( This is normally called automatically by Input )
-func (sg *StandardGame) RunTurn(act meta.Action, objs []meta.Instance) {
-	sg.Game.QueueActionInstances(act, objs)
-	sg.endTurn("end turn")
+// STORE-FIX: it takes a bit of work create a parser from the model.
+// for the command sessions ( local server, app engine, ) we only need the parser with raw input
+// so we leave it nil till its needed.
+// FUTURE: implement zero-copy parser by re-formating model nto something more amenable for the parser.
+func (sg *StandardCore) getParser() (ret parser.P, err error) {
+	if sg.parser != nil {
+		ret = *sg.parser
+	} else {
+		// cache!
+		if parser, e := parse.NewObjectParser(sg.Model, ident.MakeId("player")); e != nil {
+			err = e
+		} else {
+			ret, sg.parser = parser, &parser
+		}
+	}
+	return
 }
 
-func (sg *StandardGame) endTurn(action string) {
+func (sg *StandardCore) EndTurn(action string) {
 	if _, e := sg.Game.QueueAction(action, sg.story); e != nil {
 		log.Println(e)
 	} else if e := sg.Game.ProcessEvents(); e != nil {
 		log.Println(e)
-	} else {
-		if sg.complete.GetState() == ident.MakeId("completed") {
-			sg.completed = true
-		}
 	}
 }

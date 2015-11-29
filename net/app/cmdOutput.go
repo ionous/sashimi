@@ -14,48 +14,15 @@ import (
 type CommandOutput struct {
 	id               string
 	C.BufferedOutput // TEMP: implements Print() and Println()
-	serial           SerialOut
+	serial           *ObjectSerializer
 	events           *EventStream
 }
 
-// Includes all objects referenced by the CommandOutput.
-type Includes map[ident.Id]meta.Instance
-
-func (inc Includes) Include(gobj meta.Instance) {
-	inc[gobj.GetId()] = gobj
-}
-
-// SerialOut is used by CommandOutput to track instances
-type SerialOut struct {
-	*ObjectSerializer
-	includes Includes
-}
-
-// TryObjectRef only creates an object ref if the object is already known.
-func (serial *SerialOut) TryObjectRef(gobj meta.Instance) (ret *resource.Object, okay bool) {
-	if serial.IsKnown(gobj) {
-		ret = serial.NewObjectRef(gobj)
-		okay = true
-	}
-	return
-}
-
-func (serial *SerialOut) NewObjectRef(gobj meta.Instance) *resource.Object {
-	serial.includes.Include(gobj)
-	return serial.NewObject(resource.ObjectList{}, gobj)
-}
-
-func (serial *SerialOut) Flush() Includes {
-	ret := serial.includes
-	serial.includes = make(Includes)
-	return ret
-}
-
 // NewCommandOutput
-func NewCommandOutput(id string) *CommandOutput {
+func NewCommandOutput(id string, serializer *ObjectSerializer) *CommandOutput {
 	out := &CommandOutput{
 		id:     id,
-		serial: SerialOut{NewObjectSerializer(), Includes{}},
+		serial: serializer,
 		events: NewEventStream(),
 	}
 	return out

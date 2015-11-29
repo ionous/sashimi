@@ -90,8 +90,7 @@ func PlayGameUpdate(cons C.IConsole, g R.Game, endFrame func()) (err error) {
 		right := fmt.Sprint(" by ", game.author.GetText())
 		game.SetLeft(left)
 		game.SetRight(right)
-		immediate := true
-		if game, e := game.Start(immediate); e != nil {
+		if game, e := game.Start(); e != nil {
 			err = e
 		} else {
 			for {
@@ -119,7 +118,7 @@ func PlayGameUpdate(cons C.IConsole, g R.Game, endFrame func()) (err error) {
 
 					if e := game.Input(s); e != nil {
 						cons.Println(e.Error())
-					} else if game.IsFinished() {
+					} else if game.IsQuit() || game.IsComplete() {
 						if useMini && !game.IsQuit() {
 							mini.Update()
 						}
