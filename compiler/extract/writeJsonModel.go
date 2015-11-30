@@ -15,7 +15,7 @@ func WriteJsonModel(w io.Writer, name string, m *M.Model) (err error) {
 		err = e
 	} else {
 		fmt.Fprintln(b, "package ", name)
-		fmt.Fprintf(b, "var Data=`%s`", json)
+		fmt.Fprintf(b, "var data=`%s`", json)
 		if p, e := format.Source(b.Bytes()); e != nil {
 			err = e
 		} else {

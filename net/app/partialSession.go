@@ -16,6 +16,7 @@ import (
 	"log"
 )
 
+// implements IResource for the session and Frame for the
 type PartialSession struct {
 	game *standard.StandardCore
 	out  *CommandOutput

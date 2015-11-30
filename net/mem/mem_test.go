@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/ionous/sashimi/_examples/stories"
+	"github.com/ionous/sashimi/net"
 	"github.com/ionous/sashimi/net/app"
 	"github.com/ionous/sashimi/net/mem"
 	"github.com/ionous/sashimi/net/resource"
@@ -29,7 +30,7 @@ func TestMemApp(t *testing.T) {
 	// 	POST /game/<session>, send new input
 	// 	 GET /game/<session>/rooms/<name>/contains, list of objects
 	// 	 GET /game/<session>/classes/rooms/actions
-	handler.HandleFunc("/game/", app.HandleResource(app.GameResource(sessions)))
+	handler.HandleFunc("/game/", net.HandleResource(app.GameResource(sessions)))
 	ts := httptest.NewServer(handler)
 	defer ts.Close()
 

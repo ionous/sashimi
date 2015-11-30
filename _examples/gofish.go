@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"github.com/ionous/sashimi/_examples/fishgen"
 	"github.com/ionous/sashimi/_examples/stories"
+	D "github.com/ionous/sashimi/appengine/datastore"
 	"github.com/ionous/sashimi/compiler/extract"
 	M "github.com/ionous/sashimi/compiler/model"
-	D "github.com/ionous/sashimi/datastore"
 	G "github.com/ionous/sashimi/game"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/metal"
@@ -51,7 +51,7 @@ func main() {
 				} else {
 					defer ctx.Close()
 
-					ds := D.NewDataStore(ctx, model)
+					ds := D.NewModelStore(ctx, model)
 					modelApi = ds.Model()
 
 					// every frame flush ( save ) the cache, and empty it.

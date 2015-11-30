@@ -4,12 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"github.com/ionous/sashimi/_examples/stories"
-	"github.com/ionous/sashimi/compiler/call"
+	"github.com/ionous/sashimi/net"
 	"github.com/ionous/sashimi/net/app"
-	"github.com/ionous/sashimi/net/session"
+	"github.com/ionous/sashimi/net/mem"
 	"github.com/ionous/sashimi/net/support"
-	"github.com/ionous/sashimi/script"
-	"io/ioutil"
 	"log"
 	"net/http"
 )
@@ -33,10 +31,7 @@ func main() {
 	} else {
 		fmt.Println("listening on http://localhost:8080")
 		handler := support.NewServeMux()
-		calls := call.MakeMarkerStorage()
-
-		sessions := session.NewSessions()
-		handler.HandleFunc("/game/", app.HandleResource(GameResource(sessions)))
+		handler.HandleFunc("/game/", net.HandleResource(app.GameResource(mem.NewMemSessions())))
 		handler.HandleFilePatterns(root,
 			support.Dir("/app/"),
 			support.Dir("/bower_components/"),

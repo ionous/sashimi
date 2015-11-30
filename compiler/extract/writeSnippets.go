@@ -49,7 +49,7 @@ func Lines(a ...string) string {
 	return strings.Join(a, "\n")
 }
 
-var Callbacks = map[ident.Id]G.Callback {
+var code = map[ident.Id]G.Callback {
 	{{ range $id, $snippet := .Snippets }}
 		// {{$snippet.File}}:{{$snippet.Line}}
 		"{{ $id }}" : {{$snippet.Content}},

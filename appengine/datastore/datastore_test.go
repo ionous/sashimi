@@ -90,7 +90,7 @@ func TestStoreData(t *testing.T) {
 	if ctx, err := aetest.NewContext(nil); assert.NoError(t, err) {
 		defer ctx.Close()
 		test := modeltest.NewModel()
-		ds := NewDataStore(ctx, test)
+		ds := NewModelStore(ctx, test)
 		//
 		ctx.Infof("running api test..")
 		metatest.ApiTest(t, ds.mdl, modeltest.TestInstance)

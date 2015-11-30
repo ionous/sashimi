@@ -7,7 +7,7 @@ import (
 	"github.com/ionous/sashimi/metal"
 )
 
-func NewDataStore(ctx A.Context, m *M.Model) *DataStore {
+func NewModelStore(ctx A.Context, m *M.Model) *ModelStore {
 	// yuck!  mdl uses kvs ( for value lookup ), kvs uses mdl  (for keycreation and the load saver objects); if we shadowed the meta, we could avoid this.
 	kvs := &KeyValues{}
 	mdl := metal.NewMetal(m, kvs)
@@ -15,24 +15,24 @@ func NewDataStore(ctx A.Context, m *M.Model) *DataStore {
 	kvs.KeyGen = NewKeyGen(ctx, nil)
 	kvs.ctx = ctx
 	kvs.Reset()
-	return &DataStore{kvs, mdl}
+	return &ModelStore{kvs, mdl}
 }
 
-func (ds *DataStore) Model() meta.Model {
+func (ds *ModelStore) Model() meta.Model {
 	return ds.mdl
 }
 
 // Flush writes any pending changes to the datastore.
-func (ds *DataStore) Flush() error {
+func (ds *ModelStore) Flush() error {
 	return ds.kvs.Save()
 }
 
 // Drop clears the local cache of fetched data.
-func (ds *DataStore) Drop() {
+func (ds *ModelStore) Drop() {
 	ds.kvs.Reset()
 }
 
-type DataStore struct {
+type ModelStore struct {
 	kvs *KeyValues
 	mdl meta.Model
 }

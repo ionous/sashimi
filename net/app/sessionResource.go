@@ -47,6 +47,7 @@ func (res *SessionResource) Query() resource.Document {
 }
 
 // Post to the endpoint, but do it inside a write lock.
+// NOTE: the only end point that implements post is likely to be the session end point itself.
 func (res *SessionResource) Post(reader io.Reader) (ret resource.Document, err error) {
 	// FIX? because the interface takes a reader,
 	// we have to sit on the write lock for the duration of the read.

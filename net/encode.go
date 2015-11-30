@@ -1,4 +1,4 @@
-package app
+package net
 
 import (
 	"encoding/json"
@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-// where is a good place for this?
+// Encode the passed resource to the http writer.
 func Encode(w http.ResponseWriter, r *http.Request, doc resource.Document) {
 	w.Header().Set("Content-Type", "application/json")
 	prettyBytes, _ := json.Marshal(doc)
