@@ -1,14 +1,13 @@
-package app
+package mem_test
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/ionous/sashimi/_examples/stories"
-	"github.com/ionous/sashimi/compiler/call"
+	"github.com/ionous/sashimi/net/app"
+	"github.com/ionous/sashimi/net/mem"
 	"github.com/ionous/sashimi/net/resource"
-	"github.com/ionous/sashimi/net/session"
-	"github.com/ionous/sashimi/script"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
@@ -18,25 +17,19 @@ import (
 	"testing"
 )
 
-//
-func TestNetApp(t *testing.T) {
+// go test -run TestMemApp
+func TestMemApp(t *testing.T) {
 	stories.Select("lab")
 
-	calls := call.MakeMarkerStorage()
-	sessions := session.NewSessions(
-		func(id string) (ret session.SessionData, err error) {
-			// FIX: it's very silly to have to init and compile each time.
-			// the reason is because relations change the original model.
-			if m, e := script.InitScripts().CompileCalls(ioutil.Discard, calls); e != nil {
-				err = e
-			} else {
-				ret, err = NewCommandSession(id, m, calls)
-			}
-			return ret, err
-		})
+	sessions := mem.NewMemSessions()
 
 	handler := http.NewServeMux()
-	handler.HandleFunc("/game/", NewGameHandler(sessions))
+	// Some example uris:
+	// 	POST /game/new, create new session
+	// 	POST /game/<session>, send new input
+	// 	 GET /game/<session>/rooms/<name>/contains, list of objects
+	// 	 GET /game/<session>/classes/rooms/actions
+	handler.HandleFunc("/game/", app.HandleResource(app.GameResource(sessions)))
 	ts := httptest.NewServer(handler)
 	defer ts.Close()
 
@@ -64,7 +57,7 @@ func TestNetApp(t *testing.T) {
 						if _, err := g.post("take the glass jar"); assert.NoError(t, err) {
 							require.NoError(t, checkTable(g, 0))
 						}
-						cmd := CommandInput{
+						cmd := app.CommandInput{
 							Action:  "show-it-to",
 							Target:  "lab-assistant",
 							Context: "axe"}
@@ -100,9 +93,9 @@ type Helper struct {
 	id string
 }
 
-func (this *Helper) getOne(parts ...string) (doc resource.ObjectDocument, err error) {
+func (h *Helper) getOne(parts ...string) (doc resource.ObjectDocument, err error) {
 	//"rooms", "lab", "contents"
-	url := this.makeUrl(parts...)
+	url := h.makeUrl(parts...)
 	if resp, e := http.Get(url); e != nil {
 		err = e
 	} else {
@@ -111,9 +104,9 @@ func (this *Helper) getOne(parts ...string) (doc resource.ObjectDocument, err er
 	return
 }
 
-func (this *Helper) getMany(parts ...string) (doc resource.MultiDocument, err error) {
+func (h *Helper) getMany(parts ...string) (doc resource.MultiDocument, err error) {
 	//"rooms", "lab", "contents"
-	url := this.makeUrl(parts...)
+	url := h.makeUrl(parts...)
 	if resp, e := http.Get(url); e != nil {
 		err = e
 	} else {
@@ -122,29 +115,29 @@ func (this *Helper) getMany(parts ...string) (doc resource.MultiDocument, err er
 	return
 }
 
-func (this *Helper) post(input string) (doc resource.ObjectDocument, err error) {
-	in := CommandInput{Input: input}
-	return this.postCmd(in)
+func (h *Helper) post(input string) (doc resource.ObjectDocument, err error) {
+	in := app.CommandInput{Input: input}
+	return h.postCmd(in)
 }
 
-func (this *Helper) postCmd(in CommandInput) (doc resource.ObjectDocument, err error) {
+func (h *Helper) postCmd(in app.CommandInput) (doc resource.ObjectDocument, err error) {
 	if b, e := json.Marshal(in); e != nil {
 		err = e
 	} else {
-		postUrl := this.makeUrl()
+		postUrl := h.makeUrl()
 		if resp, e := http.Post(postUrl, "application/json", bytes.NewReader(b)); e != nil {
 			err = e
 		} else if e := decodeBody(resp, &doc); e != nil {
 			err = e
 		} else {
-			this.id = doc.Data.Id
+			h.id = doc.Data.Id
 		}
 	}
 	return doc, err
 }
 
-func (this *Helper) makeUrl(parts ...string) string {
-	parts = append([]string{this.ts.URL, "game", this.id}, parts...)
+func (h *Helper) makeUrl(parts ...string) string {
+	parts = append([]string{h.ts.URL, "game", h.id}, parts...)
 	return strings.Join(parts, "/")
 }
 

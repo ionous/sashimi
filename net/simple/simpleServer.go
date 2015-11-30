@@ -2,30 +2,14 @@ package simple
 
 import (
 	"fmt"
-	"github.com/ionous/sashimi/compiler/call"
-	"github.com/ionous/sashimi/net/session"
 	"github.com/ionous/sashimi/net/support"
-	"github.com/ionous/sashimi/script"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
 )
 
 func NewSimpleServer() *http.ServeMux {
-	calls := call.MakeMarkerStorage()
-	sessions := session.NewSessions(
-		func(string) (ret session.SessionData, err error) {
-			// FIX: it's very silly to have to init and compile each time.
-			if model, e := script.InitScripts().CompileCalls(ioutil.Discard, calls); e != nil {
-				err = e
-			} else {
-				model.PrintModel(func(a ...interface{}) { fmt.Println(a...) })
-				ret, err = NewSimpleSession(calls, model)
-			}
-			return ret, err
-		})
-
+	sessions := NewSessions()
 	handler := support.NewServeMux()
 	handler.HandleText("/", index)
 	handler.HandleFunc("/game/", func(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +22,7 @@ func NewSimpleServer() *http.ServeMux {
 			if r.Method != "POST" {
 				log.Println("Method not allowed:", r.Method)
 				http.Error(w, r.Method, http.StatusMethodNotAllowed)
-			} else if id, _, e := sessions.NewSession(); e != nil {
+			} else if id, e := sessions.NewSession(); e != nil {
 				log.Println("Failed to create session:", e)
 				http.Error(w, e.Error(), http.StatusInternalServerError)
 			} else {
@@ -46,11 +30,10 @@ func NewSimpleServer() *http.ServeMux {
 				dest := fmt.Sprintf("/game/%s?q=start", id)
 				http.Redirect(w, r, dest, http.StatusSeeOther)
 			}
-		} else if sd, ok := sessions.Session(part); !ok {
+		} else if sd, ok := sessions.GetSession(part); !ok {
 			log.Println("Couldnt find session:", part)
 			http.NotFound(w, r)
 		} else {
-			sd := sd.(*SimpleSession)
 			// post input
 			if r.Method == "POST" {
 				if e := sd.HandleInput(r.FormValue("q")); e != nil {

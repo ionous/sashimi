@@ -1,18 +1,16 @@
 package simple
 
 import (
-	M "github.com/ionous/sashimi/compiler/model"
-	"github.com/ionous/sashimi/metal"
-	"github.com/ionous/sashimi/net/session"
+	"fmt"
+	"github.com/ionous/sashimi/meta"
 	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/standard"
 )
 
-func NewSimpleSession(calls api.LookupCallbacks, model *M.Model) (ret *SimpleSession, err error) {
+func NewSimpleSession(modelApi meta.Model, calls api.LookupCallbacks) (ret *SimpleSession, err error) {
 	out := &SimpleOutput{}
 	cfg := R.NewConfig().SetCalls(calls).SetOutput(out).SetParentLookup(standard.ParentLookup{})
-	modelApi := metal.NewMetal(model, make(metal.ObjectValueMap))
 	if game, e := cfg.NewGame(modelApi); e != nil {
 		err = e
 	} else if game, e := standard.NewStandardGame(game); e != nil {
@@ -38,9 +36,9 @@ type SimpleSession struct {
 //
 func (s *SimpleSession) HandleInput(in string) (err error) {
 	if s.game.IsQuit() {
-		err = session.SessionClosed{"player quit"}
+		err = fmt.Errorf("session closed: player quit.")
 	} else if s.game.IsComplete() {
-		err = session.SessionClosed{"game finished"}
+		err = fmt.Errorf("session closed: player finished game.")
 	} else {
 		s.game.Input(in)
 		newLines := s.out.Flush()

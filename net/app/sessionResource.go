@@ -1,8 +1,8 @@
 package app
 
 import (
+	"github.com/ionous/sashimi/net/ess"
 	"github.com/ionous/sashimi/net/resource"
-	"github.com/ionous/sashimi/net/session"
 	"io"
 )
 
@@ -10,22 +10,19 @@ const (
 	frameKey = "frame"
 )
 
-// SessionResource wraps a session as a resource, along with its children.
+// SessionResource shadows all resources under a sub-tree, locking on all reads and writes, and appending the frame number to returned document's meta-data.
 type SessionResource struct {
-	session  *CommandSession
+	session  ess.ISessionResource
 	endpoint resource.IResource
 }
 
-func NewSessionResource(sessions *session.Sessions) resource.IResource {
+func NewSessionResource(sessions ess.ISessionResourceFactory) resource.IResource {
 	return &resource.Wrapper{
 		Posts: func(_ io.Reader, doc resource.DocumentBuilder) (err error) {
-			if _, sd, e := sessions.NewSession(); e != nil {
+			if session, e := sessions.NewSession(doc); e != nil {
 				err = e
 			} else {
-				session := sd.(*CommandSession)
-				session.out.FlushDocument(doc)
-				// now returning frames.
-				doc.SetMeta(frameKey, session.FrameCount())
+				doc.SetMeta(frameKey, session.Frame())
 			}
 			return err
 		}}
@@ -45,7 +42,7 @@ func (res *SessionResource) Query() resource.Document {
 	defer res.session.RUnlock()
 	res.session.RLock()
 	doc := res.endpoint.Query()
-	resource.NewDocumentBuilder(&doc).SetMeta(frameKey, res.session.FrameCount())
+	resource.NewDocumentBuilder(&doc).SetMeta(frameKey, res.session.Frame())
 	return doc
 }
 
@@ -58,7 +55,7 @@ func (res *SessionResource) Post(reader io.Reader) (ret resource.Document, err e
 	if d, e := res.endpoint.Post(reader); e != nil {
 		err = e
 	} else {
-		resource.NewDocumentBuilder(&d).SetMeta(frameKey, res.session.FrameCount())
+		resource.NewDocumentBuilder(&d).SetMeta(frameKey, res.session.Frame())
 		ret = d
 	}
 	return
