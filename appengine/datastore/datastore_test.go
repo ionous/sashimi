@@ -51,7 +51,7 @@ func TestStoreIds(t *testing.T) {
 	}
 }
 
-func TestEncodeDecode(t *testing.T) {
+func TestStoreCoding(t *testing.T) {
 	type X struct {
 		ptype meta.PropertyType
 		val   interface{}

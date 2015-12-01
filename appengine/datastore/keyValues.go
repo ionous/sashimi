@@ -18,15 +18,15 @@ type KeyValues struct {
 type LoadSavers map[ident.Id]*LoadSaver
 
 func (ls LoadSavers) Save(tc A.Context) error {
-	size := len(ls)
-	tc.Infof("saving %d keys", size)
-	keys, loadSavers := make([]*D.Key, size), make([]D.PropertyLoadSaver, size)
-	idx := 0
+	size := len(ls) // this can be as large as the number of Get(s)
+	keys, loadSavers := make([]*D.Key, 0, size), make([]D.PropertyLoadSaver, 0, size)
 	for _, loadSaver := range ls {
-		keys[idx] = loadSaver.key
-		loadSavers[idx] = loadSaver
-		idx++
+		if loadSaver.changed {
+			keys = append(keys, loadSaver.key)
+			loadSavers = append(loadSavers, loadSaver)
+		}
 	}
+	tc.Infof("saving %d keys", len(keys))
 	_, err := D.PutMulti(tc, keys, loadSavers)
 	return err
 }
@@ -48,8 +48,8 @@ func (kvs *KeyValues) GetValue(obj, field ident.Id) (ret interface{}, okay bool)
 	}
 	if err != nil {
 		panic(err)
-	} else if val, ok := inst.fields[field]; ok {
-		ret, okay = val.Value, true
+	} else {
+		ret, okay = inst.GetValue(field)
 	}
 	return
 }
@@ -60,12 +60,10 @@ func (kvs *KeyValues) SetValue(obj, field ident.Id, value interface{}) (err erro
 	if !ok {
 		inst, err = kvs.Cache(obj)
 	}
-	if err == nil {
-		if prop, ok := inst.GetProperty(field); !ok {
-			err = fmt.Errorf("coulnt find property %s.%s", obj, field)
-		} else {
-			inst.fields[field] = FieldValue{prop.GetType(), value}
-		}
+	if err != nil {
+		panic(err)
+	} else {
+		err = inst.SetValue(field, value)
 	}
 	return
 }
@@ -75,8 +73,9 @@ func (kvs *KeyValues) Cache(obj ident.Id) (ret *LoadSaver, err error) {
 		err = fmt.Errorf("couldnt find %s", obj)
 	} else {
 		key := kvs.NewKey(inst)
-		kvs.ctx.Infof("caching %s", key)
-		ls := &LoadSaver{inst, key, make(LoadSaverFields)}
+		// verbose -- FIX: memcache first?
+		//kvs.ctx.Debugf("caching %s", key)
+		ls := NewLoadSaver(inst, key)
 		if e := D.Get(kvs.ctx, key, ls); e != nil && e != D.ErrNoSuchEntity {
 			err = e
 		} else {

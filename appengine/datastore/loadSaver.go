@@ -10,11 +10,39 @@ import (
 // LoadSaver implements datastore.PropertyLoadSaver
 type LoadSaver struct {
 	meta.Instance
-	key    *D.Key
-	fields LoadSaverFields
+	key     *D.Key
+	data    LoadSaverFields
+	changed bool
 }
 
 type LoadSaverFields map[ident.Id]FieldValue
+
+func NewLoadSaver(inst meta.Instance, key *D.Key) *LoadSaver {
+	return &LoadSaver{inst, key, make(LoadSaverFields), false}
+}
+
+func (s *LoadSaver) GetValue(id ident.Id) (ret interface{}, okay bool) {
+	if field, ok := s.data[id]; ok {
+		okay, ret = true, field.Value
+	}
+	return
+}
+
+// note: we cant compare values at this levels
+// or we get panics: ex. "comparing uncomparable type []float32"
+func (s *LoadSaver) SetValue(id ident.Id, value interface{}) (err error) {
+	if field, ok := s.data[id]; ok {
+		field.Value = value
+		s.data[id] = field // record value back; it's not a pointer.
+		s.changed = true
+	} else if prop, ok := s.GetProperty(id); !ok {
+		err = fmt.Errorf("couldnt find property %s.%s", s, id)
+	} else {
+		s.data[id] = FieldValue{prop.GetType(), value}
+		s.changed = true
+	}
+	return
+}
 
 func (s *LoadSaver) Load(ch <-chan D.Property) (err error) {
 	//fmt.Println("loading", s.GetId())
@@ -29,7 +57,7 @@ func (s *LoadSaver) Load(ch <-chan D.Property) (err error) {
 			if decoded, e := Decode(ptype, p.Value); e != nil {
 				err = fmt.Errorf("decoding %s %s", prop, e)
 			} else {
-				s.fields[propId] = FieldValue{ptype, decoded}
+				s.data[propId] = FieldValue{ptype, decoded}
 			}
 		}
 	}
@@ -37,10 +65,10 @@ func (s *LoadSaver) Load(ch <-chan D.Property) (err error) {
 }
 
 func (s *LoadSaver) Save(ch chan<- D.Property) (err error) {
-	//fmt.Println("saving", s.GetId(), len(s.fields))
+	//fmt.Println("saving", s.GetId(), len(s.data))
 	defer close(ch)
 	// todo: write an instance level "version" property
-	for id, val := range s.fields {
+	for id, val := range s.data {
 		if encoded, e := val.Encode(); e != nil {
 			err = fmt.Errorf("encoding %s %s", id, e)
 			break

@@ -178,7 +178,7 @@ func ApiTest(t *testing.T, mdl meta.Model, instId ident.Id) {
 				test.Append(value, test.original)
 			}, fmt.Sprintf("instance set value: %s", test))
 			cnt := vs.NumValue()
-			require.EqualValues(t, i+1, cnt, fmt.Sprintf("cnt(%d) should be bigger", cnt))
+			require.EqualValues(t, i+1, cnt, fmt.Sprintf("cnt should grow after each append"))
 			next := vs.ValueNum(i)
 			testValue(next, test, testInstanceValue)
 		}
