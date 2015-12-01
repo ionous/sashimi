@@ -1,7 +1,8 @@
 package appengine
 
 import (
-	A "appengine"
+	"appengine"
+	"appengine/datastore"
 	DS "github.com/ionous/sashimi/appengine/datastore"
 	M "github.com/ionous/sashimi/compiler/model"
 	"github.com/ionous/sashimi/net/ess"
@@ -10,21 +11,18 @@ import (
 	"github.com/ionous/sashimi/util/ident"
 )
 
-// data, and code constants: model *M.Model, calls api.LookupCallbacks
-// net.HandleResource(app.GameResource(mem.NewMemSessions())))
-
 type AppSessions struct {
-	ctx   A.Context
-	ds    *DS.ModelStore
+	ctx   appengine.Context
+	model *M.Model
 	calls api.LookupCallbacks
 }
 
-func NewSessions(ctx A.Context,
+func NewSessions(
+	ctx appengine.Context,
 	model *M.Model,
 	calls api.LookupCallbacks,
 ) AppSessions {
-	ds := DS.NewModelStore(ctx, model)
-	return AppSessions{ctx, ds, calls}
+	return AppSessions{ctx, model, calls}
 }
 
 func (aps AppSessions) NewSession(doc resource.DocumentBuilder) (ret ess.ISessionResource, err error) {
@@ -40,5 +38,15 @@ func (aps AppSessions) GetSession(id string) (ret ess.ISessionResource, okay boo
 }
 
 func (aps AppSessions) newSession(id string) (ret AppSession, err error) {
-	return NewAppSession(aps.ctx, id, aps.ds, aps.calls)
+	// FIX: you might consider parenting this to the app and data context
+	// only one right now , but itd be nice to support multiple versions
+	// multiple stories
+	var kind string = "sessions"
+	var stringID string = id
+	var intID int64
+	var parent *datastore.Key
+	sessionKey := datastore.NewKey(aps.ctx, kind, stringID, intID, parent)
+	// the model store stores changes to the passed model under the passed ancestor session key.
+	ds := DS.NewModelStore(aps.ctx, aps.model, sessionKey)
+	return NewAppSession(id, ds, aps.calls)
 }

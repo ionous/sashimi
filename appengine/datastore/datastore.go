@@ -1,18 +1,19 @@
 package datastore
 
 import (
-	A "appengine"
+	"appengine"
+	"appengine/datastore"
 	M "github.com/ionous/sashimi/compiler/model"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/metal"
 )
 
-func NewModelStore(ctx A.Context, m *M.Model) *ModelStore {
+func NewModelStore(ctx appengine.Context, m *M.Model, parent *datastore.Key) *ModelStore {
 	// yuck!  mdl uses kvs ( for value lookup ), kvs uses mdl  (for keycreation and the load saver objects); if we shadowed the meta, we could avoid this.
 	kvs := &KeyValues{}
 	mdl := metal.NewMetal(m, kvs)
 	kvs.mdl = mdl
-	kvs.KeyGen = NewKeyGen(ctx, nil)
+	kvs.KeyGen = NewKeyGen(ctx, parent)
 	kvs.ctx = ctx
 	kvs.Reset()
 	return &ModelStore{kvs, mdl}

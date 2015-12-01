@@ -28,7 +28,7 @@ type MemSession struct {
 	*sync.RWMutex       // RLock, RUnlock, Lock, Unlock
 }
 
-func NewMemSessions() *MemSessions {
+func NewSessions() *MemSessions {
 	return &MemSessions{sessions: make(essMap), Mutex: new(sync.Mutex)}
 }
 

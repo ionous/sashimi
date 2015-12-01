@@ -51,7 +51,7 @@ func main() {
 				} else {
 					defer ctx.Close()
 
-					ds := D.NewModelStore(ctx, model)
+					ds := D.NewModelStore(ctx, model, nil)
 					modelApi = ds.Model()
 
 					// every frame flush ( save ) the cache, and empty it.

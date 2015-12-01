@@ -31,7 +31,7 @@ func main() {
 	} else {
 		fmt.Println("listening on http://localhost:8080")
 		handler := support.NewServeMux()
-		handler.HandleFunc("/game/", net.HandleResource(app.GameResource(mem.NewMemSessions())))
+		handler.HandleFunc("/game/", net.HandleResource(app.GameResource(mem.NewSessions())))
 		handler.HandleFilePatterns(root,
 			support.Dir("/app/"),
 			support.Dir("/bower_components/"),

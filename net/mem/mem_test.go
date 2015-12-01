@@ -22,7 +22,7 @@ import (
 func TestMemApp(t *testing.T) {
 	stories.Select("lab")
 
-	sessions := mem.NewMemSessions()
+	sessions := mem.NewSessions()
 
 	handler := http.NewServeMux()
 	// Some example uris:
