@@ -12,11 +12,12 @@ const (
 
 // SessionResource shadows all resources under a sub-tree, locking on all reads and writes, and appending the frame number to returned document's meta-data.
 type SessionResource struct {
-	session  ess.ISessionResource
+	session  ess.ISession
 	endpoint resource.IResource
 }
 
-func NewSessionResource(sessions ess.ISessionResourceFactory) resource.IResource {
+// SessionCreationEndpoint creates new sessions on Post.
+func SessionCreationEndpoint(sessions ess.ISessionFactory) resource.IResource {
 	return &resource.Wrapper{
 		Posts: func(_ io.Reader, doc resource.DocumentBuilder) (err error) {
 			if session, e := sessions.NewSession(doc); e != nil {

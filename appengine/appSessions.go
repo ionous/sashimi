@@ -5,6 +5,7 @@ import (
 	"appengine/datastore"
 	DS "github.com/ionous/sashimi/appengine/datastore"
 	M "github.com/ionous/sashimi/compiler/model"
+	"github.com/ionous/sashimi/net/app"
 	"github.com/ionous/sashimi/net/ess"
 	"github.com/ionous/sashimi/net/resource"
 	"github.com/ionous/sashimi/runtime/api"
@@ -25,19 +26,29 @@ func NewSessions(
 	return AppSessions{ctx, model, calls}
 }
 
-func (aps AppSessions) NewSession(doc resource.DocumentBuilder) (ret ess.ISessionResource, err error) {
+func (aps AppSessions) NewSession(doc resource.DocumentBuilder) (ret ess.ISession, err error) {
 	id := ident.Dash(ident.MakeUniqueId())
-	return aps.newSession(id)
+	key, out := aps.newSessionKey(id), app.NewCommandOutput(id, app.NewObjectSerializer(AlwaysKnown{}))
+	ret, err = aps.newSession(key, out)
+	out.FlushDocument(doc)
+	return
 }
 
-func (aps AppSessions) GetSession(id string) (ret ess.ISessionResource, okay bool) {
-	if s, e := aps.newSession(id); e == nil {
+func (aps AppSessions) GetSession(id string) (ret ess.ISession, okay bool) {
+	key, out := aps.newSessionKey(id), app.NewCommandOutput(id, app.NewObjectSerializer(AlwaysKnown{}))
+	if s, e := aps.newSession(key, out); e == nil {
 		ret, okay = s, true
 	}
 	return
 }
 
-func (aps AppSessions) newSession(id string) (ret AppSession, err error) {
+func (aps AppSessions) newSession(key *datastore.Key, out *app.CommandOutput) (ret AppSession, err error) {
+	// the model store stores changes to the passed model under the passed ancestor session key.
+	ds := DS.NewModelStore(aps.ctx, aps.model, key)
+	return NewAppSession(out, ds, aps.calls)
+}
+
+func (aps AppSessions) newSessionKey(id string) *datastore.Key {
 	// FIX: you might consider parenting this to the app and data context
 	// only one right now , but itd be nice to support multiple versions
 	// multiple stories
@@ -45,8 +56,5 @@ func (aps AppSessions) newSession(id string) (ret AppSession, err error) {
 	var stringID string = id
 	var intID int64
 	var parent *datastore.Key
-	sessionKey := datastore.NewKey(aps.ctx, kind, stringID, intID, parent)
-	// the model store stores changes to the passed model under the passed ancestor session key.
-	ds := DS.NewModelStore(aps.ctx, aps.model, sessionKey)
-	return NewAppSession(id, ds, aps.calls)
+	return datastore.NewKey(aps.ctx, kind, stringID, intID, parent)
 }

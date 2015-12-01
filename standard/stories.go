@@ -21,7 +21,7 @@ func init() {
 			Have("score", "num"),
 			Have("maximum score", "num"),
 			Have("turn count", "num"),
-			AreEither("playing").Or("completed"),
+			AreOneOf("playing", "completed", "starting").Usually("starting"),
 		)
 
 		s.The("stories",
@@ -35,6 +35,7 @@ func init() {
 				}
 			}),
 			To("end turn", func(g G.Play) {
+				// almost feel like we should have a "starting the turn" instead
 				story := g.The("story")
 				turnCount := story.Num("turn count") + 1
 				story.SetNum("turn count", turnCount)
@@ -68,6 +69,7 @@ func init() {
 				room = g.The("player").Object("whereabouts")
 				// FIX: Go() should handle both Name() and ref
 				story.Go("describe the first room", room)
+				story.IsNow("playing")
 			}))
 
 		s.The("stories",

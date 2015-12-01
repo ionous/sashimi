@@ -20,7 +20,7 @@ type Sessions struct {
 }
 
 // FIX? merge with memSessions.go
-// maybe making a separate cmd package for wrapping the memsessions with ISessionResource
+// maybe making a separate cmd package for wrapping the memsessions with ISession
 func NewSessions() *Sessions {
 	return &Sessions{sessions: make(essMap), Mutex: new(sync.Mutex)}
 }

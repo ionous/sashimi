@@ -22,15 +22,8 @@ import (
 func TestMemApp(t *testing.T) {
 	stories.Select("lab")
 
-	sessions := mem.NewSessions()
-
 	handler := http.NewServeMux()
-	// Some example uris:
-	// 	POST /game/new, create new session
-	// 	POST /game/<session>, send new input
-	// 	 GET /game/<session>/rooms/<name>/contains, list of objects
-	// 	 GET /game/<session>/classes/rooms/actions
-	handler.HandleFunc("/game/", net.HandleResource(app.GameResource(sessions)))
+	handler.HandleFunc("/game/", net.HandleResource(app.GameResource(mem.NewSessions())))
 	ts := httptest.NewServer(handler)
 	defer ts.Close()
 
@@ -38,10 +31,18 @@ func TestMemApp(t *testing.T) {
 	if d, err := g.post(""); assert.NoError(t, err) {
 		if assert.Len(t, d.Included, 0, "session starts empty") {
 			if d, err := g.getMany("actors", "player", "whereabouts"); assert.NoError(t, err) && assert.Len(t, d.Included, 1, "the room") {
-
 				if d, err := g.post("start"); assert.NoError(t, err) {
-					if _, ok := d.Data.Attributes["events"]; assert.True(t, ok, "frame has event stream") {
+					if evts, ok := d.Data.Attributes["events"]; assert.True(t, ok, "frame has event stream") {
 						require.EqualValues(t, "game", d.Data.Class)
+
+						// read the events by re-transforming the stream
+						var blocks []app.EventBlock
+						b, _ := json.Marshal(evts)
+						require.NoError(t, json.Unmarshal(b, &blocks))
+
+						// test those events:
+						require.True(t, len(blocks) >= 1, "reading blocks")
+						require.True(t, blocks[0].Evt == "commencing", "first event should be commencing")
 
 						// check the room
 						if contents, err := g.getMany("rooms", "lab", "contents"); assert.NoError(t, err) {

@@ -16,14 +16,12 @@ type AppSession struct {
 }
 
 func NewAppSession(
-	//ctx appengine.Context,
-	id string,
+	out *app.CommandOutput,
 	ds *DS.ModelStore,
 	calls api.LookupCallbacks,
 ) (
 	ret AppSession, err error,
 ) {
-	out := app.NewCommandOutput(id, app.NewObjectSerializer(AlwaysKnown{}))
 	if partial, e := app.NewPartialSession(out, ds.Model(), calls); e != nil {
 		err = e
 	} else {

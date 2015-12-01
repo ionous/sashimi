@@ -57,9 +57,14 @@ func (sc *StandardCore) SetRight(status string) {
 	sc.statusRight.SetText(status)
 }
 
-// frame is the turn count + 1 ( so that it's never zero )
-func (sc *StandardCore) Frame() int {
-	return int(sc.turnCount.GetNum()) + 1
+// frame is the turn count + 1 ( so that it's never zero while playing )
+func (sc *StandardCore) Frame() (ret int) {
+	if sc.Started() {
+		// FIX? this is a little fragile: the frame count should be 1 for the data sent by the first frame; 0 before.
+		// commencing sets us to story(sc) to started, end turn increments the turn count, and finally the session samples the Frame() just before sending the response.
+		ret = int(sc.turnCount.GetNum()) + 1
+	}
+	return
 }
 
 // NewStandardGame creates a game which is based on the standard rules.

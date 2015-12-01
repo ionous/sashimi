@@ -1,9 +1,8 @@
 package app
 
 import (
-	"github.com/ionous/sashimi/net/resource"
-
 	"github.com/ionous/sashimi/net/ess"
+	"github.com/ionous/sashimi/net/resource"
 )
 
 // GameResource finds named sessions, or uses the "new" endpoint to create sessions via post.
@@ -12,7 +11,7 @@ import (
 // 	POST /<session>, send new input
 // 	 GET /<session>/rooms/<name>/contains, list of objects
 // 	 GET /<session>/classes/rooms/actions
-func GameResource(sessions ess.ISessionResourceFactory) resource.IResource {
+func GameResource(sessions ess.ISessionFactory) resource.IResource {
 	return resource.Wrapper{
 		Finds: func(name string) (ret resource.IResource, okay bool) {
 			if name == "game" {
@@ -20,9 +19,12 @@ func GameResource(sessions ess.ISessionResourceFactory) resource.IResource {
 					Finds: func(name string) (ret resource.IResource, okay bool) {
 						switch name {
 						case "new":
-							okay, ret = true, NewSessionResource(sessions)
+							okay, ret = true, SessionCreationEndpoint(sessions)
 						default:
-							ret, okay = sessions.GetSession(name)
+							if res, ok := sessions.GetSession(name); ok {
+								okay, ret = true, &SessionResource{res, res}
+							}
+
 						}
 						return // ./game/...
 					},

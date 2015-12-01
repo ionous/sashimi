@@ -1,6 +1,7 @@
 package stories
 
 import (
+	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
 )
 
@@ -9,7 +10,10 @@ func The_Lab(s *Script) {
 	s.The("story",
 		Called("testing"),
 		Has("author", "me"),
-		Has("headline", "extra extra"))
+		Has("headline", "extra extra"),
+		When("commencing").Always(func(g G.Play) {
+			g.Say("Welcome to the lab.")
+		}))
 
 	s.The("room",
 		Called("the lab"),

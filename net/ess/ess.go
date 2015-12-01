@@ -4,12 +4,12 @@ import (
 	"github.com/ionous/sashimi/net/resource"
 )
 
-type ISessionResourceFactory interface {
-	NewSession(resource.DocumentBuilder) (ISessionResource, error)
-	GetSession(string) (ISessionResource, bool)
+type ISessionFactory interface {
+	NewSession(resource.DocumentBuilder) (ISession, error)
+	GetSession(string) (ISession, bool)
 }
 
-type ISessionResource interface {
+type ISession interface {
 	// RWLock the session to protect against a given client's browser reading/writing at the same time.
 	RWLock
 	// IResource starting point for all resources contained by the session.

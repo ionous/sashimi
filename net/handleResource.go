@@ -28,11 +28,13 @@ func HandleResponse(w http.ResponseWriter, r *http.Request, root resource.IResou
 	} else {
 		if r.Method == "GET" {
 			Encode(w, r, res.Query())
-		} else if doc, e := res.Post(r.Body); e != nil {
-			http.Error(w, e.Error(), http.StatusInternalServerError)
-			err = e
 		} else {
-			Encode(w, r, doc)
+			if doc, e := res.Post(r.Body); e != nil {
+				http.Error(w, e.Error(), http.StatusInternalServerError)
+				err = e
+			} else {
+				Encode(w, r, doc)
+			}
 		}
 	}
 	return
