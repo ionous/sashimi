@@ -32,8 +32,17 @@ func (id Id) Empty() bool {
 	return len(id) == 0
 }
 
+// for some reason strings.Compare doesnt exist in go/appengine:
+// theres this comment in the string source:
+// NOTE(rsc): ... Basically no one should use strings.Compare.
 func Compare(a, b Id) int {
-	return strings.Compare(string(a), string(b))
+	if a == b {
+		return 0
+	}
+	if a < b {
+		return -1
+	}
+	return +1
 }
 
 func Join(a, b Id) Id {
