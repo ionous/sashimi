@@ -72,7 +72,7 @@ func (mvd *MultiValueTable) addRow(instanceFactory *InstanceFactory, code S.Code
 		var name string
 		// build a valid name
 		if val, ok := getByIndex(values, mvd.name-1); !ok {
-			name = ident.MakeUniqueId().String()
+			name = ident.Dash(ident.MakeUniqueId())
 		} else if str, ok := val.(string); ok {
 			name = str
 		} else {
