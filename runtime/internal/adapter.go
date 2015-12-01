@@ -108,26 +108,31 @@ var DebugGet = false
 // FUTURE: use dependency injection instead
 func (ga *GameEventAdapter) GetObject(name string) (ret G.IObject) {
 	id := StripStringId(name)
-	if gobj, ok := ga.Model.GetInstance(id); ok {
-		ret = NewGameObject(ga.Game, gobj)
-	} else if ga.data != nil {
-		// testing against ga.data b/c sometimes the adapter isnt invoked via an event.
-		// to fix use different interfaces perhaps?
-		if obj, ok := ga.data.findByParamName(name); ok {
-			ret = obj
-		} else {
-			found := false
-			clsid := MakeStringId(ga.Model.Pluralize(lang.StripArticle(name)))
-			if clsid == ga.hint {
-				ret, found = ga.data.getObject(0)
+	// empty names are possible from empty strings like Get("")
+	if !id.Empty() {
+		if gobj, ok := ga.Model.GetInstance(id); ok {
+			ret = NewGameObject(ga.Game, gobj)
+		} else if ga.data != nil {
+			// testing against ga.data b/c sometimes the adapter isnt invoked via an event.
+			// to fix use different interfaces perhaps?
+			if obj, ok := ga.data.findByParamName(name); ok {
+				ret = obj
 			} else {
-				ret, found = ga.data.findByClass(clsid)
-			}
-			if !found {
-				ga.Log("couldnt find object", name, "including class", clsid)
-				ret = NullObjectSource(RawPath(name), 3)
+				clsid := MakeStringId(ga.Model.Pluralize(lang.StripArticle(name)))
+				found := false
+				if clsid == ga.hint {
+					ret, found = ga.data.getObject(0)
+				} else {
+					ret, found = ga.data.findByClass(clsid)
+				}
+				if !found {
+					ga.Log(fmt.Printf("couldnt find object '%s' name including class '%s'", name, clsid))
+				}
 			}
 		}
+	}
+	if ret == nil {
+		ret = NullObjectSource(RawPath(name), 3)
 	}
 	DebugGet = false
 	return

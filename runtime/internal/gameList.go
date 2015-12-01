@@ -37,7 +37,7 @@ func (l gameList) Get(i int) (ret G.IValue) {
 
 // FIX!!!!
 func (l gameList) Pop() (ret G.IValue) {
-	if cnt := l.values.NumValue(); cnt > 0 {
+	if cnt := l.values.NumValue(); cnt <= 0 {
 		l.log("Pop() on empty list.")
 		ret = nullValue{}
 	} else {
