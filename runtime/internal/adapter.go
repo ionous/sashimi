@@ -126,7 +126,7 @@ func (ga *GameEventAdapter) GetObject(name string) (ret G.IObject) {
 					ret, found = ga.data.findByClass(clsid)
 				}
 				if !found {
-					ga.Log(fmt.Printf("couldnt find object '%s' name including class '%s'", name, clsid))
+					ga.Log(fmt.Printf("couldnt find object named '%s(%s)' including class '%s'", name, id, clsid))
 				}
 			}
 		}

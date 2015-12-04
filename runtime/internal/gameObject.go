@@ -75,7 +75,6 @@ func (oa GameObject) IsNow(state string) {
 func (oa GameObject) Get(prop string) (ret G.IValue) {
 	if p, ok := oa.gobj.FindProperty(prop); !ok {
 		oa.log("Get(%s): no such property", prop)
-		panic(prop)
 		ret = nullValue{}
 	} else if p.GetType()&meta.ArrayProperty != 0 {
 		oa.log("Get(%s): property is array", prop)

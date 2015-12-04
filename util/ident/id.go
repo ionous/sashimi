@@ -59,36 +59,44 @@ func MakeUniqueId() Id {
 }
 
 // MakeId creates a new string id from the passed raw string.
-// Dashes and spaces are treated as word separators.
-// Other Illegal characters ( leading digits and non-word characters ) are stripped.
+// Dashes and spaces are treated as word separators; sequences of numbers and sequences of letters are treated as separate words.
 // NOTE: Articles ( the, etc. ) are stripped for easier matching at the script/table/level.
 func MakeId(name string) Id {
+	type word int
+	const (
+		noword word = iota
+		letter
+		number
+	)
 	var parts parts
-	started, inword, wasUpper := false, false, false
+	inword, wasUpper := noword, false
 
 	for _, r := range name {
 		if r == '-' || r == '_' || r == '=' || unicode.IsSpace(r) {
-			inword = false
+			inword = noword
 			continue
 		}
 
-		// this test similar to go scanner's is identifier alg:
-		// it has _, which we treat as a space, and
-		// its i>0, but since we are stripping spaces, 'started' is better.
-		if unicode.IsLetter(r) || (started && unicode.IsDigit(r)) {
-			started = true
-			nowUpper := unicode.IsUpper(r)
+		if unicode.IsDigit(r) {
+			if sameWord := inword == number; !sameWord {
+				parts.flush()
+			}
+			parts.WriteRune(r)
+			wasUpper = false
+			inword = number
+		} else if unicode.IsLetter(r) {
+			currUpper := unicode.IsUpper(r)
 			// classify some common word changes
-			sameWord := inword && ((wasUpper == nowUpper) || (wasUpper && !nowUpper))
-			if nowUpper {
+			sameWord := (inword == letter) && ((wasUpper == currUpper) || (wasUpper && !currUpper))
+			if currUpper {
 				r = unicode.ToLower(r)
 			}
 			if !sameWord {
 				parts.flush()
 			}
 			parts.WriteRune(r) // docs say err is always nil
-			wasUpper = nowUpper
-			inword = true
+			wasUpper = currUpper
+			inword = letter
 		}
 	}
 

@@ -14,6 +14,7 @@ func TestBasics(t *testing.T) {
 	assert.True(t, Empty().Empty(), "empty is as empty does")
 	assert.False(t, MakeUniqueId().Empty(), "unique works")
 	assert.Equal(t, "TitleCase", Join(MakeId("title"), MakeId("case")).String(), "title case stays tile case")
+	assert.Equal(t, MakeId("786abc123def"), MakeId("786-abc 123 def"))
 }
 
 func TestCompare(t *testing.T) {
@@ -24,6 +25,9 @@ func TestCompare(t *testing.T) {
 	assert.Equal(t, 1, Compare(MakeId("aba"), MakeId("ab")))
 	assert.Equal(t, -1, Compare(MakeId("ab"), MakeId("aba")))
 	assert.Equal(t, 0, Compare(MakeId("aba"), MakeId("aba")))
+	//return-policy-1 ReturnPolicy1 return-policy1 ReturnPolicy1 false
+	// id2 := ident.MakeId("ReturnPolicy1")
+	assert.Equal(t, 0, Compare(MakeId("return policy 1"), MakeId("ReturnPolicy1")))
 }
 
 func TestToString(t *testing.T) {
