@@ -1,4 +1,4 @@
-package extensions
+package quip
 
 import (
 	G "github.com/ionous/sashimi/game"
@@ -7,6 +7,10 @@ import (
 
 type QuipMemory struct {
 	g G.Play
+}
+
+func PlayerRecollects(g G.Play, fact string) bool {
+	return PlayerMemory(g).Recollects(g.The(fact))
 }
 
 func PlayerMemory(g G.Play) QuipMemory {
@@ -62,19 +66,4 @@ func (mem QuipMemory) IsQuipDisallowed(g G.Play, quip G.IObject) (disallowed boo
 		}
 	}
 	return disallowed
-}
-
-func init() {
-	AddScript(func(s *Script) {
-		s.The("kinds", Called("facts"),
-			// FIX: interestingly, kinds should have names
-			// having the same property as a parent class probably shouldnt be an error
-			Have("summary", "text"))
-
-		// FIX: should be "data"
-		s.The("kinds", Called("quip requirements"),
-			Have("fact", "fact"),
-			AreEither("permitted").Or("prohibited"),
-			Have("quip", "quip"))
-	})
 }

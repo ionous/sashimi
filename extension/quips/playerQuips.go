@@ -1,4 +1,4 @@
-package extensions
+package quip
 
 import (
 	G "github.com/ionous/sashimi/game"
@@ -18,11 +18,17 @@ type quipScore struct {
 
 // Add the passed quip to the list of quips to sort
 func (qs *QuipSort) Add(quip G.IObject) *quipScore {
+	var rank int = 250
+	if quip.Is("important") {
+		rank = 500
+	} else if quip.Is("trivial") {
+		rank = 100
+	}
 	ret := quipScore{quip,
 		quip.Text("reply") != "",
 		quip.Is("repeatable"),
 		false,
-		100,
+		rank,
 	}
 	qs.quips = append(qs.quips, ret)
 	return &qs.quips[len(qs.quips)-1]

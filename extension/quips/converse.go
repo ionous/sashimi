@@ -1,8 +1,7 @@
-package extensions
+package quip
 
 import (
 	G "github.com/ionous/sashimi/game"
-	"github.com/ionous/sashimi/standard"
 )
 
 type Conversation struct {
@@ -41,19 +40,27 @@ func Converse(g G.Play) {
 	c := TheConversation(g)
 	interlocutor := c.Interlocutor()
 	if npc := interlocutor.Object(); npc.Exists() {
-		if standard.Debugging {
-			g.Log("conversing...")
-		}
-		currentQuip := c.History().MostRecent()
-		currentRestricts := currentQuip.Exists() && currentQuip.Is("restrictive")
-		// handle queued conversation, unless the current quip is restrictive.
-		if !currentRestricts {
-			c.Queue().UpdateNextQuips(PlayerMemory(g))
-		}
+		g.Log("conversing with", npc)
 
-		// sometimes conversations want to loop, without the player saying anything; for now this doesnt advance the queue -- just looks at next quips; may need to be re-visited.
+		// sometimes conversations want to loop, without the player saying anything
 		for again := true; again; {
 			again = false
+			// CHANGE; in case the npc replies to itself, re-update the queu.
+			// (ex. the vending machine says "you seem perfectly safe to me" and then re-greets)
+			currentQuip := c.History().MostRecent()
+			currentRestricts := currentQuip.Exists() && currentQuip.Is("restrictive")
+
+			// handle queued conversation, unless the current quip is restrictive.
+			// restrictive is supposed to limit responses to a specific sub-set
+			// ( to those who "directly follow" )
+			// GetPlayerQuips() figures that out.
+			if currentRestricts {
+				g.Log("quip", currentQuip, "restricts player response; not updating next quips")
+			} else {
+				g.Log("updating next quips")
+				c.Queue().UpdateNextQuips(PlayerMemory(g))
+			}
+
 			// process the current speaker first:
 			if c.perform(npc, currentRestricts) {
 				again = true
@@ -62,8 +69,7 @@ func Converse(g G.Play) {
 			// process anyone else who might have something to say:
 			for i, actors := 0, g.List("actors"); i < actors.Len(); i++ {
 				actor := actors.Get(i).Object()
-				// threaded conversation tests:
-				// repeat with target running through **visible** people who are not the player:
+				// FIX? repeat with **visible** people who are not the player....
 				if actor != npc {
 					if c.perform(actor, currentRestricts) {
 						again = true
@@ -73,8 +79,10 @@ func Converse(g G.Play) {
 		}
 
 		// we might have changed conversations...
+		// note: if the player has nothing to say, conversation ends.
 		if npc := interlocutor.Object(); npc.Exists() {
-			g.The("player").Go("print conversation choices", npc)
+			player := g.The("player")
+			player.Go("print conversation choices", npc)
 		}
 	}
 }

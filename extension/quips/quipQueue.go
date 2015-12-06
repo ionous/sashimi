@@ -1,4 +1,4 @@
-package extensions
+package quip
 
 import (
 	G "github.com/ionous/sashimi/game"
@@ -20,19 +20,15 @@ type NextQuipPhrase struct {
 	quip string
 }
 
-func (p NextQuipPhrase) Execute(g G.Play) {
-	con := TheConversation(g)
-	con.Queue().SetNextQuip(g.The(p.quip))
-}
-
 // SetNextQuip for the associated NPC's next round of conversation.
 // FIX: I wonder if this should be merged with UpdateNextQuips() and GetPlayerQuips()
-// rather than a queue -- a pool of next quips -- and it selects the best of the set.
-// ( though player is technically from all quips... )
-func (q QuipQueue) SetNextQuip(quip G.IObject) {
+func (p NextQuipPhrase) Execute(g G.Play) {
+	quip := g.The(p.quip)
 	npc := quip.Object("subject")
 	npc.Set("next quip", quip)
 	quip.IsNow("planned")
+	//TheConversation(g).Queue().QueueQuip(quip)
+	g.Log(npc, "set next", quip)
 }
 
 // QueueQuip schedules the passed quip to be spoken sometime in the future.
@@ -41,11 +37,11 @@ func (q QuipQueue) QueueQuip(quip G.IObject) {
 }
 
 // UpdateNextQuips for all npcs who have a queued quip.
+// NOTE: queued conversation will never override what an npc already has to say.
 func (q QuipQueue) UpdateNextQuips(qm QuipMemory) {
 	// from "slice tricks". this reuses the memory of the quip queue.
 	requeue := make([]G.IObject, 0, q.Len())
 	// determine what to say next
-	// note: queued conversation will never override what an npc already has to say.
 	for i := 0; i < q.Len(); i++ {
 		quip := q.Get(i).Object()
 		nextQuip := quip.Get("subject").Object().Get("next quip")

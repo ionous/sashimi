@@ -1,4 +1,4 @@
-package extensions
+package quip
 
 import (
 	G "github.com/ionous/sashimi/game"
@@ -7,7 +7,7 @@ import (
 type followsCb func(leads G.IObject, directly bool) bool
 
 // evaluate all quips which constrain this clip
-// ex. QuipHelp(x).DirectlyFollows(y) -> visit(x) will call cb(y, true)
+// ex. for QuipHelp(x).DirectlyFollows(y), then visit(x) will call cb(y, true)
 func visitFollowConstraints(g G.Play, follower G.IObject, cb followsCb) (okay bool) {
 	// search all following quips
 	for i, quips := 0, g.List("following quips"); i < quips.Len(); i++ {
@@ -43,7 +43,7 @@ func (q QuipHelp) Follows(leader G.IObject) DirectInfo {
 	return DirectInfo{q.quip, leader}
 }
 
-// Directly returns true if the Quip should only be displayed after Follows
+// Directly returns true if the quip should only be displayed after Follows
 func (info DirectInfo) Directly(g G.Play) bool {
 	return visitFollowConstraints(g, info.follower, func(leading G.IObject, directly bool) bool {
 		return directly && info.leader == leading
@@ -56,9 +56,9 @@ func (q QuipHelp) Recently(history QuipHistory) RecentInfo {
 }
 
 // Follows ranks the Quip against all recent history.
-// Returns -1 if the passed quip follows no other quip;
-// returns 0 if the passed quip follows something, but not one of the recent quips;
-// otherwise, the higher the number, the more recent the quip that it follows.
+// Returns -1 if the quip follows no other quip;
+// Returns 0 if the quip follows something, but not one of the recent quips;
+// Otherwise, the higher the number, the more recent the quip that it follows.
 func (info RecentInfo) Follows(g G.Play) (ret int, direct bool) {
 	isAFollower := false
 	visitFollowConstraints(g, info.quip, func(leading G.IObject, directly bool) bool {
