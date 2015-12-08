@@ -1,7 +1,9 @@
 package tests
 
 import (
-	. "github.com/ionous/sashimi/extensions"
+	. "github.com/ionous/sashimi/extension/facts"
+	. "github.com/ionous/sashimi/extension/quips"
+	quips "github.com/ionous/sashimi/extension/quips/native"
 	. "github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/standard"
 	"github.com/stretchr/testify/assert"
@@ -38,7 +40,7 @@ func TestQuipHistory(t *testing.T) {
 	s := TalkScript()
 	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
 		g := test.Game.NewAdapter()
-		qh := TheConversation(g).History()
+		qh := quips.Converse(g).History()
 		// FIX:  saying hello.
 		qh.PushQuip(g.Our("WhatsTheMatter"))
 		//
@@ -61,18 +63,13 @@ func TestQuipDiscuss(t *testing.T) {
 		g := test.Game.NewAdapter()
 		if boy := g.The("alien boy"); assert.True(t, boy.Exists(), "found boy") {
 			if player := g.The("player"); assert.True(t, player.Exists(), "found player") {
-				if con := TheConversation(g); assert.True(t, con.Exists(), "found conversation") {
+				if con := quips.Converse(g); assert.True(t, con.Exists(), "found conversation") {
 					if greeting := boy.Object("greeting"); assert.True(t, greeting.Exists(), "found greeting") {
-
-						g.Go(Introduce("player").To("alien boy").WithQuip(greeting))
-						if next := boy.Object("next quip"); assert.True(t, next.Exists(), "found next") {
-							require.Equal(t, next, greeting)
-							Converse(g)
-							// clear the test, and make sure the queue is empty.
-							if lines, err := test.FlushOutput(); assert.NoError(t, err) {
-								require.True(t, len(lines) > 1)
-								require.Equal(t, `Alien Boy: "You wouldn't happen to have a matter disrupter?"`, lines[0])
-							}
+						player.Go("greet", boy)
+						// clear the test, and make sure the queue is empty.
+						if lines, err := test.FlushOutput(); assert.NoError(t, err) {
+							require.Len(t, lines, 1)
+							require.Equal(t, `Alien Boy: "You wouldn't happen to have a matter disrupter?"`, lines[0])
 						}
 					}
 				}
@@ -90,31 +87,25 @@ func TestQuipTalkQuips(t *testing.T) {
 		g := test.Game.NewAdapter()
 		if boy := g.The("alien boy"); assert.True(t, boy.Exists(), "found boy") {
 			if player := g.The("player"); assert.True(t, player.Exists(), "found player") {
-				if con := TheConversation(g); assert.True(t, con.Exists(), "found conversation") {
+				if con := quips.Converse(g); assert.True(t, con.Exists(), "found conversation") {
+					// pretend we just said whats the matter.
+					require.False(t, con.Conversing())
+					con.Actor().SetObject(boy)
+					con.History().PushQuip(g.Our("WhatsTheMatter"))
+					require.True(t, con.Conversing())
 
-					if stories := g.List("stories"); assert.Equal(t, 1, stories.Len()) {
-						story := stories.Get(0).Object()
+					// we should have two comments in return.
+					list := quips.PlayerQuips(g)
+					require.Len(t, list, 2)
+					require.Contains(t, list, g.Our("Later"))
 
-						con.Interlocutor().SetObject(boy)
-						con.History().PushQuip(g.Our("WhatsTheMatter"))
+					// test the actual converation choices printed
+					player.Go("print conversation choices")
+					if lines, e := test.FlushOutput(); assert.NoError(t, e) {
+						require.True(t, len(lines) > 2)
+						if stories := g.List("stories"); assert.Equal(t, 1, stories.Len()) {
+							story := stories.Get(0).Object()
 
-						later := g.Our("Later")
-						// verify that "later" should show up after "whats the matter".
-						// require.True(t, qp.SpeakAfter(later))
-
-						// verify that "anybody" should show up after "whats the matter".
-						// anybody := g.Our("DoesAnybody")
-						// require.True(t, qp.SpeakAfter(anybody))
-
-						// verify it actually does
-						list := GetPlayerQuips(g)
-						require.Len(t, list, 2)
-						require.Contains(t, list, later)
-
-						// test the actual converation choices printed
-						player.Go("print conversation choices", boy)
-						if lines, e := test.FlushOutput(); assert.NoError(t, e) {
-							require.True(t, len(lines) > 2)
 							story.Get("player input").SetText("2")
 							if act, e := test.Game.QueueAction("parse player input", story.Id()); assert.NoError(t, e) {
 								if lines, e := test.FlushOutput(); assert.NoError(t, e) {
@@ -137,6 +128,9 @@ func TestQuipTalkQuips(t *testing.T) {
 // TestQuipDirectFollows to test player quip generation.
 func TestQuipDirectFollows(t *testing.T) {
 	s := InitScripts()
+	Describe_Facts(s)
+	Describe_Quips(s)
+
 	s.The("actor", Called("The Alien Boy"), Exists())
 	s.The("alien boy", Has("greeting", "Don't leave!"))
 
@@ -159,6 +153,7 @@ func TestQuipDirectFollows(t *testing.T) {
 		Is("restrictive"),
 		DirectlyFollows("We need help!"))
 
+	// FIFIIFSIFSDFISI
 	s.The("quip", Called("Automat Goodbye"),
 		Has("subject", "Alien Boy"),
 		Has("comment", "I'm going to look around some more."))
@@ -168,12 +163,11 @@ func TestQuipDirectFollows(t *testing.T) {
 		g := test.Game.NewAdapter()
 		if boy := g.The("alien boy"); assert.True(t, boy.Exists(), "found boy") {
 			if player := g.The("player"); assert.True(t, player.Exists(), "found player") {
-				g.Go(Introduce("player").To("alien boy").WithDefault())
-				if con := TheConversation(g); assert.True(t, con.Exists(), "found conversation") {
-					Converse(g)
+				player.Go("greet", boy)
+				if con := quips.Converse(g); assert.True(t, con.Conversing(), "found conversation") {
 					if latest := con.History().MostRecent(); assert.True(t, latest.Exists(), "should have most recent quip") {
 						require.True(t, latest.Is("restrictive"), "should be restrictive")
-						if quips := GetPlayerQuips(g); assert.Len(t, quips, 1) {
+						if quips := quips.PlayerQuips(g); assert.Len(t, quips, 1) {
 							q := quips[0]
 							require.EqualValues(t, "WeNeedHelp", q.Id().String())
 						}
@@ -187,6 +181,8 @@ func TestQuipDirectFollows(t *testing.T) {
 // TestQuipFactFinding to verify facts and their associated conversation rules.
 func TestQuipFactFinding(t *testing.T) {
 	s := InitScripts()
+	Describe_Facts(s)
+	Describe_Quips(s)
 
 	s.The("facts",
 		Table("name", "summary").
@@ -202,18 +198,19 @@ func TestQuipFactFinding(t *testing.T) {
 			And("orbital wonder", "what were the skies like when you were young?"))
 
 	s.The("quip requirements",
-		Table("fact", "permitted", "quip"). //-property
-							Has("red", "permitted", "retort").
-							And("red", "prohibited", "smoothie request").
-							And("green", "permitted", "retort").
-							And("yellow", "prohibited", "retort"))
+		Table("fact", "permitted", "quip").
+			Has("red", "permitted", "retort").
+			And("red", "prohibited", "smoothie request").
+			And("green", "permitted", "retort").
+			And("yellow", "prohibited", "retort"))
 
 	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
 		g := test.Game.NewAdapter()
-		qm := PlayerMemory(g)
-		assert.True(t, qm.IsQuipAllowed(g, g.The("orbital wonder")))
-		assert.True(t, qm.IsQuipAllowed(g, g.The("smoothie request")))
-		assert.False(t, qm.IsQuipAllowed(g, g.The("retort")), "the retort should not be allowed")
+		qm := quips.PlayerMemory(g)
+
+		assert.True(t, qm.IsQuipAllowed(g.The("orbital wonder")))
+		assert.True(t, qm.IsQuipAllowed(g.The("smoothie request")))
+		assert.False(t, qm.IsQuipAllowed(g.The("retort")), "the retort should not be allowed")
 
 		red := g.The("red")
 		require.True(t, red.Exists())
@@ -221,42 +218,45 @@ func TestQuipFactFinding(t *testing.T) {
 		qm.Learns(red)
 		require.True(t, qm.Recollects(red), "after learning contains red")
 
-		assert.True(t, qm.IsQuipAllowed(g, g.The("orbital wonder")))
-		assert.False(t, qm.IsQuipAllowed(g, g.The("smoothie request")))
-		assert.False(t, qm.IsQuipAllowed(g, g.The("retort")))
+		assert.True(t, qm.IsQuipAllowed(g.The("orbital wonder")))
+		assert.False(t, qm.IsQuipAllowed(g.The("smoothie request")))
+		assert.False(t, qm.IsQuipAllowed(g.The("retort")))
 		green := g.The("green")
 		qm.Learns(green)
-		assert.True(t, qm.IsQuipAllowed(g, g.The("orbital wonder")))
-		assert.False(t, qm.IsQuipAllowed(g, g.The("smoothie request")))
-		assert.True(t, qm.IsQuipAllowed(g, g.The("retort")))
+		assert.True(t, qm.IsQuipAllowed(g.The("orbital wonder")))
+		assert.False(t, qm.IsQuipAllowed(g.The("smoothie request")))
+		assert.True(t, qm.IsQuipAllowed(g.The("retort")))
 		yellow := g.The("yellow")
 		qm.Learns(yellow)
-		assert.True(t, qm.IsQuipAllowed(g, g.The("orbital wonder")))
-		assert.False(t, qm.IsQuipAllowed(g, g.The("smoothie request")))
-		assert.False(t, qm.IsQuipAllowed(g, g.The("retort")))
+		assert.True(t, qm.IsQuipAllowed(g.The("orbital wonder")))
+		assert.False(t, qm.IsQuipAllowed(g.The("smoothie request")))
+		assert.False(t, qm.IsQuipAllowed(g.The("retort")))
 	}
 }
 
 // TalkScript creates some dialog to test.
 func TalkScript() *Script {
 	s := InitScripts()
+	Describe_Facts(s)
+	Describe_Quips(s)
 	s.The("story", Called("testing"), Exists())
 	s.The("actor", Called("The Alien Boy"), Exists())
 	s.The("alien boy", Has("greeting", "WhatsTheMatter"))
 
 	s.The("quip", Called("WhatsTheMatter"),
 		Has("subject", "alien boy"),
+		Is("one time"),
 		Has("reply", `"You wouldn't happen to have a matter disrupter?"`))
 
 	s.The("quip",
 		Called("DoesAnybody"),
 		Has("subject", "Alien Boy"),
+		Is("one time"),
 		DirectlyFollows("WhatsTheMatter"),
 		Has("comment", `"Does anybody?"`),
 		Has("reply", `"Or,"asks the Alien Boy, "maybe a ray gun?"`))
 
 	s.The("quip", Called("Later"),
-		Is("repeatable"),
 		Has("subject", "alien boy"),
 		Has("comment", `"Oh, sorry," Alice says. "I'll be back."`))
 	return s

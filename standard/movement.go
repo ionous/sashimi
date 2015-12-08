@@ -7,7 +7,7 @@ import (
 
 var directions = Directions
 
-// FIX: like Learn() convert to a game action: actor.Go("move to", dest)
+// FIX: like facts.Learn() convert to a game action: actor.Go("move to", dest)
 func Move(obj string) MoveToPhrase {
 	return MoveToPhrase{actor: obj}
 }

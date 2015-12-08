@@ -1,12 +1,11 @@
-package quip
+package native
 
 import (
 	G "github.com/ionous/sashimi/game"
 )
 
-// FIX: we just need fast sorting.
-// this is over-specification --
-// we've got recollection after all.
+// QuipHistory
+// FIX: we just need fast sorting or queris; we've got recollection after all.
 const QuipHistoryDepth = 3
 
 type QuipHistory [QuipHistoryDepth]G.IValue

@@ -1,26 +1,8 @@
-package fact
+package facts
 
-// FIX: replace  with player, go learn
-// ALSO: if this were in the "fact" package, it could be: fact.Learn
-// and maybe prop.Give?
-func Learn(fact string) FactPhrase {
-	return FactPhrase{fact}
-}
-func LearnThe(fact G.IObject) FactPhrase {
-	return FactPhrase{fact.Id().String()}
-}
-
-type FactPhrase struct {
-	fact string
-}
-
-func (p FactPhrase) Execute(g G.Play) {
-	PlayerMemory(g).Learns(g.The(p.fact))
-}
-
-func PlayerLearns(g G.Play, fact string) (newlyLearned bool) {
-	return PlayerMemory(g).TriesToLearn(g.The(fact))
-}
+import (
+	. "github.com/ionous/sashimi/script"
+)
 
 func Describe_Facts(s *Script) {
 	s.The("kinds", Called("facts"),
@@ -28,9 +10,6 @@ func Describe_Facts(s *Script) {
 		// having the same property as a parent class probably shouldnt be an error
 		Have("summary", "text"))
 
-	// FIX: should be "data"
-	s.The("kinds", Called("quip requirements"),
-		Have("fact", "fact"),
-		AreEither("permitted").Or("prohibited"),
-		Have("quip", "quip"))
+	// FIX: many-to-many doesnt exist; traversing a manually created table of all actors and facts would be fairly heavy; so just using a flag.
+	s.The("facts", AreEither("recollected").Or("not recollected").Usually("not recollected"))
 }

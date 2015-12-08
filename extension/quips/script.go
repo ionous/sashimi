@@ -1,11 +1,7 @@
-package quip
+package quips
 
 import (
-	"fmt"
-	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
-	. "github.com/ionous/sashimi/standard"
-	"github.com/ionous/sashimi/util/lang"
 )
 
 // FIX: replace  with player

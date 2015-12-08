@@ -1,7 +1,8 @@
 package stories
 
 import (
-	. "github.com/ionous/sashimi/extensions"
+	facts "github.com/ionous/sashimi/extension/facts/native"
+	. "github.com/ionous/sashimi/extension/quips"
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
 )
@@ -62,7 +63,7 @@ func Boy_Talk(s *Script) {
 		Has("comment", `"Wait," says Alice. "Your parents made you go get the camera?" says Alice.`),
 		Has("reply", `"Amazing, huh?" says the Alien Boy. "You wouldn"t believe--"`),
 		After("being discussed").Always(func(g G.Play) {
-			PlayerMemory(g).Learns(g.The("boy-cam"))
+			facts.PlayerLearns(g, "boy-cam")
 		}))
 
 	s.The("quip", Called("OldBoy: CameraTime1"),

@@ -1,4 +1,4 @@
-package quip
+package native
 
 import (
 	G "github.com/ionous/sashimi/game"
