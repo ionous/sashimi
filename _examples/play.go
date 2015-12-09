@@ -7,9 +7,7 @@ import (
 	"github.com/ionous/sashimi/standard"
 )
 
-//
 // Boilerplate to run the story.
-//
 func main() {
 	story := flag.String("story", "", "select the story to play.")
 	options := standard.ParseCommandLine()

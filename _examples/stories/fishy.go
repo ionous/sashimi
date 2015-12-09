@@ -1,20 +1,19 @@
 package stories
 
 import (
-	//. "github.com/ionous/sashimi/extensions"
+	. "github.com/ionous/sashimi/extension/facts"
 	facts "github.com/ionous/sashimi/extension/facts/native"
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
 	. "github.com/ionous/sashimi/standard"
 )
 
-//
 // "A Day For Fresh Sushi"
 // Ported from Inform7. Original story by Emily Short, used with permission.
 // The original source for this story can be found in the Inform documentation
 // ( http://inform7.com )
-//
 func A_Day_For_Fresh_Sushi(s *Script) {
+	Describe_Facts(s)
 	// 1-3
 	s.The("story",
 		Called("A Day For Fresh Sushi"),
