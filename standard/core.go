@@ -153,7 +153,6 @@ func ReflectToTarget(g G.Play, action string) {
 	target := g.The("action.Target")
 	//g.Log("reflecting", action, source, target)
 	target.Go(action, source)
-
 }
 
 // ReflectWithContext runs the passed action, shifting to target, context, source.
