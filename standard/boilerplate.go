@@ -1,12 +1,15 @@
 package standard
 
 import (
+	"bytes"
+	"encoding/gob"
 	"fmt"
 	C "github.com/ionous/sashimi/console"
 	"github.com/ionous/sashimi/metal"
 	"github.com/ionous/sashimi/minicon"
 	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/script"
+	"github.com/ionous/sashimi/util/ident"
 	"io"
 	"io/ioutil"
 	"os"
@@ -59,6 +62,14 @@ func RunScript(script *script.Script, opt Options) (err error) {
 	if model, e := script.Compile(writer); e != nil {
 		err = e
 	} else if opt.dump {
+
+		var b bytes.Buffer
+		enc := gob.NewEncoder(&b)
+		gob.Register(ident.Id(""))
+		if e := enc.Encode(model.Model); e != nil {
+			panic(e)
+		}
+		fmt.Println(fmt.Sprintf("size: %d(b) %.2f(k)", b.Len(), float64(b.Len())/1024.0))
 		model.Model.PrintModel(func(args ...interface{}) { fmt.Println(args...) })
 	} else {
 		cons := GetConsole(opt)

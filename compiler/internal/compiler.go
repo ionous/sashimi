@@ -240,10 +240,8 @@ func (ctx *Compiler) makeEventListeners(events M.EventMap, classes M.ClassMap, i
 	return callbacks, err
 }
 
-//
 // Turn object and action aliases into noun name and parser action mappings
 // FIX: instance names should go in declaration order
-//
 func (ctx *Compiler) compileAliases(instances M.InstanceMap, actions M.ActionMap) (
 	names M.NounNames,
 	parserActions []M.ParserAction,
@@ -253,9 +251,11 @@ func (ctx *Compiler) compileAliases(instances M.InstanceMap, actions M.ActionMap
 
 	// first: add the full names of each instance at highest ranks
 	for k, _ := range instances {
-		parts := k.Split()
-		fullName := strings.Join(parts, " ")
-		names.AddNameForId(fullName, k)
+		if !k.Reserved() {
+			parts := k.Split()
+			fullName := strings.Join(parts, " ")
+			names.AddNameForId(fullName, k)
+		}
 	}
 
 	// then: add all "is known as"
@@ -286,10 +286,12 @@ func (ctx *Compiler) compileAliases(instances M.InstanceMap, actions M.ActionMap
 
 	// finally: add the parts as lesser ranks
 	for k, _ := range instances {
-		parts := k.Split()
-		if len(parts) > 0 {
-			for _, p := range parts {
-				names.AddNameForId(p, k)
+		if !k.Reserved() {
+			parts := k.Split()
+			if len(parts) > 0 {
+				for _, p := range parts {
+					names.AddNameForId(p, k)
+				}
 			}
 		}
 	}
