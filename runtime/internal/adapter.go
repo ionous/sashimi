@@ -123,7 +123,7 @@ func (ga *GameEventAdapter) GetObject(name string) (ret G.IObject) {
 		} else if ga.data != nil {
 			// testing against ga.data b/c sometimes the adapter isnt invoked via an event.
 			// to fix use different interfaces perhaps?
-			if obj, ok := ga.data.findByName(name, ga.hint); ok {
+			if obj, ok := ga.data.findByName(ga.Model, name, ga.hint); ok {
 				ret = ga.NewGameObject(obj)
 			} else {
 				msg := fmt.Sprintf("couldnt find object named '%s(%s)'", name, id)

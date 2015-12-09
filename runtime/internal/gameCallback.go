@@ -53,7 +53,7 @@ func (gl GameListeners) ListenerNum(i int) E.IListen {
 // GameCallback adapts model listeners to game events.
 // ( by implementing E.IListen )
 type GameCallback struct {
-	game *Game
+	game *Game // FIX: switch to context?
 	meta.Listener
 }
 
@@ -66,7 +66,7 @@ func (cb GameCallback) HandleEvent(evt E.IEvent) (err error) {
 	} else {
 		if cb.GetOptions().UseAfterQueue() {
 			call := QueuedCallback{cb.GetCallback(), fn}
-			act.runAfterDefaults(call)
+			act.runAfterDefaults(call) // FIX: switch to adding to adapter? i just dont like that the action changes...
 		} else {
 			play := cb.game.newPlay(act, cb.GetClass())
 			fn(play)

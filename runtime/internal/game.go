@@ -85,7 +85,7 @@ func (g *Game) NewRuntimeAction(action meta.Action, nouns ...ident.Id,
 			}
 		}
 		if err == nil {
-			ret = NewRuntimeAction(g, action, objs)
+			ret = NewRuntimeAction(action, objs)
 		}
 	}
 	return ret, err

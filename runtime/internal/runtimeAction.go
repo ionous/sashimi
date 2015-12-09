@@ -13,15 +13,14 @@ var _ = fmt.Println
 
 // RuntimeAction contains data for event handlers and actions.
 type RuntimeAction struct {
-	game      *Game // FIX: YUCK!
 	action    meta.Action
 	objs      []meta.Instance
 	after     []QueuedCallback // FIX: WHY DO WE COPY THIS!?!
 	cancelled bool
 }
 
-func NewRuntimeAction(g *Game, act meta.Action, objects []meta.Instance) *RuntimeAction {
-	return &RuntimeAction{game: g, action: act, objs: objects}
+func NewRuntimeAction(act meta.Action, objects []meta.Instance) *RuntimeAction {
+	return &RuntimeAction{action: act, objs: objects}
 }
 
 func (act *RuntimeAction) GetTarget() meta.Instance {
@@ -48,35 +47,11 @@ func (act *RuntimeAction) runAfterDefaults(cb QueuedCallback) {
 	act.after = append(act.after, cb)
 }
 
-// Default actions occur after event processing assuming that they have not been cancelled.
-func (act *RuntimeAction) runDefaultActions() (err error) {
-	if callbacks, ok := act.action.GetCallbacks(); ok {
-		for i := 0; i < callbacks.NumCallback(); i++ {
-			cb := callbacks.CallbackNum(i)
-			play := act.game.newPlay(act, ident.Empty())
-
-			if found, ok := act.game.LookupCallback(cb); !ok {
-				err = fmt.Errorf("internal error, couldnt find callback %s", cb)
-				panic(err.Error())
-				break
-			} else {
-				found(play)
-			}
-		}
-
-		for _, after := range act.after {
-			play := act.game.newPlay(act, ident.Empty())
-			after.call(play)
-		}
-	}
-	return
-}
-
 // findByName:
-func (act *RuntimeAction) findByName(name string, hint ident.Id) (ret meta.Instance, okay bool) {
+func (act *RuntimeAction) findByName(m meta.Model, name string, hint ident.Id) (ret meta.Instance, okay bool) {
 	if obj, ok := act.findByParamName(name); ok {
 		okay, ret = true, obj
-	} else if obj, ok := act.findByClassName(name, hint); ok {
+	} else if obj, ok := act.findByClassName(m, name, hint); ok {
 		okay, ret = true, obj
 	}
 	return
@@ -94,30 +69,30 @@ func (act *RuntimeAction) findByParamName(name string) (ret meta.Instance, okay 
 }
 
 // findByClassName:
-func (act *RuntimeAction) findByClassName(name string, hint ident.Id) (ret meta.Instance, okay bool) {
-	clsid := MakeStringId(act.game.Model.Pluralize(lang.StripArticle(name)))
+func (act *RuntimeAction) findByClassName(m meta.Model, name string, hint ident.Id) (ret meta.Instance, okay bool) {
+	clsid := MakeStringId(m.Pluralize(lang.StripArticle(name)))
 	if clsid == hint {
 		ret, okay = act.getObject(0)
 	} else {
-		ret, okay = act.findByClass(clsid)
+		ret, okay = act.findByClass(m, clsid)
 	}
 	return
 }
 
 // findByExactClass; true if found
-func (act *RuntimeAction) findByClass(id ident.Id) (ret meta.Instance, okay bool) {
+func (act *RuntimeAction) findByClass(m meta.Model, id ident.Id) (ret meta.Instance, okay bool) {
 	// these are the classes originally named in the action declaration; not the sub-classes of the event target. ie. s.The("actors", Can("crawl"), not s.The("babies", When("crawling")
-	if obj, ok := act.findByExactClass(id); ok {
+	if obj, ok := act.findByExactClass(m, id); ok {
 		ret, okay = obj, true
 	} else {
 		// when all else fails try compatible classes one by one.
-		ret, okay = act.findBySimilarClass(id)
+		ret, okay = act.findBySimilarClass(m, id)
 	}
 	return ret, okay
 }
 
 // findByExactClass; true if found
-func (act *RuntimeAction) findByExactClass(id ident.Id) (ret meta.Instance, okay bool) {
+func (act *RuntimeAction) findByExactClass(_ meta.Model, id ident.Id) (ret meta.Instance, okay bool) {
 	for i, nounClass := range act.action.GetNouns() {
 		if same := id == nounClass; same {
 			ret, okay = act.getObject(i)
@@ -128,9 +103,9 @@ func (act *RuntimeAction) findByExactClass(id ident.Id) (ret meta.Instance, okay
 }
 
 // findBySimilarClass; true if found
-func (act *RuntimeAction) findBySimilarClass(id ident.Id) (ret meta.Instance, okay bool) {
+func (act *RuntimeAction) findBySimilarClass(m meta.Model, id ident.Id) (ret meta.Instance, okay bool) {
 	for i, nounClass := range act.action.GetNouns() {
-		if similar := act.game.Model.AreCompatible(id, nounClass); similar {
+		if similar := m.AreCompatible(id, nounClass); similar {
 			ret, okay = act.getObject(i)
 			break
 		}

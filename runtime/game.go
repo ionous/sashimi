@@ -23,7 +23,7 @@ func NullObject(name string) G.IObject {
 
 // ex. after having parsed and matched raw player input.
 func (g *Game) QueueActionInstances(act meta.Action, objects []meta.Instance) *internal.RuntimeAction {
-	data := internal.NewRuntimeAction(g.game, act, objects)
+	data := internal.NewRuntimeAction(act, objects)
 	g.game.QueueAction(data)
 	return data
 }

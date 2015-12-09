@@ -2,8 +2,10 @@ package internal
 
 import (
 	"container/list"
+	"fmt"
 	E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 type ActionQueue struct {
@@ -81,7 +83,25 @@ func (c *QueuedAction) Run(g *Game) (err error) {
 		err = e
 	} else {
 		if runDefault {
-			err = act.runDefaultActions()
+			play := g.newPlay(act, ident.Empty())
+			if callbacks, ok := act.action.GetCallbacks(); ok {
+				for i := 0; i < callbacks.NumCallback(); i++ {
+					cb := callbacks.CallbackNum(i)
+					if found, ok := g.LookupCallback(cb); !ok {
+						err = fmt.Errorf("internal error, couldnt find callback %s", cb)
+						//panic(err)
+						break
+					} else {
+						found(play)
+					}
+				}
+				if err == nil {
+					for _, after := range act.after {
+						after.call(play)
+					}
+				}
+			}
+
 		}
 	}
 	frame.EndEvent()

@@ -8,8 +8,8 @@ import (
 const NewLine = "\n"
 const OneSpace = " "
 
-func Say(s ...string) SayPhrase {
-	return SayPhrase{s: s, sep: NewLine}
+func Say(what ...string) SayPhrase {
+	return SayPhrase{what: what, sep: NewLine}
 }
 
 func (p SayPhrase) OnOneLine() G.RuntimePhrase {
@@ -18,11 +18,11 @@ func (p SayPhrase) OnOneLine() G.RuntimePhrase {
 }
 
 func (p SayPhrase) Execute(g G.Play) {
-	text := strings.Join(p.s, p.sep)
+	text := strings.Join(p.what, p.sep)
 	g.Say(text)
 }
 
 type SayPhrase struct {
-	s   []string
-	sep string
+	what []string
+	sep  string
 }
