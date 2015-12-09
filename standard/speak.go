@@ -5,11 +5,11 @@ import (
 	"strings"
 )
 
-func Speak(actor string) SpeakPhrase {
-	return SpeakPhrase(actor)
+func TheSpeaker(actor string) SpeakerPhrase {
+	return SpeakerPhrase(actor)
 }
 
-func (p SpeakPhrase) Says(what ...string) SpeakingPhrase {
+func (p SpeakerPhrase) Says(what ...string) SpeakingPhrase {
 	return SpeakingPhrase{actor: string(p), what: what, sep: NewLine}
 }
 
@@ -23,7 +23,7 @@ func (p SpeakingPhrase) Execute(g G.Play) {
 	g.The(p.actor).Says(text)
 }
 
-type SpeakPhrase string
+type SpeakerPhrase string
 
 type SpeakingPhrase struct {
 	actor string
