@@ -23,8 +23,9 @@ func init() {
 			Can("be examined").And("being examined").RequiresOne("actor"),
 			To("be examined", func(g G.Play) {
 				object := g.The("object")
-				object.Go("print details")
-				object.Go("print contents")
+				object.Go("print details").Then(func(g G.Play) {
+					object.Go("print contents")
+				})
 			}))
 
 		s.The("objects",

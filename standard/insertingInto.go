@@ -96,8 +96,9 @@ func init() {
 		s.The("props",
 			Can("be inserted").And("being inserted").RequiresOne("actor").AndOne("container"),
 			To("be inserted", func(g G.Play) {
-				g.Go(Insert("action.Source").Into("action.Context"))
-				g.Say("You insert", ArticleName(g, "action.Source", nil), "into", ArticleName(g, "action.Context", NameFullStop))
+				g.Go(Say("You insert", ArticleName(g, "action.Source", nil), "into", ArticleName(g, "action.Context", NameFullStop)).OnOneLine()).Then(func(g G.Play) {
+					g.Go(Insert("action.Source").Into("action.Context"))
+				})
 			}))
 		// input: actor, container, prop
 		s.Execute("insert it into",

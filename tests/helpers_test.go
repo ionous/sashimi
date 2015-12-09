@@ -95,7 +95,7 @@ type TestGame struct {
 // For testing:
 //
 func (test *TestGame) RunInput(s string) (ret []string, err error) {
-	if e := test.Game.ProcessEvents(); e != nil {
+	if e := test.Game.ProcessActions(); e != nil {
 		err = e
 	} else {
 		in := parser.NormalizeInput(s)
@@ -119,7 +119,7 @@ func (test *TestGame) RunInput(s string) (ret []string, err error) {
 }
 
 func (test *TestGame) FlushOutput() (ret []string, err error) {
-	if e := test.Game.ProcessEvents(); e != nil {
+	if e := test.Game.ProcessActions(); e != nil {
 		test.out.Println(e)
 		err = e
 	} else {

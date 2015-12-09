@@ -8,7 +8,7 @@ import (
 )
 
 type iList struct {
-	game      *Game
+	game      *GameEventAdapter
 	path      PropertyPath
 	instances []meta.Instance
 }

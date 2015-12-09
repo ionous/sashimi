@@ -47,8 +47,9 @@ func init() {
 				if prop.Is("not wearable") {
 					g.Say("That's not something you can wear.")
 				} else {
-					g.Go(Clothe("actor").With("prop"))
-					g.Say("Now", actor.Text("name"), "is wearing the", prop.Text("name"))
+					g.Go(Clothe("actor").With("prop")).Then(func(g G.Play) {
+						g.Say("Now", actor.Text("name"), "is wearing the", prop.Text("name"))
+					})
 				}
 			}))
 

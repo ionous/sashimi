@@ -5,6 +5,7 @@ import (
 	G "github.com/ionous/sashimi/game"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
+	"github.com/ionous/sashimi/util/lang"
 	"strings"
 )
 
@@ -12,10 +13,10 @@ var _ = fmt.Println
 
 // RuntimeAction contains data for event handlers and actions.
 type RuntimeAction struct {
-	game      *Game
+	game      *Game // FIX: YUCK!
 	action    meta.Action
 	objs      []meta.Instance
-	after     []QueuedCallback
+	after     []QueuedCallback // FIX: WHY DO WE COPY THIS!?!
 	cancelled bool
 }
 
@@ -71,19 +72,40 @@ func (act *RuntimeAction) runDefaultActions() (err error) {
 	return
 }
 
-// fundByParamName: source, target, or context
-func (act *RuntimeAction) findByParamName(name string) (ret G.IObject, okay bool) {
+// findByName:
+func (act *RuntimeAction) findByName(name string, hint ident.Id) (ret meta.Instance, okay bool) {
+	if obj, ok := act.findByParamName(name); ok {
+		okay, ret = true, obj
+	} else if obj, ok := act.findByClassName(name, hint); ok {
+		okay, ret = true, obj
+	}
+	return
+}
+
+// findByParamName: source, target, or context
+func (act *RuntimeAction) findByParamName(name string) (ret meta.Instance, okay bool) {
 	for index, src := range []string{"action.Source", "action.Target", "action.Context"} {
 		if strings.EqualFold(name, src) {
 			ret, okay = act.getObject(index)
 			break
 		}
 	}
-	return ret, okay
+	return
+}
+
+// findByClassName:
+func (act *RuntimeAction) findByClassName(name string, hint ident.Id) (ret meta.Instance, okay bool) {
+	clsid := MakeStringId(act.game.Model.Pluralize(lang.StripArticle(name)))
+	if clsid == hint {
+		ret, okay = act.getObject(0)
+	} else {
+		ret, okay = act.findByClass(clsid)
+	}
+	return
 }
 
 // findByExactClass; true if found
-func (act *RuntimeAction) findByClass(id ident.Id) (ret G.IObject, okay bool) {
+func (act *RuntimeAction) findByClass(id ident.Id) (ret meta.Instance, okay bool) {
 	// these are the classes originally named in the action declaration; not the sub-classes of the event target. ie. s.The("actors", Can("crawl"), not s.The("babies", When("crawling")
 	if obj, ok := act.findByExactClass(id); ok {
 		ret, okay = obj, true
@@ -95,7 +117,7 @@ func (act *RuntimeAction) findByClass(id ident.Id) (ret G.IObject, okay bool) {
 }
 
 // findByExactClass; true if found
-func (act *RuntimeAction) findByExactClass(id ident.Id) (ret G.IObject, okay bool) {
+func (act *RuntimeAction) findByExactClass(id ident.Id) (ret meta.Instance, okay bool) {
 	for i, nounClass := range act.action.GetNouns() {
 		if same := id == nounClass; same {
 			ret, okay = act.getObject(i)
@@ -106,7 +128,7 @@ func (act *RuntimeAction) findByExactClass(id ident.Id) (ret G.IObject, okay boo
 }
 
 // findBySimilarClass; true if found
-func (act *RuntimeAction) findBySimilarClass(id ident.Id) (ret G.IObject, okay bool) {
+func (act *RuntimeAction) findBySimilarClass(id ident.Id) (ret meta.Instance, okay bool) {
 	for i, nounClass := range act.action.GetNouns() {
 		if similar := act.game.Model.AreCompatible(id, nounClass); similar {
 			ret, okay = act.getObject(i)
@@ -117,9 +139,9 @@ func (act *RuntimeAction) findBySimilarClass(id ident.Id) (ret G.IObject, okay b
 }
 
 // getObject returns the index object; true if the index was in range.
-func (act *RuntimeAction) getObject(i int) (ret G.IObject, okay bool) {
+func (act *RuntimeAction) getObject(i int) (ret meta.Instance, okay bool) {
 	if i >= 0 && i < len(act.objs) {
-		ret, okay = NewGameObject(act.game, act.objs[i]), true
+		ret, okay = act.objs[i], true
 	}
 	return
 }

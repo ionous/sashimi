@@ -13,7 +13,7 @@ import (
 // possibly replace Game with a shared "context",  possibly the game object adapter
 // so that the log can still have its stack/depth unwinding
 type gameValue struct {
-	game  *Game
+	game  *GameEventAdapter
 	path  PropertyPath
 	ptype meta.PropertyType
 	value meta.Value
@@ -61,7 +61,7 @@ func (n gameValue) Object() G.IObject {
 	} else {
 		res = n.value.GetObject()
 	}
-	return NewGameObjectFromId(n.game, res)
+	return n.game.NewGameObjectFromId(res)
 }
 
 func (n gameValue) SetObject(obj G.IObject) {

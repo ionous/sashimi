@@ -11,7 +11,7 @@ import (
 var floatType = reflect.TypeOf(float64(0))
 
 type gameList struct {
-	game   *Game // context needed for wrapping instances
+	game   *GameEventAdapter // context needed for wrapping instances
 	path   PropertyPath
 	ptype  meta.PropertyType
 	values meta.Values

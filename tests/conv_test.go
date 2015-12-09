@@ -164,6 +164,7 @@ func TestQuipDirectFollows(t *testing.T) {
 		if boy := g.The("alien boy"); assert.True(t, boy.Exists(), "found boy") {
 			if player := g.The("player"); assert.True(t, player.Exists(), "found player") {
 				player.Go("greet", boy)
+				test.FlushOutput()
 				if con := quips.Converse(g); assert.True(t, con.Conversing(), "found conversation") {
 					if latest := con.History().MostRecent(); assert.True(t, latest.Exists(), "should have most recent quip") {
 						require.True(t, latest.Is("restrictive"), "should be restrictive")

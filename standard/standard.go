@@ -125,7 +125,7 @@ func (sg *StandardCore) HandleInput(in string) (err error) {
 				err = e
 			} else if act, e := sg.Game.QueueAction("parse player input", sg.story); e != nil {
 				err = e
-			} else if e := sg.Game.ProcessEvents(); e != nil {
+			} else if e := sg.Game.ProcessActions(); e != nil {
 				err = e
 			} else if act.Cancelled() {
 				sg.EndTurn("end turn")
@@ -172,7 +172,7 @@ func (sg *StandardCore) getParser() (ret parser.P, err error) {
 func (sg *StandardCore) EndTurn(action string) {
 	if _, e := sg.Game.QueueAction(action, sg.story); e != nil {
 		log.Println(e)
-	} else if e := sg.Game.ProcessEvents(); e != nil {
+	} else if e := sg.Game.ProcessActions(); e != nil {
 		log.Println(e)
 	}
 }

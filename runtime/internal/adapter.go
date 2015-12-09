@@ -5,7 +5,6 @@ import (
 	G "github.com/ionous/sashimi/game"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
-	"github.com/ionous/sashimi/util/lang"
 	"strings"
 )
 
@@ -13,30 +12,29 @@ import (
 type GameEventAdapter struct {
 	*Game
 	data *RuntimeAction
+	// when we handle events from callbacks, we set this to the target's class to help resolve names specified by user code.
 	hint ident.Id
 }
 
-//
 // NewGameAdapter gives the passed game the IPlay interface
 // Public for testing.
-//
 func NewGameAdapter(game *Game) *GameEventAdapter {
 	return &GameEventAdapter{Game: game}
 }
 
 // NewGameObject gives the passed game object the IObject interface.
 // Public for testing.
-func NewGameObjectFromId(game *Game, id ident.Id) (ret G.IObject) {
+func (ga *GameEventAdapter) NewGameObjectFromId(id ident.Id) (ret G.IObject) {
 	var inst meta.Instance
-	if i, ok := game.Model.GetInstance(id); ok {
+	if i, ok := ga.Model.GetInstance(id); ok {
 		inst = i
 	}
-	return NewGameObject(game, inst)
+	return ga.NewGameObject(inst)
 }
 
-func NewGameObject(game *Game, inst meta.Instance) (ret G.IObject) {
+func (ga *GameEventAdapter) NewGameObject(inst meta.Instance) (ret G.IObject) {
 	if inst != nil {
-		ret = GameObject{game, inst}
+		ret = GameObject{ga, inst}
 	} else {
 		ret = NullObjectSource(PropertyPath{}, 2)
 	}
@@ -58,9 +56,19 @@ func (ga *GameEventAdapter) A(name string) G.IObject {
 	return ga.GetObject(name)
 }
 
-// g.Go( Give(player).ToHe(2) )
-func (ga *GameEventAdapter) Go(phrase G.RuntimePhrase) {
-	phrase.Execute(ga)
+// g.Go( Move("the player").To("the pit of disrepair") )
+func (ga *GameEventAdapter) Go(phrase G.RuntimePhrase, phrases ...G.RuntimePhrase) (ret G.IPromise) {
+	if len(phrases) == 0 {
+		future := &QueuedPhrase{data: ga.data, run: phrase}
+		ga.Queue.QueueFuture(future)
+		ret = PendingChain{&future.next, ga.data}
+	} else {
+		phrases := append([]G.RuntimePhrase{phrase}, phrases...)
+		future := &QueuedPhrases{data: ga.data, run: phrases}
+		ga.Queue.QueueFuture(future)
+		ret = PendingChain{&future.next, ga.data}
+	}
+	return
 }
 
 func (ga *GameEventAdapter) List(class string) (ret G.IList) {
@@ -76,7 +84,7 @@ func (ga *GameEventAdapter) List(class string) (ret G.IList) {
 			}
 		}
 	}
-	return iList{ga.Game, NewPath(clsid), instances}
+	return iList{ga, NewPath(clsid), instances}
 }
 
 //
@@ -111,23 +119,16 @@ func (ga *GameEventAdapter) GetObject(name string) (ret G.IObject) {
 	// empty names are possible from empty strings like Get("")
 	if !id.Empty() {
 		if gobj, ok := ga.Model.GetInstance(id); ok {
-			ret = NewGameObject(ga.Game, gobj)
+			ret = ga.NewGameObject(gobj)
 		} else if ga.data != nil {
 			// testing against ga.data b/c sometimes the adapter isnt invoked via an event.
 			// to fix use different interfaces perhaps?
-			if obj, ok := ga.data.findByParamName(name); ok {
-				ret = obj
+			if obj, ok := ga.data.findByName(name, ga.hint); ok {
+				ret = ga.NewGameObject(obj)
 			} else {
-				clsid := MakeStringId(ga.Model.Pluralize(lang.StripArticle(name)))
-				found := false
-				if clsid == ga.hint {
-					ret, found = ga.data.getObject(0)
-				} else {
-					ret, found = ga.data.findByClass(clsid)
-				}
-				if !found {
-					ga.Log(fmt.Printf("couldnt find object named '%s(%s)' including class '%s'", name, id, clsid))
-				}
+				msg := fmt.Sprintf("couldnt find object named '%s(%s)'", name, id)
+				ga.Log(msg)
+				//panic(msg)
 			}
 		}
 	}

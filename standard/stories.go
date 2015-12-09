@@ -64,12 +64,15 @@ func init() {
 					}
 					room = rooms.Get(0).Object()
 				}
-				story.Go("set initial position", g.The("player"), room)
-				story.Go("print the banner") // see: banner.go
-				room = g.The("player").Object("whereabouts")
-				// FIX: Go() should handle both Name() and ref
-				story.Go("describe the first room", room)
-				story.IsNow("playing")
+				story.Go("set initial position", g.The("player"), room).Then(func(g G.Play) {
+					story.Go("print the banner").Then(func(g G.Play) {
+						room = g.The("player").Object("whereabouts")
+						// FIX: Go() should handle both Name() and ref
+						story.Go("describe the first room", room).Then(func(g G.Play) {
+							story.IsNow("playing")
+						})
+					})
+				})
 			}))
 
 		s.The("stories",
@@ -107,9 +110,10 @@ func init() {
 			To("describe the first room", func(g G.Play) {
 				room := g.The("action.Target")
 				/// FIX: visited should happen elsewhere
-				room.Go("report the view")
-				room.IsNow("visited")
 				g.The("status bar").SetText("left", lang.Titleize(room.Text("Name")))
+				room.Go("report the view").Then(func(g G.Play) {
+					room.IsNow("visited")
+				})
 			}),
 		)
 	})

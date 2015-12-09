@@ -2,19 +2,18 @@ package internal
 
 import (
 	"fmt"
-	E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 	"strings"
 )
 
-// GameObject wraps Instances for user script callbacks.
+// GameObject wraps Instances for user script s.
 // WARNING: for users to test object equality, the GameObject must be comparable;
 // it can't implement the interface as a pointer, and it cant have any cached values.
 type GameObject struct {
-	game *Game // for console, Go(), and relations
-	gobj meta.Instance
+	*GameEventAdapter // for console, Go(), and relations
+	gobj              meta.Instance
 }
 
 // String helps debugging.
@@ -35,15 +34,15 @@ func (oa GameObject) Exists() bool {
 // FromClass returns true when the object is compatible with ( based on ) the named class. ( parent or other ancestor )
 func (oa GameObject) FromClass(class string) (okay bool) {
 	clsid := StripStringId(class)
-	if _, found := oa.game.Model.GetClass(clsid); !found {
-		oa.game.Println("FromClass: no such class found", clsid)
+	if _, found := oa.Model.GetClass(clsid); !found {
+		oa.Println("FromClass: no such class found", clsid)
 	}
-	return oa.game.Model.AreCompatible(oa.gobj.GetParentClass().GetId(), clsid)
+	return oa.Model.AreCompatible(oa.gobj.GetParentClass().GetId(), clsid)
 }
 
 func (oa GameObject) ParentRelation() (ret G.IObject, rel string) {
-	if parent, prop, ok := oa.game.LookupParent(oa.game.Model, oa.gobj); ok {
-		ret, rel = NewGameObject(oa.game, parent), prop.GetName()
+	if parent, prop, ok := oa.LookupParent(oa.Model, oa.gobj); ok {
+		ret, rel = oa.NewGameObject(parent), prop.GetName()
 	} else {
 		ret = NullObjectSource(NewPath(oa.Id()).Add("parent"), 1)
 	}
@@ -80,7 +79,8 @@ func (oa GameObject) Get(prop string) (ret G.IValue) {
 		oa.log("Get(%s): property is array", prop)
 		ret = nullValue{}
 	} else {
-		ret = gameValue{oa.game, NewPath(p.GetId()), p.GetType(), p.GetValue()}
+		ret = gameValue{oa.GameEventAdapter,
+			NewPath(p.GetId()), p.GetType(), p.GetValue()}
 	}
 	return
 }
@@ -93,7 +93,7 @@ func (oa GameObject) List(prop string) (ret G.IList) {
 		oa.log("List(%s): property is a value, not a list.", prop)
 		ret = nullList{}
 	} else {
-		ret = gameList{oa.game, NewPath(p.GetId()), p.GetType(), p.GetValues()}
+		ret = gameList{oa.GameEventAdapter, NewPath(p.GetId()), p.GetType(), p.GetValues()}
 	}
 	return
 }
@@ -142,7 +142,7 @@ func (oa GameObject) ObjectList(prop string) (ret []G.IObject) {
 			ret = make([]G.IObject, numobjects)
 			for i := 0; i < numobjects; i++ {
 				objId := vals.ValueNum(i).GetObject()
-				ret[i] = NewGameObjectFromId(oa.game, objId)
+				ret[i] = oa.NewGameObjectFromId(objId)
 			}
 		}
 	}
@@ -153,37 +153,50 @@ func (oa GameObject) ObjectList(prop string) (ret []G.IObject) {
 func (oa GameObject) Says(text string) {
 	// FIX: share some template love with GameEventAdapter.Say()
 	lines := strings.Split(text, "\n")
-	oa.game.Output.ActorSays(oa.gobj, lines)
+	oa.Output.ActorSays(oa.gobj, lines)
 }
 
 // Go sends all the events associated with the named action,
 // and runs the default action if appropriate.
-// @see also: Game.ProcessEventQueue
-func (oa GameObject) Go(run string, objects ...G.IObject) {
-	actionId := MakeStringId(run)
-	if action, ok := oa.game.Model.GetAction(actionId); !ok {
-		oa.log("Go(%s): no such action", run)
+// ex. g.The("player").Go("show to", "the alien boy", "the ring")
+func (oa GameObject) Go(run string, objects ...G.IObject) (ret G.IPromise) {
+	if c, e := oa.queueNamedAction(run, objects); e != nil {
+		oa.log("Go(%s) with %v: error preparing action: %s", run, objects, e)
 	} else {
-		// FIX, ugly: we need the props, even tho we already have the objects...
+		ret = c
+	}
+	return
+}
+
+// FIX: other variants of this exist in runtime.Game
+func (oa GameObject) queueNamedAction(action string, objects []G.IObject) (ret G.IPromise, err error) {
+	// FUTURE: ast introspection to find whether the action exists..
+	actionId := MakeStringId(action)
+	if act, ok := oa.Model.GetAction(actionId); !ok {
+		err = fmt.Errorf("couldnt find action %s", action)
+	} else {
+		// FIX, ugly: we need the ids, even tho we already have the objects..
+		// FIXIXFIFX: if that's the case -- just use the raw strings externally.
 		nouns := make([]ident.Id, len(objects)+1)
 		nouns[0] = oa.Id()
 		for i, o := range objects {
 			nouns[i+1] = o.Id()
 		}
-		if act, e := oa.game.NewRuntimeAction(action, nouns...); e != nil {
-			oa.log("Go(%s) with %v: error running action: %s", run, objects, e)
+		// this verifies that the objects exist
+		if data, e := oa.NewRuntimeAction(act, nouns...); e != nil {
+			err = e
 		} else {
-			tgt := ObjectTarget{oa.game, oa.gobj}
-			msg := &E.Message{Id: action.GetEvent().GetId(), Data: act}
-			if e := oa.game.SendMessage(tgt, msg); e != nil {
-				oa.log("Go(%s): error sending message: %s", run, e)
-			}
+			future := &QueuedAction{data: data}
+			oa.Queue.QueueFuture(future)
+			// NOTE: the next callbacks get *our* context, not the context of the action.
+			ret = PendingChain{&future.next, oa.data}
 		}
 	}
+	return
 }
 
 func (oa GameObject) log(format string, v ...interface{}) {
 	suffix := fmt.Sprintf(format, v...)
 	prefix := oa.gobj.GetId().String()
-	oa.game.Println(prefix, suffix)
+	oa.Println(prefix, suffix)
 }

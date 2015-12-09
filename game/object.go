@@ -12,7 +12,7 @@ import (
 type IObject interface {
 	Id() ident.Id
 	Exists() bool // FIX: added for obj.Object() tests, alternatives?
-	// FromClass: true if the object was derived from the passed plural named class.
+	// FromClass returns true if the object was derived from the passed plural named class.
 	// FIX: seems to programmery, alternatives?
 	FromClass(string) bool
 	// Parent returns the spatial parent, enclosure, of an object.
@@ -26,7 +26,7 @@ type IObject interface {
 	List(string) IList
 
 	// other built ins
-	Go(action string, withTargetAndContext ...IObject)
+	Go(action string, withTargetAndContext ...IObject) IPromise
 
 	// FIX: this should probably just be an action.
 	// Go("say", ...)

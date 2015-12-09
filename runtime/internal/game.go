@@ -11,22 +11,19 @@ import (
 type Game struct {
 	Model meta.Model
 	RuntimeCore
-	Queue EventQueue
+	Queue ActionQueue
 }
 
 func NewGame(core RuntimeCore, m meta.Model) *Game {
 	return &Game{
 		m,
 		core,
-		EventQueue{E.NewQueue()},
+		NewActionQueue(),
 	}
 }
 
-func (g *Game) newPlay(data interface{}, hint ident.Id) G.Play {
-	adapter := NewGameAdapter(g)
-	adapter.data = data.(*RuntimeAction)
-	adapter.hint = hint
-	return adapter
+func (g *Game) newPlay(data *RuntimeAction, hint ident.Id) G.Play {
+	return &GameEventAdapter{Game: g, data: data, hint: hint}
 }
 
 func (g *Game) Random(n int) int {
@@ -50,7 +47,20 @@ func (g *Game) dispatch(evt E.IEvent, target ident.Id) (err error) {
 	return
 }
 
-// TODO: unwind this.
+func (g *Game) QueueAction(data *RuntimeAction) {
+	future := &QueuedAction{data: data}
+	g.Queue.QueueFuture(future)
+}
+
+func (g *Game) PopAction() (ret Future, okay bool) {
+	if !g.Queue.Empty() {
+		okay, ret = true, g.Queue.PopFuture()
+	}
+	return
+}
+
+// NewRuntimeAction: captures an action and bunch of nouns.
+// TODO: unwind this... possibly now merege this with the go bits....
 func (g *Game) NewRuntimeAction(action meta.Action, nouns ...ident.Id,
 ) (ret *RuntimeAction, err error,
 ) {
@@ -79,22 +89,4 @@ func (g *Game) NewRuntimeAction(action meta.Action, nouns ...ident.Id,
 		}
 	}
 	return ret, err
-}
-
-func (g *Game) SendMessage(tgt E.ITarget, msg *E.Message) (err error) {
-	path := E.NewPathTo(tgt)
-	frame := g.Frame.BeginEvent(tgt, path, msg)
-	if runDefault, e := msg.Send(path); e != nil {
-		err = e
-	} else {
-		if runDefault {
-			if act, ok := msg.Data.(*RuntimeAction); !ok {
-				err = fmt.Errorf("unknown action data %T", msg.Data)
-			} else {
-				err = act.runDefaultActions()
-			}
-		}
-	}
-	frame.EndEvent()
-	return err
 }

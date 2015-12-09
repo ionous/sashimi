@@ -40,10 +40,6 @@ type moveData struct {
 type MoveToPhrase moveData
 type MovingPhrase moveData
 
-func TryMove(actor G.IObject, dir G.IObject, departingDoor G.IObject) {
-	actor.Go("go through it", departingDoor)
-}
-
 func init() {
 	AddScript(func(s *Script) {
 		// 1. A Room (contains) Doors
@@ -99,7 +95,8 @@ func init() {
 				// try the forward direction:
 				departingDoor := from.Object(dir.Text("Name") + "-via")
 				if departingDoor.Exists() {
-					TryMove(actor, dir, departingDoor)
+					//TryMove(actor, dir, departingDoor)
+					actor.Go("go through it", departingDoor)
 				} else {
 					// // try the opposite direction link:
 					// rev := dir.Object("opposite")
@@ -145,8 +142,9 @@ func init() {
 					} else {
 						// FIX: player property change?
 						// at the very least a move action.
-						g.Go(MoveThe(actor).ToThe(room))
-						room.Go("report the view")
+						g.Go(MoveThe(actor).ToThe(room)).Then(func(g G.Play) {
+							room.Go("report the view")
+						})
 					}
 				}
 			}),

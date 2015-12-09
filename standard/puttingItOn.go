@@ -75,8 +75,9 @@ func init() {
 		s.The("props",
 			Can("report placed").And("reporting placed").RequiresOne("actor").AndOne("supporter"),
 			To("report placed", func(g G.Play) {
-				g.Go(Put("action.Source").Onto("action.Context"))
-				g.Say("You put", ArticleName(g, "action.Source", nil), "onto", ArticleName(g, "action.Context", NameFullStop))
+				g.Go(Say("You put", ArticleName(g, "action.Source", nil), "onto", ArticleName(g, "action.Context", NameFullStop)).OnOneLine()).Then(func(g G.Play) {
+					g.Go(Put("action.Source").Onto("action.Context"))
+				})
 			}))
 		// x.
 		s.Execute("put it onto",

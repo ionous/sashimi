@@ -59,7 +59,6 @@ func init() {
 							return
 						}
 					}
-					g.Go(Give("prop").To("actor"))
 					// separate report action?
 					if actor == g.The("player") {
 						// the kat food.
@@ -67,6 +66,7 @@ func init() {
 					} else {
 						g.Say(ArticleName(g, "action.Target", nil), "takes", DefiniteName(g, "action.Source", NameFullStop))
 					}
+					g.Go(Give("prop").To("actor"))
 				}
 			}))
 		// understandings:

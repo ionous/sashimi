@@ -23,12 +23,15 @@ func (d DescribePhrase) Execute(g G.Play) {
 		if obj.Is("unhandled") {
 			desc = obj.Text("brief")
 		}
+		var ch G.IPromise
 		if desc != "" {
-			g.Say(desc)
+			ch = g.Go(Say(desc))
 		} else {
-			obj.Go("print name")
+			ch = obj.Go("print name")
 		}
-		obj.Go("print contents")
+		ch.Then(func(g G.Play) {
+			obj.Go("print contents")
+		})
 	}
 }
 
