@@ -8,6 +8,7 @@ import (
 	"github.com/ionous/sashimi/net/ess"
 	"github.com/ionous/sashimi/net/resource"
 	"github.com/ionous/sashimi/script"
+	"github.com/ionous/sashimi/standard/framework"
 	"github.com/ionous/sashimi/util/ident" // for generating unique ids
 	"io/ioutil"
 	"sync"
@@ -38,7 +39,7 @@ func (ess *MemSessions) NewSession(doc resource.DocumentBuilder) (ret ess.ISessi
 	} else {
 		id := ident.Dash(ident.MakeUniqueId())
 		meta := metal.NewMetal(ess.model, make(metal.ObjectValueMap))
-		view := app.NewStandardView(meta)
+		view := framework.NewStandardView(meta)
 		out := app.NewCommandOutput(id, meta, view)
 		if s, e := app.NewPartialSession(meta, ess.calls, out); e != nil {
 			err = e

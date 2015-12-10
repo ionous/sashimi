@@ -10,7 +10,7 @@ import (
 	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/runtime/parse"
-	"github.com/ionous/sashimi/standard"
+	"github.com/ionous/sashimi/standard/framework"
 	"github.com/ionous/sashimi/util/ident"
 	"io"
 	"log"
@@ -18,17 +18,17 @@ import (
 
 // implements IResource for the session and Frame for the
 type PartialSession struct {
-	game *standard.StandardCore
+	game *framework.StandardCore
 	out  *CommandOutput
 }
 
 func NewPartialSession(m meta.Model, calls api.LookupCallbacks, out *CommandOutput) (ret *PartialSession, err error) {
-	cfg := R.NewConfig().SetCalls(calls).SetOutput(out).SetFrame(out).SetParentLookup(standard.NewParentLookup(m))
+	cfg := R.NewConfig().SetCalls(calls).SetOutput(out).SetFrame(out).SetParentLookup(framework.NewParentLookup(m))
 	watched := change.NewModelWatcher(out, m)
 	if game, e := cfg.NewGame(watched); e != nil {
 	} else {
 		// after creating the game, but before running it --
-		if game, e := standard.NewStandardCore(game); e != nil {
+		if game, e := framework.NewStandardCore(game); e != nil {
 			err = e
 		} else {
 			ret = &PartialSession{game, out}

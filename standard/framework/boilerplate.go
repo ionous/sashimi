@@ -1,4 +1,4 @@
-package standard
+package framework
 
 import (
 	"bytes"

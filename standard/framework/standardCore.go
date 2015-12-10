@@ -1,4 +1,4 @@
-package standard
+package framework
 
 import (
 	"fmt"
@@ -9,11 +9,6 @@ import (
 	"github.com/ionous/sashimi/util/ident"
 	"log"
 )
-
-// FIX: we have the concept floating in other fixes of "function" globals
-// and that might be needed for this, where we really dont want *shared* globals
-// you would want this tied to session, if at all possible.
-var Debugging bool
 
 // StandardCore assists the transformation of a StandardStart into a StandardGame.
 type StandardCore struct {

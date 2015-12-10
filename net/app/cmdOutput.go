@@ -32,7 +32,7 @@ func NewCommandOutput(id string, m meta.Model, view View) *CommandOutput {
 // ActorSays adds a command for an actor's line of dialog.
 func (out *CommandOutput) ActorSays(gobj meta.Instance, lines []string) {
 	if !out.view.InView(gobj) {
-		out.Log(fmt.Sprintf("CommandOutput: ignoring speach, actor '%s' not in view. (%v)\n", gobj, lines))
+		out.Log(fmt.Sprintf("CommandOutput: actor '%s' not in view, ignoring speech: (%v)\n", gobj.GetId(), lines))
 	} else {
 		out.flushPending()
 		tgt := NewObjectRef(gobj)
@@ -81,7 +81,7 @@ func (out *CommandOutput) FlushDocument(doc resource.DocumentBuilder) {
 
 func (out *CommandOutput) NumChange(gobj meta.Instance, prop ident.Id, prev, next float32) {
 	if !out.view.InView(gobj) {
-		out.Log(fmt.Sprintf("CommandOutput: ignoring num change %s(%s->%s) object '%s' not in view\n", prop, prev, next, gobj))
+		out.Log(fmt.Sprintf("CommandOutput: '%s' not in view,ignoring num change %s(%s->%s)\n", gobj.GetId(), prop, prev, next))
 	} else {
 		obj := NewObjectRef(gobj)
 		data := struct {
@@ -94,7 +94,7 @@ func (out *CommandOutput) NumChange(gobj meta.Instance, prop ident.Id, prev, nex
 
 func (out *CommandOutput) TextChange(gobj meta.Instance, prop ident.Id, prev, next string) {
 	if !out.view.InView(gobj) {
-		out.Log(fmt.Sprintf("CommandOutput: ignoring text change %s(%s->%s) object '%s' not in view\n", prop, prev, next, gobj))
+		out.Log(fmt.Sprintf("CommandOutput: '%s' not in view(%s), ignoring text change %s(%s->%s)\n", gobj.GetId(), prop, prev, next))
 	} else {
 		obj := NewObjectRef(gobj)
 		data := struct {
@@ -107,7 +107,7 @@ func (out *CommandOutput) TextChange(gobj meta.Instance, prop ident.Id, prev, ne
 
 func (out *CommandOutput) StateChange(gobj meta.Instance, prop ident.Id, prev, next ident.Id) {
 	if !out.view.InView(gobj) {
-		out.Log(fmt.Sprintf("CommandOutput: ignoring state change %s(%s->%s) object '%s' not in view\n", prop, prev, next, gobj))
+		out.Log(fmt.Sprintf("CommandOutput: '%s' not in view, ignoring state change %s(%s->%s)\n", gobj.GetId(), prop, prev, next))
 	} else {
 		obj := NewObjectRef(gobj)
 		data := struct {
@@ -125,8 +125,16 @@ func (out *CommandOutput) StateChange(gobj meta.Instance, prop ident.Id, prev, n
 // ( ex. actor.whereabouts; not: room.contents. )
 func (out *CommandOutput) ReferenceChange(gobj meta.Instance, prop, other ident.Id, prev, next meta.Instance) {
 	if out.view.Viewpoint() == gobj {
+		var n ident.Id
+		if next != nil {
+			n = next.GetId()
+		}
+		out.Log(fmt.Sprintf("CommandOutput: changing view to %s\n", n))
 		if out.view.ChangedView(gobj, prop, next) && next != nil {
 			out.serial.Include(next)
+		}
+		if next != nil && !out.view.InView(next) {
+			panic("KJKJ")
 		}
 	} else {
 		if out.view.EnteredView(gobj, prop, next) {
@@ -138,7 +146,14 @@ func (out *CommandOutput) ReferenceChange(gobj meta.Instance, prop, other ident.
 		(next != nil && out.view.InView(next))
 
 	if !relatedView {
-		out.Log(fmt.Sprintf("CommandOutput: ignoring refchange change %s(%s->%s) object '%s' not in view\n", prop, prev, next, gobj))
+		var p, n ident.Id
+		if prev != nil {
+			p = prev.GetId()
+		}
+		if next != nil {
+			n = next.GetId()
+		}
+		out.Log(fmt.Sprintf("CommandOutput: '%s' not in view, ignoring refchange %v(%v->%v)\n", gobj.GetId(), prop, p, n))
 	} else {
 		obj := NewObjectRef(gobj)
 

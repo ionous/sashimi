@@ -5,15 +5,16 @@ import (
 	"github.com/ionous/sashimi/meta"
 	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/runtime/api"
-	"github.com/ionous/sashimi/standard"
+	_ "github.com/ionous/sashimi/standard" // init
+	"github.com/ionous/sashimi/standard/framework"
 )
 
 func NewSimpleSession(modelApi meta.Model, calls api.LookupCallbacks) (ret *SimpleSession, err error) {
 	out := &SimpleOutput{}
-	cfg := R.NewConfig().SetCalls(calls).SetOutput(out).SetParentLookup(standard.NewParentLookup(modelApi))
+	cfg := R.NewConfig().SetCalls(calls).SetOutput(out).SetParentLookup(framework.NewParentLookup(modelApi))
 	if game, e := cfg.NewGame(modelApi); e != nil {
 		err = e
-	} else if game, e := standard.NewStandardGame(game); e != nil {
+	} else if game, e := framework.NewStandardGame(game); e != nil {
 		err = e
 	} else if game, e := game.Start(); e != nil {
 		err = e
@@ -28,7 +29,7 @@ func NewSimpleSession(modelApi meta.Model, calls api.LookupCallbacks) (ret *Simp
 // a single game run by the server
 //
 type SimpleSession struct {
-	game  *standard.StandardGame
+	game  *framework.StandardGame
 	out   *SimpleOutput
 	lines []string
 }

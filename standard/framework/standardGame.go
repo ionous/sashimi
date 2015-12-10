@@ -1,4 +1,4 @@
-package standard
+package framework
 
 import (
 	"github.com/ionous/sashimi/parser"

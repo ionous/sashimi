@@ -6,6 +6,7 @@ import (
 	"github.com/ionous/sashimi/net/app"
 	"github.com/ionous/sashimi/net/resource"
 	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/standard/framework"
 	"io"
 )
 
@@ -23,7 +24,7 @@ func NewAppSession(
 	ret AppSession, err error,
 ) {
 	mdl := ds.Model()
-	out := app.NewCommandOutput(id, mdl, app.NewStandardView(mdl))
+	out := app.NewCommandOutput(id, mdl, framework.NewStandardView(mdl))
 	if partial, e := app.NewPartialSession(mdl, calls, out); e != nil {
 		err = e
 	} else {

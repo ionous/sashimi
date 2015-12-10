@@ -3,7 +3,7 @@ package app
 import (
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/net/resource"
-	"github.com/ionous/sashimi/standard" //containment includes
+	"github.com/ionous/sashimi/standard/framework" //containment includes
 	"github.com/ionous/sashimi/util/ident"
 )
 
@@ -22,7 +22,7 @@ func NewObjSerializer(m meta.Model, out resource.ObjectList) *ObjSerializer {
 // Include serializes the object and its contents
 func (o *ObjSerializer) Include(gobj meta.Instance) {
 	if o.SerializeObject(gobj) {
-		for _, rel := range standard.Containment {
+		for _, rel := range framework.Containment {
 			if prop, ok := gobj.GetProperty(rel); ok {
 				values := prop.GetValues()
 				for i := 0; i < values.NumValue(); i++ {
