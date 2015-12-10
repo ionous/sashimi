@@ -8,6 +8,7 @@ import (
 	"github.com/ionous/sashimi/runtime/internal"
 	"log"
 	"math/rand"
+	"strings"
 )
 
 type RuntimeConfig struct {
@@ -37,7 +38,7 @@ func (cfg RuntimeConfig) Finalize() internal.RuntimeCore {
 			}}
 	}
 	if core.Frame == nil {
-		core.Frame = defaultFrame{core.Log}
+		core.Frame = &defaultFrame{core.Log, nil}
 	}
 	if core.LookupParents == nil {
 		core.LookupParents = noParents{}
@@ -94,15 +95,19 @@ func (cfg *RuntimeConfig) SetRand(rand *rand.Rand) *RuntimeConfig {
 }
 
 type defaultFrame struct {
-	log api.Log
+	log   api.Log
+	parts []string
 }
 
-func (d defaultFrame) BeginEvent(_ E.ITarget, path E.PathList, msg *E.Message) api.IEndEvent {
-	d.log.Printf("sending `%s` to: %s.", msg, path)
+func (d *defaultFrame) BeginEvent(_ E.ITarget, path E.PathList, msg *E.Message) api.IEndEvent {
+	d.parts = append(d.parts, msg.String())
+	fullName := strings.Join(d.parts, "/")
+	d.log.Printf("sending `%s` to: %s.", fullName, path)
 	return d
 }
 
-func (d defaultFrame) EndEvent() {
+func (d *defaultFrame) EndEvent() {
+	d.parts = d.parts[0 : len(d.parts)-1]
 }
 
 type LogAdapter struct {

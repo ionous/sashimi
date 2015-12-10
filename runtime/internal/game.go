@@ -52,11 +52,8 @@ func (g *Game) QueueAction(data *RuntimeAction) {
 	g.Queue.QueueFuture(future)
 }
 
-func (g *Game) PopAction() (ret Future, okay bool) {
-	if !g.Queue.Empty() {
-		okay, ret = true, g.Queue.PopFuture()
-	}
-	return
+func (g *Game) ProcessActions() error {
+	return g.Queue.ProcessActions(g)
 }
 
 // NewRuntimeAction: captures an action and bunch of nouns.

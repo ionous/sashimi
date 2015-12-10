@@ -42,15 +42,7 @@ func (g *Game) QueueAction(action string, nouns ...ident.Id) (ret *internal.Runt
 	return ret, err
 }
 
-// ProcessActions in the event queue till empty, or errored.
-func (g *Game) ProcessActions() (err error) {
-	for {
-		if act, ok := g.game.PopAction(); !ok {
-			break
-		} else if e := act.Run(g.game); e != nil {
-			err = e
-			break
-		}
-	}
-	return err
+// Update game until the event queue till empty, or errored.
+func (g *Game) ProcessActions() error {
+	return g.game.ProcessActions()
 }

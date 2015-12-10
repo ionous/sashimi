@@ -8,6 +8,11 @@ import (
 	"strings"
 )
 
+// FIX: we have the concept floating in other fixes of "function" globals
+// and that might be needed for this, where we really dont want *shared* globals
+// you would want this tied to session, if at all possible.
+var Debugging bool
+
 // InitStandardLibrary to ensure all standard library scripts are properly created.
 func InitStandardLibrary() *Script {
 	// the side effect of importing the standard library
@@ -364,27 +369,41 @@ func init() {
 
 		s.The("rooms",
 			Can("report the view").And("reporting the view").RequiresNothing(),
-			After("reporting the view").Always(func(g G.Play) {
+			When("reporting the view").Always(func(g G.Play) {
 				room := g.The("room")
-				room.IsNow("visited")
+				g.The("status bar").SetText("left", lang.Titleize(room.Text("Name")))
+			}),
+			After("reporting the view").Always(func(g G.Play) {
+				g.Go(Change("room").To("visited"))
 			}),
 			To("report the view", func(g G.Play) {
-				room := g.The("room")
-				// sometines a blank like is printed without this
-				// (maybe certain directions? or going through doors?)
-				// not sure why, so leaving this for consistency
-				g.Say(Lines("", room.Text("Name")))
-				g.Say(Lines(room.Text("description"), ""))
-				// FIX? uses 1 to exclude the player....
-				// again, this happens because we dont know if print description actually did anything (re:scenery, etc.)
-				if contents := room.ObjectList("contents"); len(contents) > 1 {
-					for _, obj := range contents {
-						obj.Go("print description")
-						g.Say("")
-					}
-				}
-				// FIX: duplicated in stories describe the first room
-				g.The("status bar").SetText("left", lang.Titleize(room.Text("Name")))
+				g.Go(View("room"))
 			}))
 	})
+}
+
+// FUTURE? interestingly, while we wouldnt be able to encode them without special work, the contents of the phrases are fixed: we could have After("reporting").Execute(Phrase). maybe "standard" phrases could put themselves in some sort of wrapper? around the model? tho not quite sure howd that work.
+type ViewRoomPhrase struct {
+	object string
+}
+
+func View(object string) ViewRoomPhrase {
+	return ViewRoomPhrase{object}
+}
+
+func (p ViewRoomPhrase) Execute(g G.Play) {
+	room := g.The("room")
+	// sometines a blank like is printed without this
+	// (maybe certain directions? or going through doors?)
+	// not sure why, so leaving this for consistency
+	g.Say(Lines("", room.Text("Name")))
+	g.Say(Lines(room.Text("description"), ""))
+	// FIX? uses 1 to exclude the player....
+	// again, this happens because we dont know if print description actually did anything (re:scenery, etc.)
+	if contents := room.ObjectList("contents"); len(contents) > 1 {
+		for _, obj := range contents {
+			obj.Go("print description")
+			g.Say("")
+		}
+	}
 }

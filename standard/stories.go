@@ -4,7 +4,6 @@ import (
 	"fmt"
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
-	"github.com/ionous/sashimi/util/lang"
 )
 
 //
@@ -109,11 +108,7 @@ func init() {
 				And("describing the first room").RequiresOne("room"),
 			To("describe the first room", func(g G.Play) {
 				room := g.The("action.Target")
-				/// FIX: visited should happen elsewhere
-				g.The("status bar").SetText("left", lang.Titleize(room.Text("Name")))
-				room.Go("report the view").Then(func(g G.Play) {
-					room.IsNow("visited")
-				})
+				room.Go("report the view")
 			}),
 		)
 	})

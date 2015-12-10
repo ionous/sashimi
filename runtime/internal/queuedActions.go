@@ -2,9 +2,7 @@ package internal
 
 import (
 	"fmt"
-	E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game"
-	"github.com/ionous/sashimi/util/ident"
 )
 
 // QueuedAction implements Future for named actions.
@@ -18,9 +16,12 @@ type QueuedAction struct {
 // ex. g.Go(Jump("player")
 type QueuedPhrase struct {
 	data *RuntimeAction
-	// FIX: this should be the same as "defaultAction(s)"
 	run  G.RuntimePhrase
 	next *ChainedCallback
+}
+
+func (c *QueuedPhrase) String() string {
+	return fmt.Sprint("QueuedPhrase", c.run)
 }
 
 // QueuedPhrases implements Future for a set of phrases.
@@ -32,6 +33,10 @@ type QueuedPhrases struct {
 	next *ChainedCallback
 }
 
+func (c *QueuedPhrases) String() string {
+	return fmt.Sprint("QueuedPhrases", c.run)
+}
+
 // ChainedCallbacks implements Future for nested callbacks; created by PendingChain.
 // ex. Then(func(g G.Play){ })
 type ChainedCallback struct {
@@ -39,50 +44,21 @@ type ChainedCallback struct {
 	cb   G.Callback
 }
 
-//
-func (c *QueuedAction) Run(g *Game) (err error) {
-	act := c.data
-	tgt := NewObjectTarget(g, act.GetTarget())
-	path := E.NewPathTo(tgt)
-	msg := &E.Message{Id: act.action.GetEvent().GetId(), Data: act}
-	frame := g.Frame.BeginEvent(tgt, path, msg)
-	if runDefault, e := msg.Send(path); e != nil {
-		err = e
-	} else {
-		if runDefault {
-			play := g.newPlay(act, ident.Empty())
-			if callbacks, ok := act.action.GetCallbacks(); ok {
-				for i := 0; i < callbacks.NumCallback(); i++ {
-					cb := callbacks.CallbackNum(i)
-					if found, ok := g.LookupCallback(cb); !ok {
-						err = fmt.Errorf("internal error, couldnt find callback %s", cb)
-						//panic(err)
-						break
-					} else {
-						found(play)
-					}
-				}
-				if err == nil {
-					for _, after := range act.after {
-						after.call(play)
-					}
-				}
-			}
-
-		}
-	}
-	frame.EndEvent()
-	if err == nil && c.next != nil {
-		g.Queue.QueueFuture(c.next)
-	}
-	return
+func (c *ChainedCallback) String() string {
+	return fmt.Sprint("ChainedCallback", c.cb)
 }
 
-//
+// BUG: we may be getting two sets of events?
+// when we run the defaults, they may bqueue
+// they will ahve the act of the parent
+func (c *QueuedAction) Run(g *Game) (err error) {
+	panic("not implemented")
+}
+
 func (c *QueuedPhrase) Run(g *Game) (err error) {
-	play := &GameEventAdapter{Game: g, data: c.data}
-	c.run.Execute(play)
-	if c.next != nil {
+	if e := RunPhrases(g, c.data, c.run); e != nil {
+		err = e
+	} else if c.next != nil {
 		g.Queue.QueueFuture(c.next)
 	}
 	return
@@ -90,13 +66,29 @@ func (c *QueuedPhrase) Run(g *Game) (err error) {
 
 //
 func (c *QueuedPhrases) Run(g *Game) (err error) {
-	play := &GameEventAdapter{Game: g, data: c.data}
-	for _, run := range c.run {
-		run.Execute(play)
-	}
-	if c.next != nil {
+	if e := RunPhrases(g, c.data, c.run...); e != nil {
+		err = e
+	} else if c.next != nil {
 		g.Queue.QueueFuture(c.next)
 	}
+	return
+}
+
+// during execute, whatever event we are in -- we want to stay in, until the end of execute.
+// basically we want to subvert the queue -- so all queued futures come into us
+func RunPhrases(g *Game, d *RuntimeAction, phrases ...G.RuntimePhrase) (err error) {
+	// oldQueue := g.Queue
+	// defer func() {
+	// 	g.Queue = oldQueue
+	// }()
+	// myQueue := NewActionQueue()
+	// // FIX: maybe we should get the queue from the event adapter...?
+	// g.Queue = myQueue
+	play := &GameEventAdapter{Game: g, data: d}
+	for _, run := range phrases {
+		run.Execute(play)
+	}
+	// return myQueue.ProcessActions(g)
 	return
 }
 
