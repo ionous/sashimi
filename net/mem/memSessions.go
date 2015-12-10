@@ -37,9 +37,10 @@ func (ess *MemSessions) NewSession(doc resource.DocumentBuilder) (ret ess.ISessi
 		err = e
 	} else {
 		id := ident.Dash(ident.MakeUniqueId())
-		out := app.NewCommandOutput(id, app.NewObjectSerializer(make(app.KnownObjectMap)))
 		meta := metal.NewMetal(ess.model, make(metal.ObjectValueMap))
-		if s, e := app.NewPartialSession(out, meta, ess.calls); e != nil {
+		view := app.NewStandardView(meta)
+		out := app.NewCommandOutput(id, meta, view)
+		if s, e := app.NewPartialSession(meta, ess.calls, out); e != nil {
 			err = e
 		} else {
 			out.FlushDocument(doc)

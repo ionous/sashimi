@@ -7,7 +7,7 @@ import (
 	"github.com/ionous/sashimi/util/ident"
 )
 
-func ObjectResource(mdl meta.Model, clsId ident.Id, serial *ObjectSerializer) resource.IResource {
+func ObjectResource(mdl meta.Model, clsId ident.Id) resource.IResource {
 	return resource.Wrapper{
 		// Find the id object.
 		Finds: func(name string) (ret resource.IResource, okay bool) {
@@ -17,7 +17,7 @@ func ObjectResource(mdl meta.Model, clsId ident.Id, serial *ObjectSerializer) re
 					okay, ret = true, resource.Wrapper{
 						// Return the object:
 						Queries: func(doc resource.DocumentBuilder) {
-							serial.SerializeObject(doc, inst, true)
+							doc.AddObject(SerializeObject(inst))
 						},
 						// Find a relation in the object:
 						Finds: func(propertyName string) (ret resource.IResource, okay bool) {
@@ -32,16 +32,28 @@ func ObjectResource(mdl meta.Model, clsId ident.Id, serial *ObjectSerializer) re
 									okay, ret = true, resource.Wrapper{
 										// Return the list of related objects:
 										Queries: func(doc resource.DocumentBuilder) {
-											classes, includes := doc.NewObjects(), doc.NewIncludes()
-											//// UGH. for backwards compatibility (ex. whereabouts queries
+											objects, includes :=
+												NewRefSerializer(mdl, doc.NewObjects()),
+												NewObjSerializer(mdl, doc.NewIncludes())
+
+											addObject := func(n ident.Id) {
+												if gobj, ok := mdl.GetInstance(n); !ok {
+													panic(fmt.Sprintf("internal error, couldnt find related object '%s'", n))
+												} else {
+													objects.AddObject(gobj)
+													includes.SerializeObject(gobj)
+												}
+											}
+
+											// UGH. for backwards compatibility (ex. whereabouts queries
 											if propType := prop.GetType(); propType&meta.ArrayProperty == 0 {
 												n := prop.GetValue().GetObject()
-												addObject(mdl, n, serial, classes, includes)
+												addObject(n)
 											} else {
 												vals := prop.GetValues()
 												for i := 0; i < vals.NumValue(); i++ {
 													n := vals.ValueNum(i).GetObject()
-													addObject(mdl, n, serial, classes, includes)
+													addObject(n)
 												}
 											}
 										},
@@ -55,13 +67,6 @@ func ObjectResource(mdl meta.Model, clsId ident.Id, serial *ObjectSerializer) re
 			}
 			return ret, okay
 		},
-	}
-}
-func addObject(mdl meta.Model, n ident.Id, serial *ObjectSerializer, classes, includes resource.IBuildObjects) {
-	if other, ok := mdl.GetInstance(n); !ok {
-		panic(fmt.Sprintf("internal error, couldnt find related object '%s'", n))
-	} else {
-		serial.AddObjectRef(classes, other, includes)
 	}
 }
 

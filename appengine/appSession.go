@@ -16,13 +16,15 @@ type AppSession struct {
 }
 
 func NewAppSession(
-	out *app.CommandOutput,
+	id string,
 	ds *DS.ModelStore,
 	calls api.LookupCallbacks,
 ) (
 	ret AppSession, err error,
 ) {
-	if partial, e := app.NewPartialSession(out, ds.Model(), calls); e != nil {
+	mdl := ds.Model()
+	out := app.NewCommandOutput(id, mdl, app.NewStandardView(mdl))
+	if partial, e := app.NewPartialSession(mdl, calls, out); e != nil {
 		err = e
 	} else {
 		ret = AppSession{ds, partial}

@@ -141,7 +141,7 @@ func (vw vwatch) SetObject(val ident.Id) (err error) {
 			if !val.Empty() {
 				next, _ = vw.pw.iw.mw.GetInstance(val)
 			}
-			// other is looking for "contents", "inventory", etc.
+			// other is list of "contents", "inventory", etc.
 			var other ident.Id
 			if rel, ok := vw.pw.GetRelative(); ok {
 				other = rel.From

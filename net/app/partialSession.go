@@ -22,7 +22,7 @@ type PartialSession struct {
 	out  *CommandOutput
 }
 
-func NewPartialSession(out *CommandOutput, m meta.Model, calls api.LookupCallbacks) (ret *PartialSession, err error) {
+func NewPartialSession(m meta.Model, calls api.LookupCallbacks, out *CommandOutput) (ret *PartialSession, err error) {
 	cfg := R.NewConfig().SetCalls(calls).SetOutput(out).SetFrame(out).SetParentLookup(standard.NewParentLookup(m))
 	watched := change.NewModelWatcher(out, m)
 	if game, e := cfg.NewGame(watched); e != nil {
@@ -37,6 +37,11 @@ func NewPartialSession(out *CommandOutput, m meta.Model, calls api.LookupCallbac
 	return ret, err
 }
 
+func (s *PartialSession) FlushDocument(doc resource.DocumentBuilder) error {
+	s.out.FlushDocument(doc)
+	return nil
+}
+
 func (s *PartialSession) Frame() int {
 	return s.game.Frame()
 }
@@ -48,7 +53,7 @@ func (s *PartialSession) Find(name string) (ret resource.IResource, okay bool) {
 	// by default, objects are grouped by their class:
 	default:
 		if cls, ok := mdl.GetClass(ident.MakeId(name)); ok {
-			ret, okay = ObjectResource(mdl, cls.GetId(), s.out.serial), true
+			ret, okay = ObjectResource(mdl, cls.GetId()), true
 		}
 	// a request for information about a class:
 	case "class":

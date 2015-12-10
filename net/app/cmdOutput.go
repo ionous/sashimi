@@ -1,7 +1,8 @@
 package app
 
 import (
-	C "github.com/ionous/sashimi/console"
+	"fmt"
+	"github.com/ionous/sashimi/console"
 	E "github.com/ionous/sashimi/event"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/net/resource"
@@ -12,27 +13,31 @@ import (
 
 // CommandOutput records game state changes, gets sent to the player/client.
 type CommandOutput struct {
-	id               string
-	C.BufferedOutput // TEMP: implements Print() and Println()
-	serial           *ObjectSerializer
-	events           *EventStream
+	id     string
+	view   View
+	events *EventStream
+	serial *ObjSerializer
+	text   console.BufferedOutput
 }
 
-// NewCommandOutput
-func NewCommandOutput(id string, serializer *ObjectSerializer) *CommandOutput {
-	out := &CommandOutput{
+func NewCommandOutput(id string, m meta.Model, view View) *CommandOutput {
+	return &CommandOutput{
 		id:     id,
-		serial: serializer,
+		view:   view,
 		events: NewEventStream(),
+		serial: NewObjSerializer(m, resource.NewObjectList()),
 	}
-	return out
 }
 
 // ActorSays adds a command for an actor's line of dialog.
-func (out *CommandOutput) ActorSays(who meta.Instance, lines []string) {
-	out.flushPending()
-	tgt := out.serial.NewObjectRef(who)
-	out.events.AddAction("say", tgt, lines)
+func (out *CommandOutput) ActorSays(gobj meta.Instance, lines []string) {
+	if !out.view.InView(gobj) {
+		out.Log(fmt.Sprintf("CommandOutput: ignoring speach, actor '%s' not in view. (%v)\n", gobj, lines))
+	} else {
+		out.flushPending()
+		tgt := NewObjectRef(gobj)
+		out.events.AddAction("say", tgt, lines)
+	}
 }
 
 // ScriptSays adds a command for passed script lines.
@@ -40,7 +45,7 @@ func (out *CommandOutput) ActorSays(who meta.Instance, lines []string) {
 // which gets written during flushPending() )
 func (out *CommandOutput) ScriptSays(lines []string) {
 	for _, l := range lines {
-		out.Println(l)
+		out.text.Println(l)
 	}
 }
 
@@ -67,25 +72,18 @@ func (out *CommandOutput) Log(message string) {
 // FlushDocument containing all commands to the passed document builder.
 func (out *CommandOutput) FlushDocument(doc resource.DocumentBuilder) {
 	out.flushPending()
-	out.flushFrame(doc, doc.NewIncludes())
-}
-
-// FlushFrame NOTE: Both header and included may be the same list -- as is true of the first frame.
-func (out *CommandOutput) flushFrame(header, included resource.IBuildObjects) {
-	// create a new frame
-	// include all events for out new frame
-	game := header.NewObject(out.id, "game")
+	game := doc.NewObject(out.id, "game")
 	if events := out.events.Flush(); len(events) > 0 {
 		game.SetAttr("events", events)
 	}
-	// includes the object once, after all of properties have changed.
-	for _, gobj := range out.serial.Flush() {
-		out.serial.SerializeObject(included, gobj, false)
-	}
+	doc.SetIncluded(out.serial.out)
 }
 
 func (out *CommandOutput) NumChange(gobj meta.Instance, prop ident.Id, prev, next float32) {
-	if obj, ok := out.serial.TryObjectRef(gobj); ok {
+	if !out.view.InView(gobj) {
+		out.Log(fmt.Sprintf("CommandOutput: ignoring num change %s(%s->%s) object '%s' not in view\n", prop, prev, next, gobj))
+	} else {
+		obj := NewObjectRef(gobj)
 		data := struct {
 			Prop  string  `json:"prop"`
 			Value float32 `json:"value"`
@@ -95,7 +93,10 @@ func (out *CommandOutput) NumChange(gobj meta.Instance, prop ident.Id, prev, nex
 }
 
 func (out *CommandOutput) TextChange(gobj meta.Instance, prop ident.Id, prev, next string) {
-	if obj, ok := out.serial.TryObjectRef(gobj); ok {
+	if !out.view.InView(gobj) {
+		out.Log(fmt.Sprintf("CommandOutput: ignoring text change %s(%s->%s) object '%s' not in view\n", prop, prev, next, gobj))
+	} else {
+		obj := NewObjectRef(gobj)
 		data := struct {
 			Prop  string `json:"prop"`
 			Value string `json:"value"`
@@ -103,8 +104,12 @@ func (out *CommandOutput) TextChange(gobj meta.Instance, prop ident.Id, prev, ne
 		out.events.AddAction("x-txt", obj, data)
 	}
 }
+
 func (out *CommandOutput) StateChange(gobj meta.Instance, prop ident.Id, prev, next ident.Id) {
-	if obj, ok := out.serial.TryObjectRef(gobj); ok {
+	if !out.view.InView(gobj) {
+		out.Log(fmt.Sprintf("CommandOutput: ignoring state change %s(%s->%s) object '%s' not in view\n", prop, prev, next, gobj))
+	} else {
+		obj := NewObjectRef(gobj)
 		data := struct {
 			Prop string `json:"prop"`
 			Prev string `json:"prev"`
@@ -115,9 +120,28 @@ func (out *CommandOutput) StateChange(gobj meta.Instance, prop ident.Id, prev, n
 		out.events.AddAction("x-set", obj, data)
 	}
 }
+
+// currently sent on the "one" side of an object for any object value.
+// ( ex. actor.whereabouts; not: room.contents. )
 func (out *CommandOutput) ReferenceChange(gobj meta.Instance, prop, other ident.Id, prev, next meta.Instance) {
-	if out.serial.IsKnown(gobj) || out.serial.IsKnown(prev) || out.serial.IsKnown(next) {
-		obj := out.serial.NewObjectRef(gobj)
+	if out.view.Viewpoint() == gobj {
+		if out.view.ChangedView(gobj, prop, next) && next != nil {
+			out.serial.Include(next)
+		}
+	} else {
+		if out.view.EnteredView(gobj, prop, next) {
+			out.serial.Include(gobj)
+		}
+	}
+	relatedView := out.view.InView(gobj) ||
+		(prev != nil && out.view.InView(prev)) ||
+		(next != nil && out.view.InView(next))
+
+	if !relatedView {
+		out.Log(fmt.Sprintf("CommandOutput: ignoring refchange change %s(%s->%s) object '%s' not in view\n", prop, prev, next, gobj))
+	} else {
+		obj := NewObjectRef(gobj)
+
 		relChange := struct {
 			Prop  string           `json:"prop"`
 			Other string           `json:"other"`
@@ -125,15 +149,13 @@ func (out *CommandOutput) ReferenceChange(gobj meta.Instance, prop, other ident.
 			Next  *resource.Object `json:"next,omitempty"`
 		}{Prop: jsonId(prop), Other: jsonId(other)}
 
-		// fire for the prev object's relationships
 		if prev != nil {
-			relChange.Prev = out.serial.NewObjectRef(prev)
+			relChange.Prev = NewObjectRef(prev)
+		}
+		if next != nil {
+			relChange.Next = NewObjectRef(next)
 		}
 
-		// fire for the next object's relationships
-		if next != nil {
-			relChange.Next = out.serial.NewObjectRef(next)
-		}
 		out.events.AddAction("x-rel", obj, relChange)
 	}
 }
@@ -141,22 +163,23 @@ func (out *CommandOutput) ReferenceChange(gobj meta.Instance, prop, other ident.
 // flushPending buffered lines into the fake display object.
 // ( so long as theres a flush before push and pop. )
 func (out *CommandOutput) flushPending() {
-	if lines := out.BufferedOutput.Flush(); len(lines) > 0 {
-		// FIXFIXIX: theres some sort of bug in the buffered output or the code that uses it,
-		// leading to empty, and unconsolidated, "say" staements
-		// this can be seen in command_test: after lines": ["", "lab", "an empty room", ""],
-		// are a series of blank says.
-		empty := true
-		for _, l := range lines {
-			if len(l) > 0 {
-				empty = false
-				break
-			}
-		}
-		if !empty {
-			// FIX? a queriable resource so that it's recoverable, pagination?
-			var tgt = resource.ObjectList{}.NewObject("_display_", "_sys_")
+	if lines := out.text.Flush(); len(lines) > 0 {
+		if !EmptyLines(lines) {
+			tgt := resource.NewObject("_display_", "_sys_")
 			out.events.AddAction("print", tgt, lines)
 		}
 	}
+}
+
+// FXIXI some code -- like report the view --
+// prettifies the output by printing blank lines (ugh)
+func EmptyLines(lines []string) bool {
+	empty := true
+	for _, l := range lines {
+		if len(l) > 0 {
+			empty = false
+			break
+		}
+	}
+	return empty
 }

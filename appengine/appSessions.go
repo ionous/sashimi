@@ -5,7 +5,6 @@ import (
 	"appengine/datastore"
 	DS "github.com/ionous/sashimi/appengine/datastore"
 	M "github.com/ionous/sashimi/compiler/model"
-	"github.com/ionous/sashimi/net/app"
 	"github.com/ionous/sashimi/net/ess"
 	"github.com/ionous/sashimi/net/resource"
 	"github.com/ionous/sashimi/runtime/api"
@@ -28,24 +27,27 @@ func NewSessions(
 
 func (aps AppSessions) NewSession(doc resource.DocumentBuilder) (ret ess.ISession, err error) {
 	id := ident.Dash(ident.MakeUniqueId())
-	key, out := aps.newSessionKey(id), app.NewCommandOutput(id, app.NewObjectSerializer(AlwaysKnown{}))
-	ret, err = aps.newSession(key, out)
-	out.FlushDocument(doc)
+	if s, e := aps.newSession(id); e != nil {
+		err = e
+	} else if e := s.FlushDocument(doc); e != nil {
+		err = e
+	} else {
+		ret = s
+	}
 	return
 }
 
 func (aps AppSessions) GetSession(id string) (ret ess.ISession, okay bool) {
-	key, out := aps.newSessionKey(id), app.NewCommandOutput(id, app.NewObjectSerializer(AlwaysKnown{}))
-	if s, e := aps.newSession(key, out); e == nil {
+	if s, e := aps.newSession(id); e == nil {
 		ret, okay = s, true
 	}
 	return
 }
 
-func (aps AppSessions) newSession(key *datastore.Key, out *app.CommandOutput) (ret AppSession, err error) {
+func (aps AppSessions) newSession(id string) (ret AppSession, err error) {
 	// the model store stores changes to the passed model under the passed ancestor session key.
-	ds := DS.NewModelStore(aps.ctx, aps.model, key)
-	return NewAppSession(out, ds, aps.calls)
+	ds := DS.NewModelStore(aps.ctx, aps.model, aps.newSessionKey(id))
+	return NewAppSession(id, ds, aps.calls)
 }
 
 func (aps AppSessions) newSessionKey(id string) *datastore.Key {

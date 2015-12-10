@@ -26,7 +26,7 @@ func (cls ClassModel) Parent() (ret ident.Id) {
 }
 
 // FindProperty does not search parent classes.
-func (cls ClassModel) FindGetProperty(id ident.Id) (ret *PropertyModel, okay bool) {
+func (cls ClassModel) GetProperty(id ident.Id) (ret *PropertyModel, okay bool) {
 	for i, p := range cls.Properties {
 		if p.Id == id {
 			ret, okay = &cls.Properties[i], true
