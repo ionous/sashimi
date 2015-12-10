@@ -37,19 +37,23 @@ func (v *StandardView) Viewpoint() meta.Instance {
 	return v.player
 }
 func (v *StandardView) ResetView(player, room meta.Instance) {
-	v.visible = make(map[ident.Id]StandardVisibilty)
+	v.visible = map[ident.Id]StandardVisibilty{player.GetId(): Visible}
 	v.player = player
 	v.room = room
 }
 
 func (v *StandardView) ChangedView(gobj meta.Instance, prop ident.Id, next meta.Instance) (changed bool) {
-	if _, ok := Containment[prop]; ok {
-		if next != nil {
-			next = v.LookupRoot(next)
-		}
-		if next != v.room {
-			v.ResetView(gobj, next)
-			changed = true
+	// did the player property change
+	if gobj == v.player {
+		// and is it contaiment
+		if _, ok := Containment[prop]; ok {
+			if next != nil {
+				next = v.LookupRoot(next)
+			}
+			if next != v.room {
+				v.ResetView(gobj, next)
+				changed = true
+			}
 		}
 	}
 	return
