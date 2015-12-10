@@ -20,12 +20,16 @@ func NewDocumentBuilder(doc *Document) DocumentBuilder {
 //
 func (build DocumentBuilder) NewObject(id, class string) *Object {
 	obj := NewObject(id, class)
+	build.AddObject(obj)
+	return obj
+}
+
+func (build DocumentBuilder) AddObject(obj *Object) {
 	if build.doc.Data == nil {
 		build.doc.Data = obj
 	} else {
 		build.AddError(fmt.Errorf("document object specified multiple times."))
 	}
-	return obj
 }
 
 //
