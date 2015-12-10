@@ -41,7 +41,7 @@ func (oa GameObject) FromClass(class string) (okay bool) {
 }
 
 func (oa GameObject) ParentRelation() (ret G.IObject, rel string) {
-	if parent, prop, ok := oa.LookupParent(oa.Model, oa.gobj); ok {
+	if parent, prop, ok := oa.LookupParent(oa.gobj); ok {
 		ret, rel = oa.NewGameObject(parent), prop.GetName()
 	} else {
 		ret = NullObjectSource(NewPath(oa.Id()).Add("parent"), 1)

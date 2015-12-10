@@ -75,8 +75,8 @@ func RunScript(script *script.Script, opt Options) (err error) {
 		cons := GetConsole(opt)
 		defer cons.Close()
 
-		cfg := R.NewConfig().SetCalls(model.Calls).SetOutput(NewStandardOutput(cons, writer)).SetParentLookup(ParentLookup{})
 		modelApi := metal.NewMetal(model.Model, make(metal.ObjectValueMap))
+		cfg := R.NewConfig().SetCalls(model.Calls).SetOutput(NewStandardOutput(cons, writer)).SetParentLookup(NewParentLookup(modelApi))
 		if g, e := cfg.NewGame(modelApi); e != nil {
 			err = e
 		} else {

@@ -23,7 +23,7 @@ type PartialSession struct {
 }
 
 func NewPartialSession(out *CommandOutput, m meta.Model, calls api.LookupCallbacks) (ret *PartialSession, err error) {
-	cfg := R.NewConfig().SetCalls(calls).SetOutput(out).SetFrame(out).SetParentLookup(standard.ParentLookup{})
+	cfg := R.NewConfig().SetCalls(calls).SetOutput(out).SetFrame(out).SetParentLookup(standard.NewParentLookup(m))
 	watched := change.NewModelWatcher(out, m)
 	if game, e := cfg.NewGame(watched); e != nil {
 	} else {

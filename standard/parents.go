@@ -59,24 +59,6 @@ func _location(obj IObject) (parent IObject, okay bool) {
 	return
 }
 
-// //
-// // find the direct parent ( moving towards the outermost room or closed container ) of the passed object
-// func ParentByEnclosure(obj IObject) (parent IObject, where string) {
-// 	if room, ok := obj.Object("whereabouts"); ok {
-// 		parent, wheres = room, "whereabouts"
-// 	} else if carrier, ok := Carrier(obj); ok != "" {
-// 		parent, where = carrier, ok
-// 	} else if supporter, ok := obj.Object("support"); ok {
-// 		parent, where = supporter, "support"
-// 	} else if container, ok := obj.Object("enclosure"); ok {
-// 		if container.Is("open") {
-// 			parent, where = container, "enclosure"
-// 		}
-// 	}
-// 	return
-// }
-
-//
 // find the outermost room or closed container containing the passed object
 func Enclosure(obj IObject) (parent IObject) {
 	if room := obj.Object("whereabouts"); room.Exists() {

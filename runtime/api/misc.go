@@ -9,7 +9,7 @@ import (
 
 type LookupParents interface {
 	// parent instance, property used to find the parent, true if existed
-	LookupParent(meta.Model, meta.Instance) (meta.Instance, meta.Property, bool)
+	LookupParent(meta.Instance) (meta.Instance, meta.Property, bool)
 }
 
 type LookupCallbacks interface {

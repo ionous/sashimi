@@ -35,7 +35,7 @@ func (ot ObjectTarget) String() string {
 // Parent walks up the the (externally defined) containment hierarchy (from event.ITarget.)
 func (ot ObjectTarget) Parent() (ret E.ITarget, ok bool) {
 	game, obj := ot.game, ot.obj
-	next, _, haveParent := game.LookupParent(game.Model, obj)
+	next, _, haveParent := game.LookupParent(obj)
 	cls := obj.GetParentClass()
 	if cls != nil || haveParent {
 		ret, ok = ClassTarget{ot, cls, next}, true

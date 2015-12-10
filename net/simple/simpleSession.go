@@ -10,7 +10,7 @@ import (
 
 func NewSimpleSession(modelApi meta.Model, calls api.LookupCallbacks) (ret *SimpleSession, err error) {
 	out := &SimpleOutput{}
-	cfg := R.NewConfig().SetCalls(calls).SetOutput(out).SetParentLookup(standard.ParentLookup{})
+	cfg := R.NewConfig().SetCalls(calls).SetOutput(out).SetParentLookup(standard.NewParentLookup(modelApi))
 	if game, e := cfg.NewGame(modelApi); e != nil {
 		err = e
 	} else if game, e := standard.NewStandardGame(game); e != nil {

@@ -69,7 +69,7 @@ func main() {
 			defer cons.Close()
 			//
 			out := standard.NewStandardOutput(cons, writer)
-			parents := standard.ParentLookup{}
+			parents := standard.NewParentLookup(modelApi)
 			//
 			cfg := R.NewConfig().SetCalls(calls).SetOutput(out).SetParentLookup(parents)
 			//

@@ -40,14 +40,14 @@ func (cfg RuntimeConfig) Finalize() internal.RuntimeCore {
 		core.Frame = defaultFrame{core.Log}
 	}
 	if core.LookupParents == nil {
-		core.LookupParents = parentLookup{}
+		core.LookupParents = noParents{}
 	}
 	return core
 }
 
-type parentLookup struct{}
+type noParents struct{}
 
-func (parentLookup) LookupParent(meta.Model, meta.Instance) (inst meta.Instance, rel meta.Property, okay bool) {
+func (noParents) LookupParent(meta.Instance) (inst meta.Instance, rel meta.Property, okay bool) {
 	return
 }
 
