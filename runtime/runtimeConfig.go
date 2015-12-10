@@ -106,6 +106,9 @@ func (d *defaultFrame) BeginEvent(_ E.ITarget, path E.PathList, msg *E.Message) 
 	return d
 }
 
+func (d *defaultFrame) FlushFrame() {
+}
+
 func (d *defaultFrame) EndEvent() {
 	d.parts = d.parts[0 : len(d.parts)-1]
 }

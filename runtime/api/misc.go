@@ -30,6 +30,10 @@ type EventFrame interface {
 	// could potentially send target type to startframe
 	// right now it seems wrong that the game decides that.
 	BeginEvent(E.ITarget, E.PathList, *E.Message) IEndEvent
+
+	// haking... there are actions which arent events --
+	// this gets the command output to stop consolidating lines across these actions
+	FlushFrame()
 }
 
 type IEndEvent interface {

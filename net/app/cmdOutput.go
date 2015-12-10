@@ -49,6 +49,10 @@ func (out *CommandOutput) ScriptSays(lines []string) {
 	}
 }
 
+func (out *CommandOutput) FlushFrame() {
+	out.flushPending()
+}
+
 func (out *CommandOutput) BeginEvent(tgt E.ITarget, _ E.PathList, msg *E.Message) api.IEndEvent {
 	out.flushPending()
 	// msg.Data == RunTimeAction

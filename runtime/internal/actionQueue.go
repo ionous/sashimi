@@ -34,6 +34,7 @@ func (q ActionQueue) QueueFuture(f Future) {
 	//q.list.PushBack(f)
 	// fmt.Println(fmt.Sprintf("queuing %T future, %d", f, q.list.Len()))
 	f.Run(q.g)
+	q.g.Frame.FlushFrame()
 }
 
 //
