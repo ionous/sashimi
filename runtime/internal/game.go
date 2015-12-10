@@ -11,15 +11,17 @@ import (
 type Game struct {
 	Model meta.Model
 	RuntimeCore
-	Queue ActionQueue
+	Queue *ActionQueue
 }
 
 func NewGame(core RuntimeCore, m meta.Model) *Game {
-	return &Game{
+	g := &Game{
 		m,
 		core,
-		NewActionQueue(),
+		nil,
 	}
+	g.Queue = NewActionQueue(g)
+	return g
 }
 
 func (g *Game) newPlay(data *RuntimeAction, hint ident.Id) G.Play {
@@ -49,7 +51,7 @@ func (g *Game) dispatch(evt E.IEvent, target ident.Id) (err error) {
 
 func (g *Game) QueueAction(data *RuntimeAction) {
 	future := &QueuedAction{data: data}
-	g.Queue.QueueFuture(future)
+	g.Queue.Enqueue(future)
 }
 
 func (g *Game) ProcessActions() error {

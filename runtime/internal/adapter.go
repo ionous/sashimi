@@ -61,12 +61,12 @@ func (ga *GameEventAdapter) Go(phrase G.RuntimePhrase, phrases ...G.RuntimePhras
 	if len(phrases) == 0 {
 		future := &QueuedPhrase{data: ga.data, run: phrase}
 		ga.Queue.QueueFuture(future)
-		ret = PendingChain{&future.next, ga.data}
+		ret = NewPendingChain(ga, future)
 	} else {
 		phrases := append([]G.RuntimePhrase{phrase}, phrases...)
 		future := &QueuedPhrases{data: ga.data, run: phrases}
 		ga.Queue.QueueFuture(future)
-		ret = PendingChain{&future.next, ga.data}
+		ret = NewPendingChain(ga, future)
 	}
 	return
 }

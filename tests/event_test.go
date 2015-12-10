@@ -18,8 +18,8 @@ func TestEvent(t *testing.T) {
 
 		if here, ok := test.Game.GetInstance("here"); assert.True(t, ok) {
 			here := test.Game.NewAdapter().NewGameObject(here)
-			here.Go("report the view")
 			assert.False(t, visited)
+			here.Go("report the view")
 			if r, e := test.FlushOutput(); assert.NoError(t, e) {
 				t.Log(r)
 				assert.True(t, visited)

@@ -189,7 +189,7 @@ func (oa GameObject) queueNamedAction(action string, objects []G.IObject) (ret G
 			future := &QueuedAction{data: data}
 			oa.Queue.QueueFuture(future)
 			// NOTE: the next callbacks get *our* context, not the context of the action.
-			ret = PendingChain{&future.next, oa.data}
+			ret = NewPendingChain(oa.GameEventAdapter, future)
 		}
 	}
 	return

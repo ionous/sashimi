@@ -123,7 +123,7 @@ func (null _Null) SetText(p string, v string) {
 //
 func (null _Null) Go(s string, _ ...G.IObject) G.IPromise {
 	null.println("Go", s)
-	return PendingChain{}
+	return NewPendingChain(nil, nil)
 }
 
 //

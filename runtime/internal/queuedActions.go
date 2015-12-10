@@ -2,7 +2,9 @@ package internal
 
 import (
 	"fmt"
+	E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game"
+	"github.com/ionous/sashimi/util/ident"
 )
 
 // QueuedAction implements Future for named actions.
@@ -48,11 +50,54 @@ func (c *ChainedCallback) String() string {
 	return fmt.Sprint("ChainedCallback", c.cb)
 }
 
-// BUG: we may be getting two sets of events?
-// when we run the defaults, they may bqueue
-// they will ahve the act of the parent
-func (c *QueuedAction) Run(g *Game) (err error) {
-	panic("not implemented")
+// g.The("player").Go("hack", "the nice code").Then(trailing actions...)
+func (a *QueuedAction) Run(g *Game) (err error) {
+	// we've looped back now; end the event.
+	act := a.data
+	// start a new event frame:
+	tgt := NewObjectTarget(g, act.GetTarget())
+	path := E.NewPathTo(tgt)
+	msg := &E.Message{Id: act.action.GetEvent().GetId(), Data: act}
+	frame := g.Frame.BeginEvent(tgt, path, msg)
+	// send the event, noting that new things may enter our queue.
+	if runDefault, e := msg.Send(path); e != nil {
+		err = e
+	} else {
+		// run default actions if requested, noting that new things may enter our queue.
+		if !runDefault {
+			frame.EndEvent()
+		} else {
+			play := g.newPlay(act, ident.Empty())
+			if callbacks, ok := act.action.GetCallbacks(); ok {
+				for i := 0; i < callbacks.NumCallback(); i++ {
+					cb := callbacks.CallbackNum(i)
+					if found, ok := g.LookupCallback(cb); ok {
+						found(play)
+					} else {
+						err = fmt.Errorf("internal error, couldnt find callback %s", cb)
+						break
+					}
+				}
+			}
+			frame.EndEvent()
+
+			// run "after" actions, which are queued dynamically ( though who knows why. )
+			if after := a.data.after; len(after) > 0 {
+				// fmt.Println(len(after), "after actions")
+				play := g.newPlay(a.data, ident.Empty())
+				for _, after := range after {
+					after.call(play)
+				}
+			}
+			// finally, run any trailing actions the caller may have specified.
+			// this is done outside of the event frame, we will see these later...
+			if a.next != nil {
+				// fmt.Println("queuing then")
+				a.next.Run(g)
+			}
+		}
+	}
+	return
 }
 
 func (c *QueuedPhrase) Run(g *Game) (err error) {
