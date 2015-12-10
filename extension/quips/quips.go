@@ -118,20 +118,22 @@ func Describe_Quips(s *Script) {
 	s.The("actors",
 		Can("print conversation choices").And("printing conversation choices").RequiresNothing(),
 		To("print conversation choices", func(g G.Play) {
-			player, talker := g.The("player"), g.The("action.Source")
-			if player == talker {
-				if quips := quips.PlayerQuips(g); len(quips) == 0 {
-					player.Go("depart") // safety first
-				} else {
-					// FIX: the console should grab this to label the list, and add the header numbers.
-					text := fmt.Sprintf("%s: ", player.Text("name"))
-					g.Say(Lines("", text))
-					for i, quip := range quips {
-						cmt := quip.Text("comment")             // FIX: is this good? should it be slug, or name
-						text := fmt.Sprintf("%d: %s", i+1, cmt) // FIX? template instead of fmt
-						g.Say(text)                             // FIX FIX: CAN "SAY" TEXT BE SCOPED TO THE EVENT IN THE CMD OUTPUT.
+			if quips.Converse(g).Conversing() {
+				player, talker := g.The("player"), g.The("action.Source")
+				if player == talker {
+					if quips := quips.PlayerQuips(g); len(quips) == 0 {
+						player.Go("depart") // safety first
+					} else {
+						// FIX: the console should grab this to label the list, and add the header numbers.
+						text := fmt.Sprintf("%s: ", player.Text("name"))
+						g.Say(Lines("", text))
+						for i, quip := range quips {
+							cmt := quip.Text("comment")             // FIX: is this good? should it be slug, or name
+							text := fmt.Sprintf("%d: %s", i+1, cmt) // FIX? template instead of fmt
+							g.Say(text)                             // FIX FIX: CAN "SAY" TEXT BE SCOPED TO THE EVENT IN THE CMD OUTPUT.
+						}
+						player.IsNow("inputing dialog")
 					}
-					player.IsNow("inputing dialog")
 				}
 			}
 		}))
