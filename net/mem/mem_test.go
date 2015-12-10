@@ -30,7 +30,7 @@ func TestMemApp(t *testing.T) {
 	g := &Helper{ts, "new"}
 	if d, err := g.post(""); assert.NoError(t, err) {
 		if assert.Len(t, d.Included, 0, "session starts empty") {
-			if d, err := g.getMany("actors", "player", "whereabouts"); assert.NoError(t, err) && assert.Len(t, d.Included, 1, "the room") {
+			if d, err := g.getMany("actors", "player", "whereabouts"); assert.NoError(t, err) && assert.True(t, len(d.Included) >= 1, "the room, and contents") {
 				if d, err := g.post("start"); assert.NoError(t, err) {
 					if evts, ok := d.Data.Attributes["events"]; assert.True(t, ok, "frame has event stream") {
 						require.EqualValues(t, "game", d.Data.Class)
@@ -47,7 +47,7 @@ func TestMemApp(t *testing.T) {
 						// check the room
 						if contents, err := g.getMany("rooms", "lab", "contents"); assert.NoError(t, err) {
 							require.Len(t, contents.Data, 3, "the lab should have two objects")
-							require.Len(t, contents.Included, 3, "the player should (not) be previously known, the table newly known.")
+							require.True(t, len(contents.Included) >= 3, "the player should (not) be previously known, the table newly known.")
 						}
 						require.NoError(t, checkTable(g, 1))
 

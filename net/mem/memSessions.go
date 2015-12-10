@@ -39,8 +39,7 @@ func (ess *MemSessions) NewSession(doc resource.DocumentBuilder) (ret ess.ISessi
 	} else {
 		id := ident.Dash(ident.MakeUniqueId())
 		meta := metal.NewMetal(ess.model, make(metal.ObjectValueMap))
-		view := framework.NewStandardView(meta)
-		out := app.NewCommandOutput(id, meta, view)
+		out := app.NewCommandOutput(id, meta, framework.NewStandardView(meta))
 		if s, e := app.NewPartialSession(meta, ess.calls, out); e != nil {
 			err = e
 		} else {

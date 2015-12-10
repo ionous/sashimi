@@ -6,7 +6,8 @@ import (
 )
 
 type View interface {
-	Viewpoint() meta.Instance
+	View() ident.Id
+	Viewer() ident.Id
 	InView(meta.Instance) bool
 	ChangedView(meta.Instance, ident.Id, meta.Instance) bool
 	EnteredView(meta.Instance, ident.Id, meta.Instance) bool

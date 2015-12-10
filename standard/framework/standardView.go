@@ -7,9 +7,10 @@ import (
 
 // implement View for the standard rules
 // memory games can keep this around, appengine can rebuild on the fly
+// NOTE! this has the unwatched model, so it is very dangerous to compare instances directly
 type StandardView struct {
 	mdl          meta.Model
-	player, room meta.Instance
+	player, room ident.Id
 	ParentLookup
 	visible map[ident.Id]StandardVisibilty
 }
@@ -19,7 +20,7 @@ func NewStandardView(mdl meta.Model) (ret *StandardView) {
 		panic("couldnt find player")
 	} else {
 		view := &StandardView{mdl: mdl, ParentLookup: NewParentLookup(mdl)}
-		view.ResetView(player, view.LookupRoot(player))
+		view.ResetView(player.GetId(), view.LookupRoot(player).GetId())
 		ret = view
 	}
 	return ret
@@ -33,36 +34,49 @@ const (
 	Invsible
 )
 
-func (v *StandardView) Viewpoint() meta.Instance {
+func (v *StandardView) View() ident.Id {
+	return v.room
+}
+
+func (v *StandardView) Viewer() ident.Id {
 	return v.player
 }
-func (v *StandardView) ResetView(player, room meta.Instance) {
-	v.visible = map[ident.Id]StandardVisibilty{player.GetId(): Visible}
+
+func (v *StandardView) String() (ret string) {
+	return v.room.String()
+}
+
+func (v *StandardView) ResetView(player, room ident.Id) {
+	v.visible = map[ident.Id]StandardVisibilty{player: Visible}
 	v.player = player
 	v.room = room
 }
 
 func (v *StandardView) ChangedView(gobj meta.Instance, prop ident.Id, next meta.Instance) (changed bool) {
-	// did the player property change
-	if gobj == v.player {
-		// and is it contaiment
-		if _, ok := Containment[prop]; ok {
-			if next != nil {
-				next = v.LookupRoot(next)
-			}
-			if next != v.room {
-				v.ResetView(gobj, next)
-				changed = true
-			}
+	// only allows changes to the player containment
+	// kind of silly, but there you are.
+	// FUTURE: viewpoints...
+	if gobj == nil || gobj.GetId() != v.player {
+		panic("changing viewer not supported")
+	}
+	// supports hearing all viewer relations, so just limit to containment.
+	if _, ok := Containment[prop]; ok {
+		var newRoom ident.Id
+		if next != nil {
+			newRoom = v.LookupRoot(next).GetId()
+		}
+		if v.room != newRoom {
+			v.ResetView(v.player, newRoom)
+			changed = true
 		}
 	}
 	return
 }
 
 func (v *StandardView) EnteredView(gobj meta.Instance, prop ident.Id, next meta.Instance) (entered bool) {
-	if v.room != nil {
+	if !v.room.Empty() {
 		if which := Containment[prop]; !which.Empty() {
-			nowInRoom := next != nil && v.room == v.LookupRoot(next)
+			nowInRoom := next != nil && v.room == v.LookupRoot(next).GetId()
 			id := gobj.GetId()
 			if !nowInRoom {
 				v.visible[id] = Invsible
@@ -77,25 +91,28 @@ func (v *StandardView) EnteredView(gobj meta.Instance, prop ident.Id, next meta.
 	return
 }
 
-func (v *StandardView) InView(i meta.Instance) bool {
-	id := i.GetId()
-	r := v.visible[id]
-	if r == VisibilityUnknown {
-		if v.mdl.AreCompatible(i.GetParentClass().GetId(), "stories") ||
-			v.mdl.AreCompatible(i.GetParentClass().GetId(), "status-bar-instances") {
-			r = Visible
+func (v *StandardView) InView(i meta.Instance) (ret bool) {
+	if !v.room.Empty() {
+		id := i.GetId()
+		r := v.visible[id]
+		if r != VisibilityUnknown {
+			/**/ //fmt.Println("StandardView: cached vis", id, r)
 		} else {
-			root := v.LookupRoot(i)
-			// NOTE: player inv will have a root, so far as i know --
-			// of the room -- because their parent is player, etc.
-			// hrmm....
-			if root == v.room {
+			if v.mdl.AreCompatible(i.GetParentClass().GetId(), "stories") ||
+				v.mdl.AreCompatible(i.GetParentClass().GetId(), "status-bar-instances") {
 				r = Visible
 			} else {
-				r = Invsible
+				root := v.LookupRoot(i).GetId()
+				if root == v.room {
+					r = Visible
+				} else {
+					r = Invsible
+				}
+				/**/ //fmt.Println("StandardView: stored vis", id, r == Visible, v.room, root)
 			}
+			v.visible[id] = r
 		}
-		v.visible[id] = r
+		ret = r == Visible
 	}
-	return r == Visible
+	return
 }

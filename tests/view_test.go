@@ -31,7 +31,7 @@ func TestViewChange(t *testing.T) {
 				if player, ok := test.Game.GetInstance("player"); assert.True(t, ok) {
 					view := framework.NewStandardView(test.Game)
 					//
-					assert.Equal(t, player, view.Viewpoint(), "player is viewpoint")
+					assert.Equal(t, player.GetId(), view.Viewer(), "player is viewpoint")
 					assert.True(t, view.InView(player), "viewpoint in view")
 					//
 					assert.True(t, view.InView(here), "here in view")
@@ -44,8 +44,8 @@ func TestViewChange(t *testing.T) {
 					// move into there
 					test.Game.NewAdapter().Go(Move("the player").To("there"))
 					assert.NoError(t, test.Game.ProcessActions(), "moved")
-					assert.Equal(t, player, view.Viewpoint(), "player is still viewpoint")
-					assert.True(t, view.InView(view.Viewpoint()), "viewpoint still in view")
+					assert.Equal(t, player.GetId(), view.Viewer(), "player is still viewpoint")
+					assert.True(t, view.InView(player), "viewpoint still in view")
 				}
 			}
 		}

@@ -1,18 +1,25 @@
 package change
 
 import (
-	//"fmt"
+	"fmt"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 )
 
-// FIX: add a generic shadow factory which creates instances, etc. from the api.
+// ModelWatcher proxies a meta.Model in order to raise property change events.
+// Events are raised just *before* the property changes so callers can see the object's complete current state.
+// TODO? add a generic shadow factory which creates instances, etc. from the api.
 type ModelWatcher struct {
 	PropertyChange
 	meta.Model
 }
 
-func NewModelWatcher(ch PropertyChange, m meta.Model) meta.Model {
+// FIX?  the property change events received the unwrapped instances, etc. that means they may not compare correctly against objects pulled via the model watcher interface.
+/* ex. ReferenceChange(func(gobj ....) {
+	watcher.GetInstance(gobj.GetId()) != gobj
+})
+*/
+func NewModelWatcher(ch PropertyChange, m meta.Model) ModelWatcher {
 	return ModelWatcher{ch, m}
 }
 
@@ -32,6 +39,10 @@ func (mw ModelWatcher) InstanceNum(idx int) meta.Instance {
 type iwatch struct {
 	mw ModelWatcher
 	meta.Instance
+}
+
+func (iw iwatch) String() string {
+	return iw.GetId().String()
 }
 
 func (iw iwatch) PropertyNum(idx int) meta.Property {
@@ -68,6 +79,10 @@ type pwatch struct {
 	meta.Property
 }
 
+func (pw pwatch) String() string {
+	return pw.GetId().String()
+}
+
 func (pw pwatch) GetValue() meta.Value {
 	//fmt.Println("get value", pw.GetId())
 	return vwatch{pw, pw.Property.GetValue()}
@@ -84,17 +99,19 @@ type vwatch struct {
 	meta.Value
 }
 
+func (vw vwatch) String() string {
+	return fmt.Sprint(vw.pw.GetId().String(), "proxy")
+}
+
 func (vw vwatch) SetNum(val float32) (err error) {
 	//fmt.Println("set num", val)
 	if old := vw.Value.GetNum(); old != val {
-		if e := vw.Value.SetNum(val); e != nil {
-			err = e
-		} else {
-			vw.pw.iw.mw.NumChange(
-				vw.pw.iw.Instance,
-				vw.pw.GetId(),
-				old, val)
-		}
+		vw.pw.iw.mw.NumChange(
+			vw.pw.iw.Instance,
+			vw.pw.GetId(),
+			old, val)
+		//
+		err = vw.Value.SetNum(val)
 	}
 	return
 }
@@ -102,57 +119,50 @@ func (vw vwatch) SetNum(val float32) (err error) {
 func (vw vwatch) SetText(val string) (err error) {
 	//fmt.Println("set text", val)
 	if old := vw.Value.GetText(); old != val {
-		if e := vw.Value.SetText(val); e != nil {
-			err = e
-		} else {
-			vw.pw.iw.mw.TextChange(
-				vw.pw.iw.Instance,
-				vw.pw.GetId(),
-				old, val)
-		}
+		vw.pw.iw.mw.TextChange(
+			vw.pw.iw.Instance,
+			vw.pw.GetId(),
+			old, val)
+		//
+		err = vw.Value.SetText(val)
 	}
 	return
 }
 func (vw vwatch) SetState(val ident.Id) (err error) {
 	//fmt.Println("set state", val)
 	if old := vw.Value.GetState(); old != val {
-		if e := vw.Value.SetState(val); e != nil {
-			err = e
-		} else {
-			vw.pw.iw.mw.StateChange(
-				vw.pw.iw.Instance,
-				vw.pw.GetId(),
-				old, val)
-		}
+		vw.pw.iw.mw.StateChange(
+			vw.pw.iw.Instance,
+			vw.pw.GetId(),
+			old, val)
+		//
+		err = vw.Value.SetState(val)
 	}
 	return
 }
 func (vw vwatch) SetObject(val ident.Id) (err error) {
 	//fmt.Println("set object", val)
 	if old := vw.Value.GetObject(); old != val {
-		if e := vw.Value.SetObject(val); e != nil {
-			err = e
-		} else {
-			// notify
-			var prev, next meta.Instance
-			if !old.Empty() {
-				prev, _ = vw.pw.iw.mw.GetInstance(old)
-			}
-			if !val.Empty() {
-				next, _ = vw.pw.iw.mw.GetInstance(val)
-			}
-			// other is list of "contents", "inventory", etc.
-			var other ident.Id
-			if rel, ok := vw.pw.GetRelative(); ok {
-				other = rel.From
-			}
-			//
-			vw.pw.iw.mw.ReferenceChange(
-				vw.pw.iw.Instance,
-				vw.pw.GetId(),
-				other,
-				prev, next)
+		var prev, next meta.Instance
+		if !old.Empty() {
+			prev, _ = vw.pw.iw.mw.GetInstance(old)
 		}
+		if !val.Empty() {
+			next, _ = vw.pw.iw.mw.GetInstance(val)
+		}
+		// other is list of "contents", "inventory", etc.
+		var other ident.Id
+		if rel, ok := vw.pw.GetRelative(); ok {
+			other = rel.From
+		}
+		// notify
+		vw.pw.iw.mw.ReferenceChange(
+			vw.pw.iw.Instance,
+			vw.pw.GetId(),
+			other,
+			prev, next)
+		//
+		err = vw.Value.SetObject(val)
 	}
 	return
 }

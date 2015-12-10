@@ -41,11 +41,19 @@ func ObjectResource(mdl meta.Model, clsId ident.Id) resource.IResource {
 													panic(fmt.Sprintf("internal error, couldnt find related object '%s'", n))
 												} else {
 													objects.AddObject(gobj)
-													includes.SerializeObject(gobj)
+													//includes.SerializeObject(gobj)
+													// FIX? the client first room doesnt have the complete contents, and it needs it. it could rcusively ask for all children --
+													// and... maybe it should when it needs an object
+													// ( b/c right now, both sides of this know about the containment of standard -- ie. there is code in ObjSerializer.Include to walk containment )
+													// alt: add a query string to optionally select all contents ( see jsonapi for format of query )
+													// MINOR: technically the elements of the relation should send id and type, right now they just send id
+													// the includes, however, are correctly formatted.
+													includes.Include(gobj)
 												}
 											}
 
-											// UGH. for backwards compatibility (ex. whereabouts queries
+											// allow relations containing one object
+											// (ex. player.whereabouts queries)
 											if propType := prop.GetType(); propType&meta.ArrayProperty == 0 {
 												n := prop.GetValue().GetObject()
 												addObject(n)

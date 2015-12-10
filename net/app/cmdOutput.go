@@ -21,6 +21,13 @@ type CommandOutput struct {
 }
 
 func NewCommandOutput(id string, m meta.Model, view View) *CommandOutput {
+	// ***: the model is not wrapped by a watcher; we are the listener(!)
+	// if you store the passed model or objects from it,
+	// they wont compare correctly against other model objects.
+	//
+	// NOTE: i think its okay that object serial uses the unwatched model.
+	// its not storing any instances, and its maps are on ids.
+	// FIX? the mdl used for looking up objects on GetObject, perhaps that should return an instance, not an id, then the mdl wouldnt be needed.
 	return &CommandOutput{
 		id:     id,
 		view:   view,
@@ -32,7 +39,7 @@ func NewCommandOutput(id string, m meta.Model, view View) *CommandOutput {
 // ActorSays adds a command for an actor's line of dialog.
 func (out *CommandOutput) ActorSays(gobj meta.Instance, lines []string) {
 	if !out.view.InView(gobj) {
-		out.Log(fmt.Sprintf("CommandOutput: actor '%s' not in view, ignoring speech: (%v)\n", gobj.GetId(), lines))
+		out.Log(fmt.Sprintf("CommandOutput: actor '%s' not in view '%s' ignoring speech: (%v)\n", gobj.GetId(), out.view, lines))
 	} else {
 		out.flushPending()
 		tgt := NewObjectRef(gobj)
@@ -85,7 +92,7 @@ func (out *CommandOutput) FlushDocument(doc resource.DocumentBuilder) {
 
 func (out *CommandOutput) NumChange(gobj meta.Instance, prop ident.Id, prev, next float32) {
 	if !out.view.InView(gobj) {
-		out.Log(fmt.Sprintf("CommandOutput: '%s' not in view,ignoring num change %s(%s->%s)\n", gobj.GetId(), prop, prev, next))
+		out.Log(fmt.Sprintf("CommandOutput: '%s' not in view,ignoring num change %s(%s->%s)\n", gobj.GetId(), out.view, prop, prev, next))
 	} else {
 		obj := NewObjectRef(gobj)
 		data := struct {
@@ -98,7 +105,7 @@ func (out *CommandOutput) NumChange(gobj meta.Instance, prop ident.Id, prev, nex
 
 func (out *CommandOutput) TextChange(gobj meta.Instance, prop ident.Id, prev, next string) {
 	if !out.view.InView(gobj) {
-		out.Log(fmt.Sprintf("CommandOutput: '%s' not in view(%s), ignoring text change %s(%s->%s)\n", gobj.GetId(), prop, prev, next))
+		out.Log(fmt.Sprintf("CommandOutput: '%s' not in view(%s), ignoring text change %s(%s->%s)\n", gobj.GetId(), out.view, prop, prev, next))
 	} else {
 		obj := NewObjectRef(gobj)
 		data := struct {
@@ -111,7 +118,7 @@ func (out *CommandOutput) TextChange(gobj meta.Instance, prop ident.Id, prev, ne
 
 func (out *CommandOutput) StateChange(gobj meta.Instance, prop ident.Id, prev, next ident.Id) {
 	if !out.view.InView(gobj) {
-		out.Log(fmt.Sprintf("CommandOutput: '%s' not in view, ignoring state change %s(%s->%s)\n", gobj.GetId(), prop, prev, next))
+		out.Log(fmt.Sprintf("CommandOutput: '%s' not in view '%s' ignoring state change %s(%s->%s)\n", gobj.GetId(), out.view, prop, prev, next))
 	} else {
 		obj := NewObjectRef(gobj)
 		data := struct {
@@ -128,7 +135,7 @@ func (out *CommandOutput) StateChange(gobj meta.Instance, prop ident.Id, prev, n
 // currently sent on the "one" side of an object for any object value.
 // ( ex. actor.whereabouts; not: room.contents. )
 func (out *CommandOutput) ReferenceChange(gobj meta.Instance, prop, other ident.Id, prev, next meta.Instance) {
-	if out.view.Viewpoint() == gobj {
+	if out.view.Viewer() == gobj.GetId() {
 		var n ident.Id
 		if next != nil {
 			n = next.GetId()
@@ -154,7 +161,7 @@ func (out *CommandOutput) ReferenceChange(gobj meta.Instance, prop, other ident.
 		if next != nil {
 			n = next.GetId()
 		}
-		out.Log(fmt.Sprintf("CommandOutput: '%s' not in view, ignoring refchange %v(%v->%v)\n", gobj.GetId(), prop, p, n))
+		out.Log(fmt.Sprintf("CommandOutput: '%s' not in view '%s' ignoring refchange %v(%v->%v)\n", gobj.GetId(), out.view, prop, p, n))
 	} else {
 		obj := NewObjectRef(gobj)
 
