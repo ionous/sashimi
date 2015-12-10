@@ -133,9 +133,6 @@ func (out *CommandOutput) ReferenceChange(gobj meta.Instance, prop, other ident.
 		if out.view.ChangedView(gobj, prop, next) && next != nil {
 			out.serial.Include(next)
 		}
-		if next != nil && !out.view.InView(next) {
-			panic("KJKJ")
-		}
 	} else {
 		if out.view.EnteredView(gobj, prop, next) {
 			out.serial.Include(gobj)
