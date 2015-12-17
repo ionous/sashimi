@@ -23,6 +23,21 @@ func init() {
 			AreOneOf("playing", "completed", "starting").Usually("starting"),
 		)
 
+		endTurn := func(g G.Play) {
+			// FIX: we should have a "starting the turn" instead
+			// currently, tp get the "frame" counter to see a different number than the last frame
+			// due to this frame's player input -- we have to increment both on end turn, and ending the story.
+			story := g.The("story")
+			turnCount := story.Num("turn count") + 1
+			story.SetNum("turn count", turnCount)
+			//
+			if story.Is("scored") {
+				score := story.Num("score")
+				status := fmt.Sprintf("%d/%d", int(score), int(turnCount))
+				g.The("status bar").SetText("right", status)
+			}
+		}
+
 		s.The("stories",
 			Can("commence").And("commencing").RequiresNothing(),
 			Can("end the story").And("ending the story").RequiresNothing(),
@@ -33,18 +48,9 @@ func init() {
 					g.StopHere()
 				}
 			}),
-			To("end turn", func(g G.Play) {
-				// almost feel like we should have a "starting the turn" instead
-				story := g.The("story")
-				turnCount := story.Num("turn count") + 1
-				story.SetNum("turn count", turnCount)
-				//
-				if story.Is("scored") {
-					score := story.Num("score")
-					status := fmt.Sprintf("%d/%d", int(score), int(turnCount))
-					g.The("status bar").SetText("right", status)
-				}
-			}))
+			To("end turn", endTurn),
+			After("ending the story").Always(endTurn),
+		)
 
 		s.The("stories",
 			To("commence", func(g G.Play) {
