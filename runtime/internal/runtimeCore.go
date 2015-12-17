@@ -9,6 +9,7 @@ type RuntimeCore struct {
 	api.LookupCallbacks
 	api.LookupParents
 	api.Log
+	api.SaveLoad
 	//
 	Frame  api.EventFrame
 	Output api.Output

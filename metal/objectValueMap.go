@@ -1,7 +1,9 @@
 package metal
 
 import (
+	"encoding/json"
 	"github.com/ionous/sashimi/util/ident"
+	"io"
 )
 
 // ObjectValueMap provides a default implementation of ObjectValue
@@ -21,4 +23,12 @@ func (m ObjectValueMap) SetValue(obj, field ident.Id, value interface{}) (err er
 	n := obj.String() + "." + field.String()
 	m[n] = value
 	return
+}
+
+func (m ObjectValueMap) Save(w io.Writer) (err error) {
+	return json.NewEncoder(w).Encode(m)
+}
+
+func (m ObjectValueMap) Load(r io.Reader) (err error) {
+	return json.NewDecoder(r).Decode(m)
 }

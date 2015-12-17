@@ -75,8 +75,13 @@ func RunScript(script *script.Script, opt Options) (err error) {
 		cons := GetConsole(opt)
 		defer cons.Close()
 
-		modelApi := metal.NewMetal(model.Model, make(metal.ObjectValueMap))
-		cfg := R.NewConfig().SetCalls(model.Calls).SetOutput(NewStandardOutput(cons, writer)).SetParentLookup(NewParentLookup(modelApi))
+		vals := make(metal.ObjectValueMap)
+		modelApi := metal.NewMetal(model.Model, vals)
+		cfg := R.NewConfig().
+			SetCalls(model.Calls).
+			SetOutput(NewStandardOutput(cons, writer)).
+			SetParentLookup(NewParentLookup(modelApi)).
+			SetSaveLoad(vals)
 		if g, e := cfg.NewGame(modelApi); e != nil {
 			err = e
 		} else {
@@ -129,11 +134,17 @@ func PlayGameUpdate(cons C.IConsole, g R.Game, endFrame func()) (err error) {
 
 					if e := game.Input(s); e != nil {
 						cons.Println(e.Error())
-					} else if game.IsQuit() || game.IsComplete() {
-						if useMini && !game.IsQuit() {
-							mini.Update()
+
+					} else {
+						// difficult question, if we end the story, do we want to end the turn?
+						// currently we dont.
+						// FIX: also we dont call "endFrame" -- should we?
+						if game.IsQuit() || game.IsComplete() {
+							if useMini && !game.IsQuit() {
+								mini.Update()
+							}
+							break
 						}
-						break
 					}
 					if endFrame != nil {
 						endFrame()

@@ -2,7 +2,9 @@ package standard
 
 import (
 	G "github.com/ionous/sashimi/game"
+	"github.com/ionous/sashimi/runtime"
 	. "github.com/ionous/sashimi/script"
+	"os"
 )
 
 func init() {
@@ -42,8 +44,32 @@ func init() {
 					g.Say(v.Id().String())
 				}
 			}))
+
+		s.The("actors",
+			Can("debug save").And("debugging save").RequiresNothing(),
+			To("debug save", func(g G.Play) {
+				g.Say("saving...")
+				name := g.The("story").Id().String() + ".sav"
+				if f, e := os.Create(name); e != nil {
+				} else {
+					defer f.Close()
+					runtime.DebugSave(g, f)
+				}
+			}),
+			Can("debug load").And("debugging load").RequiresNothing(),
+			To("debug load", func(g G.Play) {
+				g.Say("loading...")
+				name := g.The("story").Id().String() + ".sav"
+				if f, e := os.Open(name); e != nil {
+				} else {
+					defer f.Close()
+					runtime.DebugLoad(g, f)
+				}
+			}))
+
 		s.Execute("debug direct parent",
 			Matching("parent of {{something}}"))
+
 		s.Execute("debug contents",
 			Matching("contents of {{something}}"))
 

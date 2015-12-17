@@ -6,6 +6,7 @@ import (
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/runtime/internal"
+	"io"
 	"log"
 	"math/rand"
 	"strings"
@@ -43,7 +44,19 @@ func (cfg RuntimeConfig) Finalize() internal.RuntimeCore {
 	if core.LookupParents == nil {
 		core.LookupParents = noParents{}
 	}
+	if core.SaveLoad == nil {
+		core.SaveLoad = noSaveLoad{}
+	}
 	return core
+}
+
+type noSaveLoad struct{}
+
+func (noSaveLoad) Save(io.Writer) error {
+	return fmt.Errorf("not implemented")
+}
+func (noSaveLoad) Load(io.Reader) error {
+	return fmt.Errorf("not implemented")
 }
 
 type noParents struct{}
@@ -91,6 +104,10 @@ func (cfg *RuntimeConfig) SetLog(log api.Log) *RuntimeConfig {
 }
 func (cfg *RuntimeConfig) SetRand(rand *rand.Rand) *RuntimeConfig {
 	cfg.core.Rand = rand
+	return cfg
+}
+func (cfg *RuntimeConfig) SetSaveLoad(s api.SaveLoad) *RuntimeConfig {
+	cfg.core.SaveLoad = s
 	return cfg
 }
 
