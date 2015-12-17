@@ -38,7 +38,7 @@ func ObjectResource(mdl meta.Model, clsId ident.Id) resource.IResource {
 
 											addObject := func(n ident.Id) {
 												if gobj, ok := mdl.GetInstance(n); !ok {
-													panic(fmt.Sprintf("internal error, couldnt find related object '%s'", n))
+													panic(fmt.Sprintf("internal error, couldnt find related object %s.%s '%s'", inst, prop, n))
 												} else {
 													objects.AddObject(gobj)
 													//includes.SerializeObject(gobj)
