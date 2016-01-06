@@ -8,6 +8,7 @@ import (
 	. "github.com/ionous/sashimi/script"
 	. "github.com/ionous/sashimi/standard"
 	"github.com/ionous/sashimi/util/lang"
+	"strings"
 )
 
 func Describe_Quips(s *Script) {
@@ -17,6 +18,7 @@ func Describe_Quips(s *Script) {
 		Have("subject", "actor"),
 		Have("comment", "text"),
 		Have("reply", "text"),
+		Have("topic", "kind"),
 		AreEither("repeatable").Or("one time"),
 		AreOneOf("important", "unimportant", "trivial").Usually("unimportant"),
 		AreEither("restrictive").Or("unrestricted").Usually("unrestricted"),
@@ -101,8 +103,12 @@ func Describe_Quips(s *Script) {
 			if comment := quip.Text("comment"); comment != "" {
 				talker.Says(comment)
 			}
+			quip.Go("follow up with", g.The("actor"))
+		}),
+		Can("follow up with").And("following up").RequiresOne("actor"),
+		To("follow up with", func(g G.Play) {
 			if npc := quips.Converse(g).Actor().Object(); npc.Exists() {
-				npc.Go("discuss", quip)
+				npc.Go("discuss", g.The("quip"))
 			}
 		}),
 		Can("be discussed").And("being discussed").RequiresOne("actor"),
@@ -128,7 +134,11 @@ func Describe_Quips(s *Script) {
 						text := fmt.Sprintf("%s: ", player.Text("name"))
 						g.Say(Lines("", text))
 						for i, quip := range quips {
-							cmt := quip.Text("comment")             // FIX: is this good? should it be slug, or name
+							cmt := quip.Text("comment") // FIX: is this good? should it be slug, or name
+							lines := strings.Split(cmt, lang.NewLine)
+							if len(lines) > 0 {
+								cmt = lines[0]
+							}
 							text := fmt.Sprintf("%d: %s", i+1, cmt) // FIX? template instead of fmt
 							g.Say(text)                             // FIX FIX: CAN "SAY" TEXT BE SCOPED TO THE EVENT IN THE CMD OUTPUT.
 						}

@@ -5,6 +5,7 @@ import (
 	"sort"
 )
 
+// QuipSort ranks quips by the importance of their comments.
 type QuipSort struct {
 	quips []quipScore
 }
