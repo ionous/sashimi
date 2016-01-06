@@ -5,6 +5,7 @@ import (
 	G "github.com/ionous/sashimi/game"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
+	"github.com/ionous/sashimi/util/lang"
 	"strings"
 )
 
@@ -152,7 +153,7 @@ func (oa GameObject) ObjectList(prop string) (ret []G.IObject) {
 // Says provides this object with a voice.
 func (oa GameObject) Says(text string) {
 	// FIX: share some template love with GameEventAdapter.Say()
-	lines := strings.Split(text, "\n")
+	lines := strings.Split(text, lang.NewLine)
 	oa.Output.ActorSays(oa.gobj, lines)
 }
 

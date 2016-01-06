@@ -2,6 +2,7 @@ package standard
 
 import (
 	G "github.com/ionous/sashimi/game"
+	"github.com/ionous/sashimi/util/lang"
 	"strings"
 )
 
@@ -10,11 +11,11 @@ func TheSpeaker(actor string) SpeakerPhrase {
 }
 
 func (p SpeakerPhrase) Says(what ...string) SpeakingPhrase {
-	return SpeakingPhrase{actor: string(p), what: what, sep: NewLine}
+	return SpeakingPhrase{actor: string(p), what: what, sep: lang.NewLine}
 }
 
 func (p SpeakingPhrase) OnOneLine() G.RuntimePhrase {
-	p.sep = OneSpace
+	p.sep = lang.Space
 	return p
 }
 

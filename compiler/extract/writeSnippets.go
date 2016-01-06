@@ -46,7 +46,7 @@ G "github.com/ionous/sashimi/game"
 
 // from script...
 func Lines(a ...string) string {
-	return strings.Join(a, "\n")
+	return strings.Join(a, lang.NewLine)
 }
 
 var code = map[ident.Id]G.Callback {

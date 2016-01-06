@@ -10,6 +10,9 @@ var Articles = []string{"the", "a", "an", "our", "some"}
 var articleBar = strings.Join(Articles, "|")
 var articles = regexp.MustCompile(`^((?i)` + articleBar + `)\s`)
 
+const NewLine = "\n"
+const Space = " "
+
 func SliceArticle(str string) (article, bare string) {
 	n := strings.TrimSpace(str)
 	if pair := articles.FindStringIndex(n); pair == nil {

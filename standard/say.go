@@ -2,18 +2,16 @@ package standard
 
 import (
 	G "github.com/ionous/sashimi/game"
+	"github.com/ionous/sashimi/util/lang"
 	"strings"
 )
 
-const NewLine = "\n"
-const OneSpace = " "
-
 func Say(what ...string) SayPhrase {
-	return SayPhrase{what: what, sep: NewLine}
+	return SayPhrase{what: what, sep: lang.NewLine}
 }
 
 func (p SayPhrase) OnOneLine() G.RuntimePhrase {
-	p.sep = OneSpace
+	p.sep = lang.Space
 	return p
 }
 

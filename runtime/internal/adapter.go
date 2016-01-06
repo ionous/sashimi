@@ -5,6 +5,7 @@ import (
 	G "github.com/ionous/sashimi/game"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
+	"github.com/ionous/sashimi/util/lang"
 	"strings"
 )
 
@@ -91,7 +92,7 @@ func (ga *GameEventAdapter) List(class string) (ret G.IList) {
 func (ga *GameEventAdapter) Say(texts ...string) {
 	if len(texts) > 0 {
 		text := strings.Join(texts, " ")
-		lines := strings.Split(text, "\n")
+		lines := strings.Split(text, lang.NewLine)
 		ga.Output.ScriptSays(lines)
 	}
 }
