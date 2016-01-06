@@ -163,11 +163,16 @@ func (oa GameObject) Says(text string) {
 func (oa GameObject) Go(run string, objects ...G.IObject) (ret G.IPromise) {
 	if c, e := oa.queueNamedAction(run, objects); e != nil {
 		oa.log("Go(%s) with %v: error preparing action: %s", run, objects, e)
+		ret = NilPromise{}
 	} else {
 		ret = c
 	}
 	return
 }
+
+type NilPromise struct{}
+
+func (NilPromise) Then(G.Callback) {}
 
 // FIX: other variants of this exist in runtime.Game
 func (oa GameObject) queueNamedAction(action string, objects []G.IObject) (ret G.IPromise, err error) {

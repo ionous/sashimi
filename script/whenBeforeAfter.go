@@ -55,14 +55,20 @@ func WhenCapturing(event string, cb G.Callback) EventFinalizer {
 }
 
 //
-func (phrase EventPhrase) Or(event string) EventPhrase {
-	phrase.events = append(phrase.events, event)
-	return phrase
+func (p EventPhrase) Or(event string) EventPhrase {
+	p.events = append(p.events, event)
+	return p
 }
 
 //
-func (phrase EventPhrase) Always(cb G.Callback) EventFinalizer {
-	return EventFinalizer{phrase, cb}
+func (p EventPhrase) Always(cb G.Callback) EventFinalizer {
+	return EventFinalizer{p, cb}
+}
+
+func (p EventPhrase) Go(phrase G.RuntimePhrase, phrases ...G.RuntimePhrase) EventFinalizer {
+	return p.Always(func(g G.Play) {
+		g.Go(phrase, phrases...)
+	})
 }
 
 //
