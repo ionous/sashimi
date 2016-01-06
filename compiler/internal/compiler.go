@@ -102,7 +102,7 @@ func (ctx *Compiler) compileActions(classes M.ClassMap,
 	for _, act := range ctx.Source.Actions {
 		fields := act.Fields()
 		if actionId, source, target, context, e := ctx.resolveAction(classes, fields); e != nil {
-			err = errutil.Append(err, e)
+			err = errutil.Append(err, fmt.Errorf("couldnt compile action %v, %s", fields, e))
 		} else {
 			// and the name of event...
 			eventId, e := ctx.Names.addName(fields.Event, actionId.String())
@@ -138,12 +138,12 @@ func (ctx *Compiler) resolveAction(classes M.ClassMap, fields S.ActionAssertionF
 		// and the other two optional ones
 		target, ok = classes[ctx.Classes.singleToPlural[fields.Target]]
 		if !ok && fields.Target != "" {
-			e := fmt.Errorf("couldn't find class for noun %s", fields.Target)
+			e := fmt.Errorf("unknown target class '%s'", fields.Target)
 			err = errutil.Append(err, e)
 		}
 		context, ok = classes[ctx.Classes.singleToPlural[fields.Context]]
 		if !ok && fields.Context != "" {
-			e := fmt.Errorf("couldn't find class for noun %s", fields.Context)
+			e := fmt.Errorf("unknown context class '%s'", fields.Context)
 			err = errutil.Append(err, e)
 		}
 		if err == nil {
