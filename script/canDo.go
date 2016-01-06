@@ -21,6 +21,7 @@ func (frag RequiresWhatPhrase) RequiresNothing() IFragment {
 }
 
 // the target and the context will be input by the user, and will both be of the passed class
+// FIX: class must be singular right now :(
 func (frag RequiresWhatPhrase) RequiresTwo(class string) IFragment {
 	return ActionAssertionFragment{RequiresWhatPhrase: frag, target: class, context: class}
 }

@@ -12,13 +12,15 @@ func init() {
 			To("eat it", func(g G.Play) { ReflectToTarget(g, "report eat") }),
 		)
 
+		s.The("props", AreEither("inedible").Or("edible"))
+
 		s.The("props",
 			Can("report eat").And("reporting eat").RequiresOne("actor"),
 			To("report eat", func(g G.Play) {
-				if actor := g.The("actor"); g.The("player") == actor {
+				if g.The("prop").Is("inedible") {
 					g.Say("That's not something you can eat.")
 				} else {
-					actor.Go("impress")
+					g.The("actor").Go("impress")
 				}
 			}),
 		)

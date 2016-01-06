@@ -94,7 +94,8 @@ func init() {
 		s.The("props",
 			Can("report gave").And("reporting gave").RequiresTwo("actor"),
 			To("report gave", func(g G.Play) {
-				g.The("action.Context").Go("impress")
+				receiver := g.The("action.Context")
+				receiver.Go("impress")
 			}))
 		// input
 		s.Execute("give it to",
