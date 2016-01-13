@@ -19,6 +19,7 @@ func Describe_Quips(s *Script) {
 		Have("comment", "text"),
 		Have("reply", "text"),
 		Have("topic", "kind"),
+		Have("slug", "text"),
 		AreEither("repeatable").Or("one time"),
 		AreOneOf("important", "unimportant", "trivial").Usually("unimportant"),
 		AreEither("restrictive").Or("unrestricted").Usually("unrestricted"),
@@ -49,17 +50,38 @@ func Describe_Quips(s *Script) {
 		Have("quip", "quip"),
 	)
 
+	s.The("quip", Called("default greeting"),
+		Has("comment", ""),
+		Has("reply", ""))
+
 	// default greeting help determine conversation when being clicked on.
 	// its not completely necessary; topic-less quips fit all conversations.
 	s.The("actors",
 		Have("greeting", "quip"), // "topic"
 		Can("greet").And("greeting").RequiresOne("actor"),
 		To("greet", func(g G.Play) {
-			ReflectToTarget(g, "be greeted by")
+			// FIX/FUTURE - this is *very* interesting that the player actions run some reusable code
+			// and that code -- which raises events -- can be overriden
+			// like, maybe Execute is completely wrong.
+			// it's vaguley from inform, but what if phrases just had actions directly
+			// the events would come from whatever those raise, if any....
+			// oto -- its nice to override them completely....
+			g.Go(quips.Introduce("action.source").To("action.target").WithDefault())
 		}),
-		Can("be greeted by").And("being greeted by").RequiresOne("actor"),
+		Can("be greeted by").And("being greeted by").RequiresOne("actor").AndOne("quip"),
 		To("be greeted by", func(g G.Play) {
-			g.Go(quips.Introduce("action.Target").To("action.Source").WithDefault())
+			c := quips.Converse(g)
+			if npc := c.Actor().Object(); npc.Exists() {
+				if npc == g.The("action.source") {
+					g.Say("You're already speaking to them!")
+				} else {
+					g.Say("You're already speaking to someone!")
+				}
+			} else {
+				c.Actor().SetObject(g.The("action.source"))
+				// FIX: doesnt raise an error of any sor when we say go("mispelling"
+				g.The("action.target").Go("comment", g.The("action.context"))
+			}
 		}))
 	s.Execute("greet", Matching("talk to {{something}}").Or("t|talk|greet|ask {{something}}"))
 
@@ -131,16 +153,19 @@ func Describe_Quips(s *Script) {
 						player.Go("depart") // safety first
 					} else {
 						// FIX: the console should grab this to label the list, and add the header numbers.
-						text := fmt.Sprintf("%s: ", player.Text("name"))
+						text := fmt.Sprintf("%s: ", player.Get("name").Text())
 						g.Say(Lines("", text))
 						for i, quip := range quips {
-							cmt := quip.Text("comment") // FIX: is this good? should it be slug, or name
-							lines := strings.Split(cmt, lang.NewLine)
-							if len(lines) > 0 {
-								cmt = lines[0]
+							slug := quip.Get("slug").Text()
+							if slug == "" {
+								slug = quip.Get("comment").Text()
+								lines := strings.Split(slug, lang.NewLine)
+								if len(lines) > 0 {
+									slug = lines[0]
+								}
 							}
-							text := fmt.Sprintf("%d: %s", i+1, cmt) // FIX? template instead of fmt
-							g.Say(text)                             // FIX FIX: CAN "SAY" TEXT BE SCOPED TO THE EVENT IN THE CMD OUTPUT.
+							text := fmt.Sprintf("%d: %s", i+1, slug) // FIX? template instead of fmt
+							g.Say(text)                              // FIX FIX: CAN "SAY" TEXT BE SCOPED TO THE EVENT IN THE CMD OUTPUT.
 						}
 						player.IsNow("inputing dialog")
 					}

@@ -34,10 +34,13 @@ func (greet GreetedPhrase) WithQuip(greeting G.IObject) GreetingPhrase {
 func (greet GreetingPhrase) Execute(g G.Play) {
 	greeter, greeted := g.The(greet.greeter), g.The(greet.greeted)
 	var greeting G.IObject
-	if greet.greeting == "" {
-		greeting = greeted.Object("greeting")
-	} else {
+	if greet.greeting != "" {
 		greeting = g.The(greet.greeting)
+	} else {
+		greeting = greeted.Object("greeting")
+		if !greeting.Exists() {
+			greeting = g.The("default greeting")
+		}
 	}
 	greetActor(g, greeter, greeted, greeting)
 }
@@ -52,20 +55,6 @@ type GreetingPhrase greetingData
 func greetActor(g G.Play, greeter, greeted, greeting G.IObject) {
 	g.Log(greeter, "greeting", greeted, "with", greeting)
 	if greeter == g.The("player") && greeted.Exists() {
-		c := Converse(g)
-		if npc := c.Actor().Object(); !npc.Exists() {
-			c.Actor().SetObject(greeted)
-			// it's not necessary to have a greeting if the npc has some latent conversation options.
-			if greeting.Exists() {
-				// FIX: doesnt raise an error of any sor when we say go("mispelling"
-				greeter.Go("comment", greeting)
-			}
-		} else {
-			if npc == greeted {
-				g.Say("You're already speaking to them!")
-			} else {
-				g.Say("You're already speaking to someone!")
-			}
-		}
+		greeted.Go("be greeted by", greeter, greeting)
 	}
 }
