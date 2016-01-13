@@ -35,36 +35,50 @@ func (p objectWriteValue) GetObject() ident.Id {
 	return p.getId()
 }
 
+func (p objectWriteValue) SetRelation(id ident.Id) (err error) {
+	if was := p.GetObject(); was != id {
+		if id.Empty() {
+			err = p.set(id)
+		} else if e := p.mdl.match(id, p.prop.Relates); e != nil {
+			err = e
+		} else if e := p.set(id); e != nil {
+			err = e
+		}
+	}
+	return
+}
+
 func (p objectWriteValue) SetObject(id ident.Id) (err error) {
 	if was := p.GetObject(); was != id {
-		// clear other
+		// 1. set this side of the relation
+		if id.Empty() {
+			// empty? clear it.
+			err = p.set(id)
+		} else {
+			// check that the target object is allowed
+			if e := p.mdl.match(id, p.prop.Relates); e != nil {
+				err = e
+			} else {
+				// set this; then set the reverse.
+				if e := p.set(id); e != nil {
+					err = e
+				} else {
+					// set the reverse, if the reverse is also a one-to-one.
+					if v, e := p.mdl.getFarPointer(id, p.targetProp); e != nil {
+						err = e
+					} else {
+						v.SetRelation(p.src)
+					}
+				}
+			}
+		}
+
+		// clear old other
 		if !was.Empty() {
 			if v, e := p.mdl.getFarPointer(was, p.targetProp); e != nil {
 				err = e
 			} else {
-				v.SetObject(ident.Empty())
-			}
-		}
-		if err == nil {
-			// set this
-			if id.Empty() {
-				err = p.set(id)
-			} else {
-				// check that the target object is allowed
-				if e := p.mdl.match(id, p.prop.Relates); e != nil {
-					err = e
-				} else {
-					if e := p.set(id); e != nil {
-						err = e
-					} else {
-						// set the reverse,( if the reverse is also a one-to-one )
-						if v, e := p.mdl.getFarPointer(id, p.targetProp); e != nil {
-							err = e
-						} else {
-							v.SetObject(p.src)
-						}
-					}
-				}
+				v.SetRelation(ident.Empty())
 			}
 		}
 	}

@@ -37,6 +37,9 @@ func (p panicValue) GetObject() ident.Id {
 func (p panicValue) SetObject(ident.Id) error {
 	panic(fmt.Errorf("set object not supported for property %s", p.prop))
 }
+func (p panicValue) SetRelation(ident.Id) error {
+	panic(fmt.Errorf("set relation not supported for property %s", p.prop))
+}
 func (p panicValue) AppendObject(ident.Id) error {
 	panic(fmt.Errorf("append object not supported for property %s", p.prop))
 }

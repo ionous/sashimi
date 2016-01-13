@@ -77,3 +77,6 @@ func (iasv) SetState(ident.Id) error { panic("not a number") }
 func (i iasv) SetObject(ident.Id) error {
 	return fmt.Errorf("instance list cannot be changed")
 }
+func (i iasv) SetRelation(ident.Id) error {
+	return fmt.Errorf("instance list cannot be changed")
+}

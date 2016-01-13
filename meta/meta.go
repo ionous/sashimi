@@ -170,6 +170,8 @@ type Value interface {
 
 	GetObject() ident.Id
 	SetObject(ident.Id) error
+
+	SetRelation(ident.Id) error
 }
 
 type Values interface {
