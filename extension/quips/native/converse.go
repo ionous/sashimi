@@ -16,7 +16,7 @@ func (c Conversation) Actor() G.IValue {
 	return c.Get("actor")
 }
 func (c Conversation) Topic() G.IValue {
-	return c.Quip().Object().Get("topic")
+	return c.Get("topic")
 }
 func (c Conversation) Quip() G.IValue {
 	return c.Get("current")

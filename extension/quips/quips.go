@@ -25,18 +25,6 @@ func Describe_Quips(s *Script) {
 		AreEither("restrictive").Or("unrestricted").Usually("unrestricted"),
 	)
 
-	// quips and topics can be used by any npc; even though, most often, its by one.
-	// s.The("facts", Called("topics"),
-	// 	Have("lede", "text"))
-
-	// one topic has multiple quips; one quip can be used in multiple topics.
-	// s.The("kinds",
-	// 	Called("quip topics"),
-	// 	Have("topic", "topic"),
-	// 	Have("quip", "quip"))
-	// s.The("topics", Have("quips", "quip list"))
-	// s.The("quips", Have("topics", "topic list"))
-
 	// one quip can have multiple following quips; one quip can follow various quips.
 	s.The("kinds",
 		Called("following quips"),
@@ -57,7 +45,7 @@ func Describe_Quips(s *Script) {
 	// default greeting help determine conversation when being clicked on.
 	// its not completely necessary; topic-less quips fit all conversations.
 	s.The("actors",
-		Have("greeting", "quip"), // "topic"
+		Have("greeting", "quip"),
 		Can("greet").And("greeting").RequiresOne("actor"),
 		To("greet", func(g G.Play) {
 			// FIX/FUTURE - this is *very* interesting that the player actions run some reusable code
@@ -80,7 +68,9 @@ func Describe_Quips(s *Script) {
 			} else {
 				c.Actor().SetObject(g.The("action.source"))
 				// FIX: doesnt raise an error of any sor when we say go("mispelling"
-				g.The("action.target").Go("comment", g.The("action.context"))
+				quip := g.The("action.context")
+				g.The("action.target").Go("comment", quip)
+				c.Topic().SetObject(quip.Get("topic").Object())
 			}
 		}))
 	s.Execute("greet", Matching("talk to {{something}}").Or("t|talk|greet|ask {{something}}"))
@@ -89,11 +79,11 @@ func Describe_Quips(s *Script) {
 	s.The("kinds",
 		Called("global conversations"),
 		Have("actor", "actor"),
-		//Have("topic", "topic"),
 		Have("quip", "quip"),
 		Have("current", "quip"),
 		Have("parent", "quip"),
-		Have("grandparent", "quip"))
+		Have("grandparent", "quip"),
+		Have("topic", "kind"))
 	s.The("global conversation", Called("conversation"), Exists())
 
 	s.The("actors",
@@ -127,7 +117,7 @@ func Describe_Quips(s *Script) {
 			}
 			quip.Go("follow up with", g.The("actor"))
 		}),
-		Can("follow up with").And("following up").RequiresOne("actor"),
+		Can("follow up with").And("following up with").RequiresOne("actor"),
 		To("follow up with", func(g G.Play) {
 			if npc := quips.Converse(g).Actor().Object(); npc.Exists() {
 				npc.Go("discuss", g.The("quip"))
@@ -139,7 +129,11 @@ func Describe_Quips(s *Script) {
 			if reply := quip.Text("reply"); reply != "" {
 				talker.Says(reply)
 			}
-			quips.Converse(g).History().PushQuip(quip)
+			c := quips.Converse(g)
+			c.History().PushQuip(quip)
+			if topic := quip.Get("topic").Object(); topic != g.The("player") {
+				c.Get("topic").SetObject(topic)
+			}
 			facts.PlayerMemory(g).Learns(quip)
 		}))
 
@@ -150,7 +144,7 @@ func Describe_Quips(s *Script) {
 				player, talker := g.The("player"), g.The("action.Source")
 				if player == talker {
 					if quips := quips.PlayerQuips(g); len(quips) == 0 {
-						player.Go("depart") // safety first
+						player.Go("depart") // player rejected candy
 					} else {
 						// FIX: the console should grab this to label the list, and add the header numbers.
 						text := fmt.Sprintf("%s: ", player.Get("name").Text())

@@ -10,17 +10,9 @@ func PlayerQuips(g G.Play) []G.IObject {
 	con := Converse(g)
 	interlocutor := con.Actor()
 	if npc := interlocutor.Object(); npc.Exists() {
-		qh, qm := con.History(), PlayerMemory(g)
+		qh, qm, topic := con.History(), PlayerMemory(g), con.Topic().Object()
 		latest := qh.MostRecent()
-		var isRestrictive bool
-		var topic G.IObject
-		if latest.Exists() {
-			isRestrictive = latest.Is("restrictive")
-			if t := latest.Get("topic").Object(); t.Exists() {
-				topic = t
-			}
-		}
-
+		isRestrictive := latest.Exists() && latest.Is("restrictive")
 		// hrmm... this is very similar to "UpdateNextQuips"
 		for i, quips := 0, g.List("quips"); i < quips.Len(); i++ {
 			quip := quips.Get(i).Object()
@@ -30,7 +22,8 @@ func PlayerQuips(g G.Play) []G.IObject {
 				if quip.Get("comment").Text() != "" {
 					// Filter quips to the current topic.
 					qt := quip.Get("topic").Object()
-					if (qt.Exists() && topic == qt) || (!qt.Exists() && topic == nil) {
+					// the player as universal filter.
+					if (!qt.Exists() && !topic.Exists()) || (qt.Exists() && (topic == qt || qt == g.The("player"))) {
 						// Exclude one-time quips, checking the recollection table.
 						if quip.Is("repeatable") || !qm.Recollects(quip) {
 							// Check whether facts restrict this selection.
