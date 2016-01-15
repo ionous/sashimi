@@ -12,7 +12,7 @@ func init() {
 			Can("kiss it").And("kissing it").RequiresOne("object"),
 			To("kiss it", func(g G.Play) { ReflectToTarget(g, "report kiss") }),
 			//  kissing yourself rule
-			WhenCapturing("kissing it", func(g G.Play) {
+			Before("kissing it").Always(func(g G.Play) {
 				source, target := g.The("action.Source"), g.The("action.Target")
 				if source == target {
 					g.Say(source.Text("Name"), "didn't get much from that.")

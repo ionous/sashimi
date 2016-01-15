@@ -48,7 +48,7 @@ func init() {
 			Can("insert it into").And("inserting it into").RequiresOne("container").AndOne("prop"),
 			To("insert it into", func(g G.Play) { ReflectWithContext(g, "receive insertion") }),
 			//  can't insert clothes being worn
-			WhenCapturing("inserting it into", func(g G.Play) {
+			Before("inserting it into").Always(func(g G.Play) {
 				prop := g.The("action.Context")
 				if worn := prop.Object("wearer"); worn.Exists() {
 					g.Say("You can't insert worn clothing.")
@@ -57,7 +57,7 @@ func init() {
 				}
 			}),
 			//  can't insert what isn't held
-			WhenCapturing("inserting it into", func(g G.Play) {
+			Before("inserting it into").Always(func(g G.Play) {
 				actor, prop := g.The("action.Source"), g.The("action.Context")
 				if carrier := Carrier(prop); carrier != actor {
 					g.Say("You aren't holding", ArticleName(g, "action.Context", NameFullStop))
@@ -65,7 +65,7 @@ func init() {
 				}
 			}),
 			//  can't insert something into itself
-			WhenCapturing("inserting it into", func(g G.Play) {
+			Before("inserting it into").Always(func(g G.Play) {
 				container, prop := g.The("action.Target"), g.The("action.Context")
 				if container == prop {
 					g.Say("You can't insert something into itself.")
@@ -83,7 +83,7 @@ func init() {
 		s.The("containers",
 			Can("receive insertion").And("receiving insertion").RequiresOne("prop").AndOne("actor"),
 			//  can't insert into closed containers
-			WhenCapturing("receiving insertion", func(g G.Play) {
+			Before("receiving insertion").Always(func(g G.Play) {
 				container := g.The("container")
 				if container.Is("closed") {
 					g.Say(ArticleName(g, "container", nil), "is closed.")

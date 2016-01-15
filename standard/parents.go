@@ -21,7 +21,7 @@ func CarriedNotWorn(obj IObject) (carrier IObject) {
 	return
 }
 
-//
+// FIX: note: this wouldnt work for something in a container
 func Carrier(obj IObject) (carrier IObject) {
 	carried := false
 	for _, wob := range []string{"wearer", "owner"} {

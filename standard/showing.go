@@ -20,7 +20,7 @@ func init() {
 			Can("show it to").And("showing it to").RequiresOne("actor").AndOne("prop"),
 			To("show it to", func(g G.Play) { ReflectWithContext(g, "report show") }),
 			// "you can't show what you haven't got"
-			WhenCapturing("showing it to", func(g G.Play) {
+			Before("showing it to").Always(func(g G.Play) {
 				presenter, _, prop := g.The("action.Source"), g.The("action.Target"), g.The("action.Context")
 				if carrier := Carrier(prop); carrier != presenter {
 					g.Say("You aren't holding", ArticleName(g, "action.Context", NameFullStop))
@@ -28,7 +28,7 @@ func init() {
 				}
 			}),
 			// "convert show to yourself to examine"
-			WhenCapturing("showing it to", func(g G.Play) {
+			Before("showing it to").Always(func(g G.Play) {
 				presenter, receiver, prop := g.The("action.Source"), g.The("action.Target"), g.The("action.Context")
 				if presenter == receiver {
 					presenter.Go("examine it", prop)

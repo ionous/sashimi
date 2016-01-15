@@ -61,7 +61,7 @@ func init() {
 			Can("give it to").And("giving it to").RequiresOne("actor").AndOne("prop"),
 			To("give it to", func(g G.Play) { ReflectWithContext(g, "report give") }),
 			// "convert give to yourself to examine"
-			WhenCapturing("giving it to", func(g G.Play) {
+			Before("giving it to").Always(func(g G.Play) {
 				presenter, receiver := g.The("action.Source"), g.The("action.Target")
 				if presenter == receiver {
 					g.Say("You can't give to yourself")
@@ -69,7 +69,7 @@ func init() {
 				}
 			}),
 			// "can't give clothes being worn"
-			WhenCapturing("giving it to", func(g G.Play) {
+			Before("giving it to").Always(func(g G.Play) {
 				prop := g.The("action.Context")
 				if worn := prop.Object("wearer"); worn.Exists() {
 					g.Say("You can't give worn clothing.")
@@ -78,7 +78,7 @@ func init() {
 				}
 			}),
 			// "you can't give what you haven't got"
-			WhenCapturing("giving it to", func(g G.Play) {
+			Before("giving it to").Always(func(g G.Play) {
 				presenter, prop := g.The("action.Source"), g.The("action.Context")
 				if carrier := Carrier(prop); carrier != presenter {
 					g.Say("You aren't holding", ArticleName(g, "action.Context", NameFullStop))

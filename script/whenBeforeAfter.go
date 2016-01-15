@@ -43,18 +43,6 @@ func When(event string) EventPhrase {
 }
 
 //
-func WhenBubbling(event string, cb G.Callback) EventFinalizer {
-	origin := NewOrigin(2)
-	return EventPhrase{[]string{event}, origin, S.ListenBubble}.Always(cb)
-}
-
-//
-func WhenCapturing(event string, cb G.Callback) EventFinalizer {
-	origin := NewOrigin(2)
-	return EventPhrase{[]string{event}, origin, S.ListenCapture}.Always(cb)
-}
-
-//
 func (p EventPhrase) Or(event string) EventPhrase {
 	p.events = append(p.events, event)
 	return p
