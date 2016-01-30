@@ -396,8 +396,8 @@ func (p ViewRoomPhrase) Execute(g G.Play) {
 	// sometines a blank like is printed without this
 	// (maybe certain directions? or going through doors?)
 	// not sure why, so leaving this for consistency
-	g.Say(Lines("", room.Text("Name")))
-	g.Say(Lines(room.Text("description"), ""))
+	g.Say(Lines("", room.Get("Name").Text()))
+	g.Say(Lines(room.Get("description").Text(), ""))
 	// FIX? uses 1 to exclude the player....
 	// again, this happens because we dont know if print description actually did anything (re:scenery, etc.)
 	if contents := room.ObjectList("contents"); len(contents) > 1 {

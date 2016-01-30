@@ -92,7 +92,7 @@ func (out *CommandOutput) FlushDocument(doc resource.DocumentBuilder) {
 
 func (out *CommandOutput) NumChange(gobj meta.Instance, prop ident.Id, prev, next float32) {
 	if !out.view.InView(gobj) {
-		out.Log(fmt.Sprintf("CommandOutput: '%s' not in view,ignoring num change %s(%s->%s)\n", gobj.GetId(), out.view, prop, prev, next))
+		//out.Log(fmt.Sprintf("CommandOutput: '%s' not in view,ignoring num change %s(%s->%s)\n", gobj.GetId(), out.view, prop, prev, next))
 	} else {
 		obj := NewObjectRef(gobj)
 		data := struct {
@@ -105,7 +105,7 @@ func (out *CommandOutput) NumChange(gobj meta.Instance, prop ident.Id, prev, nex
 
 func (out *CommandOutput) TextChange(gobj meta.Instance, prop ident.Id, prev, next string) {
 	if !out.view.InView(gobj) {
-		out.Log(fmt.Sprintf("CommandOutput: '%s' not in view(%s), ignoring text change %s(%s->%s)\n", gobj.GetId(), out.view, prop, prev, next))
+		//out.Log(fmt.Sprintf("CommandOutput: '%s' not in view(%s), ignoring text change %s(%s->%s)\n", gobj.GetId(), out.view, prop, prev, next))
 	} else {
 		obj := NewObjectRef(gobj)
 		data := struct {
@@ -118,7 +118,7 @@ func (out *CommandOutput) TextChange(gobj meta.Instance, prop ident.Id, prev, ne
 
 func (out *CommandOutput) StateChange(gobj meta.Instance, prop ident.Id, prev, next ident.Id) {
 	if !out.view.InView(gobj) {
-		out.Log(fmt.Sprintf("CommandOutput: '%s' not in view '%s' ignoring state change %s(%s->%s)\n", gobj.GetId(), out.view, prop, prev, next))
+		//out.Log(fmt.Sprintf("CommandOutput: '%s' not in view '%s' ignoring state change %s(%s->%s)\n", gobj.GetId(), out.view, prop, prev, next))
 	} else {
 		obj := NewObjectRef(gobj)
 		data := struct {
@@ -154,14 +154,14 @@ func (out *CommandOutput) ReferenceChange(gobj meta.Instance, prop, other ident.
 		(next != nil && out.view.InView(next))
 
 	if !relatedView {
-		var p, n ident.Id
-		if prev != nil {
-			p = prev.GetId()
-		}
-		if next != nil {
-			n = next.GetId()
-		}
-		out.Log(fmt.Sprintf("CommandOutput: '%s' not in view '%s' ignoring refchange %v(%v->%v)\n", gobj.GetId(), out.view, prop, p, n))
+		// var p, n ident.Id
+		// if prev != nil {
+		// 	p = prev.GetId()
+		// }
+		// if next != nil {
+		// 	n = next.GetId()
+		// }
+		//out.Log(fmt.Sprintf("CommandOutput: '%s' not in view '%s' ignoring refchange %v(%v->%v)\n", gobj.GetId(), out.view, prop, p, n))
 	} else {
 		obj := NewObjectRef(gobj)
 

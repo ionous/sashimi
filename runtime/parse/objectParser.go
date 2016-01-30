@@ -23,7 +23,7 @@ func (m MatchMaker) NewMatcher(id ident.Id) (ret parser.IMatch, err error) {
 }
 
 // NewObjectParser and add all commands and patterns.
-// FIX-STORE: generate literals for all comprehensions
+// FIX-STORE: generate literals for all comprehensions; pre-compile to check for errors.
 func NewObjectParser(mdl meta.Model, source ident.Id) (p parser.P, err error) {
 	if _, ok := mdl.GetInstance(source); !ok {
 		err = fmt.Errorf("couldnt find source", source)

@@ -9,8 +9,8 @@ import (
 // options and command line parsing for terminal style playback.
 //
 type Options struct {
-	verbose, text, dump, hasConsole bool
-	cons                            C.IConsole
+	verbose, text, dump, load, hasConsole bool
+	cons                                  C.IConsole
 }
 
 // create options by reading the command line
@@ -18,8 +18,9 @@ func ParseCommandLine() Options {
 	verbose := flag.Bool("verbose", false, "prints log output when true.")
 	text := flag.Bool("text", false, "uses the simpler text console when true.")
 	dump := flag.Bool("dump", false, "dump the model.")
+	load := flag.Bool("load", false, "load the story save game.")
 	flag.Parse()
-	return Options{verbose: *verbose, text: *text, dump: *dump}
+	return Options{verbose: *verbose, text: *text, dump: *dump, load: *load}
 }
 
 func (opt Options) SetVerbose(okay bool) Options {

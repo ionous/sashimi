@@ -4,13 +4,13 @@ import (
 	"flag"
 	"fmt"
 	"github.com/ionous/sashimi/_examples/stories"
-	"github.com/ionous/sashimi/standard"
+	"github.com/ionous/sashimi/standard/framework"
 )
 
 // Boilerplate to run the story.
 func main() {
 	story := flag.String("story", "", "select the story to play.")
-	options := standard.ParseCommandLine()
+	options := framework.ParseCommandLine()
 
 	if !stories.Select(*story) {
 		flag.PrintDefaults()
@@ -19,6 +19,6 @@ func main() {
 			fmt.Println(" ", nick)
 		}
 	} else {
-		standard.RunGame(options)
+		framework.RunGame(options)
 	}
 }

@@ -12,6 +12,7 @@ import (
 )
 
 func Describe_Quips(s *Script) {
+	s.The("actors", AreEither("chatty").Or("reticent"))
 	// we derive topics and quips from facts, so we can recollect, prohibit, etc. equally.
 	// a quip can optionally be bound to a single actor.
 	s.The("facts", Called("quips"),
@@ -57,6 +58,12 @@ func Describe_Quips(s *Script) {
 			g.Go(quips.Introduce("action.source").To("action.target").WithDefault())
 		}),
 		Can("be greeted by").And("being greeted by").RequiresOne("actor").AndOne("quip"),
+		Before("being greeted by").Always(func(g G.Play) {
+			if g.The("action.source").Is("reticent") {
+				g.Say("There's no response.")
+				g.StopHere()
+			}
+		}),
 		To("be greeted by", func(g G.Play) {
 			c := quips.Converse(g)
 			if npc := c.Actor().Object(); npc.Exists() {

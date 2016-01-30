@@ -78,6 +78,23 @@ func (n gameValue) SetObject(obj G.IObject) {
 	}
 }
 
+func (n gameValue) State() (ret ident.Id) {
+	if n.ptype != meta.StateProperty {
+		n.log("State(): property is not a state.")
+	} else {
+		ret = n.value.GetState()
+	}
+	return
+}
+
+func (n gameValue) SetState(val ident.Id) {
+	if n.ptype != meta.StateProperty {
+		n.log("SetState(): property is not a state.")
+	} else if e := n.value.SetState(val); e != nil {
+		n.log("SetState(): error setting value: %v.", e)
+	}
+}
+
 func (n gameValue) log(format string, v ...interface{}) {
 	suffix := fmt.Sprintf(format, v...)
 	n.game.Println(n.path, suffix)

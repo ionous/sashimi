@@ -10,7 +10,7 @@ func init() {
 	AddScript(func(s *Script) {
 		s.The("props",
 			Called("openers"),
-			AreEither("closed").Or("open"),
+			AreEither("open").Or("closed"),
 			// note: not openable sounds like it cant become open, rather than it cannot be opened (by someone).
 			AreEither("hinged").Or("hingeless"),
 			AreEither("locakable").Or("not lockable").Usually("not lockable"),

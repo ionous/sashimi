@@ -12,18 +12,19 @@ import (
 )
 
 // TestQuipVisit to ensure that we can visit the dialog and see their properties.
-
 func TestQuipVisit(t *testing.T) {
 	s := TalkScript()
 	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
-		total, comments, repeats := 3, 2, 1
+		total, comments, repeats := 3+1, 2, 1+1 // +1 for hackish default greeting.
 		g := test.Game.NewAdapter()
 		for i, quips := 0, g.List("quips"); i < quips.Len(); i++ {
 			q := quips.Get(i).Object()
-			if q.Text("comment") != "" {
+			comment, reply, repeatable := q.Text("comment"), q.Text("reply"), q.Is("repeatable")
+			t.Logf("%v: '%v','%v','%v'", q, comment, reply, repeatable)
+			if comment != "" {
 				comments--
 			}
-			if q.Is("repeatable") {
+			if repeatable {
 				repeats--
 			}
 			total--

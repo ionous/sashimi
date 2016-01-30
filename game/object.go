@@ -53,6 +53,9 @@ type IValue interface {
 
 	Text() string
 	SetText(string)
+
+	State() ident.Id
+	SetState(ident.Id)
 }
 
 type IList interface {
