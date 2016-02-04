@@ -19,7 +19,7 @@ func PlayerQuips(g G.Play) []G.IObject {
 			// Filter to quips which quip supply the interlocutor.
 			if subject := quip.Get("subject").Object(); subject == npc {
 				// Filter to quips which have player comments.
-				if quip.Get("comment").Text() != "" {
+				if quip.Get("comment").Text() != "" || quip.Get("slug").Text() != "" {
 					// Filter quips to the current topic.
 					qt := quip.Get("topic").Object()
 					// the player as universal filter.
