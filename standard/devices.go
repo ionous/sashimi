@@ -9,9 +9,13 @@ import (
 func init() {
 	AddScript(func(s *Script) {
 		// "Represents a machine or contrivance of some kind which can be switched on or off."
+
+		// FIX: having problems with a lack of parts
+		s.The("objects",
+			AreEither("operable").Or("inoperable").Usually("inoperable"))
+
 		s.The("props",
 			Called("devices"),
-			AreEither("operable").Or("inoperable"),
 			AreEither("switched off").Or("switched on"))
 
 		s.The("devices",
@@ -38,17 +42,17 @@ func init() {
 			}))
 
 		//
-		// Turn on:
+		// Turn on, fix: was "prop", now "object" to handle outlet actors :(
 		//
 		s.The("actors",
-			Can("switch it on").And("switching it on").RequiresOne("prop"),
+			Can("switch it on").And("switching it on").RequiresOne("object"),
 			To("switch it on", func(g G.Play) { ReflectToTarget(g, "report switched on") }))
 
-		s.The("devices",
+		s.The("objects",
 			Can("report switched on").And("reporting switched on").RequiresOne("actor"),
 			To("report switched on", func(g G.Play) {
-				device, actor := g.The("device"), g.The("actor")
-				if device.Is("inoperable") {
+				device, actor := g.The("action.source"), g.The("actor")
+				if !device.Is("operable") {
 					device.Go("report inoperable")
 				} else {
 					if device.Is("switched on") {
