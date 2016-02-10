@@ -42,6 +42,7 @@ func init() {
 		s.The("kinds",
 			// printed plural name (text),
 			Have("printed name", "text"),
+			// FIX: missing a vs. the?
 			Have("indefinite article", "text"), //
 			AreEither("singular-named").Or("plural-named"),
 			AreEither("common-named").Or("proper-named"), //a name used for an individual person, place, or organization, spelled with initial capital letters, e.g., Larry, Mexico, and Boston Red Sox.
@@ -352,7 +353,7 @@ func init() {
 		s.The("doors",
 			When("printing name text").
 				Always(func(g G.Play) {
-				text := ArticleName(g, "door", func(obj G.IObject) (status string) {
+				text := DefiniteName(g, "door", func(obj G.IObject) (status string) {
 					if obj.Is("hinged") {
 						if obj.Is("open") {
 							status = "open"
