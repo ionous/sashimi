@@ -55,17 +55,22 @@ func SerializeObject(gobj meta.Instance) *resource.Object {
 	for i := 0; i < gobj.NumProperty(); i++ {
 		prop := gobj.PropertyNum(i)
 		pid := jsonId(prop.GetId())
-		switch prop.GetType() {
+		switch t := prop.GetType(); t {
 		case meta.NumProperty:
-			obj.SetAttr(pid, prop.GetValue().GetNum())
+			v := prop.GetValue() // note, sharing this "GetValue" panics, because not all types support GetValue
+			obj.SetAttr(pid, v.GetNum())
 		case meta.TextProperty:
-			obj.SetAttr(pid, prop.GetValue().GetText())
+			v := prop.GetValue()
+			obj.SetAttr(pid, v.GetText())
 		case meta.StateProperty:
-			choice := jsonId(prop.GetValue().GetState())
+			v := prop.GetValue()
+			choice := jsonId(v.GetState())
 			states = append(states, choice)
 			obj.SetAttr(pid, choice)
 		case meta.ObjectProperty:
-			obj.SetAttr(pid, jsonId(prop.GetValue().GetObject()))
+			v := prop.GetValue()
+			id := jsonId(v.GetObject())
+			obj.SetAttr(pid, id)
 		default:
 			// ignore arrays for now....
 		}

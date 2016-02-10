@@ -117,7 +117,6 @@ func (p *propBase) GetValue() (ret meta.Value) {
 		if !p.prop.IsMany {
 			return enumValue{panicValue{p}}
 		}
-
 	case M.PointerProperty:
 		if !p.prop.IsMany {
 			// we are not many, since we dont have many to many
