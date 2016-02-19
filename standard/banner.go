@@ -6,7 +6,7 @@ import (
 )
 
 //
-const VersionString = "Sashimi Experimental IF Engine - 0.1"
+const VersionString = "Sashimi Interactive Fiction Engine - 0.1"
 
 func init() {
 	AddScript(func(s *Script) {
@@ -22,8 +22,8 @@ func init() {
 					headline = "An Interactive fiction" // FIX: default for headline in class.
 				}
 				author := story.Text("author")
-				g.Say(name)
-				g.Say(headline, "by", author)
+				g.Say(name + ".")
+				g.Say(headline, "by", author+".")
 				g.Say(VersionString)
 			}))
 	})

@@ -147,7 +147,6 @@ func PlayGameUpdate(cons C.IConsole, g R.Game, endFrame func()) (err error) {
 
 					if e := game.Input(s); e != nil {
 						cons.Println(e.Error())
-
 					} else {
 						// difficult question, if we end the story, do we want to end the turn?
 						// currently we dont.
