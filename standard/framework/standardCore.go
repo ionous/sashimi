@@ -96,7 +96,7 @@ func NewStandardCore(game R.Game) (ret *StandardCore, err error) {
 			statusLeft:  left.GetValue(),
 			statusRight: right.GetValue()}
 		core.SetLeft(title.GetValue().GetText())
-		core.SetRight(fmt.Sprintf(`"%s" by %s.`, title.GetValue().GetText(), author.GetValue().GetText()))
+		core.SetRight(fmt.Sprintf(`"%s" by %s`, title.GetValue().GetText(), author.GetValue().GetText()))
 		ret = core
 	}
 	return
@@ -113,9 +113,7 @@ func (sg *StandardCore) HandleInput(in string) (err error) {
 		} else {
 			if in == "commence" {
 				in = sg.playerInput.GetText()
-				//log.Println("commence reseting input to", in)
 			}
-			//
 			if e := sg.playerInput.SetText(in); e != nil {
 				err = e
 			} else if act, e := sg.Game.QueueAction("parse player input", sg.story); e != nil {
@@ -126,12 +124,12 @@ func (sg *StandardCore) HandleInput(in string) (err error) {
 				sg.EndTurn("end turn")
 				// NOTE: canceling is not an error
 			} else if parser, e := sg.getParser(); e != nil {
+				log.Println("error getting parser", e)
 				err = e
-				//log.Println("error getting parser", err)
 			} else {
 				if _, matcher, e := parser.ParseInput(in); e != nil {
+					fmt.Println("error parsing input", in, e)
 					err = e
-					//log.Println("error parsing input", err)
 				} else if act, objs, e := matcher.(*parse.ObjectMatcher).GetMatch(); e != nil {
 					err = e
 					//log.Println("error matching input", err)
@@ -140,7 +138,6 @@ func (sg *StandardCore) HandleInput(in string) (err error) {
 					sg.EndTurn("end turn")
 				}
 			}
-
 		}
 	}
 	return err

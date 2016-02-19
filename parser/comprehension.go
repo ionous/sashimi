@@ -1,6 +1,10 @@
 package parser
 
-import "github.com/ionous/sashimi/util/ident"
+import (
+	"fmt"
+	"github.com/ionous/sashimi/util/errutil"
+	"github.com/ionous/sashimi/util/ident"
+)
 
 // Comprehension contains a set of patterns against which user input gets matched.
 // Comprehensions are created via NewComprehension() and expanded via LearnPattern().
@@ -20,7 +24,7 @@ func (c *Comprehension) LearnPattern(pattern string) (p Pattern, err error) {
 	// split the pattern into groups separated by tags
 	groups, tags := tokenize(pattern)
 	if nouns, e := newNounCheck(groups, tags); e != nil {
-		err = e
+		err = errutil.Append(err, fmt.Errorf("error learning pattern: %s", pattern))
 	} else {
 		p = Pattern{c, nouns.exp, pattern, nouns.matchIndices()}
 		c.patterns = append(c.patterns, p)
