@@ -87,8 +87,8 @@ func TestStartupText(t *testing.T) {
 				require.NoError(t, err, "commencing")
 
 				expected := []string{
-					"testing",
-					"extra extra by me",
+					"testing.",
+					"extra extra by me.",
 					standard.VersionString,
 					"",
 					"somewhere",

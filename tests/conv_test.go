@@ -15,23 +15,19 @@ import (
 func TestQuipVisit(t *testing.T) {
 	s := TalkScript()
 	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
-		total, comments, repeats := 3+1, 2, 1+1 // +1 for hackish default greeting.
+		total, comments := 3+1, 2 // +1 for hackish default greeting.
 		g := test.Game.NewAdapter()
 		for i, quips := 0, g.List("quips"); i < quips.Len(); i++ {
 			q := quips.Get(i).Object()
-			comment, reply, repeatable := q.Text("comment"), q.Text("reply"), q.Is("repeatable")
-			t.Logf("%v: '%v','%v','%v'", q, comment, reply, repeatable)
+			comment, reply := q.Text("comment"), q.Text("reply")
+			t.Logf("%v: '%v','%v','%v'", q, comment, reply)
 			if comment != "" {
 				comments--
-			}
-			if repeatable {
-				repeats--
 			}
 			total--
 		}
 		assert.Equal(t, 0, total, "total quips")
 		assert.Equal(t, 0, comments, "comment quips")
-		assert.Equal(t, 0, repeats, "repeat quips")
 	}
 }
 
@@ -51,8 +47,8 @@ func TestQuipHistory(t *testing.T) {
 		npc := lastQuip.Object("subject")
 		require.EqualValues(t, "AlienBoy", npc.Id().String())
 		//
-		repeats := lastQuip.Is("one time")
-		require.True(t, repeats, "repeats")
+		// repeats := lastQuip.Is("one time")
+		// require.True(t, repeats, "repeats")
 	}
 }
 
@@ -247,13 +243,13 @@ func TalkScript() *Script {
 
 	s.The("quip", Called("WhatsTheMatter"),
 		Has("subject", "alien boy"),
-		Is("one time"),
+		IsProhibitedBy("WhatsTheMatter"),
 		Has("reply", `"You wouldn't happen to have a matter disrupter?"`))
 
 	s.The("quip",
 		Called("DoesAnybody"),
 		Has("subject", "Alien Boy"),
-		Is("one time"),
+		IsProhibitedBy("DoesAnybody"),
 		DirectlyFollows("WhatsTheMatter"),
 		Has("comment", `"Does anybody?"`),
 		Has("reply", `"Or,"asks the Alien Boy, "maybe a ray gun?"`))

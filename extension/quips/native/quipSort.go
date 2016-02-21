@@ -1,6 +1,7 @@
 package native
 
 import (
+	"fmt"
 	G "github.com/ionous/sashimi/game"
 	"sort"
 )
@@ -12,25 +13,28 @@ type QuipSort struct {
 
 // record for tracking sorted scores
 type quipScore struct {
-	quip                       G.IObject
-	replies, repeats, directly bool
-	rank                       int
+	quip G.IObject
+	rank int
+}
+
+func (s quipScore) String() string {
+	return fmt.Sprintf("%s (%d)", s.quip, s.rank)
 }
 
 // Add the passed quip to the list of quips to sort
 func (qs *QuipSort) Add(quip G.IObject) *quipScore {
-	var rank int = 250
+	var rank int = 500
 	if quip.Is("important") {
-		rank = 500
+		rank = 1000
 	} else if quip.Is("trivial") {
+		rank = 200
+	} else if quip.Is("departing") {
 		rank = 100
 	}
-	ret := quipScore{quip,
-		quip.Text("reply") != "",
-		quip.Is("repeatable"),
-		false,
-		rank,
+	if quip.Text("reply") != "" {
+		rank += 50
 	}
+	ret := quipScore{quip, rank}
 	qs.quips = append(qs.quips, ret)
 	return &qs.quips[len(qs.quips)-1]
 }
@@ -45,13 +49,10 @@ func (qs QuipSort) Swap(i, j int) {
 	qs.quips[i], qs.quips[j] = qs.quips[j], qs.quips[i]
 }
 
-// sort.Interface; less is closer to the top of the lst
-func (qs QuipSort) Less(i, j int) (less bool) {
+// sort.Interface; less is closer to the top
+func (qs QuipSort) Less(i, j int) (moreImportant bool) {
 	a, b := qs.quips[i], qs.quips[j]
-	return (a.replies && !b.replies) ||
-		(!a.repeats && b.repeats) ||
-		(a.rank > b.rank) ||
-		(a.directly && !b.directly)
+	return a.rank > b.rank
 }
 
 func (qs QuipSort) Sort() []G.IObject {
@@ -59,11 +60,6 @@ func (qs QuipSort) Sort() []G.IObject {
 	ret := make([]G.IObject, len(qs.quips))
 	for i, s := range qs.quips {
 		ret[i] = s.quip
-		// if standard.Debugging {
-		// 	g.Log(fmt.Sprintf(
-		// 		"%s replies:%t, repeats:%t, directly:%t, rank:%d",
-		// 		s.quip, s.replies, s.repeats, s.directly, s.rank))
-		// }
 	}
 	return ret
 }

@@ -25,19 +25,18 @@ func PlayerQuips(g G.Play) []G.IObject {
 					// the player as universal filter.
 					if (!qt.Exists() && !topic.Exists()) || (qt.Exists() && (topic == qt || qt == g.The("player"))) {
 						// Exclude one-time quips, checking the recollection table.
-						if quip.Is("repeatable") || !qm.Recollects(quip) {
-							// Check whether facts restrict this selection.
-							if qm.IsQuipAllowed(quip) {
-								// When following a restrictive quips, limit to those which directly follow.
-								if isRestrictive && Quip(quip).Follows(latest).Directly(g) {
-									qs.Add(quip)
-								} else if !isRestrictive {
-									// Select those which follow recent quips,
-									// and those which do not have any follow constraints.
-									if rank, direct := Quip(quip).Recently(qh).Follows(g); rank != 0 {
-										score := qs.Add(quip)
-										score.rank = rank
-										score.directly = direct
+						if !qm.Recollects(quip) && qm.IsQuipAllowed(quip) {
+							// When following a restrictive quips, limit to those which directly follow.
+							if isRestrictive && Quip(quip).Follows(latest).Directly(g) {
+								qs.Add(quip)
+							} else if !isRestrictive {
+								// Select those which follow recent quips,
+								// and those which do not have any follow constraints.
+								if rank, direct := Quip(quip).Recently(qh).Follows(g); rank != 0 {
+									score := qs.Add(quip)
+									score.rank -= rank
+									if direct {
+										score.rank += 1000
 									}
 								}
 							}

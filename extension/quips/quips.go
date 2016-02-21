@@ -21,8 +21,7 @@ func Describe_Quips(s *Script) {
 		Have("reply", "text"),
 		Have("topic", "kind"),
 		Have("slug", "text"),
-		AreEither("repeatable").Or("one time"),
-		AreOneOf("important", "unimportant", "trivial").Usually("unimportant"),
+		AreOneOf("important", "unimportant", "trivial", "departing").Usually("unimportant"),
 		AreEither("restrictive").Or("unrestricted").Usually("unrestricted"),
 	)
 
@@ -142,6 +141,9 @@ func Describe_Quips(s *Script) {
 				c.Get("topic").SetObject(topic)
 			}
 			facts.PlayerMemory(g).Learns(quip)
+			if quip.Is("departing") {
+				talker.Go("depart")
+			}
 		}))
 
 	s.The("actors",

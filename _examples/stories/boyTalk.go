@@ -36,12 +36,10 @@ func Boy_Talk(s *Script) {
 
 	s.The("quip", Called("OldBoy: Hello Again!"),
 		Has("subject", "alien boy"),
-		Is("repeatable"),
 		Has("reply", `"Hello[one of] again[or][then at random]," the Alien Boy says.`))
 
 	s.The("quip", Called("OldBoy: Later"),
 		Has("subject", "alien boy"),
-		Is("repeatable"),
 		//Is("unimportant") -- can we determine that from the lack of reply?
 		// or, even, it's position in the order of declaration?
 		//Has("hook", `I"ll be back.`)
@@ -85,7 +83,6 @@ func Boy_Talk(s *Script) {
 
 	s.The("quip", Called("OldBoy: CameraTime"),
 		Has("subject", "Alien Boy"),
-		Is("repeatable"),
 		//Is("unimportant"),
 		//Is("weakly-phrased"),
 		//Has("hook",  `Gotta run.`) ,
