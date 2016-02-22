@@ -88,6 +88,8 @@ func (out *CommandOutput) FlushDocument(doc resource.DocumentBuilder) {
 		game.SetAttr("events", events)
 	}
 	doc.SetIncluded(out.serial.out)
+	// PATCH: clear the serial output so it grow frame after frame.
+	out.serial.out = resource.NewObjectList()
 }
 
 func (out *CommandOutput) NumChange(gobj meta.Instance, prop ident.Id, prev, next float32) {
