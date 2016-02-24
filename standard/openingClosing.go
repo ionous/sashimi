@@ -39,8 +39,9 @@ func init() {
 						if prop.Is("open") {
 							prop.Go("report already open", actor)
 						} else {
-							prop.IsNow("open")
-							prop.Go("report now open", actor)
+							g.Go(Change("prop").To("open")).Then(func(g G.Play) {
+								prop.Go("report now open", actor)
+							})
 						}
 					}
 				}

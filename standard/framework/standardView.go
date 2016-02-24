@@ -7,7 +7,7 @@ import (
 
 // implement View for the standard rules
 // memory games can keep this around, appengine can rebuild on the fly
-// NOTE! this has the unwatched model, so it is very dangerous to compare instances directly
+// NOTE! this has the unwatched model, making it dangerous to compare instances by value.
 type StandardView struct {
 	mdl          meta.Model
 	player, room ident.Id

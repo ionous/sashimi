@@ -88,8 +88,11 @@ func (out *CommandOutput) FlushDocument(doc resource.DocumentBuilder) {
 		game.SetAttr("events", events)
 	}
 	doc.SetIncluded(out.serial.out)
-	// PATCH: clear the serial output so it grow frame after frame.
+	// PATCH: clear the serial output so it doesnt grow frame after frame.
 	out.serial.out = resource.NewObjectList()
+	// PATCH: clear the known output, we only want to rely on "view" --
+	// otherwise we lose objects that change offscreen.
+	out.serial.known = make(map[ident.Id]bool)
 }
 
 func (out *CommandOutput) NumChange(gobj meta.Instance, prop ident.Id, prev, next float32) {
