@@ -3,6 +3,7 @@ package standard
 import (
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
+	"github.com/ionous/sashimi/util/lang"
 )
 
 func Insert(prop string) InsertPhrase {
@@ -86,7 +87,7 @@ func init() {
 			Before("receiving insertion").Always(func(g G.Play) {
 				container := g.The("container")
 				if container.Is("closed") {
-					g.Say(ArticleName(g, "container", nil), "is closed.")
+					g.Say(lang.Capitalize(DefiniteName(g, "container", nil)), "is closed.")
 					g.StopHere()
 				}
 			}),
