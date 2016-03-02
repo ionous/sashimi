@@ -53,11 +53,12 @@ func (p EventPhrase) Always(cb G.Callback) EventFinalizer {
 	return EventFinalizer{p, cb}
 }
 
-func (p EventPhrase) Go(phrase G.RuntimePhrase, phrases ...G.RuntimePhrase) EventFinalizer {
-	return p.Always(func(g G.Play) {
-		g.Go(phrase, phrases...)
-	})
-}
+// removed for now; causes errors with the code extraction...
+// func (p EventPhrase) Go(phrase G.RuntimePhrase, phrases ...G.RuntimePhrase) EventFinalizer {
+// 	return p.Always(func(g G.Play) {
+// 		g.Go(phrase, phrases...)
+// 	})
+// }
 
 //
 func (frag EventFinalizer) MakeStatement(b SubjectBlock) (err error) {
