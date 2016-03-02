@@ -25,7 +25,7 @@ func PlayerQuips(g G.Play) []G.IObject {
 					// the player as universal filter.
 					if (!qt.Exists() && !topic.Exists()) || (qt.Exists() && (topic == qt || qt == g.The("player"))) {
 						// Exclude one-time quips, checking the recollection table.
-						if !qm.Recollects(quip) && qm.IsQuipAllowed(quip) {
+						if qm.IsQuipAllowed(quip) {
 							// When following a restrictive quips, limit to those which directly follow.
 							if isRestrictive && Quip(quip).Follows(latest).Directly(g) {
 								qs.Add(quip)
