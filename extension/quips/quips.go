@@ -1,7 +1,6 @@
 package quips
 
 import (
-	"fmt"
 	facts "github.com/ionous/sashimi/extension/facts/native"
 	quips "github.com/ionous/sashimi/extension/quips/native"
 	G "github.com/ionous/sashimi/game"
@@ -22,8 +21,7 @@ func Describe_Quips(s *Script) {
 		Have("topic", "kind"),
 		Have("slug", "text"),
 		AreOneOf("important", "unimportant", "trivial", "departing").Usually("unimportant"),
-		AreEither("restrictive").Or("unrestricted").Usually("unrestricted"),
-	)
+		AreEither("restrictive").Or("unrestricted").Usually("unrestricted"))
 
 	// one quip can have multiple following quips; one quip can follow various quips.
 	s.The("kinds",
@@ -155,20 +153,9 @@ func Describe_Quips(s *Script) {
 					if quips := quips.PlayerQuips(g); len(quips) == 0 {
 						player.Go("depart") // player rejected candy
 					} else {
-						// FIX: the console should grab this to label the list, and add the header numbers.
-						text := fmt.Sprintf("%s: ", player.Get("name").Text())
-						g.Say(Lines("", text))
-						for i, quip := range quips {
-							slug := quip.Get("slug").Text()
-							if slug == "" {
-								slug = quip.Get("comment").Text()
-								lines := strings.Split(slug, lang.NewLine)
-								if len(lines) > 0 {
-									slug = lines[0]
-								}
-							}
-							text := fmt.Sprintf("%d: %s", i+1, slug) // FIX? template instead of fmt
-							g.Say(text)                              // FIX FIX: CAN "SAY" TEXT BE SCOPED TO THE EVENT IN THE CMD OUTPUT.
+						//FIX: my theory has been, that like the graphics display, the text display should be grabbing events. theres a balance here -- do you g.say the header for the player name generically? or only in the console? how much becomes "output" specific in any given event? maybe not too much, just occasionaly things like these menus. in which case: no special header.
+						for _, quip := range quips {
+							quip.Go("be offered")
 						}
 						player.IsNow("inputing dialog")
 					}
@@ -179,28 +166,37 @@ func Describe_Quips(s *Script) {
 	s.The("actors",
 		AreEither("not inputing dialog").Or("inputing dialog"))
 
+	s.The("kinds",
+		Can("be offered").And("being offered").RequiresNothing())
+
+	s.The("quips",
+		When("being offered").Always(func(g G.Play) {
+			quip := g.The("quip")
+			slug := quip.Get("slug").Text()
+			if slug == "" {
+				slug = quip.Get("comment").Text()
+				lines := strings.Split(slug, lang.NewLine)
+				if len(lines) > 0 {
+					slug = lines[0]
+				}
+			}
+			// FIX? events cant carry text, so a quip has to "say" its programmatically determined "slug" text. if there were onions -- maybe with native snippets? -- you could pre-generate the slug.
+			g.Say(slug)
+		}))
+
 	s.The("stories",
 		When("parsing player input").Always(func(g G.Play) {
 			story := g.The("story")
 			if player := g.The("player"); player.Is("inputing dialog") {
 				player.IsNow("not inputing dialog")
-				if quips := quips.PlayerQuips(g); len(quips) == 0 {
-					player.Go("depart")
+				input := g.The("story").Get("player input").Text()
+				if quip := g.The(input); !quip.Exists() {
+					g.Say("Please choose a valid quip.")
+					story.Go("print conversation choices")
 				} else {
-					input := g.The("story").Get("player input").Text()
-					var choice int
-					if _, e := fmt.Sscan(input, &choice); e != nil || choice < 1 || choice > len(quips) {
-						g.Say("Please choose a number from the menu.")
-						story.Go("print conversation choices")
-					} else {
-						quip := quips[choice-1]
-						if Debugging {
-							g.Log("!", player, "chose", quip)
-						}
-						player.Go("comment", quip)
-					}
-					g.StopHere()
+					player.Go("comment", quip)
 				}
+				g.StopHere()
 			}
 		}))
 }
