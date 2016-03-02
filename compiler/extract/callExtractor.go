@@ -48,6 +48,11 @@ func (cx *CallExtractor) Trace(args ...interface{}) {
 	io.WriteString(cx.trace, x)
 }
 
+func (cx *CallExtractor) Find(k string) bool {
+	_, ok := cx.snippets[k]
+	return ok
+}
+
 // CompileCallback implments the compiler interface to turn a callback function into a callback marker.
 func (cx *CallExtractor) CompileCallback(cb G.Callback) (ret ident.Id, err error) {
 	m := cx.cfg.MakeMarker(cb)

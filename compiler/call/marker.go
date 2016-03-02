@@ -51,8 +51,8 @@ func (m Marker) Encode() (ret ident.Id, err error) {
 		hash := md5.New()
 		io.WriteString(hash, string(text))
 		b := hash.Sum(nil)
-		s := fmt.Sprintf("%x", b)
-		if len(s) > len("e2c569be17396eca2a2e3c11578123ed") {
+		s := fmt.Sprintf("~%x", b)
+		if len(s) > len("~e2c569be17396eca2a2e3c11578123ed") {
 			panic(s)
 		}
 		ret = ident.MakeId(s)
