@@ -4,7 +4,7 @@ import (
 	G "github.com/ionous/sashimi/game"
 	"github.com/ionous/sashimi/meta"
 	. "github.com/ionous/sashimi/script"
-	"github.com/ionous/sashimi/standard"
+	"github.com/ionous/sashimi/standard/live"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -89,7 +89,7 @@ func TestStartupText(t *testing.T) {
 				expected := []string{
 					"testing.",
 					"extra extra by me.",
-					standard.VersionString,
+					live.VersionString,
 					"",
 					"somewhere",
 					"an empty room",

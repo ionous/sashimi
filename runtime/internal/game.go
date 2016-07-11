@@ -76,7 +76,7 @@ func (g *Game) NewRuntimeAction(action meta.Action, nouns ...ident.Id,
 			if gobj, ok := g.Model.GetInstance(noun); !ok {
 				err = InstanceNotFound(noun.String())
 				break
-			} else if !g.Model.AreCompatible(gobj.GetParentClass().GetId(), class) {
+			} else if !g.Model.AreCompatible(gobj.GetParentClass(), class) {
 				err = fmt.Errorf("type mismatch %v is %v expected %v", noun, gobj.GetParentClass(), class)
 				break
 			} else {

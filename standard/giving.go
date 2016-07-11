@@ -3,32 +3,8 @@ package standard
 import (
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
+	. "github.com/ionous/sashimi/standard/live"
 )
-
-func Give(prop string) GivePropPhrase {
-	return GivePropPhrase{prop: prop}
-}
-
-func GiveThe(prop G.IObject) GivePropPhrase {
-	return GivePropPhrase{prop: prop.Id().String()}
-}
-
-func (give GivePropPhrase) To(actor string) GivingPhrase {
-	give.actor = actor
-	return GivingPhrase(give)
-}
-
-func (give GivingPhrase) Execute(g G.Play) {
-	prop, actor := g.The(give.prop), g.The(give.actor)
-	//added indirection so we can transform props after the rules of taking/giving have run
-	actor.Go("acquire it", prop)
-}
-
-type givePhraseData struct {
-	prop, actor string
-}
-type GivePropPhrase givePhraseData
-type GivingPhrase givePhraseData
 
 // all infom giving rules:
 // 	"applies to one carried thing and one visible thing."
@@ -50,7 +26,7 @@ func init() {
 			Can("be acquired").And("being acquired").RequiresOne("actor"),
 			To("be acquired", func(g G.Play) {
 				actor, prop, rel := g.The("actor"), g.The("prop"), "owner"
-				if Debugging {
+				if Debug() {
 					par, prev := prop.ParentRelation()
 					g.Log(prop, "AssignTo", actor, rel, "from", par, prev)
 				}

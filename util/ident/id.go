@@ -3,7 +3,6 @@ package ident
 import (
 	"bytes"
 	"github.com/ionous/sashimi/util/lang"
-	"github.com/satori/go.uuid"
 	"strings"
 	"unicode"
 )
@@ -58,11 +57,6 @@ func Join(a, b Id) Id {
 
 func Empty() (ret Id) {
 	return
-}
-
-func MakeUniqueId() Id {
-	str := uuid.NewV4().String()
-	return Id("~" + str)
 }
 
 // MakeId creates a new string id from the passed raw string.

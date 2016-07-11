@@ -12,7 +12,7 @@ func TestBasics(t *testing.T) {
 	assert.Equal(t, "WordDash", MakeId("word-dash").String(), "WordDash", "dashed words split")
 	assert.Equal(t, "Apostrophes", MakeId("apostrophe's").String(), "apostrophes vanish")
 	assert.True(t, Empty().Empty(), "empty is as empty does")
-	assert.False(t, MakeUniqueId().Empty(), "unique works")
+	//assert.False(t, MakeUniqueId().Empty(), "unique works")
 	assert.Equal(t, "TitleCase", Join(MakeId("title"), MakeId("case")).String(), "title case stays tile case")
 	assert.Equal(t, MakeId("786abc123def"), MakeId("786-abc 123 def"))
 }

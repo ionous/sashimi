@@ -38,7 +38,7 @@ func (oa GameObject) FromClass(class string) (okay bool) {
 	if _, found := oa.Model.GetClass(clsid); !found {
 		oa.Println("FromClass: no such class found", clsid)
 	}
-	return oa.Model.AreCompatible(oa.gobj.GetParentClass().GetId(), clsid)
+	return oa.Model.AreCompatible(oa.gobj.GetParentClass(), clsid)
 }
 
 func (oa GameObject) ParentRelation() (ret G.IObject, rel string) {

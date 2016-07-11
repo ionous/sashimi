@@ -3,6 +3,7 @@ package standard
 import (
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
+	. "github.com/ionous/sashimi/standard/live"
 	"github.com/ionous/sashimi/util/lang"
 )
 
@@ -21,20 +22,20 @@ func init() {
 		s.The("devices",
 			When("printing name text").
 				Always(func(g G.Play) {
-				text := ArticleName(g, "device", func(device G.IObject) (status string) {
-					if device.Is("operable") {
-						if device.Is("switched on") {
-							status = "switched on"
-						} else {
-							status = "switched off"
+					text := ArticleName(g, "device", func(device G.IObject) (status string) {
+						if device.Is("operable") {
+							if device.Is("switched on") {
+								status = "switched on"
+							} else {
+								status = "switched off"
+							}
 						}
-					}
-					return status
-				})
-				text = lang.Capitalize(text)
-				g.Say(text)
-				g.StopHere()
-			}))
+						return status
+					})
+					text = lang.Capitalize(text)
+					g.Say(text)
+					g.StopHere()
+				}))
 
 		s.The("props", Can("report inoperable").And("reporting inoperable").RequiresNothing(),
 			To("report inoperable", func(g G.Play) {

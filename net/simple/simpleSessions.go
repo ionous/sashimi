@@ -6,6 +6,7 @@ import (
 	"github.com/ionous/sashimi/metal"
 	"github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/util/ident"
+	"github.com/ionous/sashimi/util/uuid"
 	"io/ioutil"
 	"sync"
 )
@@ -20,7 +21,7 @@ type Sessions struct {
 }
 
 // FIX? merge with memSessions.go
-// maybe making a separate cmd package for wrapping the memsessions with ISession
+// maybe making a separate cmd package for wrapping the memsessions with Session
 func NewSessions() *Sessions {
 	return &Sessions{sessions: make(essMap), Mutex: new(sync.Mutex)}
 }
@@ -31,7 +32,7 @@ func (ess *Sessions) NewSession() (ret string, err error) {
 	} else if s, e := NewSimpleSession(m, ess.calls); e != nil {
 		err = e
 	} else {
-		id := ident.Dash(ident.MakeUniqueId())
+		id := ident.Dash(uuid.MakeUniqueId())
 		defer ess.Unlock()
 		ess.Lock()
 		ess.sessions[id] = s

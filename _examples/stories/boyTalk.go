@@ -1,8 +1,8 @@
 package stories
 
 import (
-	facts "github.com/ionous/sashimi/extension/facts/native"
-	. "github.com/ionous/sashimi/extension/quips"
+	"github.com/ionous/sashimi/extension/facts"
+	. "github.com/ionous/sashimi/extension/quips/script"
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
 )

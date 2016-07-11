@@ -3,42 +3,10 @@ package standard
 import (
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
+	. "github.com/ionous/sashimi/standard/live"
 )
 
 var directions = Directions
-
-// FIX: like facts.Learn() convert to a game action: actor.Go("move to", dest)
-func Move(obj string) MoveToPhrase {
-	return MoveToPhrase{actor: obj}
-}
-
-func MoveThe(obj G.IObject) MoveToPhrase {
-	return Move(obj.Id().String())
-}
-
-func (move MoveToPhrase) ToThe(dest G.IObject) MovingPhrase {
-	return move.To(dest.Id().String())
-}
-
-func (move MoveToPhrase) To(dest string) MovingPhrase {
-	move.dest = dest
-	return MovingPhrase(move)
-}
-
-func (move MoveToPhrase) OutOfWorld() MovingPhrase {
-	return MovingPhrase(move)
-}
-
-func (move MovingPhrase) Execute(g G.Play) {
-	actor, dest := g.The(move.actor), g.The(move.dest)
-	AssignTo(actor, "whereabouts", dest)
-}
-
-type moveData struct {
-	actor, dest string
-}
-type MoveToPhrase moveData
-type MovingPhrase moveData
 
 func init() {
 	AddScript(func(s *Script) {
@@ -106,7 +74,7 @@ func init() {
 					// 		TryMove(actor, dir, sources[0])
 					// 	}
 					//} else {
-					if Debugging {
+					if Debug() {
 						g.Log("couldnt find %s exit", dir)
 					}
 					g.Say("You can't move that direction.")
@@ -122,15 +90,15 @@ func init() {
 			To("be passed through", func(g G.Play) {
 				departingDoor, actor := g.The("door"), g.The("actor")
 				if dest := departingDoor.Object("destination"); !dest.Exists() {
-					if Debugging {
+					if Debug() {
 						g.Log("couldnt find destination")
 					}
 				} else if room := dest.Object("whereabouts"); !room.Exists() {
-					if Debugging {
+					if Debug() {
 						g.Log("couldnt find whereabouts")
 					}
 				} else {
-					if Debugging {
+					if Debug() {
 						g.Log("moving ", actor, " to ", room)
 					}
 					if departingDoor.Is("closed") {

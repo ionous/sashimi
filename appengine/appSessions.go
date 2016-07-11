@@ -9,6 +9,7 @@ import (
 	"github.com/ionous/sashimi/net/resource"
 	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/util/ident"
+	"github.com/ionous/sashimi/util/uuid"
 )
 
 type AppSessions struct {
@@ -25,8 +26,8 @@ func NewSessions(
 	return AppSessions{ctx, model, calls}
 }
 
-func (aps AppSessions) NewSession(doc resource.DocumentBuilder) (ret ess.ISession, err error) {
-	id := ident.Dash(ident.MakeUniqueId())
+func (aps AppSessions) NewSession(doc resource.DocumentBuilder) (ret ess.Session, err error) {
+	id := ident.Dash(uuid.MakeUniqueId())
 	if s, e := aps.newSession(id); e != nil {
 		err = e
 	} else if e := s.FlushDocument(doc); e != nil {
@@ -37,7 +38,7 @@ func (aps AppSessions) NewSession(doc resource.DocumentBuilder) (ret ess.ISessio
 	return
 }
 
-func (aps AppSessions) GetSession(id string) (ret ess.ISession, okay bool) {
+func (aps AppSessions) GetSession(id string) (ret ess.Session, okay bool) {
 	if s, e := aps.newSession(id); e == nil {
 		ret, okay = s, true
 	}

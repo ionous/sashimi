@@ -1,2 +1,2 @@
-// Package ess provides interfaces for use by app ( since ess returns interfaces defined in ess. )
+// Package ess provides resource implementations for game session endpoints.
 package ess

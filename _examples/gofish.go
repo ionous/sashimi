@@ -73,9 +73,8 @@ func main() {
 			//
 			cfg := R.NewConfig().SetCalls(calls).SetOutput(out).SetParentLookup(parents)
 			//
-			if g, e := cfg.NewGame(modelApi); e != nil {
-				panic(e)
-			} else if e := standard.PlayGameUpdate(cons, g, update); e != nil {
+			g := cfg.MakeGame(modelApi)
+			if e := standard.PlayGameUpdate(cons, g, update); e != nil {
 				panic(e)
 			}
 		}

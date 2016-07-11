@@ -20,10 +20,9 @@ func NewConfig() *RuntimeConfig {
 	return &RuntimeConfig{}
 }
 
-//modelApi := metal.NewMetal(model, make(metal.ObjectValueMap))
-func (cfg RuntimeConfig) NewGame(m meta.Model) (Game, error) {
+func (cfg RuntimeConfig) MakeGame(m meta.Model) Game {
 	core := cfg.Finalize()
-	return Game{m, internal.NewGame(core, m)}, nil
+	return Game{m, internal.NewGame(core, m)}
 }
 
 func (cfg RuntimeConfig) Finalize() internal.RuntimeCore {

@@ -10,13 +10,14 @@ import (
 	"github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/standard/framework"
 	"github.com/ionous/sashimi/util/ident" // for generating unique ids
+	"github.com/ionous/sashimi/util/uuid"
 	"io/ioutil"
 	"sync"
 )
 
 type essMap map[string]MemSession
 
-// ess.ISessionFactory
+// ess.SessionFactory
 type MemSessions struct {
 	sessions essMap
 	model    *M.Model
@@ -33,11 +34,11 @@ func NewSessions() *MemSessions {
 	return &MemSessions{sessions: make(essMap), Mutex: new(sync.Mutex)}
 }
 
-func (ess *MemSessions) NewSession(doc resource.DocumentBuilder) (ret ess.ISession, err error) {
+func (ess *MemSessions) NewSession(doc resource.DocumentBuilder) (ret ess.Session, err error) {
 	if e := ess.compile(); e != nil {
 		err = e
 	} else {
-		id := ident.Dash(ident.MakeUniqueId())
+		id := ident.Dash(uuid.MakeUniqueId())
 		// FIX? load?
 		meta := metal.NewMetal(ess.model, make(metal.ObjectValueMap))
 		out := app.NewCommandOutput(id, meta, framework.NewStandardView(meta))
@@ -56,7 +57,7 @@ func (ess *MemSessions) NewSession(doc resource.DocumentBuilder) (ret ess.ISessi
 	return
 }
 
-func (ess MemSessions) GetSession(id string) (ret ess.ISession, okay bool) {
+func (ess MemSessions) GetSession(id string) (ret ess.Session, okay bool) {
 	defer ess.Unlock()
 	ess.Lock()
 	ret, okay = ess.sessions[id]

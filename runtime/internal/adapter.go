@@ -80,7 +80,7 @@ func (ga *GameEventAdapter) List(class string) (ret G.IList) {
 	} else {
 		for i := 0; i < ga.Model.NumInstance(); i++ {
 			gobj := ga.Model.InstanceNum(i)
-			if id := gobj.GetParentClass().GetId(); ga.Model.AreCompatible(id, clsid) {
+			if id := gobj.GetParentClass(); ga.Model.AreCompatible(id, clsid) {
 				instances = append(instances, gobj)
 			}
 		}

@@ -20,7 +20,7 @@ func NewParentLookup(mdl meta.Model) ParentLookup {
 	return ParentLookup{mdl}
 }
 func (p ParentLookup) LookupParent(inst meta.Instance) (ret meta.Instance, rel meta.Property, okay bool) {
-	if p.mdl.AreCompatible(inst.GetParentClass().GetId(), objects) {
+	if p.mdl.AreCompatible(inst.GetParentClass(), objects) {
 		for wse, _ := range Containment {
 			if prop, ok := inst.GetProperty(wse); ok {
 				if parent := prop.GetValue().GetObject(); !parent.Empty() {

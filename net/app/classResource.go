@@ -22,7 +22,7 @@ func ClassResource(mdl meta.Model) resource.IResource {
 				okay, ret = true, resource.Wrapper{
 					// return information about the id'd class
 					Queries: func(doc resource.DocumentBuilder) {
-						addClass(doc, doc.NewIncludes(), cls)
+						addClass(mdl, doc, doc.NewIncludes(), cls)
 					},
 				}
 			}
@@ -31,19 +31,19 @@ func ClassResource(mdl meta.Model) resource.IResource {
 	}
 }
 
-func classParents(cls meta.Class, ar []string) []string {
-	if p := cls.GetParentClass(); p != nil {
-		ar = append(classParents(p, ar), jsonId(p.GetId()))
+func classParents(mdl meta.Model, cls ident.Id, ar []string) []string {
+	if p, ok := mdl.GetClass(cls); ok {
+		ar = append(classParents(mdl, p.GetId(), ar), jsonId(p.GetId()))
 	}
 	return ar
 }
 
-func addClass(doc, sub resource.IBuildObjects, cls meta.Class) {
+func addClass(mdl meta.Model, doc, sub resource.IBuildObjects, cls meta.Class) {
 	var parent *resource.Object
-	if p := cls.GetParentClass(); p != nil {
+	if p := cls.GetParentClass(); !p.Empty() {
 		//addClass(model, sub, sub, p)
 		// disabling recursion
-		parent = resource.NewObject(jsonId(p.GetId()), "class")
+		parent = resource.NewObject(jsonId(p), "class")
 	}
 	id := jsonId(cls.GetId())
 	out := doc.NewObject(id, "class")
@@ -52,7 +52,7 @@ func addClass(doc, sub resource.IBuildObjects, cls meta.Class) {
 	out.SetAttr("name", plural.GetValue().GetText())
 	singular, _ := cls.FindProperty("singular")
 	out.SetAttr("singular", singular.GetValue().GetText())
-	a := append(classParents(cls, nil), id)
+	a := append(classParents(mdl, cls.GetId(), nil), id)
 	// reverse
 	for i := len(a)/2 - 1; i >= 0; i-- {
 		opp := len(a) - 1 - i

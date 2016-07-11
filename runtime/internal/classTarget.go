@@ -6,19 +6,17 @@ import (
 	"github.com/ionous/sashimi/util/ident"
 )
 
-//
 // Implements E.ITarget for classes.
 // The objects and classes form a uniform chain of targets
-//
 type ClassTarget struct {
-	host     ObjectTarget
-	class    meta.Class
+	from     ObjectTarget
+	class    ident.Id
 	upObject meta.Instance
 }
 
 //
 func (ct ClassTarget) Id() ident.Id {
-	return ct.class.GetId()
+	return ct.class
 }
 
 //
@@ -28,24 +26,25 @@ func (ct ClassTarget) Class() ident.Id {
 
 //
 func (ct ClassTarget) String() string {
-	return ct.class.GetId().String()
+	return ct.class.String()
 }
 
 // Walk up the class hierarchy; when we reach the end, move to the next instance.
 // (from E.ITarget)
-func (ct ClassTarget) Parent() (ret E.ITarget, ok bool) {
-	if parent := ct.class.GetParentClass(); parent != nil {
-		ret = ClassTarget{ct.host, parent, ct.upObject}
-		ok = true
+func (ct ClassTarget) Parent() (ret E.ITarget, okay bool) {
+
+	if cls, ok := ct.from.game.Model.GetClass(ct.class); ok {
+		ret = ClassTarget{ct.from, cls.GetParentClass(), ct.upObject}
+		okay = true
 	} else if next := ct.upObject; next != nil {
-		ret = ObjectTarget{ct.host.game, next}
-		ok = true
+		ret = ObjectTarget{ct.from.game, next}
+		okay = true
 	}
-	return ret, ok
+	return
 }
 
 // Send an event to ct target.
 // (from E.ITarget)
 func (ct ClassTarget) TargetDispatch(evt E.IEvent) (err error) {
-	return ct.host.game.dispatch(evt, ct.class.GetId())
+	return ct.from.game.dispatch(evt, ct.class)
 }

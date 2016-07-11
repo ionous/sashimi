@@ -3,27 +3,8 @@ package standard
 import (
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
+	. "github.com/ionous/sashimi/standard/live"
 )
-
-func Clothe(actor string) ClothePhrase {
-	return ClothePhrase{actor: actor}
-}
-
-func (p ClothePhrase) With(prop string) WearingPhrase {
-	p.clothing = prop
-	return WearingPhrase(p)
-}
-
-func (p WearingPhrase) Execute(g G.Play) {
-	actor, clothing := g.The(p.actor), g.The(p.actor)
-	AssignTo(clothing, "wearer", actor)
-}
-
-type wearData struct {
-	actor, clothing string
-}
-type ClothePhrase wearData
-type WearingPhrase wearData
 
 func init() {
 	AddScript(func(s *Script) {

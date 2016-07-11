@@ -1,2 +1,2 @@
-// Package metal implements the Meta.Model interface for an in-memory Complier.Model.
+// Package metal implements the meta interfaces for an in-memory game model.
 package metal

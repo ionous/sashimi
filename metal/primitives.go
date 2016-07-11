@@ -58,7 +58,7 @@ func (p pointerValue) SetObject(id ident.Id) (err error) {
 func (mdl Metal) match(id ident.Id, relates ident.Id) (err error) {
 	if target, ok := mdl.GetInstance(id); !ok {
 		err = fmt.Errorf("no such instance '%s'", id)
-	} else if ok := mdl.AreCompatible(target.GetParentClass().GetId(), relates); !ok {
+	} else if ok := mdl.AreCompatible(target.GetParentClass(), relates); !ok {
 		err = fmt.Errorf("%s not compatible with %v", target, relates)
 	}
 	return

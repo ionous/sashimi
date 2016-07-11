@@ -1,2 +1,2 @@
-// Resource rest-ish-ly provides data similar to http://jsonapi.org.
+// Package resource rest-ish-ly provides game data similar to http://jsonapi.org.
 package resource

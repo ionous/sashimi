@@ -24,7 +24,7 @@ func (ot ObjectTarget) Id() ident.Id {
 
 //
 func (ot ObjectTarget) Class() ident.Id {
-	return ot.obj.GetParentClass().GetId()
+	return ot.obj.GetParentClass()
 }
 
 //
@@ -37,7 +37,7 @@ func (ot ObjectTarget) Parent() (ret E.ITarget, ok bool) {
 	game, obj := ot.game, ot.obj
 	next, _, haveParent := game.LookupParent(obj)
 	cls := obj.GetParentClass()
-	if cls != nil || haveParent {
+	if !cls.Empty() || haveParent {
 		ret, ok = ClassTarget{ot, cls, next}, true
 	}
 	return ret, ok

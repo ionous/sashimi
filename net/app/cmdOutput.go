@@ -2,11 +2,11 @@ package app
 
 import (
 	"fmt"
-	"github.com/ionous/sashimi/console"
 	E "github.com/ionous/sashimi/event"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/net/resource"
 	"github.com/ionous/sashimi/runtime/api"
+	"github.com/ionous/sashimi/util"
 	"github.com/ionous/sashimi/util/ident"
 	"os"
 )
@@ -17,7 +17,7 @@ type CommandOutput struct {
 	view   View
 	events *EventStream
 	serial *ObjSerializer
-	text   console.BufferedOutput
+	text   util.BufferedOutput
 }
 
 func NewCommandOutput(id string, m meta.Model, view View) *CommandOutput {
@@ -169,7 +169,6 @@ func (out *CommandOutput) ReferenceChange(gobj meta.Instance, prop, other ident.
 		//out.Log(fmt.Sprintf("CommandOutput: '%s' not in view '%s' ignoring refchange %v(%v->%v)\n", gobj.GetId(), out.view, prop, p, n))
 	} else {
 		obj := NewObjectRef(gobj)
-
 		relChange := struct {
 			Prop  string           `json:"prop"`
 			Other string           `json:"other"`
@@ -183,7 +182,6 @@ func (out *CommandOutput) ReferenceChange(gobj meta.Instance, prop, other ident.
 		if next != nil {
 			relChange.Next = NewObjectRef(next)
 		}
-
 		out.events.AddAction("x-rel", obj, relChange)
 	}
 }

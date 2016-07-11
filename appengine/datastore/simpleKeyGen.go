@@ -18,7 +18,7 @@ func NewKeyGen(c A.Context, parent *D.Key) SimpleKeyGen {
 }
 
 func (f SimpleKeyGen) NewKey(inst meta.Instance) *D.Key {
-	kind := ident.Dash(inst.GetParentClass().GetId())
+	kind := ident.Dash(inst.GetParentClass())
 	stringID := ident.Dash(inst.GetId())
 	intID := int64(0)
 	return D.NewKey(f.c, kind, stringID, intID, f.parent)

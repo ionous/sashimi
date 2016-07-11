@@ -8,7 +8,7 @@ import (
 
 //
 func NewObjectRef(gobj meta.Instance) *resource.Object {
-	return resource.NewObject(jsonId(gobj.GetId()), jsonId(gobj.GetParentClass().GetId()))
+	return resource.NewObject(jsonId(gobj.GetId()), jsonId(gobj.GetParentClass()))
 }
 
 type RefSerializer struct {

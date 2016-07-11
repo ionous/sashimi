@@ -1,11 +1,11 @@
 package stories
 
 import (
-	. "github.com/ionous/sashimi/extension/facts"
-	facts "github.com/ionous/sashimi/extension/facts/native"
+	"github.com/ionous/sashimi/extension/facts"
+	. "github.com/ionous/sashimi/extension/facts/script"
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
-	. "github.com/ionous/sashimi/standard"
+	. "github.com/ionous/sashimi/standard/live"
 )
 
 // "A Day For Fresh Sushi"
@@ -129,14 +129,14 @@ You shake your head. No time for fantasy. Must feed fish.`)
 		When("reporting search").
 			Or("reporting look under").
 			Always(func(g G.Play) {
-			fishFood := g.The("fish food")
-			if !fishFood.Is("found") {
-				fishFood.IsNow("found")
-				g.Go(GiveThe(fishFood).To("the player"))
-				g.Say("Poking around the cloths reveals -- ha HA! -- a vehemently orange can of fish food.")
-				g.StopHere()
-			}
-		}),
+				fishFood := g.The("fish food")
+				if !fishFood.Is("found") {
+					fishFood.IsNow("found")
+					g.Go(GiveThe(fishFood).To("the player"))
+					g.Say("Poking around the cloths reveals -- ha HA! -- a vehemently orange can of fish food.")
+					g.StopHere()
+				}
+			}),
 		// FIX: i like the fact the event filters can
 		When("reporting shown").Always(func(g G.Play) {
 			fish := g.The("evil fish")

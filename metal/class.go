@@ -21,12 +21,12 @@ func (c classInfo) GetId() ident.Id {
 	return c.Id
 }
 
-func (c classInfo) GetParentClass() (ret meta.Class) {
+func (c classInfo) GetParentClass() ident.Id {
 	if p := c.Parent(); !p.Empty() {
 		parent := c.mdl.Classes[p]
-		ret = classInfo{c.mdl, parent}
+		return parent.Id //classInfo{c.mdl, parent}
 	}
-	return
+	return ident.Empty()
 }
 
 func (c classInfo) GetOriginalName() string {

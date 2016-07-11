@@ -31,8 +31,7 @@ type EventCallbacks map[ident.Id][]M.ListenerModel
 
 // array of properties ( for flat cache ) ordered for linear traversal.
 // children appear first; redudent properties are *not* removed.
-type PropertyRef *M.PropertyModel
-type PropertyList []PropertyRef
+type PropertyList []*M.PropertyModel
 type PropertyCache map[ident.Id]PropertyList
 
 // single/plural properties need some fixing

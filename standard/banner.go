@@ -3,10 +3,8 @@ package standard
 import (
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
+	. "github.com/ionous/sashimi/standard/live"
 )
-
-//
-const VersionString = "Sashimi Interactive Fiction Engine - 0.1"
 
 func init() {
 	AddScript(func(s *Script) {

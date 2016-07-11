@@ -2,14 +2,14 @@ package simple
 
 import (
 	"fmt"
-	C "github.com/ionous/sashimi/console"
 	"github.com/ionous/sashimi/meta"
+	"github.com/ionous/sashimi/util"
 	"os"
 )
 
 // implements IOutput
 type SimpleOutput struct {
-	C.BufferedOutput // implements Print() and Println()
+	util.BufferedOutput // implements Print() and Println()
 }
 
 //

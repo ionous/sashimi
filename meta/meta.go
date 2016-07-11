@@ -2,6 +2,9 @@ package meta
 
 import "github.com/ionous/sashimi/util/ident"
 
+type Instance Prototype
+type Class Prototype
+
 type Model interface {
 	NumAction() int
 	ActionNum(int) Action
@@ -102,10 +105,9 @@ type Prototype interface {
 	GetId() ident.Id
 	//?GetType()  -> class or instance
 
-	// GetParentClass returns nil for classes if no parent;
-	// panics if no class can be found for an instnace.
-	// FIX? switch to classId?
-	GetParentClass() Class
+	// GetParentClass returns empty id for classes if no parent;
+	// panics if no class can be found for an instance.
+	GetParentClass() ident.Id
 	GetOriginalName() string
 
 	NumProperty() int
@@ -124,9 +126,6 @@ type Prototype interface {
 type Relation interface {
 	GetId() ident.Id
 }
-
-type Instance Prototype
-type Class Prototype
 
 type PropertyType int
 

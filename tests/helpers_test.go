@@ -3,13 +3,13 @@ package tests
 import (
 	"fmt"
 	"github.com/ionous/sashimi/compiler"
-	C "github.com/ionous/sashimi/console"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/metal"
 	"github.com/ionous/sashimi/parser"
 	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/runtime/parse"
 	. "github.com/ionous/sashimi/script"
+	"github.com/ionous/sashimi/util"
 	"github.com/ionous/sashimi/util/ident"
 	"strings"
 	"testing"
@@ -33,7 +33,7 @@ func (out LogOutput) Write(bytes []byte) (int, error) {
 //
 type TestOutput struct {
 	t *testing.T
-	*C.BufferedOutput
+	*util.BufferedOutput
 }
 
 //
@@ -64,12 +64,11 @@ func NewTestGameSource(t *testing.T, s *Script, source string) (ret TestGame, er
 	if model, e := s.Compile(Log(t)); e != nil {
 		err = e
 	} else {
-		cons := TestOutput{t, &C.BufferedOutput{}}
+		cons := TestOutput{t, &util.BufferedOutput{}}
 		cfg := R.NewConfig().SetCalls(model.Calls).SetOutput(cons)
 		modelApi := metal.NewMetal(model.Model, make(metal.ObjectValueMap))
-		if game, e := cfg.NewGame(modelApi); e != nil {
-			err = e
-		} else if parser, e := parse.NewObjectParser(game, ident.MakeId(source)); e != nil {
+		game := cfg.MakeGame(modelApi)
+		if parser, e := parse.NewObjectParser(game, ident.MakeId(source)); e != nil {
 			err = e
 		} else {
 			ret = TestGame{t, game, model, cons, parser}

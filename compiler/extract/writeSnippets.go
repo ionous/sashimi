@@ -35,20 +35,15 @@ var templateText string = `
 package {{.PkgName}}
 import ( 
 G "github.com/ionous/sashimi/game"
-. "github.com/ionous/sashimi/standard"
-facts "github.com/ionous/sashimi/extension/facts/native"
-quips "github.com/ionous/sashimi/extension/quips/native"
+. "github.com/ionous/sashimi/standard/live"
+"github.com/ionous/sashimi/extension/facts"
+"github.com/ionous/sashimi/extension/quips"
 "github.com/ionous/sashimi/util/lang"
 "github.com/ionous/sashimi/util/ident"
 "fmt"
 "strings"{{ range .Packages }}
 "{{.}}"{{ end }}
 )
-
-// from script...
-func Lines(a ...string) string {
-	return strings.Join(a, lang.NewLine)
-}
 
 func Go(phrase G.RuntimePhrase, phrases ...G.RuntimePhrase) G.Callback {
 	return func(g G.Play) {

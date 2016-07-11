@@ -6,6 +6,7 @@ package stories
 import (
 	"fmt"
 	"github.com/ionous/sashimi/script"
+	"github.com/ionous/sashimi/standard"
 )
 
 func Select(name string) bool {
@@ -63,6 +64,8 @@ func (this *Registry) Select(name string) bool {
 // when the call to InitializeScript happens,
 // inject the script selected via the story registry.
 func init() {
+	standard.InitStandardLibrary()
+
 	script.AddScript(func(s *script.Script) {
 		if cb, ok := stories.reg[stories.selected]; ok {
 			cb(s)

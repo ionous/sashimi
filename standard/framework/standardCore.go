@@ -32,6 +32,14 @@ func (sg *StandardCore) Started() bool {
 	return sg.complete.GetState() != ident.MakeId("starting")
 }
 
+func (sc *StandardCore) Title() string {
+	return sc.title.GetText()
+}
+
+func (sc *StandardCore) Author() string {
+	return sc.author.GetText()
+}
+
 // Left status bar text.
 func (sc *StandardCore) Left() string {
 	return sc.statusLeft.GetText()

@@ -1,5 +1,7 @@
 package console
 
+import "github.com/ionous/sashimi/util"
+
 //
 // Creates a console whose input comes from the passed strings.
 // when the strings are exhausted the Readln() returns false.
@@ -12,7 +14,7 @@ func NewBufCon(strs []string) *BufCon {
 type BufCon struct {
 	strs  []string
 	index int
-	BufferedOutput
+	util.BufferedOutput
 }
 
 //

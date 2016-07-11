@@ -16,7 +16,7 @@ func ObjectResource(mdl meta.Model, clsId ident.Id) resource.IResource {
 				//
 				for i := 0; i < mdl.NumInstance(); i++ {
 					inst := mdl.InstanceNum(i)
-					cls := inst.GetParentClass().GetId()
+					cls := inst.GetParentClass()
 					match := mdl.AreCompatible(cls, clsId)
 					if match {
 						objects.NewObject(jsonId(inst.GetId()), jsonId(cls))
@@ -28,7 +28,7 @@ func ObjectResource(mdl meta.Model, clsId ident.Id) resource.IResource {
 			id := ident.MakeId(name)
 			if inst, ok := mdl.GetInstance(id); ok {
 				// instance data
-				if cls := inst.GetParentClass(); clsId == cls.GetId() {
+				if pid := inst.GetParentClass(); clsId == pid {
 					okay, ret = true, resource.Wrapper{
 						// Return the object:
 						Queries: func(doc resource.DocumentBuilder) {

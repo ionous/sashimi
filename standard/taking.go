@@ -4,6 +4,7 @@ import (
 	"fmt"
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
+	. "github.com/ionous/sashimi/standard/live"
 )
 
 // from inform:

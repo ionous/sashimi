@@ -17,11 +17,11 @@ func (n instInfo) String() string {
 func (n instInfo) GetId() ident.Id {
 	return n.Id
 }
-func (n instInfo) GetParentClass() meta.Class {
-	return n.getParentClass()
+func (n instInfo) GetParentClass() ident.Id {
+	return n.Class
 }
 
-func (n instInfo) getParentClass() classInfo {
+func (n instInfo) getClassInfo() classInfo {
 	cls := n.mdl.Classes[n.Class]
 	return classInfo{n.mdl, cls}
 }
@@ -31,30 +31,30 @@ func (n instInfo) GetOriginalName() string {
 }
 
 func (n instInfo) NumProperty() int {
-	return n.getParentClass().NumProperty()
+	return n.getClassInfo().NumProperty()
 }
 
 func (n instInfo) PropertyNum(i int) (ret meta.Property) {
-	p := n.getParentClass().propertyNum(i)
+	p := n.getClassInfo().propertyNum(i)
 	return n.makeProperty(p)
 }
 
 func (n instInfo) GetProperty(id ident.Id) (ret meta.Property, okay bool) {
-	if p, ok := n.getParentClass().getPropertyById(id); ok {
+	if p, ok := n.getClassInfo().getPropertyById(id); ok {
 		ret, okay = n.makeProperty(p), true
 	}
 	return
 }
 
 func (n instInfo) FindProperty(s string) (ret meta.Property, okay bool) {
-	if p, ok := n.getParentClass().getPropertyByName(s); ok {
+	if p, ok := n.getClassInfo().getPropertyByName(s); ok {
 		ret, okay = n.makeProperty(p), true
 	}
 	return
 }
 
 func (n instInfo) GetPropertyByChoice(id ident.Id) (ret meta.Property, okay bool) {
-	if p, ok := n.getParentClass().getPropertyByChoice(id); ok {
+	if p, ok := n.getClassInfo().getPropertyByChoice(id); ok {
 		ret, okay = n.makeProperty(p), true
 	}
 	return

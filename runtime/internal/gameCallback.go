@@ -20,7 +20,7 @@ func NewGameListeners(game *Game, evt E.IEvent, target ident.Id, ls meta.Listene
 		if isClassTarget {
 			if l.GetInstance().Empty() && target == l.GetClass() {
 				// expands the target phase to include the instance's class.
-				isTargetPhase := isTargetPhase || cls.host == evt.Target()
+				isTargetPhase := isTargetPhase || cls.from == evt.Target()
 				trigger = l.GetOptions().UseTargetOnly() == isTargetPhase
 			}
 		} else {

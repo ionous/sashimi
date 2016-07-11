@@ -1,11 +1,11 @@
 package tests
 
 import (
-	. "github.com/ionous/sashimi/extension/facts"
-	. "github.com/ionous/sashimi/extension/quips"
-	quips "github.com/ionous/sashimi/extension/quips/native"
+	. "github.com/ionous/sashimi/extension/facts/script"
+	"github.com/ionous/sashimi/extension/quips"
+	. "github.com/ionous/sashimi/extension/quips/script"
 	. "github.com/ionous/sashimi/script"
-	"github.com/ionous/sashimi/standard"
+	. "github.com/ionous/sashimi/standard/live"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -54,7 +54,7 @@ func TestQuipHistory(t *testing.T) {
 
 // TestQuipDiscuss for the discuss event and the conversation queue.
 func TestQuipDiscuss(t *testing.T) {
-	standard.Debugging = true
+	Debugging = true
 	s := TalkScript()
 	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
 		g := test.Game.NewAdapter()
@@ -155,7 +155,7 @@ func TestQuipDirectFollows(t *testing.T) {
 		Has("subject", "Alien Boy"),
 		Has("comment", "I'm going to look around some more."))
 
-	standard.Debugging = true
+	Debugging = true
 	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
 		g := test.Game.NewAdapter()
 		if boy := g.The("alien boy"); assert.True(t, boy.Exists(), "found boy") {

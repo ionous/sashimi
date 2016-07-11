@@ -65,7 +65,7 @@ func (om *ObjectMatcher) AddObject(id ident.Id) (err error) {
 		err = fmt.Errorf("too many nouns %d<%d", cnt, max)
 	} else {
 		noun := nouns[cnt]
-		if cls := gobj.GetParentClass(); !om.mdl.AreCompatible(cls.GetId(), noun) {
+		if cls := gobj.GetParentClass(); !om.mdl.AreCompatible(cls, noun) {
 			err = fmt.Errorf("noun %d not compatible %s(%s) != %s", cnt, id, cls, noun)
 		} else {
 			om.objects = append(om.objects, gobj)

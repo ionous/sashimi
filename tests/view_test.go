@@ -2,8 +2,8 @@ package tests
 
 import (
 	. "github.com/ionous/sashimi/script"
-	. "github.com/ionous/sashimi/standard"
 	"github.com/ionous/sashimi/standard/framework"
+	. "github.com/ionous/sashimi/standard/live"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

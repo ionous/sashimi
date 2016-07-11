@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
+	"github.com/ionous/sashimi/util/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"reflect"
@@ -15,7 +16,7 @@ import (
 // "State" should contain choices "yes" and "no"
 func ApiTest(t *testing.T, mdl meta.Model, instId ident.Id) {
 	require.NotNil(t, mdl)
-	_, noExist := mdl.GetInstance(ident.MakeUniqueId())
+	_, noExist := mdl.GetInstance(uuid.MakeUniqueId())
 	require.False(t, noExist)
 	// find inst by index
 	var inst meta.Instance
@@ -128,7 +129,9 @@ func ApiTest(t *testing.T, mdl meta.Model, instId ident.Id) {
 		require.NoError(t, err, fmt.Sprintf("class set value error: %s", test))
 	}
 	_ = testClassValue
-	testMethods(inst.GetParentClass(), testClassValue)
+	parentCls, parentClsOk := mdl.GetClass(inst.GetParentClass())
+	require.True(t, parentClsOk)
+	testMethods(parentCls, testClassValue)
 
 	testArrays := func(src meta.Prototype, eval func(TestValue, meta.Values)) {
 		// test class values;
@@ -170,7 +173,6 @@ func ApiTest(t *testing.T, mdl meta.Model, instId ident.Id) {
 
 	testArrays(inst, func(test TestValue, vs meta.Values) {
 		value := reflect.ValueOf(vs)
-
 		// append
 		for i := 0; i < 3; i++ {
 			// instances can get and set values
@@ -195,7 +197,7 @@ func ApiTest(t *testing.T, mdl meta.Model, instId ident.Id) {
 		test.Append(value, test.value)
 	})
 
-	testArrays(inst.GetParentClass(), func(test TestValue, vs meta.Values) {
+	testArrays(parentCls, func(test TestValue, vs meta.Values) {
 		// classes disallow set values
 		value := reflect.ValueOf(vs)
 		require.Panics(t, func() {

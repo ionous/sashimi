@@ -12,15 +12,14 @@ import (
 func NewSimpleSession(modelApi meta.Model, calls api.LookupCallbacks) (ret *SimpleSession, err error) {
 	out := &SimpleOutput{}
 	cfg := R.NewConfig().SetCalls(calls).SetOutput(out).SetParentLookup(framework.NewParentLookup(modelApi))
-	if game, e := cfg.NewGame(modelApi); e != nil {
-		err = e
-	} else if game, e := framework.NewStandardGame(game); e != nil {
+	game := cfg.MakeGame(modelApi)
+
+	if game, e := framework.NewStandardGame(game); e != nil {
 		err = e
 	} else if game, e := game.Start(); e != nil {
 		err = e
 	} else {
 		ret = &SimpleSession{game, out, out.Flush()}
-
 	}
 	return ret, err
 }

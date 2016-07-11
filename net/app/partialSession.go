@@ -29,14 +29,12 @@ func NewPartialSession(m meta.Model, calls api.LookupCallbacks, out *CommandOutp
 		SetOutput(out).
 		SetFrame(out).
 		SetParentLookup(framework.NewParentLookup(watched))
-	if game, e := cfg.NewGame(watched); e != nil {
+	game := cfg.MakeGame(watched)
+	// after creating the game, but before running it --
+	if game, e := framework.NewStandardCore(game); e != nil {
+		err = e
 	} else {
-		// after creating the game, but before running it --
-		if game, e := framework.NewStandardCore(game); e != nil {
-			err = e
-		} else {
-			ret = &PartialSession{game, out}
-		}
+		ret = &PartialSession{game, out}
 	}
 	return ret, err
 }

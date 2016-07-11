@@ -1,33 +1,17 @@
 package standard
 
 import (
-	"fmt"
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
+	. "github.com/ionous/sashimi/standard/live"
 	"github.com/ionous/sashimi/util/lang"
-	"strings"
 )
-
-// FIX: we have the concept floating in other fixes of "function" globals
-// and that might be needed for this, where we really dont want *shared* globals
-// you would want this tied to session, if at all possible.
-var Debugging bool
 
 // InitStandardLibrary to ensure all standard library scripts are properly created.
 func InitStandardLibrary() *Script {
 	// the side effect of importing the standard library
 	// adds the scripts to the list of those which get initialized.
 	return InitScripts()
-}
-
-// FIX: there's no error testing here and its definitely possible to screw things up.
-func AssignTo(prop G.IObject, rel string, dest G.IObject) {
-	// sure hope there's no errors, would relation by value remove the need for transaction?
-	if _, parentRel := prop.ParentRelation(); parentRel != "" {
-		// note: an object like the fishFood isnt "in the world", and doest have an owner field to clear.
-		prop.Set(parentRel, nil)
-	}
-	prop.Set(rel, dest)
 }
 
 //
@@ -144,34 +128,6 @@ func init() {
 	})
 }
 
-// reflect to the passed action passing the actors's current whereabouts.
-// will have to become more sophisticated for being inside a box.
-func ReflectToLocation(g G.Play, action string) {
-	actor := g.The("actor")
-	target := actor.Object("whereabouts")
-	//g.Log("reflecting", action, actor, target)
-	target.Go(action, actor)
-}
-
-// ReflectToTarget runs the passed action, flipping the source and target.
-func ReflectToTarget(g G.Play, action string) {
-	source := g.The("action.Source")
-	target := g.The("action.Target")
-	//g.Log("reflecting", action, source, target)
-	target.Go(action, source)
-}
-
-// ReflectWithContext runs the passed action, shifting to target, context, source.
-// FIX: i think it'd be better to first use ReflectToTarget, keeping the context as the third parameter
-// and then ReflectToContext, possibly re-swapping source and target.
-func ReflectWithContext(g G.Play, action string) {
-	source := g.The("action.Source")
-	target := g.The("action.Target")
-	context := g.The("action.Context")
-	//g.Log("reflecting", action, source, target, context)
-	target.Go(action, context, source)
-}
-
 func init() {
 	AddScript(func(s *Script) {
 
@@ -232,69 +188,6 @@ func init() {
 }
 
 //
-// when is the right time for functions versus callbacks?
-func ListContents(g G.Play, header string, obj G.IObject) (printed bool) {
-	// if something described which is not scenery is on the noun and something which is not the player is on the noun:
-	// obviously a filterd callback, visitor, would be nice FilterList("contents", func() ... )
-	// FIX: if something has scenery objets, they appear as contents,
-	// but then the list is empty. ( ex. lab coat, but it might happen elsewhere )
-	// we'd maybe need to know if something printed?
-	if contents := obj.ObjectList("contents"); len(contents) > 0 {
-		g.Say(header, obj.Text("Name"), "is:")
-		for _, content := range contents {
-			content.Go("print description")
-		}
-		printed = true
-	}
-	return printed
-}
-
-func NameFullStop(G.IObject) string {
-	return ""
-}
-
-type NameStatus func(obj G.IObject) string
-
-func ArticleName(g G.Play, which string, status NameStatus) string {
-	return articleName(g, which, false, status)
-}
-func DefiniteName(g G.Play, which string, status NameStatus) string {
-	return articleName(g, which, true, status)
-}
-func articleName(g G.Play, which string, definite bool, status NameStatus) string {
-	obj := g.The(which)
-	text := obj.Text("Name")
-	if obj.Is("proper-named") {
-		text = lang.Titleize(text)
-	} else {
-		article := ""
-		if definite {
-			article = "the"
-		} else {
-			article = obj.Text("indefinite article")
-			if article == "" {
-				if obj.Is("plural-named") {
-					article = "some"
-				} else if lang.StartsWithVowel(text) {
-					article = "an"
-				} else {
-					article = "a"
-				}
-			}
-		}
-		text = strings.Join([]string{article, strings.ToLower(text)}, " ")
-	}
-	if status != nil {
-		if s := status(obj); s != "" {
-			text = fmt.Sprintf("%s (%s)", text, s)
-		} else {
-			text = text + "."
-		}
-	}
-	return text
-}
-
-//
 // System actions
 func init() {
 	AddScript(func(s *Script) {
@@ -328,45 +221,45 @@ func init() {
 		s.The("containers",
 			When("printing name text").
 				Always(func(g G.Play) {
-				// FIX: conditional return instead of Always?
-				// or some way ( dependency injection ) to get at the event object
-				// of course, rules producing values and stacks might work too.
-				// FIX: a container is an opener... where do we print the opener status name
-				// put this on doors for now.
-				text := ArticleName(g, "container", func(obj G.IObject) (status string) {
-					if obj.Is("closed") {
-						if obj.Is("hinged") {
-							status = "closed"
+					// FIX: conditional return instead of Always?
+					// or some way ( dependency injection ) to get at the event object
+					// of course, rules producing values and stacks might work too.
+					// FIX: a container is an opener... where do we print the opener status name
+					// put this on doors for now.
+					text := ArticleName(g, "container", func(obj G.IObject) (status string) {
+						if obj.Is("closed") {
+							if obj.Is("hinged") {
+								status = "closed"
+							}
+						} else if list := obj.ObjectList("contents"); len(list) == 0 {
+							if obj.Is("transparent") || obj.Is("open") {
+								status = "empty"
+							}
 						}
-					} else if list := obj.ObjectList("contents"); len(list) == 0 {
-						if obj.Is("transparent") || obj.Is("open") {
-							status = "empty"
-						}
-					}
-					return status
-				})
-				text = lang.Capitalize(text)
-				g.Say(text)
-				g.StopHere()
-			}))
+						return status
+					})
+					text = lang.Capitalize(text)
+					g.Say(text)
+					g.StopHere()
+				}))
 
 		s.The("doors",
 			When("printing name text").
 				Always(func(g G.Play) {
-				text := DefiniteName(g, "door", func(obj G.IObject) (status string) {
-					if obj.Is("hinged") {
-						if obj.Is("open") {
-							status = "open"
-						} else {
-							status = "closed"
+					text := DefiniteName(g, "door", func(obj G.IObject) (status string) {
+						if obj.Is("hinged") {
+							if obj.Is("open") {
+								status = "open"
+							} else {
+								status = "closed"
+							}
 						}
-					}
-					return status
-				})
-				text = lang.Capitalize(text)
-				g.Say(text)
-				g.StopHere()
-			}))
+						return status
+					})
+					text = lang.Capitalize(text)
+					g.Say(text)
+					g.StopHere()
+				}))
 
 		s.The("rooms",
 			Can("report the view").And("reporting the view").RequiresNothing(),
@@ -381,30 +274,4 @@ func init() {
 				g.Go(View("room"))
 			}))
 	})
-}
-
-// FUTURE? interestingly, while we wouldnt be able to encode them without special work, the contents of the phrases are fixed: we could have After("reporting").Execute(Phrase). maybe "standard" phrases could put themselves in some sort of wrapper? around the model? tho not quite sure howd that work.
-type ViewRoomPhrase struct {
-	object string
-}
-
-func View(object string) ViewRoomPhrase {
-	return ViewRoomPhrase{object}
-}
-
-func (p ViewRoomPhrase) Execute(g G.Play) {
-	room := g.The("room")
-	// sometines a blank like is printed without this
-	// (maybe certain directions? or going through doors?)
-	// not sure why, so leaving this for consistency
-	g.Say(Lines("", room.Get("Name").Text()))
-	g.Say(Lines(room.Get("description").Text(), ""))
-	// FIX? uses 1 to exclude the player....
-	// again, this happens because we dont know if print description actually did anything (re:scenery, etc.)
-	if contents := room.ObjectList("contents"); len(contents) > 1 {
-		for _, obj := range contents {
-			obj.Go("print description")
-			g.Say("")
-		}
-	}
 }
