@@ -33,7 +33,8 @@ func ClassResource(mdl meta.Model) resource.IResource {
 
 func classParents(mdl meta.Model, cls ident.Id, ar []string) []string {
 	if p, ok := mdl.GetClass(cls); ok {
-		ar = append(classParents(mdl, p.GetId(), ar), jsonId(p.GetId()))
+		parents := classParents(mdl, p.GetParentClass(), ar)
+		ar = append(parents, jsonId(p.GetId()))
 	}
 	return ar
 }
@@ -52,7 +53,7 @@ func addClass(mdl meta.Model, doc, sub resource.IBuildObjects, cls meta.Class) {
 	out.SetAttr("name", plural.GetValue().GetText())
 	singular, _ := cls.FindProperty("singular")
 	out.SetAttr("singular", singular.GetValue().GetText())
-	a := append(classParents(mdl, cls.GetId(), nil), id)
+	a := classParents(mdl, cls.GetId(), nil)
 	// reverse
 	for i := len(a)/2 - 1; i >= 0; i-- {
 		opp := len(a) - 1 - i

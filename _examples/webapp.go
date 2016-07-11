@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/ionous/sashimi/_examples/stories"
 	"github.com/ionous/sashimi/net"
-	"github.com/ionous/sashimi/net/app"
+	"github.com/ionous/sashimi/net/ess"
 	"github.com/ionous/sashimi/net/mem"
 	"github.com/ionous/sashimi/net/support"
 	"log"
@@ -31,7 +31,7 @@ func main() {
 	} else {
 		fmt.Println("listening on http://localhost:8080")
 		handler := support.NewServeMux()
-		handler.HandleFunc("/game/", net.HandleResource(app.GameResource(mem.NewSessions())))
+		handler.HandleFunc("/game/", net.HandleResource(ess.GameResource(mem.NewSessions())))
 		handler.HandleFilePatterns(root,
 			support.Dir("/app/"),
 			support.Dir("/bower_components/"),

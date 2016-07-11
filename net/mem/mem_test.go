@@ -7,6 +7,7 @@ import (
 	"github.com/ionous/sashimi/_examples/stories"
 	"github.com/ionous/sashimi/net"
 	"github.com/ionous/sashimi/net/app"
+	"github.com/ionous/sashimi/net/ess"
 	"github.com/ionous/sashimi/net/mem"
 	"github.com/ionous/sashimi/net/resource"
 	"github.com/stretchr/testify/assert"
@@ -23,7 +24,7 @@ func TestMemApp(t *testing.T) {
 	stories.Select("lab")
 
 	handler := http.NewServeMux()
-	handler.HandleFunc("/game/", net.HandleResource(app.GameResource(mem.NewSessions())))
+	handler.HandleFunc("/game/", net.HandleResource(ess.GameResource(mem.NewSessions())))
 	ts := httptest.NewServer(handler)
 	defer ts.Close()
 

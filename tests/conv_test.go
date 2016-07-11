@@ -92,18 +92,20 @@ func TestQuipTalkQuips(t *testing.T) {
 					require.True(t, con.Conversing())
 
 					// we should have two comments in return.
+					const NumComments int = 2
 					list := quips.PlayerQuips(g)
-					require.Len(t, list, 2)
+					require.Len(t, list, NumComments)
 					require.Contains(t, list, g.Our("Later"))
 
 					// test the actual converation choices printed
 					player.Go("print conversation choices")
 					if lines, e := test.FlushOutput(); assert.NoError(t, e) {
-						require.True(t, len(lines) > 2)
+						require.Len(t, lines, NumComments)
 						if stories := g.List("stories"); assert.Equal(t, 1, stories.Len()) {
 							story := stories.Get(0).Object()
 
-							story.Get("player input").SetText("2")
+							// hmmm.... this used to input a number
+							story.Get("player input").SetText("Later")
 							if act, e := test.Game.QueueAction("parse player input", story.Id()); assert.NoError(t, e) {
 								if lines, e := test.FlushOutput(); assert.NoError(t, e) {
 									require.True(t, act.Cancelled())
