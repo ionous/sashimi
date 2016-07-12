@@ -5,10 +5,8 @@ import (
 	"strings"
 )
 
-//
 // FindResource expands the passed resource, using each element of the passed path in turn.
 // Returns an error, PathError, describing the extent of the matched path.
-//
 func FindResource(res IResource, path string) (ret IResource, err error) {
 	parts := strings.Split(path, "/")
 	for i, part := range parts {
