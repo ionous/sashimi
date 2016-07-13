@@ -22,17 +22,20 @@ type IObject interface {
 	Is(string) bool
 	IsNow(string)
 
+	// Returns the named property
 	Get(string) IValue
+
+	// Returns the named list
 	List(string) IList
 
-	// other built ins
+	// Run an action defined on this object.
 	Go(action string, withTargetAndContext ...IObject) IPromise
 
 	// FIX: this should probably just be an action.
 	// Go("say", ...)
 	Says(string)
 
-	// old: property access
+	// deprecated: prefer Get()
 	Num(string) float32
 	SetNum(string, float32)
 
@@ -44,6 +47,7 @@ type IObject interface {
 	SetText(string, string)
 }
 
+// IValue provides access to an object property
 type IValue interface {
 	Num() float32
 	SetNum(float32)
@@ -58,17 +62,25 @@ type IValue interface {
 	SetState(ident.Id)
 }
 
+// IValue provides access to an object list
 type IList interface {
+	// Len returns the number of values in the list.
 	Len() int
+	// Get returns the value of the nth values in the list.
 	Get(int) IValue
-	Pop() IValue
-
-	// IValue, IObject, numbers, text
+	// Contains returns true if the passed parameter exists in the list.
+	// The parameter can be an IValue, IObject, number, text.
 	Contains(interface{}) bool
 
+	// AppendNum adds the passed number to the end of the list.
 	AppendNum(float32)
+	// AppendText adds the passed string to the end of the list.
 	AppendText(string)
+	// AppendObject adds the passed object to the end of the list.
 	AppendObject(IObject)
 
+	// Pop removes the last value from the list.
+	Pop() IValue
+	// Reset the list by completely emptying it.
 	Reset()
 }
