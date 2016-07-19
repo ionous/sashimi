@@ -41,7 +41,6 @@ func Describe_Quips(s *Script) {
 		Has("reply", ""))
 
 	// default greeting help determine conversation when being clicked on.
-	// its not completely necessary; topic-less quips fit all conversations.
 	s.The("actors",
 		Have("greeting", "quip"),
 		Can("greet").And("greeting").RequiresOne("actor"),

@@ -5,6 +5,7 @@ import (
 )
 
 // PlayerQuips returns the possible quips for the player to say.
+// the "player" topic matches all topics; the null topic matches only null topics
 func PlayerQuips(g G.Play) []G.IObject {
 	qs := QuipSort{}
 	con := Converse(g)
@@ -22,7 +23,7 @@ func PlayerQuips(g G.Play) []G.IObject {
 				if quip.Get("comment").Text() != "" || quip.Get("slug").Text() != "" {
 					// Filter quips to the current topic.
 					qt := quip.Get("topic").Object()
-					// the player as universal filter.
+					// the player as universal topic: applies to any topic.
 					if (!qt.Exists() && !topic.Exists()) || (qt.Exists() && (topic == qt || qt == g.The("player"))) {
 						// Exclude one-time quips, checking the recollection table.
 						if qm.IsQuipAllowed(quip) {

@@ -36,10 +36,12 @@ func (greet GreetingPhrase) Execute(g G.Play) {
 	var greeting G.IObject
 	if greet.greeting != "" {
 		greeting = g.The(greet.greeting)
-	} else {
+	}
+	if greeting == nil || !greeting.Exists() {
 		greeting = greeted.Object("greeting")
 		if !greeting.Exists() {
 			greeting = g.The("default greeting")
+			g.Log("falling back on global default greeting", greet)
 		}
 	}
 	greetActor(g, greeter, greeted, greeting)
