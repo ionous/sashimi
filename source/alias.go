@@ -1,6 +1,8 @@
 package source
 
-//
+// FIX: aliases ( aka understandings ) should be, or generate, POV actions
+// then we can grab what the player does versus what the game does
+// the game should never use the POV actions, only actor actions.
 type AliasStatement struct {
 	fields AliasFields
 	source Code

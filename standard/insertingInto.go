@@ -21,6 +21,8 @@ import (
 // * "carry out inserting": now in second noun
 // * "concise report inserting rule": "done"
 // * "standard reporting rule": "actor put thing into thing"
+
+/// insert it into, receive insertion, being inserted.
 func init() {
 	AddScript(func(s *Script) {
 		// 1. source
