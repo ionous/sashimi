@@ -1,6 +1,7 @@
 package net
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/ionous/sashimi/net/resource"
 	"log"
@@ -29,15 +30,25 @@ func handleResponse(w http.ResponseWriter, r *http.Request, root resource.IResou
 	} else {
 		if r.Method == "GET" {
 			doc := res.Query()
-			Encode(w, r, doc)
+			encode(w, r, doc)
 		} else {
 			if doc, e := res.Post(r.Body); e != nil {
 				http.Error(w, e.Error(), http.StatusInternalServerError)
 				err = e
 			} else {
-				Encode(w, r, doc)
+				encode(w, r, doc)
 			}
 		}
 	}
 	return
+}
+
+// Encode the passed resource to the http writer.
+func encode(w http.ResponseWriter, r *http.Request, doc resource.Document) {
+	w.Header().Set("Content-Type", "application/json")
+	prettyBytes, _ := json.Marshal(doc)
+	log.Println("returning", string(prettyBytes))
+	if e := json.NewEncoder(w).Encode(doc); e != nil {
+		log.Println(e)
+	}
 }
