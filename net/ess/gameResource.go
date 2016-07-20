@@ -19,11 +19,12 @@ func GameResource(sessions SessionFactory) resource.IResource {
 						switch name {
 						case "new":
 							okay, ret = true, SessionCreationEndpoint(sessions)
+						case "load":
+							okay, ret = true, SessionRestoreEndpoint(sessions)
 						default:
 							if res, ok := sessions.GetSession(name); ok {
 								okay, ret = true, &SessionResource{res, res}
 							}
-
 						}
 						return // ./game/...
 					},

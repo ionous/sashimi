@@ -1,6 +1,7 @@
 package ess
 
 import (
+	"encoding/json"
 	"github.com/ionous/sashimi/net/resource"
 	"io"
 )
@@ -20,6 +21,27 @@ func SessionCreationEndpoint(sessions SessionFactory) resource.IResource {
 	return &resource.Wrapper{
 		Posts: func(_ io.Reader, doc resource.DocumentBuilder) (err error) {
 			if session, e := sessions.NewSession(doc); e != nil {
+				err = e
+			} else {
+				doc.SetMeta(frameKey, session.Frame())
+			}
+			return err
+		}}
+}
+
+type Restore struct {
+	Slot string `json:"slot"`
+	// maybe version?
+}
+
+// SessionRestoreEndpoint loads a saved session into a new session.
+func SessionRestoreEndpoint(sessions SessionFactory) resource.IResource {
+	return &resource.Wrapper{
+		Posts: func(r io.Reader, doc resource.DocumentBuilder) (err error) {
+			decoder, in := json.NewDecoder(r), Restore{}
+			if e := decoder.Decode(&in); e != nil {
+				err = e
+			} else if session, e := sessions.RestoreSession(in.Slot, doc); e != nil {
 				err = e
 			} else {
 				doc.SetMeta(frameKey, session.Frame())

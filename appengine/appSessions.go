@@ -3,6 +3,7 @@ package appengine
 import (
 	"appengine"
 	"appengine/datastore"
+	"fmt"
 	DS "github.com/ionous/sashimi/appengine/datastore"
 	M "github.com/ionous/sashimi/compiler/model"
 	"github.com/ionous/sashimi/net/ess"
@@ -24,6 +25,10 @@ func NewSessions(
 	calls api.LookupCallbacks,
 ) AppSessions {
 	return AppSessions{ctx, model, calls}
+}
+
+func (aps AppSessions) RestoreSession(id string, doc resource.DocumentBuilder) (ess.Session, error) {
+	return nil, fmt.Errorf("restore session not implemented")
 }
 
 func (aps AppSessions) NewSession(doc resource.DocumentBuilder) (ret ess.Session, err error) {

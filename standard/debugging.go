@@ -49,36 +49,6 @@ func init() {
 				}
 			}))
 
-		s.The("actors",
-			Can("debug save").And("debugging save").RequiresNothing(),
-			To("debug save", func(g G.Play) {
-				g.Say("saving...")
-				// name := g.List("stories").Get(0).Object().Id().String() + ".sav"
-				// if f, e := os.Create(name); e != nil {
-				// 	g.Log("error creating save", name, e.Error())
-				// } else {
-				// 	g.Log("saving", name)
-				// 	defer f.Close()
-				// 	if e := runtime.DebugSave(g, f); e != nil {
-				// 		g.Log("error saving", name, e.Error())
-				// 	}
-				// }
-			}),
-			// FUTURE: havent tried resync on client, some sort of refresh page thing based on event is needed.
-			Can("debug load").And("debugging load").RequiresNothing(),
-			To("debug load", func(g G.Play) {
-				g.Say("loading...")
-				// name := g.List("stories").Get(0).Object().Id().String() + ".sav"
-				// if f, e := os.Open(name); e != nil {
-				// 	g.Log("error opening", name, e.Error())
-				// } else {
-				// 	defer f.Close()
-				// 	if e := runtime.DebugLoad(g, f); e != nil {
-				// 		g.Log("error loading", name, e.Error())
-				// 	}
-				// }
-			}))
-
 		s.Execute("debug direct parent",
 			Matching("parent of {{something}}"))
 
@@ -87,11 +57,5 @@ func init() {
 
 		s.Execute("debug room contents",
 			Matching("contents of room"))
-
-		s.Execute("debug save",
-			Matching("save"))
-
-		s.Execute("debug load",
-			Matching("load"))
 	})
 }

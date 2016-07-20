@@ -6,7 +6,6 @@ import (
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/runtime/internal"
-	"io"
 	"log"
 	"math/rand"
 	"strings"
@@ -51,11 +50,8 @@ func (cfg RuntimeConfig) Finalize() internal.RuntimeCore {
 
 type noSaveLoad struct{}
 
-func (noSaveLoad) Save(io.Writer) error {
-	return fmt.Errorf("not implemented")
-}
-func (noSaveLoad) Load(io.Reader) error {
-	return fmt.Errorf("not implemented")
+func (noSaveLoad) SaveGame() (string, error) {
+	return "", fmt.Errorf("not implemented")
 }
 
 type noParents struct{}

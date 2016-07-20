@@ -6,7 +6,6 @@ import (
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/runtime/internal"
 	"github.com/ionous/sashimi/util/ident"
-	"io"
 )
 
 type Game struct {
@@ -48,12 +47,7 @@ func (g *Game) ProcessActions() error {
 	return g.game.ProcessActions()
 }
 
-func DebugSave(g G.Play, w io.Writer) error {
+func SaveGame(g G.Play) (string, error) {
 	i := g.(*internal.GameEventAdapter)
-	return i.Game.Save(w)
-}
-
-func DebugLoad(g G.Play, r io.Reader) error {
-	i := g.(*internal.GameEventAdapter)
-	return i.Game.Load(r)
+	return i.Game.SaveGame()
 }

@@ -74,28 +74,13 @@ func RunScript(script *script.Script, opt Options) (err error) {
 	} else {
 		cons := GetConsole(opt)
 		defer cons.Close()
+		//
 		vals := make(metal.ObjectValueMap)
-		if opt.load {
-			stories := ident.MakeId("stories")
-			for k, v := range model.Model.Instances {
-				if v.Class == stories {
-					if f, e := os.Open(k.String() + ".sav"); e != nil {
-						panic(e)
-					} else {
-						defer f.Close()
-						if e := vals.Load(f); e != nil {
-							panic(e)
-						}
-					}
-				}
-			}
-		}
 		modelApi := metal.NewMetal(model.Model, vals)
 		cfg := R.NewConfig().
 			SetCalls(model.Calls).
 			SetOutput(NewStandardOutput(cons, writer)).
-			SetParentLookup(framework.NewParentLookup(modelApi)).
-			SetSaveLoad(vals)
+			SetParentLookup(framework.NewParentLookup(modelApi))
 		g := cfg.MakeGame(modelApi)
 		err = PlayGame(cons, g)
 	}

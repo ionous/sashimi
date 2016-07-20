@@ -25,7 +25,7 @@ func NewAppSession(
 ) {
 	mdl := ds.Model()
 	out := app.NewCommandOutput(id, mdl, framework.NewStandardView(mdl))
-	if partial, e := app.NewPartialSession(mdl, calls, out); e != nil {
+	if partial, e := app.NewPartialSession(mdl, calls, nil, out); e != nil {
 		err = e
 	} else {
 		ret = AppSession{ds, partial}

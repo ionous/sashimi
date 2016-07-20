@@ -6,5 +6,6 @@ import (
 
 type SessionFactory interface {
 	NewSession(resource.DocumentBuilder) (Session, error)
+	RestoreSession(string, resource.DocumentBuilder) (Session, error)
 	GetSession(string) (Session, bool)
 }

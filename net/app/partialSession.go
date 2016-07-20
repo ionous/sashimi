@@ -22,12 +22,13 @@ type PartialSession struct {
 	out  *CommandOutput
 }
 
-func NewPartialSession(m meta.Model, calls api.LookupCallbacks, out *CommandOutput) (ret *PartialSession, err error) {
+func NewPartialSession(m meta.Model, calls api.LookupCallbacks, saver api.SaveLoad, out *CommandOutput) (ret *PartialSession, err error) {
 	watched := change.NewModelWatcher(out, m)
 	cfg := R.NewConfig().
 		SetCalls(calls).
 		SetOutput(out).
 		SetFrame(out).
+		SetSaveLoad(saver).
 		SetParentLookup(framework.NewParentLookup(watched))
 	game := cfg.MakeGame(watched)
 	// after creating the game, but before running it --
