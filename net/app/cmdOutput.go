@@ -8,7 +8,7 @@ import (
 	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/util"
 	"github.com/ionous/sashimi/util/ident"
-	"os"
+	"log"
 )
 
 // CommandOutput records game state changes, gets sent to the player/client.
@@ -77,7 +77,7 @@ func (out *CommandOutput) EndEvent() {
 // Log the passed message locally, doesn't generate a client command.
 // FIX: a log interface -- perhaps as an anonymous member -- then we could have logf, etc.
 func (out *CommandOutput) Log(message string) {
-	os.Stderr.WriteString(message)
+	log.Print(message)
 }
 
 // FlushDocument containing all commands to the passed document builder.
