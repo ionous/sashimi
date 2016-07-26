@@ -12,6 +12,8 @@ type Conversation struct {
 func Converse(g G.Play) Conversation {
 	return Conversation{g.The("conversation")}
 }
+
+// Actor returns whomever the player is conversing with.
 func (c Conversation) Actor() G.IValue {
 	return c.Get("actor")
 }

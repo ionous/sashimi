@@ -94,7 +94,11 @@ func Describe_Quips(s *Script) {
 		To("depart", func(g G.Play) {
 			if c := quips.Converse(g); c.Conversing() {
 				c.Reset()
-				g.Say("(", lang.Capitalize(DefiniteName(g, "actor", nil)), "says goodbye.", ")")
+				// HACK: this looks bad in alice,
+				// hiding it via event scoping doesnt work so well
+				// other events inside of this event get hidden
+				// FIX: before and after actions dont really fall before/after the scope, and the probably should.
+				//g.Say("(", lang.Capitalize(DefiniteName(g, "actor", nil)), "says goodbye.", ")")
 			}
 		}))
 
