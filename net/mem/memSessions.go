@@ -75,11 +75,7 @@ func (ess *MemSessions) createSession(mem metal.ObjectValueMap, doc resource.Doc
 		out := app.NewCommandOutput(id, meta, framework.NewStandardView(meta))
 		var saver api.SaveLoad
 		if ess.saver != nil {
-			saver = SaveHelper{
-				id,
-				mem,
-				ess.saver,
-			}
+			saver = NewSaveHelper(id, mem, ess.saver)
 		}
 		if s, e := app.NewPartialSession(meta, ess.calls, saver, out); e != nil {
 			err = e

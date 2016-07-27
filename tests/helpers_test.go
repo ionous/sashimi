@@ -5,12 +5,15 @@ import (
 	"github.com/ionous/sashimi/compiler"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/metal"
+	"github.com/ionous/sashimi/net/mem"
 	"github.com/ionous/sashimi/parser"
 	R "github.com/ionous/sashimi/runtime"
+	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/runtime/parse"
 	. "github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/util"
 	"github.com/ionous/sashimi/util/ident"
+	"log"
 	"strings"
 	"testing"
 )
@@ -60,18 +63,28 @@ func (out TestOutput) Log(s string) {
 	out.t.Log(strings.TrimSpace(s))
 }
 
-func NewTestGameSource(t *testing.T, s *Script, source string) (ret TestGame, err error) {
+type ParentCreator func(meta.Model) api.LookupParents
+
+func NewTestGameSource(t *testing.T, s *Script, source string, pc ParentCreator) (ret TestGame, err error) {
 	if model, e := s.Compile(Log(t)); e != nil {
 		err = e
 	} else {
+		storage := make(metal.ObjectValueMap)
+		saver := &TestSaver{}
 		cons := TestOutput{t, &util.BufferedOutput{}}
-		cfg := R.NewConfig().SetCalls(model.Calls).SetOutput(cons)
-		modelApi := metal.NewMetal(model.Model, make(metal.ObjectValueMap))
+		values := TestValueMap{storage}
+		modelApi := metal.NewMetal(model.Model, values)
+		var parents api.LookupParents
+		if pc != nil {
+			parents = pc(modelApi)
+		}
+		cfg := R.NewConfig().SetCalls(model.Calls).SetOutput(cons).SetSaveLoad(mem.NewSaveHelper("testing", storage, saver)).SetParentLookup(parents)
+		//
 		game := cfg.MakeGame(modelApi)
 		if parser, e := parse.NewObjectParser(game, ident.MakeId(source)); e != nil {
 			err = e
 		} else {
-			ret = TestGame{t, game, model, cons, parser}
+			ret = TestGame{t, game, model, cons, parser, saver, storage}
 		}
 	}
 	return ret, err
@@ -79,7 +92,7 @@ func NewTestGameSource(t *testing.T, s *Script, source string) (ret TestGame, er
 
 //
 func NewTestGame(t *testing.T, s *Script) (ret TestGame, err error) {
-	return NewTestGameSource(t, s, "player")
+	return NewTestGameSource(t, s, "player", nil)
 }
 
 type TestGame struct {
@@ -88,11 +101,21 @@ type TestGame struct {
 	compiler.MemoryResult
 	out    TestOutput
 	Parser parser.P
+	saver  *TestSaver
+	values metal.ObjectValueMap
 }
 
-//
-// For testing:
-//
+func (test *TestGame) Commence() (ret []string, err error) {
+	if story, ok := meta.FindFirstOf(test.Game, ident.MakeId("stories")); !ok {
+		err = fmt.Errorf("should have test story")
+	} else if _, e := test.Game.QueueAction("commence", story.GetId()); e != nil {
+		err = e
+	} else {
+		ret, err = test.FlushOutput()
+	}
+	return
+}
+
 func (test *TestGame) RunInput(s string) (ret []string, err error) {
 	if e := test.Game.ProcessActions(); e != nil {
 		err = e
@@ -125,4 +148,33 @@ func (test *TestGame) FlushOutput() (ret []string, err error) {
 		ret = test.out.Flush()
 	}
 	return
+}
+
+// TestSaver implements mem.MemSaver
+type TestSaver struct {
+	blob mem.SaveGameBlob
+}
+
+func (t *TestSaver) SaveBlob(slot string, blob mem.SaveGameBlob) (string, error) {
+	t.blob = blob
+	return slot, nil
+}
+func (t *TestSaver) LoadBlob(slot string) (mem.SaveGameBlob, error) {
+	return t.blob, nil
+}
+
+// TestValueMap implements metal.ObjectValue
+type TestValueMap struct {
+	values metal.ObjectValueMap
+}
+
+// GetValue succeeds if SetValue was called on a corresponding obj.field.
+func (m TestValueMap) GetValue(obj, field ident.Id) (ret interface{}, okay bool) {
+	return m.values.GetValue(obj, field)
+}
+
+// SetValue always succeeds, storing the passed value to the map at obj.field.
+func (m TestValueMap) SetValue(obj, field ident.Id, value interface{}) (err error) {
+	log.Println("SetValue:", obj, field, value)
+	return m.values.SetValue(obj, field, value)
 }

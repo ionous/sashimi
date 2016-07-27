@@ -5,11 +5,15 @@ import (
 	"github.com/ionous/sashimi/metal"
 )
 
-// implement api.SaveLoad
+// SaveHelper implements api.SaveLoad for a MemSaver interface
 type SaveHelper struct {
 	id     string
 	values metal.ObjectValueMap
 	saver  MemSaver
+}
+
+func NewSaveHelper(id string, values metal.ObjectValueMap, saver MemSaver) SaveHelper {
+	return SaveHelper{id, values, saver}
 }
 
 //extract data and call

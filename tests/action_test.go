@@ -58,7 +58,7 @@ func TestActionClassCallback(t *testing.T) {
 		Called("other"),
 		Has("description", "it's an error!"),
 	)
-	if g, err := NewTestGameSource(t, s, "obj"); assert.NoError(t, err) {
+	if g, err := NewTestGameSource(t, s, "obj", nil); assert.NoError(t, err) {
 		if _, err := g.Game.QueueAction("test", ident.MakeId("obj")); assert.NoError(t, err) {
 			if err := g.Game.ProcessActions(); assert.NoError(t, err) {
 				if out, err := g.FlushOutput(); assert.NoError(t, err) {
@@ -83,7 +83,7 @@ func TestActionCallbackBeforeAfter(t *testing.T) {
 		}),
 	)
 	s.The("kind", Called("obj"), Exists())
-	if g, err := NewTestGameSource(t, s, "obj"); assert.NoError(t, err) {
+	if g, err := NewTestGameSource(t, s, "obj", nil); assert.NoError(t, err) {
 		if _, err := g.Game.QueueAction("test", ident.MakeId("obj")); assert.NoError(t, err) {
 			if err := g.Game.ProcessActions(); assert.NoError(t, err) {
 				if out, err := g.FlushOutput(); assert.NoError(t, err) {
@@ -121,7 +121,7 @@ func TestActionCallbackParsing(t *testing.T) {
 		Matching("look|l at {{something}}"),
 	)
 	// should trigger "test", which should print the description
-	if g, err := NewTestGameSource(t, s, "looker"); assert.NoError(t, err) {
+	if g, err := NewTestGameSource(t, s, "looker", nil); assert.NoError(t, err) {
 		if assert.Len(t, g.Model.Aliases, 2) {
 			str := "look at lookee"
 			if res, err := g.RunInput(str); assert.NoError(t, err, "handle input") {
