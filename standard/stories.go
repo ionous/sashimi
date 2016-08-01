@@ -42,6 +42,15 @@ func init() {
 			Can("commence").And("commencing").RequiresNothing(),
 			Can("end the story").And("ending the story").RequiresNothing(),
 			Can("end turn").And("ending the turn").RequiresNothing(),
+			Before("commencing").Always(func(g G.Play) {
+				inst := g.The("status bar")
+				title := g.The("story").Get("name").Text()
+				author := g.The("story").Get("author").Text()
+
+				tag := fmt.Sprintf(`"%s" by %s`, title, author)
+				inst.Get("left").SetText(title)
+				inst.Get("right").SetText(tag)
+			}),
 			Before("ending the turn").Always(func(g G.Play) {
 				story := g.The("story")
 				if story.Is("completed") {

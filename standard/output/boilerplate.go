@@ -11,7 +11,6 @@ import (
 	"github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/standard/framework"
 	"github.com/ionous/sashimi/util/ident"
-
 	"io"
 	"io/ioutil"
 	"os"
@@ -97,56 +96,58 @@ func PlayGame(cons C.IConsole, g R.Game) (err error) {
 func PlayGameUpdate(cons C.IConsole, g R.Game, endFrame func()) (err error) {
 	if game, e := framework.NewStandardGame(g); e != nil {
 		err = e
+	} else if game, e := game.Start(); e != nil {
+		err = e
+	} else if status, ok := g.GetInstance(ident.MakeId("status bar")); !ok {
+		err = fmt.Errorf("couldn't find status bar")
+	} else if statusLeft, ok := status.FindProperty("left"); !ok {
+		err = fmt.Errorf("couldn't find left status")
+	} else if statusRight, ok := status.FindProperty("right"); !ok {
+		err = fmt.Errorf("couldn't find right status")
 	} else {
-		left := game.Title()
-		right := fmt.Sprint(" by ", game.Author())
-		game.SetLeft(left)
-		game.SetRight(right)
-		if game, e := game.Start(); e != nil {
-			err = e
-		} else {
-			for {
-				// update the status bar as needed....
-				// ( FIX: status change before the text associated with the change has been teletyped )
-				// ( control code handlers -- needed for changing color in text -- might be better )
-				newleft, newright := game.Left(), game.Right()
-				if left != newleft || right != newright {
-					if mini, ok := cons.(MiniConsole); ok {
-						mini.Status.Left, mini.Status.Right = newleft, newright
-						mini.RefreshDisplay()
-					}
+		var left, right string
+		for {
+			// update the status bar as needed....
+			// ( FIX: status change before the text associated with the change has been teletyped )
+			// ( control code handlers -- needed for changing color in text -- might be better )
+			newleft, newright := statusLeft.GetValue().GetText(), statusRight.GetValue().GetText()
+			if left != newleft || right != newright {
+				if mini, ok := cons.(MiniConsole); ok {
+					mini.Status.Left, mini.Status.Right = newleft, newright
+					mini.RefreshDisplay()
+				}
+			}
+
+			// read new input
+			if s, ok := cons.Readln(); !ok {
+				break
+			} else {
+				mini, useMini := cons.(MiniConsole)
+				if useMini {
+					mini.Flush() // print all remaining teletype text
+					mini.Println()
+					mini.Println(">", s)
 				}
 
-				// read new input
-				if s, ok := cons.Readln(); !ok {
-					break
+				if e := game.Input(s); e != nil {
+					cons.Println(e.Error())
 				} else {
-					mini, useMini := cons.(MiniConsole)
-					if useMini {
-						mini.Flush() // print all remaining teletype text
-						mini.Println()
-						mini.Println(">", s)
-					}
-
-					if e := game.Input(s); e != nil {
-						cons.Println(e.Error())
-					} else {
-						// difficult question, if we end the story, do we want to end the turn?
-						// currently we dont.
-						// FIX: also we dont call "endFrame" -- should we?
-						if game.IsQuit() || game.IsComplete() {
-							if useMini && !game.IsQuit() {
-								mini.Update()
-							}
-							break
+					// difficult question, if we end the story, do we want to end the turn?
+					// currently we dont.
+					// FIX: also we dont call "endFrame" -- should we?
+					if game.IsQuit() || game.IsComplete() {
+						if useMini && !game.IsQuit() {
+							mini.Update()
 						}
+						break
 					}
-					if endFrame != nil {
-						endFrame()
-					}
+				}
+				if endFrame != nil {
+					endFrame()
 				}
 			}
 		}
 	}
+
 	return err
 }

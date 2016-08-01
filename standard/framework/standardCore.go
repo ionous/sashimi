@@ -15,13 +15,9 @@ type StandardCore struct {
 	R.Game
 	parser *parser.P // P is a struct, cached via getParser()
 	story  ident.Id
-	title,
-	author,
 	playerInput,
 	complete,
-	turnCount,
-	statusLeft,
-	statusRight meta.Value
+	turnCount meta.Value
 }
 
 func (sg *StandardCore) IsComplete() bool {
@@ -30,34 +26,6 @@ func (sg *StandardCore) IsComplete() bool {
 
 func (sg *StandardCore) Started() bool {
 	return sg.complete.GetState() != ident.MakeId("starting")
-}
-
-func (sc *StandardCore) Title() string {
-	return sc.title.GetText()
-}
-
-func (sc *StandardCore) Author() string {
-	return sc.author.GetText()
-}
-
-// Left status bar text.
-func (sc *StandardCore) Left() string {
-	return sc.statusLeft.GetText()
-}
-
-// Right status bar text.
-func (sc *StandardCore) Right() string {
-	return sc.statusRight.GetText()
-}
-
-// SetLeft status bar text.
-func (sc *StandardCore) SetLeft(status string) {
-	sc.statusLeft.SetText(status)
-}
-
-// SetRight status bar text.
-func (sc *StandardCore) SetRight(status string) {
-	sc.statusRight.SetText(status)
 }
 
 // frame is the turn count + 1 ( so that it's never zero while playing )
@@ -72,39 +40,23 @@ func (sc *StandardCore) Frame() (ret int) {
 
 // NewStandardGame creates a game which is based on the standard rules.
 func NewStandardCore(game R.Game) (ret *StandardCore, err error) {
-	//
 	if story, ok := meta.FindFirstOf(game.Model, ident.MakeId("stories")); !ok {
-		err = fmt.Errorf("couldn't find story")
-	} else if status, ok := meta.FindFirstOf(game.Model, ident.MakeId("status bar instances")); !ok {
-		err = fmt.Errorf("couldn't find status bar")
-	} else if author, ok := story.FindProperty("author"); !ok {
-		err = fmt.Errorf("couldn't find author")
-	} else if title, ok := story.FindProperty("name"); !ok {
-		err = fmt.Errorf("couldn't find title")
+		err = fmt.Errorf("couldn't find story object")
 	} else if turnCount, ok := story.FindProperty("turn count"); !ok {
-		err = fmt.Errorf("couldn't find turn count")
+		err = fmt.Errorf("couldn't find turn count property")
 	} else if playerInput, ok := story.FindProperty("player input"); !ok {
-		err = fmt.Errorf("couldn't find completed status")
+		err = fmt.Errorf("couldn't find player input property")
 	} else if completed, ok := story.GetPropertyByChoice(ident.MakeId("completed")); !ok {
-		err = fmt.Errorf("couldn't find completed status")
-	} else if left, ok := status.FindProperty("left"); !ok {
-		err = fmt.Errorf("couldn't find left status")
-	} else if right, ok := status.FindProperty("right"); !ok {
-		err = fmt.Errorf("couldn't find right status")
+		err = fmt.Errorf("couldn't find completed property")
 	} else {
 		core := &StandardCore{
 			Game:        game,
 			parser:      nil,
 			story:       story.GetId(),
-			title:       title.GetValue(),
-			author:      author.GetValue(),
 			playerInput: playerInput.GetValue(),
 			complete:    completed.GetValue(),
 			turnCount:   turnCount.GetValue(),
-			statusLeft:  left.GetValue(),
-			statusRight: right.GetValue()}
-		core.SetLeft(title.GetValue().GetText())
-		core.SetRight(fmt.Sprintf(`"%s" by %s`, title.GetValue().GetText(), author.GetValue().GetText()))
+		}
 		ret = core
 	}
 	return
