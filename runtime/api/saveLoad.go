@@ -1,5 +1,5 @@
 package api
 
 type SaveLoad interface {
-	SaveGame() (string, error)
+	SaveGame(autosave bool) (string, error)
 }

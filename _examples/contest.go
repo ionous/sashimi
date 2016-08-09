@@ -1,9 +1,6 @@
 package main
 
-import (
-	"github.com/ionous/sashimi/minicon"
-	// "github.com/drhodes/golorem" // lorem
-)
+import "github.com/ionous/sashimi/minicon"
 
 func main() {
 	d := minicon.NewMiniCon()
@@ -13,6 +10,7 @@ func main() {
 
 	d.Println("Type `q` to quit; press `esc` to speed up text.")
 	d.Println("")
+	// "github.com/drhodes/golorem" // lorem
 	// for i := 0; i < 100; i++ {
 	// 	str := lorem.Sentence(5, 100)
 	// 	d.Println(str)

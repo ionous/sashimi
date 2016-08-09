@@ -46,30 +46,50 @@ func (s *FileSaver) LoadBlob(slot string) (ret mem.SaveGameBlob, err error) {
 }
 
 // SaveBlob(slot string, blob SaveGameBlob) error
-func (s *FileSaver) SaveBlob(_ string, b mem.SaveGameBlob) (slot string, err error) {
+func (s *FileSaver) SaveBlob(loc string, b mem.SaveGameBlob) (slot string, err error) {
 	if where, e := s.savePath(); e != nil {
 		err = e
 	} else if e := os.MkdirAll(where, 0777); e != nil {
 		err = e
 	} else {
-		// the attitude of the go community can be very frustrating:
-		// https://groups.google.com/forum/#!topic/golang-nuts/PHgye3Hm2_0
-		if f, e := ioutil.TempFile(where, ""); e != nil {
-			err = e
-		} else if _, e := f.Write(b); e != nil {
-			err = e
-			f.Close()
+		// avoid arbitrary locations, but autosave is okay.
+		if loc == "autosave" {
+			fname := path.Join(where, loc+ext)
+			if f, e := os.Create(fname); e != nil {
+				err = e
+			} else if _, e := s.write(f, b); e != nil {
+				err = e
+			}
+			slot = loc
 		} else {
-			src := f.Name()
-			dst := src + ext
-			if e := os.Rename(src, dst); e != nil {
+			// the attitude of the go community can be very frustrating:
+			// https://groups.google.com/forum/#!topic/golang-nuts/PHgye3Hm2_0
+			if f, e := ioutil.TempFile(where, ""); e != nil {
+				err = e
+			} else if src, e := s.write(f, b); e != nil {
 				err = e
 			} else {
-				// name without extension
-				slot = path.Base(src)
+				dst := src + ext
+				if e := os.Rename(src, dst); e != nil {
+					err = e
+				} else {
+					// name without extension
+					slot = path.Base(src)
+				}
 			}
 		}
 	}
+	return
+}
+
+// SaveBlob(slot string, blob SaveGameBlob) error
+func (s *FileSaver) write(f *os.File, b mem.SaveGameBlob) (src string, err error) {
+	if _, e := f.Write(b); e != nil {
+		err = e
+	} else {
+		src = f.Name()
+	}
+	f.Close()
 	return
 }
 

@@ -42,7 +42,7 @@ func TestInvSaveLoad(t *testing.T) {
 		}
 
 		if _, err := test.Commence(); assert.NoError(t, err, "couldnt commence") {
-			if _, err := R.SaveGame(g); assert.NoError(t, err, "couldnt save game") {
+			if _, err := R.SaveGame(g, false); assert.NoError(t, err, "couldnt save game") {
 				m := make(map[string]string)
 				if err := json.Unmarshal(test.saver.blob, &m); assert.NoError(t, err, "couldnt read blob") {
 					require.Equal(t, m["Candy.ObjectsOwner"], "")

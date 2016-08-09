@@ -60,12 +60,12 @@ func (out *CommandOutput) FlushFrame() {
 	out.flushPending()
 }
 
-func (out *CommandOutput) BeginEvent(tgt E.ITarget, _ E.PathList, msg *E.Message) api.IEndEvent {
+func (out *CommandOutput) BeginEvent(tgt, ctx meta.Instance, _ E.PathList, msg *E.Message) api.IEndEvent {
 	out.flushPending()
 	// msg.Data == RunTimeAction
 	// theres not really parameters for events right now
 	// other than tgt, src, ctx right now.
-	out.events.PushEvent(msg.Id, tgt, nil)
+	out.events.PushEvent(msg.Id, tgt, ctx, nil)
 	return out
 }
 

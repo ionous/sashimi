@@ -33,14 +33,17 @@ type IEvent interface {
 // Uses an interface for facilitating add/remove event listeners;
 // comparing function pointers is error-prone in go (due to closures)
 type IListen interface {
-	// FIX: does dispatch really need an error handling? i, personally, am not so sure.
+	// FIX: does dispatch really need an error handling?
 	HandleEvent(IEvent) error
 }
 
 // ITarget dispatch events to some hierarchical node, for instance, in a DOM.
+// FIX: i wonder whether instead of having ITarget ( target could be an id )
+// the focus could be around Path: rather than building ( and copying ) the path ahead of time, instead: have a path interface which the caller implements.
+// dispatch could be to a path node.
+// evaluate what dispatch needs, not what we want to give it.
 type ITarget interface {
 	Id() ident.Id
-	Class() ident.Id
-	Parent() (ITarget, bool)
-	TargetDispatch(IEvent) error
+	Parent() (ITarget, bool)     // used by path.addPath
+	TargetDispatch(IEvent) error // used by proc.sendToTarget, Send(path PathList)
 }

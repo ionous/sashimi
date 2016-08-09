@@ -55,10 +55,10 @@ func (a *QueuedAction) Run(g *Game) (err error) {
 	// we've looped back now; end the event.
 	act := a.data
 	// start a new event frame:
-	tgt := NewObjectTarget(g, act.GetTarget())
-	path := E.NewPathTo(tgt)
+	o1, o2 := act.GetTarget(), act.GetContext()
+	path := E.NewPathTo(NewObjectTarget(g, o1))
 	msg := &E.Message{Id: act.action.GetEvent().GetId(), Data: act}
-	frame := g.Frame.BeginEvent(tgt, path, msg)
+	frame := g.Frame.BeginEvent(o1, o2, path, msg)
 	// send the event, noting that new things may enter our queue.
 	if runDefault, e := msg.Send(path); e != nil {
 		err = e

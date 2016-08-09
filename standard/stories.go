@@ -10,7 +10,10 @@ import (
 // System actions
 func init() {
 	AddScript(func(s *Script) {
-		s.The("kinds",
+		// in lieu of singletons, globals.
+		// globals are transmitted to the client in the default view.
+		s.The("kinds", Called("globals"), Exist())
+		s.The("globals",
 			Called("stories").WithSingularName("story"),
 			Have("author", "text"),
 			Have("headline", "text"),

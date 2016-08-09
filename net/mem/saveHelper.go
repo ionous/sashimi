@@ -18,13 +18,19 @@ func NewSaveHelper(id string, values metal.ObjectValueMap, saver MemSaver) SaveH
 
 //extract data and call
 // implement runtime.api.SaveLoad, collect the model into json, push the string ( or bytes ) into memSaver
-func (m SaveHelper) SaveGame() (ret string, err error) {
+func (m SaveHelper) SaveGame(autosave bool) (ret string, err error) {
 	if b, e := json.Marshal(m.values); e != nil {
 		err = e
-	} else if r, e := m.saver.SaveBlob(m.id, b); e != nil {
-		err = e
 	} else {
-		ret = r
+		var saveId string
+		if autosave {
+			saveId = "autosave"
+		}
+		if r, e := m.saver.SaveBlob(saveId, b); e != nil {
+			err = e
+		} else {
+			ret = r
+		}
 	}
 	return
 }

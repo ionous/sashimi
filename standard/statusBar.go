@@ -8,7 +8,7 @@ import (
 //
 func init() {
 	AddScript(func(s *Script) {
-		s.The("kinds",
+		s.The("globals",
 			Called("status bar instances"),
 			Have("left", "text"),
 			Have("right", "text"))

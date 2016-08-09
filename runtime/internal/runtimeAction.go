@@ -23,8 +23,18 @@ func NewRuntimeAction(act meta.Action, objects []meta.Instance) *RuntimeAction {
 	return &RuntimeAction{action: act, objs: objects}
 }
 
-func (act *RuntimeAction) GetTarget() meta.Instance {
-	return act.objs[0]
+func (act *RuntimeAction) GetTarget() (ret meta.Instance) {
+	if len(act.objs) > 0 {
+		ret = act.objs[0]
+	}
+	return
+}
+
+func (act *RuntimeAction) GetContext() (ret meta.Instance) {
+	if len(act.objs) > 1 {
+		ret = act.objs[1]
+	}
+	return
 }
 
 // each action can have a chain of default actions

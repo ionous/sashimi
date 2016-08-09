@@ -2,7 +2,7 @@ package app
 
 import (
 	"container/list"
-	E "github.com/ionous/sashimi/event"
+	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/net/resource"
 	"github.com/ionous/sashimi/util/ident"
 )
@@ -30,6 +30,7 @@ type EventStream struct {
 type EventBlock struct {
 	Evt    string           `json:"evt,omitempty"`
 	Tgt    *resource.Object `json:"tgt,omitempty"`
+	Ctx    *resource.Object `json:"ctx,omitempty"`
 	Data   interface{}      `json:"data,omitempty"`
 	Events []*EventBlock    `json:"events,omitempty"`
 }
@@ -50,18 +51,24 @@ func (evs *EventStream) CurrentEvent() (ret *EventBlock) {
 	return ret
 }
 
-func (evs *EventStream) PushEvent(evt ident.Id, tgt E.ITarget, data interface{}) (ret *EventBlock) {
-	// create a new event block, and add it ( as the current event )
-	noRef := resource.ObjectList{}.NewObject(
-		jsonId(tgt.Id()),
-		jsonId(tgt.Class()))
-	return evs.push(evt, noRef, data)
+func noRef(tgt meta.Instance) (ret *resource.Object) {
+	if tgt != nil {
+		ret = resource.ObjectList{}.NewObject(
+			jsonId(tgt.GetId()),
+			jsonId(tgt.GetParentClass()))
+	}
+	return
 }
 
-func (evs *EventStream) push(evt ident.Id, tgt *resource.Object, data interface{}) (ret *EventBlock) {
+func (evs *EventStream) PushEvent(evt ident.Id, tgt, ctx meta.Instance, data interface{}) (ret *EventBlock) {
+	// create a new event block, and add it ( as the current event )
+	return evs.push(evt, noRef(tgt), noRef(ctx), data)
+}
+
+func (evs *EventStream) push(evt ident.Id, tgt, ctx *resource.Object, data interface{}) (ret *EventBlock) {
 	// get parent before push
 	parent := evs.CurrentEvent()
-	block := &EventBlock{Evt: jsonId(evt), Tgt: tgt, Data: data}
+	block := &EventBlock{Evt: jsonId(evt), Tgt: tgt, Ctx: ctx, Data: data}
 	// link this event into its parent (if any)
 	if parent != nil {
 		parent.Events = append(parent.Events, block)
@@ -77,7 +84,7 @@ func (evs *EventStream) push(evt ident.Id, tgt *resource.Object, data interface{
 // AddAction adds an event without hierarchy
 func (evs *EventStream) AddAction(act string, tgt *resource.Object, data interface{}) {
 	evt := ident.MakeId(act)
-	evs.push(evt, tgt, data)
+	evs.push(evt, tgt, nil, data)
 	evs.PopEvent()
 }
 

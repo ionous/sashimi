@@ -2,6 +2,7 @@ package api
 
 import (
 	E "github.com/ionous/sashimi/event"
+	"github.com/ionous/sashimi/meta"
 )
 
 type EventFrame interface {
@@ -16,9 +17,9 @@ type EventFrame interface {
 	// only: how do we know that a thing is a "class" and should get "Class" resource? i had an answer to this one.....
 	// could potentially send target type to startframe
 	// right now it seems wrong that the game decides that.
-	BeginEvent(E.ITarget, E.PathList, *E.Message) IEndEvent
+	BeginEvent(meta.Instance, meta.Instance, E.PathList, *E.Message) IEndEvent
 
-	// haking... there are actions which arent events --
+	// hacking... there are actions which arent events --
 	// this gets the command output to stop consolidating lines across these actions
 	FlushFrame()
 }

@@ -8,18 +8,33 @@ import (
 
 func init() {
 	AddScript(func(s *Script) {
+		// future: maybe a named or enum for require? ( tho an arbitrary string would be  unsafe )
+		// maybe an optional require?
+		s.The("globals", Called("save-settings"), Exist())
+		s.The("save-setting", Called("auto-save"), Exist())
+		s.The("save-setting", Called("normal-save"), Exist())
+
 		s.The("actors",
-			// future: maybe a named string for the slot?
-			Can("save it").And("saving it").RequiresNothing(),
+			Can("save via input").And("saving via input").RequiresNothing(),
+			To("save via input", func(g G.Play) {
+				g.The("actor").Go("save it", g.The("normal-save"))
+			}),
+			Can("autosave via input").And("autosaving via input").RequiresNothing(),
+			To("autosave via input", func(g G.Play) {
+				g.The("actor").Go("save it", g.The("auto-save"))
+			}),
+			Can("save it").And("saving it").RequiresOne("save-setting"),
 			To("save it", func(g G.Play) {
-				if s, e := runtime.SaveGame(g); e != nil {
+				autoSave := g.The("save-setting") == g.The("auto-save")
+				if s, e := runtime.SaveGame(g, autoSave); e != nil {
 					g.Log("error", e.Error())
 				} else {
 					g.Say("saved", s)
 				}
 			}),
 		)
-		s.Execute("save it", Matching("save"))
+		s.Execute("save via input", Matching("save"))
+		s.Execute("autosave via input", Matching("autosave"))
 	})
 	// FIX: future runtime load, incl
 	// listing and selection of save games.

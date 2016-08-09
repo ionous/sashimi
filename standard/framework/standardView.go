@@ -98,8 +98,7 @@ func (v *StandardView) InView(i meta.Instance) (ret bool) {
 		if r != VisibilityUnknown {
 			/**/ //fmt.Println("StandardView: cached vis", id, r)
 		} else {
-			if v.mdl.AreCompatible(i.GetParentClass(), "stories") ||
-				v.mdl.AreCompatible(i.GetParentClass(), "status-bar-instances") {
+			if v.mdl.AreCompatible(i.GetParentClass(), "globals") {
 				r = Visible
 			} else {
 				root := v.LookupRoot(i).GetId()

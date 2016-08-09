@@ -50,7 +50,7 @@ func (cfg RuntimeConfig) Finalize() internal.RuntimeCore {
 
 type noSaveLoad struct{}
 
-func (noSaveLoad) SaveGame() (string, error) {
+func (noSaveLoad) SaveGame(autosave bool) (string, error) {
 	return "", fmt.Errorf("not implemented")
 }
 
@@ -111,7 +111,7 @@ type defaultFrame struct {
 	parts []string
 }
 
-func (d *defaultFrame) BeginEvent(_ E.ITarget, path E.PathList, msg *E.Message) api.IEndEvent {
+func (d *defaultFrame) BeginEvent(_, _ meta.Instance, path E.PathList, msg *E.Message) api.IEndEvent {
 	d.parts = append(d.parts, msg.String())
 	fullName := strings.Join(d.parts, "/")
 	d.log.Printf("sending `%s` to: %s.", fullName, path)

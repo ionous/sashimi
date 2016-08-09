@@ -47,7 +47,7 @@ func (g *Game) ProcessActions() error {
 	return g.game.ProcessActions()
 }
 
-func SaveGame(g G.Play) (string, error) {
+func SaveGame(g G.Play, autosave bool) (string, error) {
 	i := g.(*internal.GameEventAdapter)
-	return i.Game.SaveGame()
+	return i.Game.SaveGame(autosave)
 }
