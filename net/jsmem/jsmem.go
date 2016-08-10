@@ -1,10 +1,10 @@
 package jsmem
 
 import (
-	"bytes"
 	"encoding/json"
 	"github.com/ionous/sashimi/compiler/ingest"
 	"github.com/ionous/sashimi/metal"
+	"github.com/ionous/sashimi/metal/pack"
 	"github.com/ionous/sashimi/net/app"
 	"github.com/ionous/sashimi/net/resource"
 	"github.com/ionous/sashimi/standard/framework"
@@ -12,80 +12,75 @@ import (
 )
 
 type JsMem struct {
-	memory  metal.ObjectValueMap
 	session *app.PartialSession
+	memory  *memory
 }
+
+type SaveCallback func(Storage, bool) (slot string, err error)
+type Storage pack.ObjectValuePack
 
 // New creates a blank js session.
 // main can contain the mc pairing.
-func New(mc ingest.ModelCode) JsMem {
-	//	model    *M.Model
-	//	calls    call.MarkerStorage
-	mem := make(metal.ObjectValueMap)
-	return create(mc, mem)
+func New(mc ingest.ModelCode, save SaveCallback) JsMem {
+	mem := &memory{make(metal.ObjectValueMap), save}
+	return mem.createGame(mc)
 }
 
 // Restore uses the passed code and data as a starting point, and restores the saved json over top of it.
-func Restore(mc ingest.ModelCode, saved string) (ret JsMem, err string) {
-	mem := make(metal.ObjectValueMap)
-	if e := json.NewDecoder(strings.NewReader(saved)).Decode(&mem); e != nil {
-		err = e.Error()
+func Restore(mc ingest.ModelCode, data Storage, save SaveCallback) (ret JsMem, err error) {
+	if values, e := pack.Unpack(pack.ObjectValuePack(data)); e != nil {
+		err = e
 	} else {
-		ret = create(mc, mem)
+		//metal.ObjectValueMap(values)
+		mem := &memory{values, save}
+		ret = mem.createGame(mc)
 	}
 	return
 }
 
-// Snapshot returns a json-blob of the current game state
-// ( the intended use is so the client cant save )
-func (js *JsMem) Snapshot() (res string, err string) {
-	buf := new(bytes.Buffer)
-	if e := json.NewEncoder(buf).Encode(js.memory); e != nil {
-		err = e.Error()
-	} else {
-		res = buf.String()
+type memory struct {
+	values metal.ObjectValueMap
+	save   SaveCallback
+}
+
+func (mem *memory) SaveGame(autosave bool) (string, error) {
+	data := pack.Pack(mem.values)
+	return mem.save(Storage(data), autosave)
+}
+
+func (mem *memory) createGame(mc ingest.ModelCode) JsMem {
+	meta := metal.NewMetal(mc.Model, mem.values)
+	out := app.NewCommandOutput("gopherjs", meta, framework.NewStandardView(meta))
+	sess, e := app.NewPartialSession(meta, mc.Code, mem, out)
+	if e != nil {
+		panic(e)
 	}
-	return
+	return JsMem{sess, mem}
 }
 
 // Get mirrors http get: retrieving data from the game
-func (js *JsMem) Get(path string) (resp string, err string) {
+func (js *JsMem) Get(_, path string) (ret string, err error) {
 	if res, e := resource.FindResource(js.session, path); e != nil {
-		err = e.Error()
+		err = e
+	} else if r, e := js.encode(res.Query()); e != nil {
+		err = e
 	} else {
-		doc := res.Query()
-		if r, e := js.encode(doc); e != nil {
-			err = e.Error()
-		} else {
-			resp = r
-		}
+		ret = r
 	}
 	return
 }
 
 // Post mirrors http post: sending commands for the turn
-func (js *JsMem) Post(body string) (resp string, err string) {
+func (js *JsMem) Post(_, body string) (ret string, err error) {
 	reader := strings.NewReader(body)
 	if doc, e := js.session.Post(reader); e != nil {
-		err = e.Error()
+		err = e
 	} else if r, e := js.encode(doc); e != nil {
-		err = e.Error()
+		err = e
 	} else {
-		resp = r
+		ret = r
 	}
 	return
-}
-
-func create(mc ingest.ModelCode, mem metal.ObjectValueMap) JsMem {
-	meta := metal.NewMetal(mc.Model, mem)
-	// the command output (unfortunately) needs some kind of id
-	// since we only have one session at a time, it doesnt matter what
-	out := app.NewCommandOutput("gopherjs", meta, framework.NewStandardView(meta))
-	sess, e := app.NewPartialSession(meta, mc.Code, nil, out)
-	if e != nil {
-		panic(e)
-	}
-	return JsMem{mem, sess}
 }
 
 func (js JsMem) encode(doc resource.Document) (resp string, err error) {
