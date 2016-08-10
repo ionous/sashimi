@@ -1,6 +1,7 @@
 package errutil
 
 import (
+	"errors"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"strings"
@@ -8,23 +9,20 @@ import (
 )
 
 func TestPrefix(t *testing.T) {
-	var err error
-	err = fmt.Errorf("error")
+	err := errors.New("error")
 	err = Prefix(err, "prefix")
 	assert.EqualError(t, err, "prefix: error")
 }
 
 func TestAppend(t *testing.T) {
-	var err error
-	one, two := fmt.Errorf("1"), fmt.Errorf("2")
-	err = Append(one, two)
+	one, two := errors.New("1"), errors.New("2")
+	err := Append(one, two)
 	list := strings.Split(err.Error(), "\n")
 	assert.EqualValues(t, []string{"1", "2"}, list)
 }
 
 func TestErrorFunc(t *testing.T) {
-	var err error
-	err = Func(func() string { return "fun" })
+	err := Func(func() string { return "fun" })
 	assert.EqualError(t, err, "fun")
 }
 
@@ -36,6 +34,7 @@ func (p Printer) Errorf(format string, a ...interface{}) error {
 	err := fmt.Errorf(format, a...)
 	return Prefix(err, p.prefix)
 }
+
 func TestErrorf(t *testing.T) {
 	p := Printer{"test"}
 	var errorf Errorf = p
