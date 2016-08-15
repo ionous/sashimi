@@ -10,7 +10,7 @@ import (
 func Encode(ptype meta.PropertyType, val interface{}) (ret interface{}, err error) {
 	switch ptype {
 	case meta.NumProperty:
-		if v, ok := val.(float32); !ok {
+		if v, ok := val.(float64); !ok {
 			err = fmt.Errorf("property not a float %T(%v)", val, val)
 		} else {
 			ret = float64(v)
@@ -31,7 +31,7 @@ func Encode(ptype meta.PropertyType, val interface{}) (ret interface{}, err erro
 		buf := new(bytes.Buffer)
 		switch ptype & ^meta.ArrayProperty {
 		case meta.NumProperty:
-			if vs, ok := val.([]float32); !ok {
+			if vs, ok := val.([]float64); !ok {
 				err = fmt.Errorf("property not array of floats %T(%v)", val, val)
 			} else {
 				err = writeNums(buf, vs)
@@ -64,7 +64,7 @@ func Decode(ptype meta.PropertyType, val interface{}) (ret interface{}, err erro
 		if v, ok := val.(float64); !ok {
 			err = fmt.Errorf("property not a float %T(%v)", val, val)
 		} else {
-			ret = float32(v)
+			ret = float64(v)
 		}
 	case meta.TextProperty:
 		if v, ok := val.(string); !ok {

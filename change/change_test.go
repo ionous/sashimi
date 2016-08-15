@@ -19,7 +19,7 @@ type ChangeMock struct {
 	nums, texts, states int
 }
 
-func (p *ChangeMock) NumChange(obj meta.Instance, prop ident.Id, prev, next float32) {
+func (p *ChangeMock) NumChange(obj meta.Instance, prop ident.Id, prev, next float64) {
 	require.NotEqual(p.t, prev, next)
 	p.values.SetValue(obj.GetId(), prop, next)
 	p.nums++

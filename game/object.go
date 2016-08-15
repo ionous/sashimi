@@ -22,13 +22,13 @@ type IObject interface {
 	Is(string) bool
 	IsNow(string)
 
-	// Returns the named property
+	// Get returns the named property.
 	Get(string) IValue
 
-	// Returns the named list
+	// List returns the named list.
 	List(string) IList
 
-	// Run an action defined on this object.
+	// Go run an action defined on this object.
 	Go(action string, withTargetAndContext ...IObject) IPromise
 
 	// FIX: this should probably just be an action.
@@ -36,8 +36,8 @@ type IObject interface {
 	Says(string)
 
 	// deprecated: prefer Get()
-	Num(string) float32
-	SetNum(string, float32)
+	Num(string) float64
+	SetNum(string, float64)
 
 	Object(string) IObject
 	ObjectList(string) []IObject
@@ -49,8 +49,8 @@ type IObject interface {
 
 // IValue provides access to an object property
 type IValue interface {
-	Num() float32
-	SetNum(float32)
+	Num() float64
+	SetNum(float64)
 
 	Object() IObject
 	SetObject(IObject)
@@ -60,6 +60,12 @@ type IValue interface {
 
 	State() ident.Id
 	SetState(ident.Id)
+}
+
+// IQuery provides access to an object list
+type IQuery interface {
+	HasNext() bool
+	Next() IObject
 }
 
 // IValue provides access to an object list
@@ -73,7 +79,7 @@ type IList interface {
 	Contains(interface{}) bool
 
 	// AppendNum adds the passed number to the end of the list.
-	AppendNum(float32)
+	AppendNum(float64)
 	// AppendText adds the passed string to the end of the list.
 	AppendText(string)
 	// AppendObject adds the passed object to the end of the list.

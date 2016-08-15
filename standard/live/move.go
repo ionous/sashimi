@@ -10,11 +10,11 @@ func Move(obj string) MoveToPhrase {
 }
 
 func MoveThe(obj G.IObject) MoveToPhrase {
-	return Move(obj.Id().String())
+	return Move(string(obj.Id()))
 }
 
 func (move MoveToPhrase) ToThe(dest G.IObject) MovingPhrase {
-	return move.To(dest.Id().String())
+	return move.To(string(dest.Id()))
 }
 
 func (move MoveToPhrase) To(dest string) MovingPhrase {

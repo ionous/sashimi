@@ -80,7 +80,7 @@ func (oa GameObject) Get(prop string) (ret G.IValue) {
 		oa.log("Get(%s): property is array", prop)
 		ret = nullValue{}
 	} else {
-		ret = gameValue{oa.GameEventAdapter,
+		ret = &gameValue{oa.GameEventAdapter,
 			NewPath(p.GetId()), p.GetType(), p.GetValue()}
 	}
 	return
@@ -94,18 +94,18 @@ func (oa GameObject) List(prop string) (ret G.IList) {
 		oa.log("List(%s): property is a value, not a list.", prop)
 		ret = nullList{}
 	} else {
-		ret = gameList{oa.GameEventAdapter, NewPath(p.GetId()), p.GetType(), p.GetValues()}
+		ret = &gameList{oa.GameEventAdapter, NewPath(p.GetId()), p.GetType(), p.GetValues()}
 	}
 	return
 }
 
 // Num value of the named property.
-func (oa GameObject) Num(prop string) (ret float32) {
+func (oa GameObject) Num(prop string) (ret float64) {
 	return oa.Get(prop).Num()
 }
 
 // SetNum changes the value of an existing number property.
-func (oa GameObject) SetNum(prop string, value float32) {
+func (oa GameObject) SetNum(prop string, value float64) {
 	oa.Get(prop).SetNum(value)
 }
 
@@ -203,6 +203,6 @@ func (oa GameObject) queueNamedAction(action string, objects []G.IObject) (ret G
 
 func (oa GameObject) log(format string, v ...interface{}) {
 	suffix := fmt.Sprintf(format, v...)
-	prefix := oa.gobj.GetId().String()
+	prefix := oa.gobj.GetId()
 	oa.Println(prefix, suffix)
 }

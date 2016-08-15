@@ -13,13 +13,13 @@ type panicValue struct {
 	*propBase
 }
 
-func (p panicValue) GetNum() float32 {
+func (p panicValue) GetNum() float64 {
 	panic(fmt.Errorf("get num not supported for property %s", p.prop))
 }
-func (p panicValue) SetNum(float32) error {
+func (p panicValue) SetNum(float64) error {
 	panic(fmt.Errorf("set num not supported for property %s", p.prop))
 }
-func (p panicValue) AppendNum(float32) error {
+func (p panicValue) AppendNum(float64) error {
 	panic(fmt.Errorf("append num not supported for property %s", p.prop))
 }
 func (p panicValue) GetText() string {

@@ -56,3 +56,22 @@ func TestDash(t *testing.T) {
 	assert.EqualValues(t, "dash-identity", Dash(MakeId("dash-identity")))
 	assert.EqualValues(t, "dash-it-all", Dash(MakeId("DashItAll")))
 }
+
+// TestRecycle to ensure the string underlying an id can itself convert into a id matching the original
+// important for gopherjs optimization
+func TestRecycle(t *testing.T) {
+	src := []string{
+		"lowercase",
+		"ALLCAPS",
+		"PascalCase",
+		"camellCase",
+		"space case",
+		"em-dash",
+	}
+	for _, src := range src {
+		id := MakeId(src)
+		noconvert := string(id)
+		recycledId := MakeId(noconvert)
+		assert.Zero(t, Compare(recycledId, id))
+	}
+}

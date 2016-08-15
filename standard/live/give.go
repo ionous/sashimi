@@ -7,7 +7,7 @@ func Give(prop string) GivePropPhrase {
 }
 
 func GiveThe(prop G.IObject) GivePropPhrase {
-	return GivePropPhrase{prop: prop.Id().String()}
+	return GivePropPhrase{prop: string(prop.Id())}
 }
 
 func (give GivePropPhrase) To(actor string) GivingPhrase {

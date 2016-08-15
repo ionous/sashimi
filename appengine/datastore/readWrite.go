@@ -6,12 +6,12 @@ import (
 	"github.com/ionous/sashimi/util/ident"
 )
 
-func readNums(buf *bytes.Buffer) (ret []float32, err error) {
+func readNums(buf *bytes.Buffer) (ret []float64, err error) {
 	var size int64
 	if e := binary.Read(buf, binary.LittleEndian, &size); e != nil {
 		err = e
 	} else {
-		ret = make([]float32, size)
+		ret = make([]float64, size)
 		err = binary.Read(buf, binary.LittleEndian, ret)
 	}
 	return
@@ -49,7 +49,7 @@ func readIds(buf *bytes.Buffer) (ret []ident.Id, err error) {
 	return
 }
 
-func writeNums(buf *bytes.Buffer, nums []float32) (err error) {
+func writeNums(buf *bytes.Buffer, nums []float64) (err error) {
 	if e := binary.Write(buf, binary.LittleEndian, int64(len(nums))); e != nil {
 		err = e
 	} else {

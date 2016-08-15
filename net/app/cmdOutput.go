@@ -95,14 +95,14 @@ func (out *CommandOutput) FlushDocument(doc resource.DocumentBuilder) {
 	out.serial.known = make(map[ident.Id]bool)
 }
 
-func (out *CommandOutput) NumChange(gobj meta.Instance, prop ident.Id, prev, next float32) {
+func (out *CommandOutput) NumChange(gobj meta.Instance, prop ident.Id, prev, next float64) {
 	if !out.view.InView(gobj) {
 		//out.Log(fmt.Sprintf("CommandOutput: '%s' not in view,ignoring num change %s(%s->%s)\n", gobj.GetId(), out.view, prop, prev, next))
 	} else {
 		obj := NewObjectRef(gobj)
 		data := struct {
 			Prop  string  `json:"prop"`
-			Value float32 `json:"value"`
+			Value float64 `json:"value"`
 		}{jsonId(prop), next}
 		out.events.AddAction("x-num", obj, data)
 	}

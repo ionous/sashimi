@@ -35,8 +35,11 @@ type PropertyList []*M.PropertyModel
 type PropertyCache map[ident.Id]PropertyList
 
 // single/plural properties need some fixing
-var singular = ident.MakeId("singular")
-var plural = ident.MakeId("plural")
+const pluralString = "plural"
+const singularString = "singular"
+
+var singularId = ident.MakeId(pluralString)
+var pluralId = ident.MakeId(pluralString)
 
 func merge(base, more PropertyList) (ret PropertyList) {
 	ret = base
@@ -56,19 +59,14 @@ func NewMetal(m *M.Model, v ObjectValue) *Metal {
 }
 
 func (mdl *Metal) NumAction() int {
-	return len(mdl.Actions)
+	actions := mdl.actionList()
+	return len(actions)
 }
 
 func (mdl *Metal) ActionNum(i int) meta.Action {
-	if mdl._actions == nil {
-		mdl._actions = make([]*M.ActionModel, 0, len(mdl.Actions))
-		for _, v := range mdl.Actions {
-			mdl._actions = append(mdl._actions, v)
-		}
-	}
+	actions := mdl.actionList()
 	// panics on out of range
-	a := mdl._actions[i]
-	return actionInfo{mdl, a}
+	return actionInfo{mdl, actions[i]}
 }
 
 func (mdl *Metal) GetAction(id ident.Id) (ret meta.Action, okay bool) {
@@ -79,19 +77,14 @@ func (mdl *Metal) GetAction(id ident.Id) (ret meta.Action, okay bool) {
 }
 
 func (mdl *Metal) NumEvent() int {
-	return len(mdl.Events)
+	events := mdl.eventList()
+	return len(events)
 }
 
 func (mdl *Metal) EventNum(i int) meta.Event {
-	if mdl._events == nil {
-		mdl._events = make([]*M.EventModel, 0, len(mdl.Events))
-		for _, v := range mdl.Events {
-			mdl._events = append(mdl._events, v)
-		}
-	}
 	// panics on out of range
-	a := mdl._events[i]
-	return eventInfo{mdl, a}
+	events := mdl.eventList()
+	return eventInfo{mdl, events[i]}
 }
 
 func (mdl *Metal) GetEvent(id ident.Id) (ret meta.Event, okay bool) {
@@ -101,43 +94,32 @@ func (mdl *Metal) GetEvent(id ident.Id) (ret meta.Event, okay bool) {
 	return
 }
 
-func (mdl Metal) NumClass() int {
-	return len(mdl.Classes)
+func (mdl *Metal) NumClass() int {
+	classes := mdl.classList()
+	return len(classes)
 }
 
 func (mdl *Metal) ClassNum(i int) meta.Class {
-	if mdl._classes == nil {
-		mdl._classes = make([]*M.ClassModel, 0, len(mdl.Classes))
-		for _, v := range mdl.Classes {
-			mdl._classes = append(mdl._classes, v)
-		}
-	}
-	// panics on out of range
-	c := mdl._classes[i]
-	return classInfo{mdl, c}
+	classes := mdl.classList()
+	return &classInfo{mdl, classes[i]}
 }
 
 func (mdl *Metal) GetClass(id ident.Id) (ret meta.Class, okay bool) {
 	if c, ok := mdl.Classes[id]; ok {
-		ret, okay = classInfo{mdl, c}, true
+		ret, okay = &classInfo{mdl, c}, true
 	}
 	return
 }
 
-func (mdl Metal) NumInstance() int {
-	return len(mdl.Instances)
+func (mdl *Metal) NumInstance() int {
+	instances := mdl.instanceList()
+	return len(instances)
 }
 
 func (mdl *Metal) InstanceNum(i int) meta.Instance {
-	if mdl._instances == nil {
-		mdl._instances = make([]*M.InstanceModel, 0, len(mdl.Instances))
-		for _, v := range mdl.Instances {
-			mdl._instances = append(mdl._instances, v)
-		}
-	}
 	// panics on out of range
-	n := mdl._instances[i]
-	return mdl.makeInstance(n)
+	instances := mdl.instanceList()
+	return mdl.makeInstance(instances[i])
 }
 
 func (mdl *Metal) GetInstance(id ident.Id) (ret meta.Instance, okay bool) {
@@ -147,19 +129,15 @@ func (mdl *Metal) GetInstance(id ident.Id) (ret meta.Instance, okay bool) {
 	return
 }
 
-func (mdl Metal) NumRelation() int {
-	return len(mdl.Relations)
+func (mdl *Metal) NumRelation() int {
+	relations := mdl.relationList()
+	return len(relations)
 }
 
 func (mdl *Metal) RelationNum(i int) meta.Relation {
-	if mdl._relations == nil {
-		mdl._relations = make([]*M.RelationModel, 0, len(mdl.Relations))
-		for _, v := range mdl.Relations {
-			mdl._relations = append(mdl._relations, v)
-		}
-	}
+	relations := mdl.relationList()
 	// panics on out of range
-	r := mdl._relations[i]
+	r := relations[i]
 	return relInfo{mdl, r}
 }
 
@@ -176,11 +154,11 @@ func (mdl *Metal) ParserActionNum(i int) meta.ParserAction {
 	return meta.ParserAction{p.Action, p.Commands}
 }
 
-func (mdl Metal) NumParserAction() int {
+func (mdl *Metal) NumParserAction() int {
 	return len(mdl.ParserActions)
 }
 
-func (mdl Metal) Pluralize(single string) (plural string) {
+func (mdl *Metal) Pluralize(single string) (plural string) {
 	if res, ok := mdl.SingleToPlural[single]; ok {
 		plural = res
 	} else {
@@ -189,7 +167,7 @@ func (mdl Metal) Pluralize(single string) (plural string) {
 	return
 }
 
-func (mdl Metal) AreCompatible(child, parent ident.Id) (okay bool) {
+func (mdl *Metal) AreCompatible(child, parent ident.Id) (okay bool) {
 	if c, ok := mdl.Classes[child]; ok {
 		if c.Id == parent {
 			okay = true
@@ -206,7 +184,7 @@ func (mdl Metal) AreCompatible(child, parent ident.Id) (okay bool) {
 }
 
 // hrmmm...
-func (mdl Metal) MatchNounName(n string, f func(ident.Id) bool) (int, bool) {
+func (mdl *Metal) MatchNounName(n string, f func(ident.Id) bool) (int, bool) {
 	return mdl.Aliases.Try(n, f)
 }
 
@@ -214,7 +192,63 @@ func (mdl *Metal) makeInstance(n *M.InstanceModel) meta.Instance {
 	return instInfo{mdl, n}
 }
 
-func (mdl *Metal) getPropertyList(cls *M.ClassModel) (ret PropertyList) {
+// FIX: these lists are NG.
+// *) id rather not have dynamic memory creation / pinning
+// *) it cant respond to new instances
+// *) itd be better to have real queries
+// NOTE: we use the list caches for len() so gopherjs can avoid Object.keys
+func (mdl *Metal) instanceList() []*M.InstanceModel {
+	if mdl._instances == nil {
+		// commented out re: gopherjs
+		// mdl._instances = make([]*M.InstanceModel, 0, len(mdl.Instances))
+		for _, v := range mdl.Instances {
+			mdl._instances = append(mdl._instances, v)
+		}
+	}
+	return mdl._instances
+}
+func (mdl *Metal) eventList() []*M.EventModel {
+	if mdl._events == nil {
+		// commented out re: gopherjs
+		// mdl._events = make([]*M.EventModel, 0, len(mdl.Events))
+		for _, v := range mdl.Events {
+			mdl._events = append(mdl._events, v)
+		}
+	}
+	return mdl._events
+}
+func (mdl *Metal) classList() []*M.ClassModel {
+	if mdl._classes == nil {
+		// commented out re: gopherjs
+		// mdl._classes = make([]*M.ClassModel, 0, len(mdl.Classes))
+		for _, v := range mdl.Classes {
+			mdl._classes = append(mdl._classes, v)
+		}
+	}
+	return mdl._classes
+}
+func (mdl *Metal) relationList() []*M.RelationModel {
+	if mdl._relations == nil {
+		// commented out re: gopherjs
+		// mdl._relations = make([]*M.RelationModel, 0, len(mdl.Relations))
+		for _, v := range mdl.Relations {
+			mdl._relations = append(mdl._relations, v)
+		}
+	}
+	return mdl._relations
+}
+func (mdl *Metal) actionList() []*M.ActionModel {
+	if mdl._actions == nil {
+		// commented out re: gopherjs
+		// mdl._actions = make([]*M.ActionModel, 0, len(mdl.Actions))
+		for _, v := range mdl.Actions {
+			mdl._actions = append(mdl._actions, v)
+		}
+	}
+	return mdl._actions
+}
+
+func (mdl *Metal) propertyList(cls *M.ClassModel) (ret PropertyList) {
 	if props, ok := mdl._properties[cls.Id]; ok {
 		ret = props
 	} else {
@@ -235,13 +269,13 @@ func (mdl *Metal) makePropertyList(cls *M.ClassModel) (ret PropertyList) {
 	return
 }
 
-func (mdl Metal) getZero(prop *M.PropertyModel) (ret interface{}) {
+func (mdl *Metal) getZero(prop *M.PropertyModel) (ret interface{}) {
 	switch prop.Type {
 	case M.NumProperty:
 		if !prop.IsMany {
-			ret = float32(0)
+			ret = float64(0)
 		} else {
-			ret = []float32{}
+			ret = []float64{}
 		}
 	case M.TextProperty:
 		if !prop.IsMany {

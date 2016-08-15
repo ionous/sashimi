@@ -49,7 +49,7 @@ func ApiTest(t *testing.T, mdl meta.Model, instId ident.Id) {
 	}
 
 	methods := []TestValue{
-		{MethodMaker("Num"), float32(0), float32(32)},
+		{MethodMaker("Num"), float64(0), float64(32)},
 		{MethodMaker("Text"), "", "text"},
 		{MethodMaker("State"), ident.MakeId("no"), ident.MakeId("yes")},
 		{MethodMaker("Object"), ident.Empty(), inst.GetId()},

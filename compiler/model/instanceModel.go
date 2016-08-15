@@ -15,7 +15,7 @@ type InstanceModel struct {
 type Values map[ident.Id]Value
 
 // Enums are stored as int;
-// Numbers as float32;
+// Numbers as float64;
 // Pointers as ident.Id;
 // Text as string.
 type Value interface{}

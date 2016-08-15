@@ -11,7 +11,7 @@ func Learn(fact string) FactPhrase {
 	return FactPhrase{fact}
 }
 func LearnThe(fact G.IObject) FactPhrase {
-	return FactPhrase{fact.Id().String()}
+	return FactPhrase{string(fact.Id())}
 }
 
 type FactPhrase struct {

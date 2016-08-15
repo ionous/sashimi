@@ -82,13 +82,13 @@ func (null _Null) List(p string) G.IList {
 }
 
 //
-func (null _Null) Num(p string) (ret float32) {
+func (null _Null) Num(p string) (ret float64) {
 	null.println("Num", p)
 	return
 }
 
 //
-func (null _Null) SetNum(p string, v float32) {
+func (null _Null) SetNum(p string, v float64) {
 	null.println("SetNum", p, v)
 }
 

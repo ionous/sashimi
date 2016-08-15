@@ -19,7 +19,7 @@ type InstanceInfo struct {
 }
 
 // Enums are stored as int;
-// Numbers as float32;
+// Numbers as float64;
 // Pointers as ident.Id;
 // Text as string.
 type Variant interface{}

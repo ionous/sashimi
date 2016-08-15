@@ -45,12 +45,12 @@ func TestInvSaveLoad(t *testing.T) {
 			if _, err := R.SaveGame(g, false); assert.NoError(t, err, "couldnt save game") {
 				m := make(map[string]string)
 				if err := json.Unmarshal(test.saver.blob, &m); assert.NoError(t, err, "couldnt read blob") {
-					require.Equal(t, m["Candy.ObjectsOwner"], "")
-					require.Equal(t, m["Hat.ObjectsOwner"], "player")
-					require.Equal(t, m["Hook.ObjectsOwner"], "player")
-					require.Equal(t, m["Hook.ObjectsWhereabouts"], "")
-					require.Equal(t, m["Neverland.RoomsVisited"], "visited")
-					require.Equal(t, m["Player.ObjectsWhereabouts"], "neverland")
+					require.Equal(t, m["candy.objects-Owner"], "")
+					require.Equal(t, m["hat.objects-owner"], "player")
+					require.Equal(t, m["hook.objects-owner"], "player")
+					require.Equal(t, m["hook.objects-whereabouts"], "")
+					require.Equal(t, m["neverland.rooms-visited"], "visited")
+					require.Equal(t, m["player.objects-whereabouts"], "neverland")
 				}
 			}
 		}

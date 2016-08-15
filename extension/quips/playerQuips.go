@@ -15,8 +15,8 @@ func PlayerQuips(g G.Play) []G.IObject {
 		latest := qh.MostRecent()
 		isRestrictive := latest.Exists() && latest.Is("restrictive")
 		// hrmm... this is very similar to "UpdateNextQuips"
-		for i, quips := 0, g.List("quips"); i < quips.Len(); i++ {
-			quip := quips.Get(i).Object()
+		for quips := g.Query("quips"); quips.HasNext(); {
+			quip := quips.Next()
 			// Filter to quips which quip supply the interlocutor.
 			if subject := quip.Get("subject").Object(); subject == npc {
 				// Filter to quips which have player comments.

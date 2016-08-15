@@ -11,7 +11,7 @@ func Describe(object string) DescribePhrase {
 }
 
 func DescribeThe(object G.IObject) DescribePhrase {
-	return DescribePhrase{object.Id().String()}
+	return DescribePhrase{string(object.Id())}
 }
 
 func (d DescribePhrase) Execute(g G.Play) {

@@ -8,8 +8,8 @@ import (
 type nullValue PropertyPath
 
 func (_ nullValue) Set(value G.IValue)    {}
-func (_ nullValue) Num() (ret float32)    { return }
-func (_ nullValue) SetNum(float32)        {}
+func (_ nullValue) Num() (ret float64)    { return }
+func (_ nullValue) SetNum(float64)        {}
 func (n nullValue) Object() G.IObject     { return NullObject("") }
 func (_ nullValue) SetObject(G.IObject)   {}
 func (_ nullValue) Text() (ret string)    { return }

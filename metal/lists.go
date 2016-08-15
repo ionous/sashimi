@@ -28,8 +28,8 @@ func (ar arrayValues) ClearValues() error {
 	return ar.set(empty)
 }
 
-func (ar arrayValues) AppendNum(v float32) error {
-	slice := ar.getGeneric().([]float32)
+func (ar arrayValues) AppendNum(v float64) error {
+	slice := ar.getGeneric().([]float64)
 	return ar.set(append(slice, v))
 }
 

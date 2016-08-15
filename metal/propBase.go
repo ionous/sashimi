@@ -44,14 +44,14 @@ func (p *propBase) getId() (ret ident.Id) {
 	return
 }
 
-// we want to keep values as float32;
+// we want to keep values as float64;
 // values from json come in as float64.
-func (p *propBase) getNum() (ret float32) {
+func (p *propBase) getNum() (ret float64) {
 	v := p.getValue(p.prop)
-	if id, ok := v.(float32); ok {
+	if id, ok := v.(float64); ok {
 		ret = id
 	} else {
-		ret = float32(v.(float64))
+		ret = float64(v.(float64))
 	}
 	return
 }
@@ -107,15 +107,15 @@ func (p *propBase) GetValue() (ret meta.Value) {
 	switch p.prop.Type {
 	case M.NumProperty:
 		if !p.prop.IsMany {
-			return numValue{panicValue{p}}
+			return &numValue{panicValue{p}}
 		}
 	case M.TextProperty:
 		if !p.prop.IsMany {
-			return textValue{panicValue{p}}
+			return &textValue{panicValue{p}}
 		}
 	case M.EnumProperty:
 		if !p.prop.IsMany {
-			return enumValue{panicValue{p}}
+			return &enumValue{panicValue{p}}
 		}
 	case M.PointerProperty:
 		if !p.prop.IsMany {
@@ -126,7 +126,7 @@ func (p *propBase) GetValue() (ret meta.Value) {
 			if rel, ok := p.mdl.Relations[p.prop.Relation]; ok && rel.Style == M.OneToOne {
 				return newRelatedValue(p, rel)
 			} else {
-				return pointerValue{panicValue{p}}
+				return &pointerValue{panicValue{p}}
 			}
 		}
 	default:
@@ -141,13 +141,13 @@ func (p *propBase) GetValues() meta.Values {
 	case M.NumProperty:
 		if p.prop.IsMany {
 			return arrayValues{p, func(i int) meta.Value {
-				return numElement{elementValue{panicValue{p}, i}}
+				return &numElement{&elementValue{panicValue{p}, i}}
 			}}
 		}
 	case M.TextProperty:
 		if p.prop.IsMany {
 			return arrayValues{p, func(i int) meta.Value {
-				return textElement{elementValue{panicValue{p}, i}}
+				return &textElement{&elementValue{panicValue{p}, i}}
 			}}
 		}
 	case M.EnumProperty:
@@ -158,7 +158,7 @@ func (p *propBase) GetValues() meta.Values {
 				return newManyValues(p)
 			} else {
 				return arrayValues{p, func(i int) meta.Value {
-					return objectElement{elementValue{panicValue{p}, i}}
+					return &objectElement{&elementValue{panicValue{p}, i}}
 				}}
 			}
 		}

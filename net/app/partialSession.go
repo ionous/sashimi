@@ -13,7 +13,6 @@ import (
 	"github.com/ionous/sashimi/standard/framework"
 	"github.com/ionous/sashimi/util/ident"
 	"io"
-	"log"
 )
 
 // implements IResource for the session and Frame for the
@@ -95,7 +94,7 @@ var playerId = ident.MakeId("player")
 
 // Send the passed input to the game.
 func (s *PartialSession) _handleInput(input CommandInput) (err error) {
-	log.Println(fmt.Sprintf("processing %+v", input))
+	//log.Println(fmt.Sprintf("processing %+v", input))
 	// NOTE: cmd session doesnt support quit
 	if s.game.IsComplete() {
 		err = fmt.Errorf("game finished.")

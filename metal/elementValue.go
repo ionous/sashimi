@@ -13,40 +13,40 @@ type elementValue struct {
 }
 
 type numElement struct {
-	elementValue
+	*elementValue
 }
 type textElement struct {
-	elementValue
+	*elementValue
 }
 type objectElement struct {
-	elementValue
+	*elementValue
 }
 
-func (el numElement) GetNum() float32 {
-	slice := el.getGeneric().([]float32)
+func (el *numElement) GetNum() float64 {
+	slice := el.getGeneric().([]float64)
 	return slice[el.index]
 }
-func (el numElement) SetNum(v float32) error {
-	slice := el.getGeneric().([]float32)
+func (el *numElement) SetNum(v float64) error {
+	slice := el.getGeneric().([]float64)
 	slice[el.index] = v
 	return el.set(slice)
 }
 
-func (el textElement) GetText() string {
+func (el *textElement) GetText() string {
 	slice := el.getGeneric().([]string)
 	return slice[el.index]
 }
-func (el textElement) SetText(v string) error {
+func (el *textElement) SetText(v string) error {
 	slice := el.getGeneric().([]string)
 	slice[el.index] = v
 	return el.set(slice)
 }
 
-func (el objectElement) GetObject() ident.Id {
+func (el *objectElement) GetObject() ident.Id {
 	slice := el.getGeneric().([]ident.Id)
 	return slice[el.index]
 }
-func (el objectElement) SetObject(v ident.Id) error {
+func (el *objectElement) SetObject(v ident.Id) error {
 	slice := el.getGeneric().([]ident.Id)
 	slice[el.index] = v
 	return el.set(slice)

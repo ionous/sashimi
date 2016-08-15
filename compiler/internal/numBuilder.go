@@ -22,14 +22,14 @@ func (num NumBuilder) BuildProperty() (M.IProperty, error) {
 }
 
 func (num NumBuilder) SetProperty(ctx PropertyContext) (err error) {
-	nilVal := float32(0)
+	nilVal := float64(0)
 	switch val := ctx.value.(type) {
 	case int:
-		err = ctx.values.lockSet(ctx.inst, num.Id, nilVal, float32(val))
+		err = ctx.values.lockSet(ctx.inst, num.Id, nilVal, float64(val))
 	case float32:
-		err = ctx.values.lockSet(ctx.inst, num.Id, nilVal, float32(val))
+		err = ctx.values.lockSet(ctx.inst, num.Id, nilVal, float64(val))
 	case float64: // note: go's own default number type is float64
-		err = ctx.values.lockSet(ctx.inst, num.Id, nilVal, float32(val))
+		err = ctx.values.lockSet(ctx.inst, num.Id, nilVal, float64(val))
 	default:
 		err = SetValueMismatch(ctx.inst, num.Id, nilVal, val)
 	}

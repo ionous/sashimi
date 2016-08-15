@@ -19,7 +19,7 @@ func VerifyPostValues(t *testing.T, v metal.ObjectValue) {
 	if res, ok := v.GetValue(modeltest.TestInstance, modeltest.NumProp); !assert.True(t, ok, fmt.Sprintf("missing (%s.%s)", modeltest.TestInstance, modeltest.NumProp)) {
 		t.Fatal()
 	} else {
-		require.EqualValues(t, float32(32), res)
+		require.EqualValues(t, float64(32), res)
 	}
 	if res, ok := v.GetValue(modeltest.TestInstance, modeltest.TextProp); assert.True(t, ok) {
 		require.EqualValues(t, "text", res)
@@ -36,7 +36,7 @@ func VerifyPostLists(t *testing.T, v metal.ObjectValue) {
 
 	//
 	if res, ok := v.GetValue(modeltest.TestInstance, modeltest.NumsProp); assert.True(t, ok, "get value nums prop") {
-		require.Contains(t, res, float32(32))
+		require.Contains(t, res, float64(32))
 	}
 	if res, ok := v.GetValue(modeltest.TestInstance, modeltest.TextsProp); assert.True(t, ok, "get value texts prop") {
 		require.Contains(t, res, "text")

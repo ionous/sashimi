@@ -18,7 +18,7 @@ import (
 // https://golang.org/pkg/encoding/binary/#Write
 
 func TestStoreNums(t *testing.T) {
-	vals := []float32{-1.2, 3.1, 4.2}
+	vals := []float64{-1.2, 3.1, 4.2}
 	stream := new(bytes.Buffer)
 	require.NoError(t, writeNums(stream, vals))
 	b := stream.Bytes()
@@ -58,7 +58,7 @@ func TestStoreCoding(t *testing.T) {
 		val   interface{}
 	}
 	xs := []X{{
-		meta.NumProperty, float32(2.3),
+		meta.NumProperty, float64(2.3),
 	}, {
 		meta.TextProperty, "text",
 	}, {
@@ -66,7 +66,7 @@ func TestStoreCoding(t *testing.T) {
 	}, {
 		meta.ObjectProperty, ident.MakeId("object"),
 	}, {
-		meta.NumProperty | meta.ArrayProperty, []float32{1, 2, 3},
+		meta.NumProperty | meta.ArrayProperty, []float64{1, 2, 3},
 	}, {
 		meta.TextProperty | meta.ArrayProperty, []string{"a", "b", "c"},
 	}, {

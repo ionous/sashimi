@@ -17,7 +17,7 @@ const (
 //
 type PropertyExpectation struct {
 	rule  RuleType    // style of rule
-	value interface{} // expects numbers to be marshelled to float32 in advance
+	value interface{} // expects numbers to be marshelled to float64 in advance
 }
 
 func NewExpectation(rule RuleType, value interface{}) PropertyExpectation {

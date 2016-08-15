@@ -6,7 +6,7 @@ import (
 )
 
 type PropertyChange interface {
-	NumChange(obj meta.Instance, prop ident.Id, prev, next float32)
+	NumChange(obj meta.Instance, prop ident.Id, prev, next float64)
 	TextChange(obj meta.Instance, prop ident.Id, prev, next string)
 	StateChange(obj meta.Instance, prop ident.Id, prev, next ident.Id)
 	ReferenceChange(obj meta.Instance, prop, other ident.Id, prev, next meta.Instance)

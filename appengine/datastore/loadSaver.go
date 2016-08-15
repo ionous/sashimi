@@ -29,7 +29,7 @@ func (s *LoadSaver) GetValue(id ident.Id) (ret interface{}, okay bool) {
 }
 
 // note: we cant compare values at this levels
-// or we get panics: ex. "comparing uncomparable type []float32"
+// or we get panics: ex. "comparing uncomparable type []float64"
 func (s *LoadSaver) SetValue(id ident.Id, value interface{}) (err error) {
 	if field, ok := s.data[id]; ok {
 		field.Value = value

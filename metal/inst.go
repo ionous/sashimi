@@ -6,6 +6,7 @@ import (
 	"github.com/ionous/sashimi/util/ident"
 )
 
+// FIX? move to internal so that this can show up in documentation.
 type instInfo struct {
 	mdl *Metal
 	*M.InstanceModel
@@ -20,16 +21,9 @@ func (n instInfo) GetId() ident.Id {
 func (n instInfo) GetParentClass() ident.Id {
 	return n.Class
 }
-
-func (n instInfo) getClassInfo() classInfo {
-	cls := n.mdl.Classes[n.Class]
-	return classInfo{n.mdl, cls}
-}
-
 func (n instInfo) GetOriginalName() string {
 	return n.Name
 }
-
 func (n instInfo) NumProperty() int {
 	return n.getClassInfo().NumProperty()
 }
@@ -60,7 +54,12 @@ func (n instInfo) GetPropertyByChoice(id ident.Id) (ret meta.Property, okay bool
 	return
 }
 
-func (n instInfo) makeProperty(p *M.PropertyModel) meta.Property {
+func (n *instInfo) getClassInfo() *classInfo {
+	cls := n.mdl.Classes[n.Class]
+	return &classInfo{n.mdl, cls}
+}
+
+func (n *instInfo) makeProperty(p *M.PropertyModel) meta.Property {
 	return &propBase{
 		mdl:      n.mdl,
 		src:      n.Id,
@@ -69,7 +68,7 @@ func (n instInfo) makeProperty(p *M.PropertyModel) meta.Property {
 		setValue: n.setValue}
 }
 
-func (n instInfo) getValue(p *M.PropertyModel) (ret GenericValue) {
+func (n *instInfo) getValue(p *M.PropertyModel) (ret GenericValue) {
 	// try the object-value interface first
 	if v, ok := n.mdl.objectValues.GetValue(n.Id, p.Id); ok {
 		ret = v
@@ -83,7 +82,7 @@ func (n instInfo) getValue(p *M.PropertyModel) (ret GenericValue) {
 	return
 }
 
-func (n instInfo) setValue(p *M.PropertyModel, v GenericValue) error {
+func (n *instInfo) setValue(p *M.PropertyModel, v GenericValue) error {
 	// STORE FIX: TEST CONSTRAINTS
 	return n.mdl.objectValues.SetValue(n.Id, p.Id, v)
 }

@@ -16,9 +16,9 @@ type Play interface {
 	// Log a quiet print.
 	Log(text ...interface{})
 	// List one or more objects by class name.
-	// FIX: replace by a query?
+	// FUTURE: replace class by an index?
 	// ALT: broadcast an event to an optionally query/filtered set of objects.
-	List(class string) IList
+	Query(class string) IQuery
 	// StopHere.
 	// FIX: move into the event object, possible via callback parameter injection
 	StopHere()

@@ -131,7 +131,7 @@ type PropertyType int
 
 const (
 	InvalidProperty PropertyType = iota
-	NumProperty                  // float32
+	NumProperty                  // float64
 	TextProperty                 // string
 	StateProperty                // string.Id
 	ObjectProperty               // string.Id
@@ -158,8 +158,8 @@ type Relative struct {
 
 // get and set panic if the value is not of the requested type; set can return error when the value, when of the correct type, violates a property constraint
 type Value interface {
-	GetNum() float32
-	SetNum(float32) error
+	GetNum() float64
+	SetNum(float64) error
 
 	GetText() string
 	SetText(string) error
@@ -178,7 +178,7 @@ type Values interface {
 	ValueNum(int) Value
 
 	ClearValues() error
-	AppendNum(float32) error
+	AppendNum(float64) error
 	AppendText(string) error
 	AppendObject(ident.Id) error
 

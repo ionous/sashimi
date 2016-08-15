@@ -17,14 +17,18 @@ func TestQuipVisit(t *testing.T) {
 	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
 		total, comments := 3+1, 2 // +1 for hackish default greeting.
 		g := test.Game.NewAdapter()
-		for i, quips := 0, g.List("quips"); i < quips.Len(); i++ {
-			q := quips.Get(i).Object()
+
+		for quips := g.Query("quips"); quips.HasNext(); {
+			q := quips.Next()
 			comment, reply := q.Text("comment"), q.Text("reply")
-			t.Logf("%v: '%v','%v','%v'", q, comment, reply)
+			t.Logf("%v: '%v','%v'", q, comment, reply)
 			if comment != "" {
 				comments--
 			}
 			total--
+			if total < 0 || comments < 0 {
+				break
+			}
 		}
 		assert.Equal(t, 0, total, "total quips")
 		assert.Equal(t, 0, comments, "comment quips")
@@ -101,8 +105,8 @@ func TestQuipTalkQuips(t *testing.T) {
 					player.Go("print conversation choices")
 					if lines, e := test.FlushOutput(); assert.NoError(t, e) {
 						require.Len(t, lines, NumComments)
-						if stories := g.List("stories"); assert.Equal(t, 1, stories.Len()) {
-							story := stories.Get(0).Object()
+						if stories := g.Query("stories"); assert.True(t, stories.HasNext()) {
+							story := stories.Next()
 
 							// hmmm.... this used to input a number
 							story.Get("player input").SetText("Later")

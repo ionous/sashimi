@@ -19,11 +19,11 @@ type ModelWatcher struct {
 	watcher.GetInstance(gobj.GetId()) != gobj
 })
 */
-func NewModelWatcher(ch PropertyChange, m meta.Model) ModelWatcher {
-	return ModelWatcher{ch, m}
+func NewModelWatcher(ch PropertyChange, m meta.Model) *ModelWatcher {
+	return &ModelWatcher{ch, m}
 }
 
-func (mw ModelWatcher) GetInstance(id ident.Id) (ret meta.Instance, okay bool) {
+func (mw *ModelWatcher) GetInstance(id ident.Id) (ret meta.Instance, okay bool) {
 	//fmt.Println("get instance", id)
 	if i, ok := mw.Model.GetInstance(id); ok {
 		ret, okay = iwatch{mw, i}, true
@@ -31,13 +31,13 @@ func (mw ModelWatcher) GetInstance(id ident.Id) (ret meta.Instance, okay bool) {
 	return
 }
 
-func (mw ModelWatcher) InstanceNum(idx int) meta.Instance {
+func (mw *ModelWatcher) InstanceNum(idx int) meta.Instance {
 	//fmt.Println("instance num", idx)
 	return iwatch{mw, mw.Model.InstanceNum(idx)}
 }
 
 type iwatch struct {
-	mw ModelWatcher
+	mw *ModelWatcher
 	meta.Instance
 }
 
@@ -48,13 +48,13 @@ func (iw iwatch) String() string {
 func (iw iwatch) PropertyNum(idx int) meta.Property {
 	//fmt.Println("property num", idx)
 	p := iw.Instance.PropertyNum(idx)
-	return pwatch{iw, p}
+	return &pwatch{&iw, p}
 }
 
 func (iw iwatch) FindProperty(name string) (ret meta.Property, okay bool) {
 	//fmt.Println("find property", name)
 	if p, ok := iw.Instance.FindProperty(name); ok {
-		ret, okay = pwatch{iw, p}, true
+		ret, okay = &pwatch{&iw, p}, true
 	}
 	return
 }
@@ -62,48 +62,47 @@ func (iw iwatch) FindProperty(name string) (ret meta.Property, okay bool) {
 func (iw iwatch) GetProperty(id ident.Id) (ret meta.Property, okay bool) {
 	//fmt.Println("get property", id)
 	if p, ok := iw.Instance.GetProperty(id); ok {
-		ret, okay = pwatch{iw, p}, true
+		ret, okay = &pwatch{&iw, p}, true
 	}
 	return
 }
 func (iw iwatch) GetPropertyByChoice(choice ident.Id) (ret meta.Property, okay bool) {
 	//fmt.Println("get property by choice", choice)
 	if p, ok := iw.Instance.GetPropertyByChoice(choice); ok {
-		ret, okay = pwatch{iw, p}, true
+		ret, okay = &pwatch{&iw, p}, true
 	}
 	return
 }
 
+// uses pointers re: gopherjs optimization
 type pwatch struct {
-	iw iwatch
+	iw *iwatch
 	meta.Property
 }
 
-func (pw pwatch) String() string {
+func (pw *pwatch) String() string {
 	return pw.GetId().String()
 }
 
-func (pw pwatch) GetValue() meta.Value {
-	//fmt.Println("get value", pw.GetId())
-	return vwatch{pw, pw.Property.GetValue()}
+func (pw *pwatch) GetValue() meta.Value {
+	return &vwatch{pw, pw.Property.GetValue()}
 }
 
 // note: not currently watching arrays
-func (pw pwatch) GetValues() meta.Values {
-	//fmt.Println("get values", pw.GetId())
+func (pw *pwatch) GetValues() meta.Values {
 	return pw.Property.GetValues()
 }
 
 type vwatch struct {
-	pw pwatch
+	pw *pwatch
 	meta.Value
 }
 
-func (vw vwatch) String() string {
-	return fmt.Sprint(vw.pw.GetId().String(), "proxy")
+func (vw *vwatch) String() string {
+	return fmt.Sprint(vw.pw.GetId(), "proxy")
 }
 
-func (vw vwatch) SetNum(val float32) (err error) {
+func (vw *vwatch) SetNum(val float64) (err error) {
 	//fmt.Println("set num", val)
 	if old := vw.Value.GetNum(); old != val {
 		vw.pw.iw.mw.NumChange(
@@ -116,7 +115,7 @@ func (vw vwatch) SetNum(val float32) (err error) {
 	return
 }
 
-func (vw vwatch) SetText(val string) (err error) {
+func (vw *vwatch) SetText(val string) (err error) {
 	//fmt.Println("set text", val)
 	if old := vw.Value.GetText(); old != val {
 		vw.pw.iw.mw.TextChange(
@@ -128,7 +127,7 @@ func (vw vwatch) SetText(val string) (err error) {
 	}
 	return
 }
-func (vw vwatch) SetState(val ident.Id) (err error) {
+func (vw *vwatch) SetState(val ident.Id) (err error) {
 	//fmt.Println("set state", val)
 	if old := vw.Value.GetState(); old != val {
 		vw.pw.iw.mw.StateChange(
@@ -140,7 +139,7 @@ func (vw vwatch) SetState(val ident.Id) (err error) {
 	}
 	return
 }
-func (vw vwatch) SetObject(val ident.Id) (err error) {
+func (vw *vwatch) SetObject(val ident.Id) (err error) {
 	//fmt.Println("set object", val)
 	if old := vw.Value.GetObject(); old != val {
 		var prev, next meta.Instance

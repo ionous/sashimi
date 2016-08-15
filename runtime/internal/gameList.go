@@ -17,16 +17,16 @@ type gameList struct {
 	values meta.Values
 }
 
-func (l gameList) Len() int {
+func (l *gameList) Len() int {
 	return l.values.NumValue()
 }
 
-func (l gameList) Get(i int) (ret G.IValue) {
+func (l *gameList) Get(i int) (ret G.IValue) {
 	if cnt := l.values.NumValue(); i < 0 || i >= cnt {
 		l.log("Get(%d) out of range(%d).", i, cnt)
 		ret = nullValue{}
 	} else {
-		ret = gameValue{
+		ret = &gameValue{
 			l.game,
 			l.path.Index(i),
 			l.ptype & ^meta.ArrayProperty,
@@ -36,7 +36,7 @@ func (l gameList) Get(i int) (ret G.IValue) {
 }
 
 // FIX!!!!
-func (l gameList) Pop() (ret G.IValue) {
+func (l *gameList) Pop() (ret G.IValue) {
 	if cnt := l.values.NumValue(); cnt <= 0 {
 		l.log("Pop() on empty list.")
 		ret = nullValue{}
@@ -44,7 +44,7 @@ func (l gameList) Pop() (ret G.IValue) {
 		ret = l.Get(0)
 		switch l.ptype {
 		case meta.NumProperty:
-			n := make([]float32, cnt-1)
+			n := make([]float64, cnt-1)
 			for i := 0; i < cnt-1; i++ {
 				n[i] = l.values.ValueNum(i + 1).GetNum()
 			}
@@ -75,7 +75,7 @@ func (l gameList) Pop() (ret G.IValue) {
 	return ret
 }
 
-func (l gameList) Contains(in interface{}) (yes bool) {
+func (l *gameList) Contains(in interface{}) (yes bool) {
 	switch l.ptype {
 	default:
 		panic("internal error, unhandled type")
@@ -86,7 +86,7 @@ func (l gameList) Contains(in interface{}) (yes bool) {
 		} else {
 			r := reflect.ValueOf(v)
 			if r.Type().ConvertibleTo(floatType) {
-				num := float32(r.Convert(floatType).Float())
+				num := float64(r.Convert(floatType).Float())
 				yes = containsNum(l.values, num)
 			} else {
 				l.log("Contains, testing unknown value %v", in)
@@ -105,8 +105,6 @@ func (l gameList) Contains(in interface{}) (yes bool) {
 	case meta.ObjectProperty | meta.ArrayProperty:
 		if in == nil {
 			yes = containsObject(l.values, ident.Empty())
-		} else if v, ok := in.(iasv); ok {
-			yes = containsObject(l.values, v.GetId())
 		} else if v, ok := in.(gameValue); ok && v.ptype == meta.ObjectProperty {
 			yes = containsObject(l.values, v.value.GetObject())
 		} else if v, ok := in.(GameObject); ok {
@@ -120,35 +118,35 @@ func (l gameList) Contains(in interface{}) (yes bool) {
 	return
 }
 
-func (l gameList) AppendNum(v float32) {
+func (l *gameList) AppendNum(v float64) {
 	if e := l.values.AppendNum(v); e != nil {
 		l.log("AppendNum(): error appending list: %s.", e)
 	}
 }
-func (l gameList) AppendText(v string) {
+func (l *gameList) AppendText(v string) {
 	if e := l.values.AppendText(v); e != nil {
 		l.log("AppendText(): error appending list: %s.", e)
 	}
 }
-func (l gameList) AppendObject(v G.IObject) {
+func (l *gameList) AppendObject(v G.IObject) {
 	if e := l.values.AppendObject(v.Id()); e != nil {
 		l.log("AppendObject(): error appending list: %s.", e)
 	}
 }
-func (l gameList) Reset() {
+func (l *gameList) Reset() {
 	if e := l.values.ClearValues(); e != nil {
 		l.log("Reset(): error reseting list: %s.", e)
 	}
 }
 
-func (l gameList) log(format string, v ...interface{}) {
+func (l *gameList) log(format string, v ...interface{}) {
 	suffix := fmt.Sprintf(format, v...)
 	l.game.Println(l.path, suffix)
 }
 
 //.................
 
-func containsNum(values meta.Values, v float32) (yes bool) {
+func containsNum(values meta.Values, v float64) (yes bool) {
 	for i := 0; i < values.NumValue(); i++ {
 		if values.ValueNum(i).GetNum() == v {
 			yes = true

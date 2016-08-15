@@ -27,7 +27,7 @@ func (greet GreetedPhrase) With(greeting string) GreetingPhrase {
 }
 
 func (greet GreetedPhrase) WithQuip(greeting G.IObject) GreetingPhrase {
-	greet.greeting = greeting.Id().String()
+	greet.greeting = string(greeting.Id())
 	return GreetingPhrase(greet)
 }
 

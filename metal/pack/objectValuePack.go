@@ -57,7 +57,7 @@ const (
 
 func writePrimitive(w *bytes.Buffer, values *indexer, v interface{}) bool {
 	switch val := v.(type) {
-	case float32:
+	case float64:
 		writeVariant(w, int(Num))
 		binary.Write(w, binary.LittleEndian, val)
 	case string:
@@ -74,7 +74,7 @@ func writePrimitive(w *bytes.Buffer, values *indexer, v interface{}) bool {
 
 func writeArray(w *bytes.Buffer, values *indexer, v interface{}) bool {
 	switch array := v.(type) {
-	case []float32:
+	case []float64:
 		writeVariant(w, int(NumArray))
 		writeVariant(w, len(array))
 		for _, val := range array {
@@ -146,7 +146,7 @@ func Unpack(src ObjectValuePack) (metal.ObjectValueMap, error) {
 				//
 				switch ValueType(kind) {
 				case Num:
-					var v float32
+					var v float64
 					if e := binary.Read(r, binary.LittleEndian, &v); e != nil {
 						err = e
 						panic(e)
@@ -165,9 +165,9 @@ func Unpack(src ObjectValuePack) (metal.ObjectValueMap, error) {
 					if l, e := binary.ReadVarint(r); e != nil {
 						err = e
 					} else {
-						arr := make([]float32, l)
+						arr := make([]float64, l)
 						for i := 0; i < int(l); i++ {
-							var v float32
+							var v float64
 							if e := binary.Read(r, binary.LittleEndian, &v); e != nil {
 								err = e
 								break

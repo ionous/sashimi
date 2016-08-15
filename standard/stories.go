@@ -75,11 +75,11 @@ func init() {
 				}
 				room := g.The("player").Object("whereabouts")
 				if !room.Exists() {
-					rooms := g.List("rooms")
-					if rooms.Len() == 0 {
+					rooms := g.Query("rooms")
+					if !rooms.HasNext() {
 						panic("story has no rooms")
 					}
-					room = rooms.Get(0).Object()
+					room = rooms.Next()
 				}
 				story.Go("set initial position", g.The("player"), room).Then(func(g G.Play) {
 					story.Go("print the banner").Then(func(g G.Play) {

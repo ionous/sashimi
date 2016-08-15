@@ -5,42 +5,36 @@ import (
 	"github.com/ionous/sashimi/util/ident"
 )
 
+// uses pointers re: gopherjs
 type numValue struct{ panicValue }
 
-func (p numValue) SetNum(f float32) error {
+func (p *numValue) SetNum(f float64) error {
 	return p.set(f)
 }
-func (p numValue) GetNum() float32 {
+func (p *numValue) GetNum() float64 {
 	return p.getNum()
 }
 
-type numValues struct{ panicValue }
-
-func (p numValues) SetNum(f float32) error {
-	return p.set(f)
-}
-func (p numValues) GetNum() float32 {
-	return p.getNum()
-}
-
+// uses pointers re: gopherjs
 type textValue struct{ panicValue }
 
-func (p textValue) GetText() string {
+func (p *textValue) GetText() string {
 	return p.getString()
 }
-func (p textValue) SetText(t string) error {
+func (p *textValue) SetText(t string) error {
 	return p.set(t)
 }
 
+// uses pointers re: gopherjs
 type pointerValue struct {
 	panicValue
 }
 
-func (p pointerValue) GetObject() ident.Id {
+func (p *pointerValue) GetObject() ident.Id {
 	return p.getId()
 }
 
-func (p pointerValue) SetObject(id ident.Id) (err error) {
+func (p *pointerValue) SetObject(id ident.Id) (err error) {
 	if p.GetObject() != id {
 		if id.Empty() {
 			err = p.set(id)
@@ -55,7 +49,7 @@ func (p pointerValue) SetObject(id ident.Id) (err error) {
 	return
 }
 
-func (mdl Metal) match(id ident.Id, relates ident.Id) (err error) {
+func (mdl *Metal) match(id ident.Id, relates ident.Id) (err error) {
 	if target, ok := mdl.GetInstance(id); !ok {
 		err = fmt.Errorf("no such instance '%s'", id)
 	} else if ok := mdl.AreCompatible(target.GetParentClass(), relates); !ok {
