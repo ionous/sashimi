@@ -6,6 +6,7 @@ import (
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/ionous/sashimi/util/lang"
+	"strings"
 )
 
 type GenericValue interface{}
@@ -31,7 +32,11 @@ type EventCallbacks map[ident.Id][]M.ListenerModel
 
 // array of properties ( for flat cache ) ordered for linear traversal.
 // children appear first; redudent properties are *not* removed.
-type PropertyList []*M.PropertyModel
+type PropertyEntry struct {
+	*M.PropertyModel
+	lower string
+}
+type PropertyList []*PropertyEntry
 type PropertyCache map[ident.Id]PropertyList
 
 // single/plural properties need some fixing
@@ -40,6 +45,20 @@ const singularString = "singular"
 
 var singularId = ident.MakeId(pluralString)
 var pluralId = ident.MakeId(pluralString)
+
+// var pluralFnv = MakeHash(pluralString)
+// var singularFnv = MakeHash(singularString)
+
+//type StringHash uint64
+
+// func LowerHash(s string) StringHash {
+// 	return MakeHash(strings.ToLower(s))
+// }
+// func MakeHash(s string) StringHash {
+// 	n := fnv.New64a()
+// 	n.Write([]byte(s))
+// 	return StringHash(n.Sum64())
+// }
 
 func merge(base, more PropertyList) (ret PropertyList) {
 	ret = base
@@ -84,12 +103,12 @@ func (mdl *Metal) NumEvent() int {
 func (mdl *Metal) EventNum(i int) meta.Event {
 	// panics on out of range
 	events := mdl.eventList()
-	return eventInfo{mdl, events[i]}
+	return &eventInfo{mdl, events[i]}
 }
 
 func (mdl *Metal) GetEvent(id ident.Id) (ret meta.Event, okay bool) {
 	if a, ok := mdl.Events[id]; ok {
-		ret, okay = eventInfo{mdl, a}, true
+		ret, okay = &eventInfo{mdl, a}, true
 	}
 	return
 }
@@ -186,6 +205,13 @@ func (mdl *Metal) AreCompatible(child, parent ident.Id) (okay bool) {
 // hrmmm...
 func (mdl *Metal) MatchNounName(n string, f func(ident.Id) bool) (int, bool) {
 	return mdl.Aliases.Try(n, f)
+	// id := ident.Id(n)
+	// if _, ok := mdl.Instances[id]; ok {
+	// 	okay = f(id)
+	// } else {
+	// 	x, okay = mdl.Aliases.Try(n, f)
+	// }
+	// return
 }
 
 func (mdl *Metal) makeInstance(n *M.InstanceModel) meta.Instance {
@@ -264,7 +290,9 @@ func (mdl *Metal) propertyList(cls *M.ClassModel) (ret PropertyList) {
 
 func (mdl *Metal) makePropertyList(cls *M.ClassModel) (ret PropertyList) {
 	for i, _ := range cls.Properties {
-		ret = append(ret, &cls.Properties[i])
+		p := &cls.Properties[i]
+		e := &PropertyEntry{p, strings.ToLower(p.Name)}
+		ret = append(ret, e)
 	}
 	return
 }

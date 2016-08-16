@@ -9,9 +9,9 @@ import (
 type ActionMap map[ident.Id]*ActionInfo
 
 // FIX: i kind of think all maps with the string ids should have this
-func (this ActionMap) FindActionByName(name string) (*ActionInfo, bool) {
+func (acts ActionMap) FindActionByName(name string) (*ActionInfo, bool) {
 	id := MakeStringId(name)
-	act, ok := this[id]
+	act, ok := acts[id]
 	return act, ok
 }
 

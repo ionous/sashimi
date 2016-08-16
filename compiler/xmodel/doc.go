@@ -1,5 +1,6 @@
 /*
-Model provides a post-compiled representation of the scripts.
+package xmodel provides a post-compiled representation of the scripts. It is used internally by the compiler, and has been superseded by sashimi/compiler/model.
+
 ( It should probably be assumed to be internally consistent. )
 The table version of things would also build,merge into this same code.
 The script callbacks currently must always be re-compiled.

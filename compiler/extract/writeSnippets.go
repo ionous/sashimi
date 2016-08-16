@@ -19,7 +19,6 @@ func WriteSnippets(w io.Writer, cx *CallExtractor, packages ...string) (err erro
 		} else {
 			snippets := b.Bytes()
 			if p, e := format.Source(snippets); e != nil {
-				//err = fmt.Errorf("error formatting source: %s", e)
 				w.Write(snippets)
 				panic(e)
 			} else {

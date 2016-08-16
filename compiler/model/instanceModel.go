@@ -1,8 +1,8 @@
 package model
 
 import (
-	"fmt"
 	"github.com/ionous/sashimi/util/ident"
+	"github.com/ionous/sashimi/util/sbuf"
 )
 
 type InstanceModel struct {
@@ -20,7 +20,15 @@ type Values map[ident.Id]Value
 // Text as string.
 type Value interface{}
 
-func (inst InstanceModel) String() string {
-	// FIX: inst looks silly when singular starts with a vowel.
-	return fmt.Sprintf("%s(%s)", inst.Id, inst.Class)
+func (n *InstanceModel) String() string {
+	return sbuf.New().S(string(n.Id)).R('(').S(string(n.Class)).R(')').String()
+}
+func (n *InstanceModel) GetId() ident.Id {
+	return n.Id
+}
+func (n *InstanceModel) GetParentClass() ident.Id {
+	return n.Class
+}
+func (n *InstanceModel) GetOriginalName() string {
+	return n.Name
 }

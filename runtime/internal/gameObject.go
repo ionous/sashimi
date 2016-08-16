@@ -72,7 +72,11 @@ func (oa GameObject) IsNow(state string) {
 	}
 }
 
-func (oa GameObject) Get(prop string) (ret G.IValue) {
+func (oa GameObject) Get(prop string) G.IValue {
+	return oa.get(prop)
+}
+
+func (oa *GameObject) get(prop string) (ret G.IValue) {
 	if p, ok := oa.gobj.FindProperty(prop); !ok {
 		oa.log("Get(%s): no such property", prop)
 		ret = nullValue{}
@@ -101,33 +105,33 @@ func (oa GameObject) List(prop string) (ret G.IList) {
 
 // Num value of the named property.
 func (oa GameObject) Num(prop string) (ret float64) {
-	return oa.Get(prop).Num()
+	return oa.get(prop).Num()
 }
 
 // SetNum changes the value of an existing number property.
 func (oa GameObject) SetNum(prop string, value float64) {
-	oa.Get(prop).SetNum(value)
+	oa.get(prop).SetNum(value)
 }
 
 // Text value of the named property ( expanding any templated text. )
 // ( interestingly, inform seems to error when trying to store or manipulate templated text. )
 func (oa GameObject) Text(prop string) (ret string) {
-	return oa.Get(prop).Text()
+	return oa.get(prop).Text()
 }
 
 // SetText changes the value of an existing text property.
 func (oa GameObject) SetText(prop string, text string) {
-	oa.Get(prop).SetText(text)
+	oa.get(prop).SetText(text)
 }
 
 // Object returns a related object.
 func (oa GameObject) Object(prop string) (ret G.IObject) {
-	return oa.Get(prop).Object()
+	return oa.get(prop).Object()
 }
 
 // Set changes an object relationship.
 func (oa GameObject) Set(prop string, object G.IObject) {
-	oa.Get(prop).SetObject(object)
+	oa.get(prop).SetObject(object)
 }
 
 // ObjectList returns a list of related objects.
@@ -175,7 +179,7 @@ type NilPromise struct{}
 func (NilPromise) Then(G.Callback) {}
 
 // FIX: other variants of this exist in runtime.Game
-func (oa GameObject) queueNamedAction(action string, objects []G.IObject) (ret G.IPromise, err error) {
+func (oa *GameObject) queueNamedAction(action string, objects []G.IObject) (ret G.IPromise, err error) {
 	// FUTURE: ast introspection to find whether the action exists..
 	actionId := MakeStringId(action)
 	if act, ok := oa.Model.GetAction(actionId); !ok {
@@ -201,7 +205,7 @@ func (oa GameObject) queueNamedAction(action string, objects []G.IObject) (ret G
 	return
 }
 
-func (oa GameObject) log(format string, v ...interface{}) {
+func (oa *GameObject) log(format string, v ...interface{}) {
 	suffix := fmt.Sprintf(format, v...)
 	prefix := oa.gobj.GetId()
 	oa.Println(prefix, suffix)

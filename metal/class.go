@@ -1,7 +1,7 @@
 package metal
 
 import (
-	"fmt"
+	"errors"
 	M "github.com/ionous/sashimi/compiler/model"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
@@ -45,7 +45,7 @@ func (c *classInfo) PropertyNum(i int) meta.Property {
 
 func (c *classInfo) propertyNum(i int) *M.PropertyModel {
 	props := c.mdl.propertyList(c.ClassModel)
-	return props[i] // panics on out of range
+	return props[i].PropertyModel // panics on out of range
 }
 
 func (c *classInfo) GetProperty(id ident.Id) (ret meta.Property, okay bool) {
@@ -63,18 +63,20 @@ func (c *classInfo) FindProperty(s string) (ret meta.Property, okay bool) {
 }
 
 func (c *classInfo) getPropertyByName(name string) (ret *M.PropertyModel, okay bool) {
-	// hack for singular and plural properties, note: they wont show up in enumeration...
+	// FIX: hack for singular and plural properties, note: they wont show up in enumeration...
 	// ie. asking for FindProperty("plural"), or FindProperty("singular")
 	// these really should be generated at compile time or something
-	if strings.EqualFold(name, pluralString) {
-		ret, okay = &M.PropertyModel{Id: pluralId, Type: M.TextProperty}, true
-	} else if strings.EqualFold(name, singularString) {
-		ret, okay = &M.PropertyModel{Id: singularId, Type: M.TextProperty}, true
-	} else {
-		for _, p := range c.mdl.propertyList(c.ClassModel) {
-			if strings.EqualFold(name, p.Name) {
-				ret, okay = p, true
-				break
+	if name := strings.ToLower(name); true {
+		if name == pluralString {
+			ret, okay = &M.PropertyModel{Id: pluralId, Type: M.TextProperty}, true
+		} else if name == singularString {
+			ret, okay = &M.PropertyModel{Id: singularId, Type: M.TextProperty}, true
+		} else {
+			for _, p := range c.mdl.propertyList(c.ClassModel) {
+				if name == p.lower {
+					ret, okay = p.PropertyModel, true
+					break
+				}
 			}
 		}
 	}
@@ -90,7 +92,7 @@ func (c *classInfo) getPropertyById(id ident.Id) (ret *M.PropertyModel, okay boo
 	} else {
 		for _, p := range c.mdl.propertyList(c.ClassModel) {
 			if id == p.Id {
-				ret, okay = p, true
+				ret, okay = p.PropertyModel, true
 				break
 			}
 		}
@@ -108,11 +110,11 @@ func (c *classInfo) GetPropertyByChoice(choice ident.Id) (ret meta.Property, oka
 func (c *classInfo) getPropertyByChoice(id ident.Id) (ret *M.PropertyModel, okay bool) {
 	for _, p := range c.mdl.propertyList(c.ClassModel) {
 		if p.Type == M.EnumProperty {
-			if enum, ok := c.mdl.Enumerations[p.Id]; !ok {
-				panic(fmt.Sprintf("internal error, couldnt find enumeration '%s.%s'", c.Id, p.Id))
-			} else if idx := enum.ChoiceToIndex(id); idx > 0 {
-				ret, okay = p, true
-				break
+			if enum, ok := c.mdl.Enumerations[p.Id]; ok {
+				if idx := enum.ChoiceToIndex(id); idx > 0 {
+					ret, okay = p.PropertyModel, true
+					break
+				}
 			}
 		}
 	}
@@ -141,5 +143,5 @@ func (c *classInfo) getValue(p *M.PropertyModel) (ret GenericValue) {
 }
 
 func (c *classInfo) setValue(p *M.PropertyModel, v GenericValue) error {
-	panic(fmt.Errorf("classes dont support set property. %s.%v", c.Id, p.Id))
+	return errors.New("classes dont support set property")
 }

@@ -1,7 +1,7 @@
 package framework
 
 import (
-	"fmt"
+	"errors"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/parser"
 	R "github.com/ionous/sashimi/runtime"
@@ -41,13 +41,13 @@ func (sc *StandardCore) Frame() (ret int) {
 // NewStandardGame creates a game which is based on the standard rules.
 func NewStandardCore(game R.Game) (ret *StandardCore, err error) {
 	if story, ok := meta.FindFirstOf(game.Model, ident.MakeId("stories")); !ok {
-		err = fmt.Errorf("couldn't find story object")
+		err = errors.New("couldn't find story object")
 	} else if turnCount, ok := story.FindProperty("turn count"); !ok {
-		err = fmt.Errorf("couldn't find turn count property")
+		err = errors.New("couldn't find turn count property")
 	} else if playerInput, ok := story.FindProperty("player input"); !ok {
-		err = fmt.Errorf("couldn't find player input property")
+		err = errors.New("couldn't find player input property")
 	} else if completed, ok := story.GetPropertyByChoice(ident.MakeId("completed")); !ok {
-		err = fmt.Errorf("couldn't find completed property")
+		err = errors.New("couldn't find completed property")
 	} else {
 		core := &StandardCore{
 			Game:        game,
@@ -88,7 +88,7 @@ func (sg *StandardCore) HandleInput(in string) (err error) {
 				err = e
 			} else {
 				if _, matcher, e := parser.ParseInput(in); e != nil {
-					fmt.Println("error parsing input", in, e)
+					log.Println("error parsing input", in, e)
 					err = e
 				} else if act, objs, e := matcher.(*parse.ObjectMatcher).GetMatch(); e != nil {
 					err = e

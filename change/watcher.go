@@ -46,13 +46,11 @@ func (iw iwatch) String() string {
 }
 
 func (iw iwatch) PropertyNum(idx int) meta.Property {
-	//fmt.Println("property num", idx)
 	p := iw.Instance.PropertyNum(idx)
 	return &pwatch{&iw, p}
 }
 
 func (iw iwatch) FindProperty(name string) (ret meta.Property, okay bool) {
-	//fmt.Println("find property", name)
 	if p, ok := iw.Instance.FindProperty(name); ok {
 		ret, okay = &pwatch{&iw, p}, true
 	}
@@ -60,14 +58,12 @@ func (iw iwatch) FindProperty(name string) (ret meta.Property, okay bool) {
 }
 
 func (iw iwatch) GetProperty(id ident.Id) (ret meta.Property, okay bool) {
-	//fmt.Println("get property", id)
 	if p, ok := iw.Instance.GetProperty(id); ok {
 		ret, okay = &pwatch{&iw, p}, true
 	}
 	return
 }
 func (iw iwatch) GetPropertyByChoice(choice ident.Id) (ret meta.Property, okay bool) {
-	//fmt.Println("get property by choice", choice)
 	if p, ok := iw.Instance.GetPropertyByChoice(choice); ok {
 		ret, okay = &pwatch{&iw, p}, true
 	}

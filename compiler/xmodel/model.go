@@ -4,8 +4,7 @@ import (
 	"github.com/ionous/sashimi/compiler/model/table"
 )
 
-// Model: compiler's original output
-// FIX: as much as possible this should, overtime, become the compiler/model format.
+// Model the compiler's original output
 type Model struct {
 	// rule like:
 	Classes       ClassMap

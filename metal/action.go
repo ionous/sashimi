@@ -24,7 +24,7 @@ func (a actionInfo) GetEvent() (ret meta.Event) {
 	if e, ok := a.mdl.Events[a.EventId]; !ok {
 		panic(fmt.Sprintf("internal error, no event found for action %s", a.EventId))
 	} else {
-		ret = eventInfo{a.mdl, e}
+		ret = &eventInfo{a.mdl, e}
 	}
 	return
 }

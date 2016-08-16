@@ -11,14 +11,14 @@ type listenersInfo struct {
 	captures  bool
 }
 
-func (l listenersInfo) NumListener() int {
+func (l *listenersInfo) NumListener() int {
 	return len(l.callbacks)
 }
 
-func (l listenersInfo) ListenerNum(i int) meta.Listener {
+func (l *listenersInfo) ListenerNum(i int) meta.Listener {
 	// panics out of range
 	cb := &l.callbacks[i]
-	return listenerInfo{cb}
+	return &listenerInfo{cb}
 }
 
 type listenerInfo struct {
@@ -26,22 +26,22 @@ type listenerInfo struct {
 }
 
 // GetInstance can return Empty()
-func (l listenerInfo) GetInstance() ident.Id {
+func (l *listenerInfo) GetInstance() ident.Id {
 	return l.Instance
 }
 
 // GetClass always returns a valid class id.
-func (l listenerInfo) GetClass() ident.Id {
+func (l *listenerInfo) GetClass() ident.Id {
 	return l.Class
 }
 
 // GetCallback() returns a valid callback id.
-func (l listenerInfo) GetCallback() ident.Id {
+func (l *listenerInfo) GetCallback() ident.Id {
 	return l.Callback
 }
 
 //
-func (l listenerInfo) GetOptions() meta.CallbackOptions {
+func (l *listenerInfo) GetOptions() meta.CallbackOptions {
 	var opt meta.CallbackOptions
 	if l.UseTargetOnly() {
 		opt |= meta.UseTargetOnly

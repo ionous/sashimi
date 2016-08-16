@@ -13,6 +13,10 @@ import (
 // Therefore, Id cannot store its parts as an []string. they must be joined first.
 type Id string
 
+func (id Id) Raw() string {
+	return string(id)
+}
+
 // String representation of the id (ex. for fmt), currently TitleCase.
 func (id Id) String() (ret string) {
 	if id.Empty() {

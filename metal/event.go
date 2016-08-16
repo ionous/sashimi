@@ -11,15 +11,15 @@ type eventInfo struct {
 	*M.EventModel
 }
 
-func (e eventInfo) GetId() ident.Id {
+func (e *eventInfo) GetId() ident.Id {
 	return e.Id
 }
 
-func (e eventInfo) GetEventName() string {
+func (e *eventInfo) GetEventName() string {
 	return e.Name
 }
 
-func (e eventInfo) GetListeners(capture bool) (ret meta.Listeners, okay bool) {
+func (e *eventInfo) GetListeners(capture bool) (ret meta.Listeners, okay bool) {
 	var callbacks M.EventModelCallbacks
 	if capture {
 		callbacks = e.Capture
@@ -29,7 +29,7 @@ func (e eventInfo) GetListeners(capture bool) (ret meta.Listeners, okay bool) {
 	if len(callbacks) == 0 {
 		ret = meta.NoListeners{}
 	} else {
-		ret = listenersInfo{callbacks, capture}
+		ret = &listenersInfo{callbacks, capture}
 		okay = true
 	}
 	return

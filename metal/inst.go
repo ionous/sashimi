@@ -7,23 +7,12 @@ import (
 )
 
 // FIX? move to internal so that this can show up in documentation.
+// NOTE: because of GameObject equality, cant be pointer receiver.
 type instInfo struct {
 	mdl *Metal
 	*M.InstanceModel
 }
 
-func (n instInfo) String() string {
-	return n.Id.String()
-}
-func (n instInfo) GetId() ident.Id {
-	return n.Id
-}
-func (n instInfo) GetParentClass() ident.Id {
-	return n.Class
-}
-func (n instInfo) GetOriginalName() string {
-	return n.Name
-}
 func (n instInfo) NumProperty() int {
 	return n.getClassInfo().NumProperty()
 }
