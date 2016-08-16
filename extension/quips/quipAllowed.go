@@ -22,8 +22,8 @@ func (qm QuipMemory) IsQuipAllowed(quip G.IObject) bool {
 // A quip requirement can allow or disallow a given quip based on whether the player knows a specific fact.
 func (qm QuipMemory) quipDisallowed(quip G.IObject) (disallowed bool) {
 	// quip | fact | premits
-	for reqs := qm.g.Query("quip requirements"); reqs.HasNext(); {
-		if req := reqs.Next(); req.Get("quip").Object() == quip {
+	for reqs := qm.g.Query("quip requirements", true); reqs.HasNext(); {
+		if req := reqs.Next(); quip.Equals(req.Get("quip").Object()) {
 			fact, permits := req.Get("fact").Object(), req.Is("permitted")
 			recollects := qm.Recollects(fact)
 			// the opposite behavior of required is to exclude the use of the quip

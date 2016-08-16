@@ -7,6 +7,7 @@ import (
 	"github.com/ionous/sashimi/util/ident"
 	"io"
 	"io/ioutil"
+	"strings"
 )
 
 type CallExtractor struct {
@@ -76,10 +77,15 @@ func (cx *CallExtractor) CompileCallback(cb G.Callback) (ret ident.Id, err error
 					if old, exists := cx.snippets[str]; exists {
 						err = fmt.Errorf("function already exists %s %s %s", x, old, bytes)
 					} else {
-						cx.snippets[str] = Snippet{
-							File:    m.File,
-							Line:    m.Line,
-							Content: string(bytes),
+						content := string(bytes)
+						if strings.Contains(content, "==") || strings.Contains(content, "!=") {
+							err = fmt.Errorf("function contains equal %s %d", file, line)
+						} else {
+							cx.snippets[str] = Snippet{
+								File:    m.File,
+								Line:    m.Line,
+								Content: content,
+							}
 						}
 					}
 				}

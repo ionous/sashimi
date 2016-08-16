@@ -70,6 +70,10 @@ func (null _Null) IsNow(c string) {
 	null.println("IsNow", c)
 }
 
+func (null _Null) Equals(r G.IObject) bool {
+	return false
+}
+
 //
 func (null _Null) Get(p string) G.IValue {
 	null.println("Get", p)

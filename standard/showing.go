@@ -23,7 +23,7 @@ func init() {
 			// "you can't show what you haven't got"
 			Before("showing it to").Always(func(g G.Play) {
 				presenter, _, prop := g.The("action.Source"), g.The("action.Target"), g.The("action.Context")
-				if carrier := Carrier(prop); carrier != presenter {
+				if carrier := Carrier(prop); !carrier.Equals(presenter) {
 					g.Say("You aren't holding", ArticleName(g, "action.Context", NameFullStop))
 					g.StopHere()
 				}
@@ -31,7 +31,7 @@ func init() {
 			// "convert show to yourself to examine"
 			Before("showing it to").Always(func(g G.Play) {
 				presenter, receiver, prop := g.The("action.Source"), g.The("action.Target"), g.The("action.Context")
-				if presenter == receiver {
+				if presenter.Equals(receiver) {
 					presenter.Go("examine it", prop)
 					g.StopHere()
 				}

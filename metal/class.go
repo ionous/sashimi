@@ -1,7 +1,6 @@
 package metal
 
 import (
-	"errors"
 	M "github.com/ionous/sashimi/compiler/model"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
@@ -66,28 +65,28 @@ func (c *classInfo) getPropertyByName(name string) (ret *M.PropertyModel, okay b
 	// FIX: hack for singular and plural properties, note: they wont show up in enumeration...
 	// ie. asking for FindProperty("plural"), or FindProperty("singular")
 	// these really should be generated at compile time or something
-	if name := strings.ToLower(name); true {
-		if name == pluralString {
-			ret, okay = &M.PropertyModel{Id: pluralId, Type: M.TextProperty}, true
-		} else if name == singularString {
-			ret, okay = &M.PropertyModel{Id: singularId, Type: M.TextProperty}, true
-		} else {
-			for _, p := range c.mdl.propertyList(c.ClassModel) {
-				if name == p.lower {
-					ret, okay = p.PropertyModel, true
-					break
-				}
+	lower := strings.ToLower(name)
+	if lower == pluralString {
+		ret, okay = &M.PropertyModel{Id: pluralId, Type: M.TextProperty}, true
+	} else if lower == singularString {
+		ret, okay = &M.PropertyModel{Id: singularId, Type: M.TextProperty}, true
+	} else {
+		for _, p := range c.mdl.propertyList(c.ClassModel) {
+			if lower == p.lower {
+				ret, okay = p.PropertyModel, true
+				break
 			}
 		}
 	}
+
 	return
 }
 
 func (c *classInfo) getPropertyById(id ident.Id) (ret *M.PropertyModel, okay bool) {
 	// hack for singular and plural properties, note: they wont show up in enumeration...
-	if ident.Compare(id, ident.Join(c.Id, pluralId)) == 0 {
+	if id.Equals(ident.Join(c.Id, pluralId)) {
 		ret, okay = &M.PropertyModel{Id: pluralId, Type: M.TextProperty}, true
-	} else if ident.Compare(id, ident.Join(c.Id, singularId)) == 0 {
+	} else if id.Equals(ident.Join(c.Id, singularId)) {
 		ret, okay = &M.PropertyModel{Id: singularId, Type: M.TextProperty}, true
 	} else {
 		for _, p := range c.mdl.propertyList(c.ClassModel) {
@@ -143,5 +142,6 @@ func (c *classInfo) getValue(p *M.PropertyModel) (ret GenericValue) {
 }
 
 func (c *classInfo) setValue(p *M.PropertyModel, v GenericValue) error {
-	return errors.New("classes dont support set property")
+	// test current expect full on panic, even through we return an error... hmmm...
+	panic("classes dont support set property")
 }

@@ -201,10 +201,10 @@ func init() {
 		s.The("objects",
 			Can("report look under").And("reporting look under").RequiresOne("actor"),
 			To("report look under", func(g G.Play) {
-				source, actor := g.The("action.Source"), g.The("action.Target")
-				if g.The("player") == actor {
+				if actor := g.The("action.Target"); g.The("player").Equals(actor) {
 					g.Say("You find nothing of interest.")
 				} else {
+					source := g.The("action.Source")
 					g.Say(actor.Text("Name"), "looks under the", source.Text("Name"), ".")
 				}
 			}))
@@ -231,7 +231,7 @@ func init() {
 							if obj.Is("hinged") {
 								status = "closed"
 							}
-						} else if list := obj.ObjectList("contents"); len(list) == 0 {
+						} else if list := obj.ObjectList("contents"); !(len(list) > 0) {
 							if obj.Is("transparent") || obj.Is("open") {
 								status = "empty"
 							}

@@ -37,6 +37,10 @@ func Carrier(obj G.IObject) (carrier G.IObject) {
 	return
 }
 
+func IsNil(i interface{}) bool {
+	return i == nil
+}
+
 // find the location ( the outermost room ) of the passed object
 func Locate(obj G.IObject) (where G.IObject) {
 	if p, ok := _location(obj); ok {

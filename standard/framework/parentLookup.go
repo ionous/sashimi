@@ -16,10 +16,10 @@ var Containment = map[ident.Id]ident.Id{
 	"objects-enclosure":   "containers-contents",
 }
 
-func NewParentLookup(mdl meta.Model) ParentLookup {
-	return ParentLookup{mdl}
+func NewParentLookup(mdl meta.Model) *ParentLookup {
+	return &ParentLookup{mdl}
 }
-func (p ParentLookup) LookupParent(inst meta.Instance) (ret meta.Instance, rel meta.Property, okay bool) {
+func (p *ParentLookup) LookupParent(inst meta.Instance) (ret meta.Instance, rel meta.Property, okay bool) {
 	if p.mdl.AreCompatible(inst.GetParentClass(), objects) {
 		for wse, _ := range Containment {
 			if prop, ok := inst.GetProperty(wse); ok {
@@ -36,7 +36,7 @@ func (p ParentLookup) LookupParent(inst meta.Instance) (ret meta.Instance, rel m
 }
 
 // FIX: see also: Enclosure. anyway to share?
-func (p ParentLookup) LookupRoot(inst meta.Instance) (ret meta.Instance) {
+func (p *ParentLookup) LookupRoot(inst meta.Instance) (ret meta.Instance) {
 	ret = inst
 	for {
 		if obj, _, ok := p.LookupParent(ret); !ok {

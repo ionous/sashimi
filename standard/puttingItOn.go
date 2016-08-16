@@ -25,7 +25,7 @@ func init() {
 			//  can't put what isn't held
 			Before("putting it onto").Always(func(g G.Play) {
 				actor, prop := g.The("action.Source"), g.The("action.Context")
-				if carrier := Carrier(prop); carrier != actor {
+				if carrier := Carrier(prop); !carrier.Equals(actor) {
 					g.Say("You aren't holding", ArticleName(g, "action.Context", NameFullStop))
 					g.StopHere()
 				}
@@ -33,7 +33,7 @@ func init() {
 			//  can't put something onto itself
 			Before("putting it onto").Always(func(g G.Play) {
 				supporter, prop := g.The("action.Target"), g.The("action.Context")
-				if supporter == prop {
+				if supporter.Equals(prop) {
 					g.Say("You can't put something onto itself.")
 					g.StopHere()
 				}

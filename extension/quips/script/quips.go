@@ -63,7 +63,7 @@ func Describe_Quips(s *Script) {
 		To("be greeted by", func(g G.Play) {
 			c := quips.Converse(g)
 			if npc := c.Actor().Object(); npc.Exists() {
-				if npc == g.The("action.source") {
+				if npc.Equals(g.The("action.source")) {
 					g.Say("You're already speaking to them!")
 				} else {
 					g.Say("You're already speaking to someone!")
@@ -119,7 +119,7 @@ func Describe_Quips(s *Script) {
 		To("report comment", func(g G.Play) {
 			// NOTE: commenting is always the player.
 			talker, quip := g.The("actor"), g.The("quip")
-			if comment := quip.Text("comment"); comment != "" {
+			if comment := quip.Text("comment"); len(comment) > 0 {
 				talker.Says(comment)
 			}
 			quip.Go("follow up with", g.The("actor"))
@@ -133,12 +133,12 @@ func Describe_Quips(s *Script) {
 		Can("be discussed").And("being discussed").RequiresOne("actor"),
 		To("be discussed", func(g G.Play) {
 			talker, quip := g.The("actor"), g.The("quip")
-			if reply := quip.Text("reply"); reply != "" {
+			if reply := quip.Text("reply"); len(reply) > 0 {
 				talker.Says(reply)
 			}
 			c := quips.Converse(g)
 			c.History().PushQuip(quip)
-			if topic := quip.Get("topic").Object(); topic != g.The("player") {
+			if topic := quip.Get("topic").Object(); !topic.Equals(g.The("player")) {
 				c.Get("topic").SetObject(topic)
 			}
 			facts.PlayerMemory(g).Learns(quip)
@@ -152,8 +152,8 @@ func Describe_Quips(s *Script) {
 		To("print conversation choices", func(g G.Play) {
 			if quips.Converse(g).Conversing() {
 				player, talker := g.The("player"), g.The("action.Source")
-				if player == talker {
-					if quips := quips.PlayerQuips(g); len(quips) == 0 {
+				if player.Equals(talker) {
+					if quips := quips.PlayerQuips(g); !(len(quips) > 0) {
 						player.Go("depart") // player rejected candy
 					} else {
 						//FIX: my theory has been, that like the graphics display, the text display should be grabbing events. theres a balance here -- do you g.say the header for the player name generically? or only in the console? how much becomes "output" specific in any given event? maybe not too much, just occasionaly things like these menus. in which case: no special header.
@@ -176,7 +176,7 @@ func Describe_Quips(s *Script) {
 		When("being offered").Always(func(g G.Play) {
 			quip := g.The("quip")
 			slug := quip.Get("slug").Text()
-			if slug == "" {
+			if !(len(slug) > 0) {
 				slug = quip.Get("comment").Text()
 				lines := strings.Split(slug, lang.NewLine)
 				if len(lines) > 0 {

@@ -20,7 +20,7 @@ func init() {
 			Can("report listen").And("reporting listen").RequiresOne("actor"),
 			To("report listen", func(g G.Play) {
 				actor := g.The("action.Target")
-				if g.The("player") == actor {
+				if g.The("player").Equals(actor) {
 					g.Say("You hear nothing unexpected.")
 				} else {
 					g.Say(actor.Text("Name"), "listens.")

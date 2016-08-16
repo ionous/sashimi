@@ -16,10 +16,10 @@ type CommandInput struct {
 // Nouns returns an array of target and context strings, skipping empty strings.
 func (cmd *CommandInput) Nouns() []string {
 	nouns := make([]string, 0, 3)
-	if n := cmd.Target; n != "" {
+	if n := cmd.Target; len(n) > 0 {
 		nouns = append(nouns, n)
 	}
-	if n := cmd.Context; n != "" {
+	if n := cmd.Context; len(n) > 0 {
 		nouns = append(nouns, n)
 	}
 	return nouns

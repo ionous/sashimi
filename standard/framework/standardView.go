@@ -11,7 +11,7 @@ import (
 type StandardView struct {
 	mdl          meta.Model
 	player, room ident.Id
-	ParentLookup
+	*ParentLookup
 	visible map[ident.Id]StandardVisibilty
 }
 

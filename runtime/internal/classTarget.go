@@ -32,7 +32,6 @@ func (ct ClassTarget) String() string {
 // Walk up the class hierarchy; when we reach the end, move to the next instance.
 // (from E.ITarget)
 func (ct ClassTarget) Parent() (ret E.ITarget, okay bool) {
-
 	if cls, ok := ct.from.game.Model.GetClass(ct.class); ok {
 		ret = ClassTarget{ct.from, cls.GetParentClass(), ct.upObject}
 		okay = true

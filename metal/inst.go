@@ -8,35 +8,36 @@ import (
 
 // FIX? move to internal so that this can show up in documentation.
 // NOTE: because of GameObject equality, cant be pointer receiver.
+// now: it can be because of .Equals
 type instInfo struct {
 	mdl *Metal
 	*M.InstanceModel
 }
 
-func (n instInfo) NumProperty() int {
+func (n *instInfo) NumProperty() int {
 	return n.getClassInfo().NumProperty()
 }
 
-func (n instInfo) PropertyNum(i int) (ret meta.Property) {
+func (n *instInfo) PropertyNum(i int) (ret meta.Property) {
 	p := n.getClassInfo().propertyNum(i)
 	return n.makeProperty(p)
 }
 
-func (n instInfo) GetProperty(id ident.Id) (ret meta.Property, okay bool) {
+func (n *instInfo) GetProperty(id ident.Id) (ret meta.Property, okay bool) {
 	if p, ok := n.getClassInfo().getPropertyById(id); ok {
 		ret, okay = n.makeProperty(p), true
 	}
 	return
 }
 
-func (n instInfo) FindProperty(s string) (ret meta.Property, okay bool) {
+func (n *instInfo) FindProperty(s string) (ret meta.Property, okay bool) {
 	if p, ok := n.getClassInfo().getPropertyByName(s); ok {
 		ret, okay = n.makeProperty(p), true
 	}
 	return
 }
 
-func (n instInfo) GetPropertyByChoice(id ident.Id) (ret meta.Property, okay bool) {
+func (n *instInfo) GetPropertyByChoice(id ident.Id) (ret meta.Property, okay bool) {
 	if p, ok := n.getClassInfo().getPropertyByChoice(id); ok {
 		ret, okay = n.makeProperty(p), true
 	}

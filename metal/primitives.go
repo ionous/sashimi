@@ -35,7 +35,7 @@ func (p *pointerValue) GetObject() ident.Id {
 }
 
 func (p *pointerValue) SetObject(id ident.Id) (err error) {
-	if p.GetObject() != id {
+	if !id.Equals(p.GetObject()) {
 		if id.Empty() {
 			err = p.set(id)
 		} else {

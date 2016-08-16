@@ -75,7 +75,7 @@ func init() {
 				}
 				room := g.The("player").Object("whereabouts")
 				if !room.Exists() {
-					rooms := g.Query("rooms")
+					rooms := g.Query("rooms", false)
 					if !rooms.HasNext() {
 						panic("story has no rooms")
 					}

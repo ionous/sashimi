@@ -39,7 +39,7 @@ func init() {
 			// "convert give to yourself to examine"
 			Before("giving it to").Always(func(g G.Play) {
 				presenter, receiver := g.The("action.Source"), g.The("action.Target")
-				if presenter == receiver {
+				if presenter.Equals(receiver) {
 					g.Say("You can't give to yourself")
 					g.StopHere()
 				}
@@ -56,7 +56,7 @@ func init() {
 			// "you can't give what you haven't got"
 			Before("giving it to").Always(func(g G.Play) {
 				presenter, prop := g.The("action.Source"), g.The("action.Context")
-				if carrier := Carrier(prop); carrier != presenter {
+				if carrier := Carrier(prop); !carrier.Equals(presenter) {
 					g.Say("You aren't holding", ArticleName(g, "action.Context", NameFullStop))
 					g.StopHere()
 				}

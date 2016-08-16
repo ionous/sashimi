@@ -18,10 +18,10 @@ func TestMetal(t *testing.T) {
 	// test plural
 	if cls, ok := m.GetClass(ident.MakeId("TestClasses")); assert.True(t, ok, "get test class") {
 		if p, ok := cls.FindProperty("plural"); assert.True(t, ok) {
-			require.EqualValues(t, "test classes", p.GetValue().GetText())
+			require.EqualValues(t, "test classes", p.GetValue().GetText(), "plural test")
 		}
 		if p, ok := cls.FindProperty("singular"); assert.True(t, ok) {
-			require.EqualValues(t, "test class", p.GetValue().GetText())
+			require.EqualValues(t, "test class", p.GetValue().GetText(), "singular test")
 		}
 	}
 

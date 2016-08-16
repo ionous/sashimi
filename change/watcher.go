@@ -26,14 +26,13 @@ func NewModelWatcher(ch PropertyChange, m meta.Model) *ModelWatcher {
 func (mw *ModelWatcher) GetInstance(id ident.Id) (ret meta.Instance, okay bool) {
 	//fmt.Println("get instance", id)
 	if i, ok := mw.Model.GetInstance(id); ok {
-		ret, okay = iwatch{mw, i}, true
+		ret, okay = &iwatch{mw, i}, true
 	}
 	return
 }
 
 func (mw *ModelWatcher) InstanceNum(idx int) meta.Instance {
-	//fmt.Println("instance num", idx)
-	return iwatch{mw, mw.Model.InstanceNum(idx)}
+	return &iwatch{mw, mw.Model.InstanceNum(idx)}
 }
 
 type iwatch struct {
@@ -41,31 +40,31 @@ type iwatch struct {
 	meta.Instance
 }
 
-func (iw iwatch) String() string {
+func (iw *iwatch) String() string {
 	return iw.GetId().String()
 }
 
-func (iw iwatch) PropertyNum(idx int) meta.Property {
+func (iw *iwatch) PropertyNum(idx int) meta.Property {
 	p := iw.Instance.PropertyNum(idx)
-	return &pwatch{&iw, p}
+	return &pwatch{iw, p}
 }
 
-func (iw iwatch) FindProperty(name string) (ret meta.Property, okay bool) {
+func (iw *iwatch) FindProperty(name string) (ret meta.Property, okay bool) {
 	if p, ok := iw.Instance.FindProperty(name); ok {
-		ret, okay = &pwatch{&iw, p}, true
+		ret, okay = &pwatch{iw, p}, true
 	}
 	return
 }
 
-func (iw iwatch) GetProperty(id ident.Id) (ret meta.Property, okay bool) {
+func (iw *iwatch) GetProperty(id ident.Id) (ret meta.Property, okay bool) {
 	if p, ok := iw.Instance.GetProperty(id); ok {
-		ret, okay = &pwatch{&iw, p}, true
+		ret, okay = &pwatch{iw, p}, true
 	}
 	return
 }
-func (iw iwatch) GetPropertyByChoice(choice ident.Id) (ret meta.Property, okay bool) {
+func (iw *iwatch) GetPropertyByChoice(choice ident.Id) (ret meta.Property, okay bool) {
 	if p, ok := iw.Instance.GetPropertyByChoice(choice); ok {
-		ret, okay = &pwatch{&iw, p}, true
+		ret, okay = &pwatch{iw, p}, true
 	}
 	return
 }

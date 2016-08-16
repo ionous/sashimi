@@ -35,7 +35,7 @@ func (ga *GameEventAdapter) NewGameObjectFromId(id ident.Id) (ret G.IObject) {
 
 func (ga *GameEventAdapter) NewGameObject(inst meta.Instance) (ret G.IObject) {
 	if inst != nil {
-		ret = GameObject{ga, inst}
+		ret = &GameObject{ga, inst}
 	} else {
 		ret = NullObjectSource(PropertyPath{}, 2)
 	}
@@ -72,8 +72,8 @@ func (ga *GameEventAdapter) Go(phrase G.RuntimePhrase, phrases ...G.RuntimePhras
 	return
 }
 
-func (ga *GameEventAdapter) Query(class string) (ret G.IQuery) {
-	q := &ClassQuery{ga: ga, cls: StripStringId(class)}
+func (ga *GameEventAdapter) Query(class string, exact bool) (ret G.IQuery) {
+	q := &ClassQuery{ga: ga, cls: StripStringId(class), exact: exact}
 	q.idx, q.next = q.Advance()
 	return q
 }

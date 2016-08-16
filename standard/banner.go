@@ -16,7 +16,7 @@ func init() {
 				story := g.The("story")
 				name := story.Text("name")
 				headline := story.Text("headline")
-				if headline == "" {
+				if !(len(headline) > 0) {
 					headline = "An Interactive fiction" // FIX: default for headline in class.
 				}
 				author := story.Text("author")

@@ -31,7 +31,8 @@ func ApiTest(t *testing.T, mdl meta.Model, instId ident.Id) {
 	require.NotNil(t, inst, "should have found instance by index")
 	// find inst by id
 	if direct, ok := mdl.GetInstance(instId); assert.True(t, ok, "get instance by id") {
-		require.True(t, direct == inst, "equality is necessary for the sake of game object adapter")
+		// NO LONG NEEDED
+		//require.True(t, direct.Equals(inst), "equality is necessary for the sake of game object adapter")
 		require.EqualValues(t, instId, direct.GetId(), "self id test")
 	}
 	//

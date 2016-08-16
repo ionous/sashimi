@@ -17,8 +17,7 @@ func TestQuipVisit(t *testing.T) {
 	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
 		total, comments := 3+1, 2 // +1 for hackish default greeting.
 		g := test.Game.NewAdapter()
-
-		for quips := g.Query("quips"); quips.HasNext(); {
+		for quips := g.Query("quips", true); quips.HasNext(); {
 			q := quips.Next()
 			comment, reply := q.Text("comment"), q.Text("reply")
 			t.Logf("%v: '%v','%v'", q, comment, reply)
@@ -105,7 +104,7 @@ func TestQuipTalkQuips(t *testing.T) {
 					player.Go("print conversation choices")
 					if lines, e := test.FlushOutput(); assert.NoError(t, e) {
 						require.Len(t, lines, NumComments)
-						if stories := g.Query("stories"); assert.True(t, stories.HasNext()) {
+						if stories := g.Query("stories", false); assert.True(t, stories.HasNext()) {
 							story := stories.Next()
 
 							// hmmm.... this used to input a number
@@ -183,6 +182,7 @@ func TestQuipDirectFollows(t *testing.T) {
 }
 
 // TestQuipFactFinding to verify facts and their associated conversation rules.
+// go test -v -run  TestQuipFactFinding
 func TestQuipFactFinding(t *testing.T) {
 	s := InitScripts()
 	Describe_Facts(s)

@@ -18,22 +18,22 @@ type GameObject struct {
 }
 
 // String helps debugging.
-func (oa GameObject) String() string {
+func (oa *GameObject) String() string {
 	return oa.gobj.GetId().String()
 }
 
 // Id uniquely identifies the object.
-func (oa GameObject) Id() ident.Id {
+func (oa *GameObject) Id() ident.Id {
 	return oa.gobj.GetId()
 }
 
 // Exists always returns true for GameObject; see also NullObject which always returns false.
-func (oa GameObject) Exists() bool {
+func (oa *GameObject) Exists() bool {
 	return true
 }
 
 // FromClass returns true when the object is compatible with ( based on ) the named class. ( parent or other ancestor )
-func (oa GameObject) FromClass(class string) (okay bool) {
+func (oa *GameObject) FromClass(class string) (okay bool) {
 	clsid := StripStringId(class)
 	if _, found := oa.Model.GetClass(clsid); !found {
 		oa.Println("FromClass: no such class found", clsid)
@@ -41,7 +41,7 @@ func (oa GameObject) FromClass(class string) (okay bool) {
 	return oa.Model.AreCompatible(oa.gobj.GetParentClass(), clsid)
 }
 
-func (oa GameObject) ParentRelation() (ret G.IObject, rel string) {
+func (oa *GameObject) ParentRelation() (ret G.IObject, rel string) {
 	if parent, prop, ok := oa.LookupParent(oa.gobj); ok {
 		ret, rel = oa.NewGameObject(parent), prop.GetName()
 	} else {
@@ -50,8 +50,12 @@ func (oa GameObject) ParentRelation() (ret G.IObject, rel string) {
 	return ret, rel
 }
 
+func (oa *GameObject) Equals(r G.IObject) bool {
+	return oa.Id() == r.Id()
+}
+
 // Is this object in the passed state?
-func (oa GameObject) Is(state string) (ret bool) {
+func (oa *GameObject) Is(state string) (ret bool) {
 	choice := MakeStringId(state)
 	if prop, ok := oa.gobj.GetPropertyByChoice(choice); !ok {
 		oa.log("Is(%s): no such choice.", state)
@@ -63,7 +67,7 @@ func (oa GameObject) Is(state string) (ret bool) {
 }
 
 // IsNow changes the state of an object.
-func (oa GameObject) IsNow(state string) {
+func (oa *GameObject) IsNow(state string) {
 	newChoice := MakeStringId(state)
 	if prop, ok := oa.gobj.GetPropertyByChoice(newChoice); !ok {
 		oa.log("IsNow(%s): no such choice.", state)
@@ -72,7 +76,7 @@ func (oa GameObject) IsNow(state string) {
 	}
 }
 
-func (oa GameObject) Get(prop string) G.IValue {
+func (oa *GameObject) Get(prop string) G.IValue {
 	return oa.get(prop)
 }
 
@@ -90,7 +94,7 @@ func (oa *GameObject) get(prop string) (ret G.IValue) {
 	return
 }
 
-func (oa GameObject) List(prop string) (ret G.IList) {
+func (oa *GameObject) List(prop string) (ret G.IList) {
 	if p, ok := oa.gobj.FindProperty(prop); !ok {
 		oa.log("List(%s): no such property.", prop)
 		ret = nullList{}
@@ -104,38 +108,38 @@ func (oa GameObject) List(prop string) (ret G.IList) {
 }
 
 // Num value of the named property.
-func (oa GameObject) Num(prop string) (ret float64) {
+func (oa *GameObject) Num(prop string) (ret float64) {
 	return oa.get(prop).Num()
 }
 
 // SetNum changes the value of an existing number property.
-func (oa GameObject) SetNum(prop string, value float64) {
+func (oa *GameObject) SetNum(prop string, value float64) {
 	oa.get(prop).SetNum(value)
 }
 
 // Text value of the named property ( expanding any templated text. )
 // ( interestingly, inform seems to error when trying to store or manipulate templated text. )
-func (oa GameObject) Text(prop string) (ret string) {
+func (oa *GameObject) Text(prop string) (ret string) {
 	return oa.get(prop).Text()
 }
 
 // SetText changes the value of an existing text property.
-func (oa GameObject) SetText(prop string, text string) {
+func (oa *GameObject) SetText(prop string, text string) {
 	oa.get(prop).SetText(text)
 }
 
 // Object returns a related object.
-func (oa GameObject) Object(prop string) (ret G.IObject) {
+func (oa *GameObject) Object(prop string) (ret G.IObject) {
 	return oa.get(prop).Object()
 }
 
 // Set changes an object relationship.
-func (oa GameObject) Set(prop string, object G.IObject) {
+func (oa *GameObject) Set(prop string, object G.IObject) {
 	oa.get(prop).SetObject(object)
 }
 
 // ObjectList returns a list of related objects.
-func (oa GameObject) ObjectList(prop string) (ret []G.IObject) {
+func (oa *GameObject) ObjectList(prop string) (ret []G.IObject) {
 	if p, ok := oa.gobj.FindProperty(prop); ok {
 		switch t := p.GetType(); t {
 		default:
@@ -155,7 +159,7 @@ func (oa GameObject) ObjectList(prop string) (ret []G.IObject) {
 }
 
 // Says provides this object with a voice.
-func (oa GameObject) Says(text string) {
+func (oa *GameObject) Says(text string) {
 	// FIX: share some template love with GameEventAdapter.Say()
 	lines := strings.Split(text, lang.NewLine)
 	oa.Output.ActorSays(oa.gobj, lines)
@@ -164,7 +168,7 @@ func (oa GameObject) Says(text string) {
 // Go sends all the events associated with the named action,
 // and runs the default action if appropriate.
 // ex. g.The("player").Go("show to", "the alien boy", "the ring")
-func (oa GameObject) Go(run string, objects ...G.IObject) (ret G.IPromise) {
+func (oa *GameObject) Go(run string, objects ...G.IObject) (ret G.IPromise) {
 	if c, e := oa.queueNamedAction(run, objects); e != nil {
 		oa.log("Go(%s) with %v: error preparing action: %s", run, objects, e)
 		ret = NilPromise{}

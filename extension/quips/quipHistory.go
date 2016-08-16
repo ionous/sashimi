@@ -30,7 +30,7 @@ func (qh QuipHistory) MostRecent() G.IObject {
 // Rank returns a number where larger is more recent, and 0 is not recent at all.
 func (qh *QuipHistory) Rank(which G.IObject) (ret int) {
 	for i, r := range qh {
-		if r.Object() == which {
+		if which.Equals(r.Object()) {
 			ret = len(qh) - i
 			break
 		}

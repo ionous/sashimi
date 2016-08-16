@@ -42,7 +42,7 @@ func init() {
 			//  can't insert what isn't held
 			Before("inserting it into").Always(func(g G.Play) {
 				actor, prop := g.The("action.Source"), g.The("action.Context")
-				if carrier := Carrier(prop); carrier != actor {
+				if carrier := Carrier(prop); !carrier.Equals(actor) {
 					g.Say("You aren't holding", ArticleName(g, "action.Context", NameFullStop))
 					g.StopHere()
 				}
@@ -50,7 +50,7 @@ func init() {
 			//  can't insert something into itself
 			Before("inserting it into").Always(func(g G.Play) {
 				container, prop := g.The("action.Target"), g.The("action.Context")
-				if container == prop {
+				if container.Equals(prop) {
 					g.Say("You can't insert something into itself.")
 					g.StopHere()
 				}

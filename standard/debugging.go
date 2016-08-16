@@ -14,10 +14,10 @@ func init() {
 			To("debug direct parent", func(g G.Play) {
 				target := g.The("action.Target")
 				parent, relation := target.ParentRelation()
-				if relation == "" {
-					g.Say(target.Text("Name"), "=>", "out of world")
-				} else {
+				if len(relation) > 0 {
 					g.Say(target.Text("Name"), "=>", relation, parent.Text("Name"))
+				} else {
+					g.Say(target.Text("Name"), "=>", "out of world")
 				}
 			}))
 		// FIX: sometimes parent of -- matches unexpected objects

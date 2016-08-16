@@ -31,7 +31,7 @@ func (qs *QuipSort) Add(quip G.IObject) *quipScore {
 	} else if quip.Is("departing") {
 		rank = 100
 	}
-	if quip.Text("reply") != "" {
+	if len(quip.Text("reply")) > 0 {
 		rank += 50
 	}
 	ret := quipScore{quip, rank}

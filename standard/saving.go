@@ -4,6 +4,7 @@ import (
 	G "github.com/ionous/sashimi/game"
 	"github.com/ionous/sashimi/runtime"
 	. "github.com/ionous/sashimi/script"
+	. "github.com/ionous/sashimi/standard/live"
 )
 
 func init() {
@@ -25,9 +26,9 @@ func init() {
 			}),
 			Can("save it").And("saving it").RequiresOne("save-setting"),
 			To("save it", func(g G.Play) {
-				autoSave := g.The("save-setting") == g.The("auto-save")
-				if s, e := runtime.SaveGame(g, autoSave); e != nil {
-					g.Log("error", e.Error())
+				autoSave := g.The("save-setting").Equals(g.The("auto-save"))
+				if s, e := runtime.SaveGame(g, autoSave); !IsNil(e) {
+					g.Log("error", e)
 				} else {
 					g.Say("saved", s)
 				}

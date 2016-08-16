@@ -168,7 +168,7 @@ func containsText(values meta.Values, v string) (yes bool) {
 
 func containsObject(values meta.Values, v ident.Id) (yes bool) {
 	for i := 0; i < values.NumValue(); i++ {
-		if values.ValueNum(i).GetObject() == v {
+		if v.Equals(values.ValueNum(i).GetObject()) {
 			yes = true
 			break
 		}

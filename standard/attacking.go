@@ -15,7 +15,7 @@ func init() {
 		s.The("objects",
 			Can("report attack").And("reporting attack").RequiresOne("actor"),
 			To("report attack", func(g G.Play) {
-				if actor := g.The("actor"); g.The("player") == actor {
+				if g.The("player").Equals(g.The("actor")) {
 					g.Say("Violence isn't the answer.")
 				}
 			}))

@@ -18,7 +18,7 @@ type Play interface {
 	// List one or more objects by class name.
 	// FUTURE: replace class by an index?
 	// ALT: broadcast an event to an optionally query/filtered set of objects.
-	Query(class string) IQuery
+	Query(class string, exact bool) IQuery
 	// StopHere.
 	// FIX: move into the event object, possible via callback parameter injection
 	StopHere()

@@ -141,7 +141,7 @@ You shake your head. No time for fantasy. Must feed fish.`)
 		When("reporting shown").Always(func(g G.Play) {
 			fish := g.The("evil fish")
 			receiver := g.The("action.Context")
-			if fish == receiver {
+			if fish.Equals(receiver) {
 				fish.Says("What are you, some kind of sadist? I don't want to see a bunch of cloths! What kind of f'ing good, 'scuse my French, is that supposed to do me? I don't even wear pants for God's sake!")
 				g.Say("He really looks upset. You start wondering whether apoplexy is an ailment common to fish.")
 				g.StopHere()
@@ -175,7 +175,7 @@ You shake your head. No time for fantasy. Must feed fish.`)
 		When("reporting gave").Always(func(g G.Play) {
 			receiver := g.The("action.Context")
 			fish := g.The("evil fish")
-			if fish == receiver {
+			if fish.Equals(receiver) {
 				fish.Says("That's the ticket, sweetie! Bring it on.")
 				g.StopHere()
 			}
@@ -283,7 +283,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 	s.The("vase",
 		When("receiving insertion").Always(func(g G.Play) {
 			prop := g.The("action.Target")
-			if prop != g.The("bouquet") {
+			if !prop.Equals(g.The("bouquet")) {
 				g.The("evil fish").Says(`"Okay, so, what were you, raised in a barn? Normal folks like to use that for flowers. Or so I've observed."`)
 				g.StopHere()
 			} else {
@@ -462,7 +462,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 		// 218:
 		Before("feeding it").Always(func(g G.Play) {
 			player := g.The("player")
-			if c := Carrier(g.The("fish food")); c != player {
+			if carrier := Carrier(g.The("fish food")); !player.Equals(carrier) {
 				g.Say("You need the fish food first!")
 				g.StopHere()
 			}
@@ -470,7 +470,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 		// 222-227
 		When("feeding it").Always(func(g G.Play) {
 			what := g.The("action.Target") // FIX: The("object") is player, not very nice...
-			if what == g.The("evil fish") {
+			if what.Equals(g.The("evil fish")) {
 				// "increment the score"
 				story := g.Our("A Day For Fresh Sushi")
 				story.SetNum("score", story.Num("score")+1)
@@ -486,7 +486,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 		}),
 		// 228-230
 		When("feeding it").Always(func(g G.Play) {
-			if g.The("object") == g.The("fish food") {
+			if g.The("object").Equals(g.The("fish food")) {
 				g.The("actor").Go("feed it", g.The("evil fish"))
 				g.StopHere()
 			}

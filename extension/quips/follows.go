@@ -10,10 +10,10 @@ type followsCb func(leads G.IObject, directly bool) bool
 // ex. for QuipHelp(x).DirectlyFollows(y), then visit(x) will call cb(y, true)
 func visitFollowConstraints(g G.Play, follower G.IObject, cb followsCb) (okay bool) {
 	// search all following quips
-	for quips := g.Query("following quips"); quips.HasNext(); {
+	for quips := g.Query("following quips", true); quips.HasNext(); {
 		quip := quips.Next()
 		// yes, this entry talks about our position relative to some other quip
-		if following := quip.Get("following").Object(); following.Exists() && following == follower {
+		if following := quip.Get("following").Object(); following.Exists() && following.Equals(follower) {
 			// grab that other quip
 			if leading := quip.Get("leading").Object(); leading.Exists() {
 				// call the visitor
@@ -46,7 +46,7 @@ func (q QuipHelp) Follows(leader G.IObject) DirectInfo {
 // Directly returns true if the quip should only be displayed after Follows
 func (info DirectInfo) Directly(g G.Play) bool {
 	return visitFollowConstraints(g, info.follower, func(leading G.IObject, directly bool) bool {
-		return directly && info.leader == leading
+		return directly && info.leader.Equals(leading)
 	})
 }
 

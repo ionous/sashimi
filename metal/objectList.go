@@ -34,7 +34,7 @@ func newManyValues(p *propBase) (ret meta.Values) {
 		for i := 0; i < p.mdl.NumInstance(); i++ {
 			target := p.mdl.InstanceNum(i)
 			if t, ok := target.GetProperty(targetProp); ok {
-				if v := t.GetValue(); v.GetObject() == p.src {
+				if v := t.GetValue(); p.src.Equals(v.GetObject()) {
 					objs = append(objs, target.GetId())
 				}
 			}
@@ -57,7 +57,7 @@ func (p *objectList) ClearValues() (err error) {
 			err = errutil.Append(err, e)
 		} else {
 			// possible, if unlikely, that its changed.
-			if v.GetObject() == p.src {
+			if p.src.Equals(v.GetObject()) {
 				v.SetObject(ident.Empty())
 			}
 		}

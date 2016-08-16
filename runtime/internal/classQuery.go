@@ -8,10 +8,11 @@ import (
 
 // FUTURE: check mutation?
 type ClassQuery struct {
-	ga   *GameEventAdapter
-	cls  ident.Id
-	idx  int
-	next meta.Instance
+	ga    *GameEventAdapter
+	cls   ident.Id
+	exact bool
+	idx   int
+	next  meta.Instance
 }
 
 func (q *ClassQuery) HasNext() bool {
@@ -29,14 +30,23 @@ func (q *ClassQuery) Next() (ret G.IObject) {
 }
 
 // Advance does not modify q.
-func (q *ClassQuery) Advance() (ret int, inst meta.Instance) {
-	ga, idx, clsid := q.ga, q.idx, q.cls
-	for l := ga.Model.NumInstance(); idx < l; idx++ {
-		gobj := ga.Model.InstanceNum(idx)
-		if id := gobj.GetParentClass(); ga.Model.AreCompatible(id, clsid) {
-			inst = gobj
-			break
+func (q *ClassQuery) Advance() (int, meta.Instance) {
+	m, idx, clsid := q.ga.Model, q.idx, q.cls
+	l := m.NumInstance()
+	if q.exact {
+		for ; idx < l; idx++ {
+			gobj := m.InstanceNum(idx)
+			if id := gobj.GetParentClass(); id == clsid {
+				return idx + 1, gobj // explicit return to handle idx renaming
+			}
+		}
+	} else {
+		for ; idx < l; idx++ {
+			gobj := m.InstanceNum(idx)
+			if id := gobj.GetParentClass(); m.AreCompatible(id, clsid) {
+				return idx + 1, gobj // explicit return to handle idx renaming
+			}
 		}
 	}
-	return idx + 1, inst // explicit return to handle idx renaming
+	return l, nil
 }

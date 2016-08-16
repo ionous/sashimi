@@ -21,7 +21,7 @@ func init() {
 				// FIX? inform often, but not always, tests for trying silently,
 				// "if the action is not silent" ...
 				// seems... strange. why report if if its silent?
-				if g.The("player") == actor {
+				if g.The("player").Equals(actor) {
 					g.Say("You jump on the spot.")
 				} else {
 					g.Say(actor.Text("Name"), "jumps on the spot.")

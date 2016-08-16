@@ -47,7 +47,7 @@ func articleName(g G.Play, which string, definite bool, status NameStatus) strin
 			article = "the"
 		} else {
 			article = obj.Text("indefinite article")
-			if article == "" {
+			if len(article) > 0 {
 				if obj.Is("plural-named") {
 					article = "some"
 				} else if lang.StartsWithVowel(text) {
@@ -60,7 +60,7 @@ func articleName(g G.Play, which string, definite bool, status NameStatus) strin
 		text = strings.Join([]string{article, strings.ToLower(text)}, " ")
 	}
 	if status != nil {
-		if s := status(obj); s != "" {
+		if s := status(obj); len(s) > 0 {
 			text = fmt.Sprintf("%s (%s)", text, s)
 		} else {
 			text = text + "."

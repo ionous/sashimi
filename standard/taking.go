@@ -35,9 +35,9 @@ func init() {
 				// first, only same room:
 				actorCeiling, targetCeiling := Enclosure(actor), Enclosure(prop)
 				//
-				if actorCeiling != targetCeiling {
+				if !actorCeiling.Equals(targetCeiling) {
 					g.Say("That isn't available.")
-					g.Log(fmt.Sprintf("take ceiling mismatch (%v!=%v)", actorCeiling, targetCeiling))
+					g.Log(fmt.Sprintf("take ceiling mismatch (%v not %v)", actorCeiling, targetCeiling))
 				} else {
 					if prop.Is("scenery") {
 						g.Say("That isn't available.")
@@ -52,7 +52,7 @@ func init() {
 					}
 					if parent, _ := prop.ParentRelation(); parent.Exists() {
 						if parent.FromClass("actors") {
-							if parent != actor {
+							if !parent.Equals(actor) {
 								g.Say("That'd be stealing!")
 							} else {
 								g.Say(ArticleName(g, "action.Target", nil), "already has that!")
@@ -61,7 +61,7 @@ func init() {
 						}
 					}
 					// separate report action?
-					if actor == g.The("player") {
+					if actor.Equals(g.The("player")) {
 						// the kat food.
 						g.Say("You take", DefiniteName(g, "action.Source", NameFullStop))
 					} else {

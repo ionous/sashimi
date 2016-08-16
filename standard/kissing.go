@@ -15,7 +15,7 @@ func init() {
 			//  kissing yourself rule
 			Before("kissing it").Always(func(g G.Play) {
 				source, target := g.The("action.Source"), g.The("action.Target")
-				if source == target {
+				if source.Equals(target) {
 					g.Say(source.Text("Name"), "didn't get much from that.")
 					g.StopHere()
 				}

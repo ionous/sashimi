@@ -42,6 +42,10 @@ func (id Id) Reserved() bool {
 	return len(id) > 0 && id[0] == '~'
 }
 
+func (id Id) Equals(other Id) bool {
+	return other == id
+}
+
 // for some reason strings.Compare doesnt exist in go/appengine:
 // theres this comment in the string source:
 // NOTE(rsc): ... Basically no one should use strings.Compare.

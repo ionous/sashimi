@@ -21,7 +21,7 @@ func init() {
 			Can("report smell").And("reporting smell").RequiresOne("actor"),
 			To("report smell", func(g G.Play) {
 				actor := g.The("action.Target")
-				if g.The("player") == actor {
+				if g.The("player").Equals(actor) {
 					g.Say("You smell nothing unexpected.")
 				} else {
 					g.Say(actor.Text("Name"), "sniffs.")

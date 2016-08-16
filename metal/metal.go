@@ -43,22 +43,8 @@ type PropertyCache map[ident.Id]PropertyList
 const pluralString = "plural"
 const singularString = "singular"
 
-var singularId = ident.MakeId(pluralString)
 var pluralId = ident.MakeId(pluralString)
-
-// var pluralFnv = MakeHash(pluralString)
-// var singularFnv = MakeHash(singularString)
-
-//type StringHash uint64
-
-// func LowerHash(s string) StringHash {
-// 	return MakeHash(strings.ToLower(s))
-// }
-// func MakeHash(s string) StringHash {
-// 	n := fnv.New64a()
-// 	n.Write([]byte(s))
-// 	return StringHash(n.Sum64())
-// }
+var singularId = ident.MakeId(singularString)
 
 func merge(base, more PropertyList) (ret PropertyList) {
 	ret = base
@@ -205,17 +191,10 @@ func (mdl *Metal) AreCompatible(child, parent ident.Id) (okay bool) {
 // hrmmm...
 func (mdl *Metal) MatchNounName(n string, f func(ident.Id) bool) (int, bool) {
 	return mdl.Aliases.Try(n, f)
-	// id := ident.Id(n)
-	// if _, ok := mdl.Instances[id]; ok {
-	// 	okay = f(id)
-	// } else {
-	// 	x, okay = mdl.Aliases.Try(n, f)
-	// }
-	// return
 }
 
 func (mdl *Metal) makeInstance(n *M.InstanceModel) meta.Instance {
-	return instInfo{mdl, n}
+	return &instInfo{mdl, n}
 }
 
 // FIX: these lists are NG.

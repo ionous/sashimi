@@ -30,12 +30,10 @@ func (m Memory) TriesToLearn(fact G.IObject) (newlyLearned bool) {
 // mostly the player will need this -- so just a table with precese is enough
 // but it could also be actor, id
 func (m Memory) Learns(fact G.IObject) {
-	//m.AppendObject(fact)
 	fact.IsNow("recollected")
 }
 
 // RecollectsQuip determines if the passed fact has been spoken.
 func (m Memory) Recollects(fact G.IObject) bool {
-	//return m.Contains(fact)
 	return fact.Is("recollected")
 }

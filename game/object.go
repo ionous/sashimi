@@ -21,6 +21,7 @@ type IObject interface {
 
 	Is(string) bool
 	IsNow(string)
+	Equals(IObject) bool
 
 	// Get returns the named property.
 	Get(string) IValue

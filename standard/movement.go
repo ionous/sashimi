@@ -66,14 +66,6 @@ func init() {
 					//TryMove(actor, dir, departingDoor)
 					actor.Go("go through it", departingDoor)
 				} else {
-					// // try the opposite direction link:
-					// rev := dir.Object("opposite")
-					// exit := from.Object(rev.Text("Name") + "-rev-via")
-					// if exit.Exists() {
-					// 	if sources := exit.ObjectList("sources"); len(sources) == 1 {
-					// 		TryMove(actor, dir, sources[0])
-					// 	}
-					//} else {
 					if Debug() {
 						g.Log("couldnt find %s exit", dir)
 					}

@@ -34,7 +34,7 @@ func (greet GreetedPhrase) WithQuip(greeting G.IObject) GreetingPhrase {
 func (greet GreetingPhrase) Execute(g G.Play) {
 	greeter, greeted := g.The(greet.greeter), g.The(greet.greeted)
 	var greeting G.IObject
-	if greet.greeting != "" {
+	if len(greet.greeting) > 0 {
 		greeting = g.The(greet.greeting)
 	}
 	if greeting == nil || !greeting.Exists() {
@@ -56,7 +56,7 @@ type GreetingPhrase greetingData
 
 func greetActor(g G.Play, greeter, greeted, greeting G.IObject) {
 	g.Log(greeter, "greeting", greeted, "with", greeting)
-	if greeter == g.The("player") && greeted.Exists() {
+	if g.The("player").Equals(greeter) && greeted.Exists() {
 		greeted.Go("be greeted by", greeter, greeting)
 	}
 }

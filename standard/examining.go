@@ -37,7 +37,7 @@ func init() {
 			To("print details", func(g G.Play) {
 				object := g.The("object")
 				desc := object.Text("description")
-				if desc != "" {
+				if len(desc) > 0 {
 					g.Say(desc)
 				} else {
 					//g.Say("You see nothing special about:")

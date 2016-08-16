@@ -170,7 +170,7 @@ type xDir struct {
 }
 
 func (x xDir) isSpecified() bool {
-	return x.str != ""
+	return len(x.str) > 0
 }
 
 func (x xDir) makeDir(b SubjectBlock) (int, error) {
