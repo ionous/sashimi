@@ -1,9 +1,6 @@
 package game
 
 // Play provides the runtime with scripted callbacks.
-// FUTURE? replace this interface with a set of global functions which delegate based on context:
-// the script system for definitions, the game systems for callbacks.
-// augment the callbacks with dependency injection to provide standard objects.
 type Play interface {
 	// The function retrieves a script declared instance.
 	The(noun string) IObject

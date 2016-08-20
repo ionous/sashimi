@@ -7,6 +7,10 @@ func Change(target string) ChangePhrase {
 	return ChangePhrase{target: target}
 }
 
+func ChangeThe(obj G.IObject) ChangePhrase {
+	return Change(string(obj.Id()))
+}
+
 func (p ChangePhrase) To(state string) ChangePhrase {
 	return p.And(state)
 }

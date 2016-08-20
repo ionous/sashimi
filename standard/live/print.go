@@ -31,13 +31,19 @@ func NameFullStop(G.IObject) string {
 type NameStatus func(obj G.IObject) string
 
 func ArticleName(g G.Play, which string, status NameStatus) string {
+	return TheArticleName(g, g.The(which), status)
+}
+func TheArticleName(g G.Play, which G.IObject, status NameStatus) string {
 	return articleName(g, which, false, status)
 }
 func DefiniteName(g G.Play, which string, status NameStatus) string {
+	return TheDefiniteName(g, g.The(which), status)
+}
+func TheDefiniteName(g G.Play, which G.IObject, status NameStatus) string {
 	return articleName(g, which, true, status)
 }
-func articleName(g G.Play, which string, definite bool, status NameStatus) string {
-	obj := g.The(which)
+
+func articleName(g G.Play, obj G.IObject, definite bool, status NameStatus) string {
 	text := obj.Text("Name")
 	if obj.Is("proper-named") {
 		text = lang.Titleize(text)
@@ -47,7 +53,7 @@ func articleName(g G.Play, which string, definite bool, status NameStatus) strin
 			article = "the"
 		} else {
 			article = obj.Text("indefinite article")
-			if len(article) > 0 {
+			if len(article) == 0 {
 				if obj.Is("plural-named") {
 					article = "some"
 				} else if lang.StartsWithVowel(text) {
