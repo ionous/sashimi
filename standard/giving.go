@@ -19,6 +19,9 @@ import (
 //  "report an an actor giving something to"
 func init() {
 	AddScript(func(s *Script) {
+		// for summarily ( client side ) rejecting items
+		s.The("actors", AreEither("items receiver").Or("items rejector"))
+
 		s.The("actors",
 			Can("acquire it").And("acquiring it").RequiresOne("prop"),
 			To("acquire it", func(g G.Play) { ReflectToTarget(g, "be acquired") }))
