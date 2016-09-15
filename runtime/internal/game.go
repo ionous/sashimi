@@ -28,8 +28,15 @@ func (g *Game) newPlay(data *RuntimeAction, hint ident.Id) G.Play {
 	return &GameEventAdapter{Game: g, data: data, hint: hint}
 }
 
-func (g *Game) Random(n int) int {
-	return g.Rand.Intn(n)
+var lastRandom int
+
+func (g *Game) Random(exclusiveMax int) int {
+	n := g.Rand.Intn(exclusiveMax)
+	if n == lastRandom {
+		n = (n + 1) % exclusiveMax
+	}
+	lastRandom = n
+	return n
 }
 
 // target: class or instance id
