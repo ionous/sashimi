@@ -53,7 +53,7 @@ func (rel RelativeBuilder) SetProperty(ctx PropertyContext) (err error) {
 	if table, ok := ctx.tables.TableById(rel.fields.Relation); !ok {
 		err = fmt.Errorf("couldnt find table", rel.fields.Relation)
 	} else if otherName, okay := ctx.value.(string); !okay {
-		err = SetValueMismatch(ctx.inst, rel.id, "", ctx.value)
+		err = SetValueMismatch("relative", ctx.inst, rel.id, "", ctx.value)
 	} else {
 		otherId := M.MakeStringId(otherName)
 		if other, ok := ctx.refs[otherId]; !ok {

@@ -24,7 +24,7 @@ func init() {
 
 		s.The("actors",
 			Can("acquire it").And("acquiring it").RequiresOne("prop"),
-			To("acquire it", func(g G.Play) { ReflectToTarget(g, "be acquired") }))
+			To("acquire it", ReflectToTarget("be acquired")))
 		s.The("props",
 			Can("be acquired").And("being acquired").RequiresOne("actor"),
 			To("be acquired", func(g G.Play) {
@@ -38,7 +38,7 @@ func init() {
 		// 1. source
 		s.The("actors",
 			Can("give it to").And("giving it to").RequiresOne("actor").AndOne("prop"),
-			To("give it to", func(g G.Play) { ReflectWithContext(g, "report give") }),
+			To("give it to", ReflectWithContext("report give")),
 			// "convert give to yourself to examine"
 			Before("giving it to").Always(func(g G.Play) {
 				presenter, receiver := g.The("action.Source"), g.The("action.Target")
@@ -68,7 +68,7 @@ func init() {
 		// 2. receiver
 		s.The("actors",
 			Can("report give").And("reporting give").RequiresOne("prop").AndOne("actor"),
-			To("report give", func(g G.Play) { ReflectWithContext(g, "report gave") }))
+			To("report give", ReflectWithContext("report gave")))
 		// 3. context
 		s.The("props",
 			Can("report gave").And("reporting gave").RequiresTwo("actor"),

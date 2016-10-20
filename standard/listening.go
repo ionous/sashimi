@@ -10,10 +10,10 @@ func init() {
 	AddScript(func(s *Script) {
 		s.The("actors",
 			Can("listen").And("listening").RequiresNothing(),
-			To("listen", func(g G.Play) { ReflectToLocation(g, "report listen") }),
+			To("listen", ReflectToLocation("report listen")),
 
 			Can("listen to").And("listening to").RequiresOne("kind"),
-			To("listen to", func(g G.Play) { ReflectToTarget(g, "report listen") }),
+			To("listen to", ReflectToTarget("report listen")),
 		)
 		// kinds, to allow rooms and objects
 		s.The("kinds",

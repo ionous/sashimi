@@ -24,7 +24,7 @@ func init() {
 		//
 		s.The("actors",
 			Can("open it").And("opening it").RequiresOne("prop"),
-			To("open it", func(g G.Play) { ReflectToTarget(g, "be opened by") }),
+			To("open it", ReflectToTarget("be opened by")),
 		)
 
 		// "[regarding the noun][They] [aren't] something [we] [can] open."
@@ -79,7 +79,7 @@ func init() {
 		// one visible thing, and requiring light
 		s.The("actors",
 			Can("close it").And("closing it").RequiresOne("prop"),
-			To("close it", func(g G.Play) { ReflectToTarget(g, "be closed by") }),
+			To("close it", ReflectToTarget("be closed by")),
 		)
 		s.The("props",
 			Can("be closed by").And("being closed by").RequiresOne("actor"),

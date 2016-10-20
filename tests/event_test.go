@@ -1,48 +1,75 @@
 package tests
 
 import (
-	. "github.com/ionous/sashimi/script"
-	"github.com/ionous/sashimi/standard"
-	//	"github.com/ionous/sashimi/standard/framework"
-	G "github.com/ionous/sashimi/game"
+	"github.com/ionous/mars/core"
+	"github.com/ionous/mars/rt"
+	"github.com/ionous/mars/rtm"
+	"github.com/ionous/mars/script"
+	. "github.com/ionous/mars/script/s"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-// FIX: not really unit test yet, but helpful for debugging
-// really, this should have an event sink mock and test that everything works as expected.
-func TestEvent(t *testing.T) {
-	visited := false
-	s := EventScript(t, &visited)
-	if test, err := NewTestGame(t, s); assert.NoError(t, err) {
+func TestRawProperty(t *testing.T) {
+	script := &script.Script{
+		The("kinds",
+			Called("rooms"),
+			Have("greeting", "text"),
+		),
+		The("kinds", Called("actors"), Exist()),
+		The("actor", Called("player"), Exists()),
+		The("room", Called("world"), Has("greeting", "hello")),
+	}
 
-		if here, ok := test.Game.GetInstance("here"); assert.True(t, ok) {
-			here := test.Game.NewAdapter().NewGameObject(here)
-			assert.False(t, visited)
-			here.Go("report the view")
-			if r, e := test.FlushOutput(); assert.NoError(t, e) {
-				t.Log(r)
-				assert.True(t, visited)
+	// FIX FIX FIX FIX FIX -- the test game -- any game -- shouldnt require a parser.
+	// that should be on the front end, wrapping the game.
+	// ditto the "player"
+	// the understandings used by the parser can just sit there
+	// in the future, maybe we could put the understanding in an outer layer
+	if test, err := NewTestGame(t, script); assert.NoError(t, err, "created game") {
+		//
+		if world, ok := test.Game.GetInstance("world"); assert.True(t, ok, "found world") {
+			//
+			if greeting, ok := world.FindProperty("greeting"); assert.True(t, ok, "has greeting") {
+				//
+				g := greeting.GetGeneric()
+				if v, ok := g.(rt.TextEval); assert.True(t, ok, "text eval") {
+					//
+					run := rtm.NewRtm(test.Game.Model, nil)
+					if text, e := v.GetText(run); assert.NoError(t, e, "got text") {
+						assert.Equal(t, "hello", text.String())
+						t.Log(text)
+					}
+				}
 			}
 		}
 	}
 }
+func TestNumEvalProperty(t *testing.T) {
+	script := &script.Script{
+		The("kinds",
+			Called("actors"),
+			Have("counter", "num"),
+		),
+		The("actor", Called("player"), Has("counter", core.AddNum{core.N(2), core.N(3)})),
+	}
 
-func EventScript(t *testing.T, visited *bool) *Script {
-	s := standard.InitStandardLibrary()
-	s.The("room",
-		Called("here"),
-		Has("description", "a dull room"),
-		After("reporting the view").Always(func(g G.Play) {
-			t.Log("after reporting the view")
-			*visited = true
-		}),
-	)
-	s.The("object", Called("the knicknack"),
-		Exists(),
-		In("here"))
-	s.The("player",
-		Exists(),
-		In("here"))
-	return s
+	// FIX FIX FIX FIX FIX -- the test game -- any game -- shouldnt require a parser.
+	// that should be on the front end, wrapping the game.
+	// ditto the "player"
+	// the understandings used by the parser can just sit there
+	// in the future, maybe we could put the understanding in an outer layer
+	if test, err := NewTestGame(t, script); assert.NoError(t, err, "created game") {
+		if player, ok := test.Game.GetInstance("player"); assert.True(t, ok, "found player") {
+			if counter, ok := player.FindProperty("counter"); assert.True(t, ok, "has greeting") {
+				g := counter.GetGeneric()
+				if v, ok := g.(rt.NumEval); assert.True(t, ok, "num eval") {
+					run := rtm.NewRtm(test.Game.Model, nil)
+					if num, e := v.GetNumber(run); assert.NoError(t, e, "got num") {
+						assert.EqualValues(t, 5, num.Float())
+					}
+				}
+			}
+		}
+	}
 }

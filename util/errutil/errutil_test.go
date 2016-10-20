@@ -2,7 +2,7 @@ package errutil
 
 import (
 	"errors"
-	"fmt"
+	//"fmt"
 	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
@@ -26,18 +26,31 @@ func TestErrorFunc(t *testing.T) {
 	assert.EqualError(t, err, "fun")
 }
 
-type Printer struct {
-	prefix string
+// type Printer struct {
+// 	prefix string
+// }
+
+// func (p Printer) Errorf(format string, a ...interface{}) error {
+// 	err := fmt.Errorf(format, a...)
+// 	return Prefix(err, p.prefix)
+// }
+
+// func TestErrorf(t *testing.T) {
+// 	p := Printer{"test"}
+// 	var errorf Errorf = p
+// 	s := errorf.Errorf("hello %s", "there")
+// 	assert.EqualError(t, s, "test: hello there")
+// }
+
+type Stringed struct {
+	s string
 }
 
-func (p Printer) Errorf(format string, a ...interface{}) error {
-	err := fmt.Errorf(format, a...)
-	return Prefix(err, p.prefix)
+func (s Stringed) String() string {
+	return s.s
 }
 
-func TestErrorf(t *testing.T) {
-	p := Printer{"test"}
-	var errorf Errorf = p
-	s := errorf.Errorf("hello %s", "there")
-	assert.EqualError(t, s, "test: hello there")
+func TestJoin(t *testing.T) {
+	joined := New("a", Stringed{"b"}, "c")
+	assert.EqualError(t, joined, "a b c")
 }

@@ -1,7 +1,6 @@
 package parse
 
 import (
-	"fmt"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/parser"
 	"github.com/ionous/sashimi/util/errutil"
@@ -15,7 +14,7 @@ type MatchMaker struct {
 
 func (m MatchMaker) NewMatcher(id ident.Id) (ret parser.IMatch, err error) {
 	if act, ok := m.mdl.GetAction(id); !ok {
-		err = fmt.Errorf("couldnt find action", id)
+		err = errutil.New("couldnt find action", id)
 	} else {
 		ret, err = NewObjectMatcher(act, m.src, m.mdl)
 	}
@@ -26,14 +25,14 @@ func (m MatchMaker) NewMatcher(id ident.Id) (ret parser.IMatch, err error) {
 // FIX-STORE: generate literals for all comprehensions; pre-compile to check for errors.
 func NewObjectParser(mdl meta.Model, source ident.Id) (p parser.P, err error) {
 	if _, ok := mdl.GetInstance(source); !ok {
-		err = fmt.Errorf("couldnt find source", source)
+		err = errutil.New("couldnt find source", source)
 	} else {
 		p = parser.NewParser(MatchMaker{mdl, source})
 		for i := 0; i < mdl.NumParserAction(); i++ {
 			pa := mdl.ParserActionNum(i)
 			// lookup the parser actions to catch any strange compiler errors
 			if _, ok := mdl.GetAction(pa.Action); !ok {
-				err = errutil.Append(err, fmt.Errorf("couldnt find action", pa.Action))
+				err = errutil.Append(err, errutil.New("couldnt find action", pa.Action))
 			} else {
 				if comp, e := p.NewComprehension(pa.Action); e != nil {
 					err = errutil.Append(err, e)

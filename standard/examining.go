@@ -15,7 +15,7 @@ func init() {
 		// examine studio: You can't see any such thing; sad face.
 		s.The("actors",
 			Can("examine it").And("examining it").RequiresOne("object"),
-			To("examine it", func(g G.Play) { ReflectToTarget(g, "be examined") }),
+			To("examine it", ReflectToTarget("be examined")),
 		)
 		// the default action prints the place holder text
 		// the events system prints the specifics and prevents the defaults as needed

@@ -15,20 +15,20 @@ type propBase struct {
 	prop *M.PropertyModel
 	// life's a little complicated.
 	// we have a generic property base ( propBase )
-	// an extension to panic on every get and set ( panicValue )
+	// an extension to panic on every get and set ( PanicValue )
 	// and overrides to implement the specific text/num/etc methods ( textValue )
 	// the location of values for class and instances differs, so the class and instance pass themselves to their properties, and on to their values.
-	getValue func(*M.PropertyModel) GenericValue
-	setValue func(*M.PropertyModel, GenericValue) error
+	getValue func(*M.PropertyModel) meta.Generic
+	setValue func(*M.PropertyModel, meta.Generic) error
 }
 
-func (p *propBase) set(v GenericValue) error {
+func (p *propBase) SetGeneric(v meta.Generic) error {
 	return p.setValue(p.prop, v)
 }
 
 // mainly for arrays, but arrays dont have instance data storage
 // if we need them, we probably will want to write a decoder on the instance json data.
-func (p *propBase) getGeneric() GenericValue {
+func (p *propBase) GetGeneric() meta.Generic {
 	return p.getValue(p.prop)
 }
 
@@ -107,15 +107,15 @@ func (p *propBase) GetValue() (ret meta.Value) {
 	switch p.prop.Type {
 	case M.NumProperty:
 		if !p.prop.IsMany {
-			return &numValue{panicValue{p}}
+			return &numValue{PanicValue{p}}
 		}
 	case M.TextProperty:
 		if !p.prop.IsMany {
-			return &textValue{panicValue{p}}
+			return &textValue{PanicValue{p}}
 		}
 	case M.EnumProperty:
 		if !p.prop.IsMany {
-			return &enumValue{panicValue{p}}
+			return &enumValue{PanicValue{p}}
 		}
 	case M.PointerProperty:
 		if !p.prop.IsMany {
@@ -126,7 +126,7 @@ func (p *propBase) GetValue() (ret meta.Value) {
 			if rel, ok := p.mdl.Relations[p.prop.Relation]; ok && rel.Style == M.OneToOne {
 				return newRelatedValue(p, rel)
 			} else {
-				return &pointerValue{panicValue{p}}
+				return &pointerValue{PanicValue{p}}
 			}
 		}
 	default:
@@ -141,13 +141,13 @@ func (p *propBase) GetValues() meta.Values {
 	case M.NumProperty:
 		if p.prop.IsMany {
 			return arrayValues{p, func(i int) meta.Value {
-				return &numElement{&elementValue{panicValue{p}, i}}
+				return &numElement{&elementValue{PanicValue{p}, i}}
 			}}
 		}
 	case M.TextProperty:
 		if p.prop.IsMany {
 			return arrayValues{p, func(i int) meta.Value {
-				return &textElement{&elementValue{panicValue{p}, i}}
+				return &textElement{&elementValue{PanicValue{p}, i}}
 			}}
 		}
 	case M.EnumProperty:
@@ -158,7 +158,7 @@ func (p *propBase) GetValues() meta.Values {
 				return newManyValues(p)
 			} else {
 				return arrayValues{p, func(i int) meta.Value {
-					return &objectElement{&elementValue{panicValue{p}, i}}
+					return &objectElement{&elementValue{PanicValue{p}, i}}
 				}}
 			}
 		}

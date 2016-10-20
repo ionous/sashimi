@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"github.com/ionous/mars/rtm"
 	E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game"
 	"github.com/ionous/sashimi/util/ident"
@@ -72,7 +73,11 @@ func (a *QueuedAction) Run(g *Game) (err error) {
 				for i := 0; i < callbacks.NumCallback(); i++ {
 					cb := callbacks.CallbackNum(i)
 					if found, ok := g.LookupCallback(cb); ok {
-						found(play)
+						rt := &Mars{rtm.NewRtm(g.Model, nil), play}
+						if e := rt.Execute(found).Execute(rt); e != nil {
+							err = e
+							break
+						}
 					} else {
 						err = fmt.Errorf("internal error, couldnt find callback %s", cb)
 						break
@@ -85,8 +90,14 @@ func (a *QueuedAction) Run(g *Game) (err error) {
 			if after := a.data.after; len(after) > 0 {
 				// fmt.Println(len(after), "after actions")
 				play := g.newPlay(a.data, ident.Empty())
+				rt := &Mars{rtm.NewRtm(g.Model, nil), play}
+				//
 				for _, after := range after {
-					after.call(play)
+					if e := rt.Execute(after.call).Execute(rt); e != nil {
+						err = e
+						break
+					}
+					//after.call(play)
 				}
 			}
 			// finally, run any trailing actions the caller may have specified.
@@ -140,6 +151,6 @@ func RunPhrases(g *Game, d *RuntimeAction, phrases ...G.RuntimePhrase) (err erro
 //
 func (c *ChainedCallback) Run(g *Game) (err error) {
 	play := &GameEventAdapter{Game: g, data: c.data}
-	c.cb(play)
-	return
+	rt := &Mars{rtm.NewRtm(g.Model, nil), play}
+	return rt.Execute(c.cb).Execute(rt)
 }

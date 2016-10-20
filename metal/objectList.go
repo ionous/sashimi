@@ -11,7 +11,7 @@ import (
 var _ = fmt.Println
 
 type objectList struct {
-	panicValue
+	PanicValue
 	targetProp ident.Id
 	objs       []ident.Id
 }
@@ -40,7 +40,7 @@ func newManyValues(p *propBase) (ret meta.Values) {
 			}
 		}
 	}
-	return &objectList{panicValue{p}, targetProp, objs}
+	return &objectList{PanicValue{p}, targetProp, objs}
 }
 
 func (p objectList) NumValue() int {
@@ -48,7 +48,7 @@ func (p objectList) NumValue() int {
 }
 
 func (p objectList) ValueNum(i int) meta.Value {
-	return objectReadValue{p.panicValue, p.objs[i]}
+	return objectReadValue{p.PanicValue, p.objs[i]}
 }
 
 func (p *objectList) ClearValues() (err error) {

@@ -1,6 +1,8 @@
 package standard
 
 import (
+	"github.com/ionous/mars/g"
+	"github.com/ionous/mars/std"
 	G "github.com/ionous/sashimi/game"
 	. "github.com/ionous/sashimi/script"
 	. "github.com/ionous/sashimi/standard/live"
@@ -130,33 +132,26 @@ func init() {
 
 func init() {
 	AddScript(func(s *Script) {
-
 		// one visible thing, and requring light
 		s.The("actors",
 			Can("look").And("looking").RequiresNothing(),
-			To("look",
-				// func( g G.Play) { ReflectToLocation(g,"report the view") }
-				// reflect to location will send the actor as a parameter,
-				// but report the view doesnt expect parameters.
-				func(g G.Play) {
-					actor := g.The("actor")
-					target := actor.Object("whereabouts")
-					target.Go("report the view")
-				}),
-		)
+			// note: reflect to location send the actor as a parameter,
+			// but report the view doesnt expect parameters.
+			To("look", g.Go{
+				Who: Property{Our("actor"), "whereabouts"},
+				Run: "report the view"},
+			))
 
 		// one visible thing and requiring light.
 		s.The("actors",
 			Can("look under it").And("looking under it").RequiresOne("object"),
-			To("look under it", func(g G.Play) { ReflectToTarget(g, "report look under") }),
+			To("look under it", g.ReflectToTarget("report look under")),
 		)
 
 		// FIX: should generate a report/response instead?
 		s.The("actors",
 			Can("impress").And("impressing").RequiresNothing(),
-			To("impress", func(g G.Play) {
-				g.Say(lang.Capitalize(ArticleName(g, "actor", nil)), "is unimpressed.")
-			}))
+			To("impress", g.Say(std.TheUpper{R{"actor"}}, "is unimpressed.")))
 
 		// "taking inventory" in inform
 		// again, as with some other actions: for players this happens in carry out, for npcs in report.
@@ -164,6 +159,11 @@ func init() {
 		s.The("actors",
 			Can("report inventory").And("reporting inventory").RequiresNothing(),
 			To("report inventory", func(g G.Play) {
+				// NOTES:
+
+				// you are carrying:
+				// you are wearing:
+				// fwiw: Carry out taking inventory have the only good description of response text. (A)
 				this := g.The("actor")
 				source := []string{"Clothing", "Inventory"}
 				for _, s := range source {

@@ -1,6 +1,7 @@
 package script
 
 import (
+	"github.com/ionous/mars/rt"
 	E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game"
 	S "github.com/ionous/sashimi/source"
@@ -49,16 +50,21 @@ func (p EventPhrase) Or(event string) EventPhrase {
 }
 
 //
-func (p EventPhrase) Always(cb G.Callback) EventFinalizer {
+func (p EventPhrase) Always(cb G.OldCallback) EventFinalizer {
+	return EventFinalizer{p, Patch{cb}}
+}
+
+func (p EventPhrase) Go(cb G.Callback) EventFinalizer {
 	return EventFinalizer{p, cb}
 }
 
-// removed for now; causes errors with the code extraction...
-// func (p EventPhrase) Go(phrase G.RuntimePhrase, phrases ...G.RuntimePhrase) EventFinalizer {
-// 	return p.Always(func(g G.Play) {
-// 		g.Go(phrase, phrases...)
-// 	})
-// }
+type Patch struct {
+	cb G.OldCallback
+}
+
+func (p Patch) Execute(rt.Runtime) error {
+	panic("not implemented")
+}
 
 //
 func (frag EventFinalizer) MakeStatement(b SubjectBlock) (err error) {

@@ -29,7 +29,7 @@ func init() {
 		s.The("actors",
 			// FIX? word-wise this is wrong ( see tickle-it-with, though it is "correct" )
 			Can("insert it into").And("inserting it into").RequiresOne("container").AndOne("prop"),
-			To("insert it into", func(g G.Play) { ReflectWithContext(g, "receive insertion") }),
+			To("insert it into", ReflectWithContext("receive insertion")),
 			//  can't insert clothes being worn
 			Before("inserting it into").Always(func(g G.Play) {
 				prop := g.The("action.Context")
@@ -73,7 +73,7 @@ func init() {
 					g.StopHere()
 				}
 			}),
-			To("receive insertion", func(g G.Play) { ReflectWithContext(g, "be inserted") }))
+			To("receive insertion", ReflectWithContext("be inserted")))
 
 		// 3. context
 		s.The("props",

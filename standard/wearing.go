@@ -15,7 +15,7 @@ func init() {
 		// you could start by fixing this internally, and then come back to change the requires interface.
 		s.The("actors",
 			Can("wear it").And("wearing it").RequiresOne("prop"),
-			To("wear it", func(g G.Play) { ReflectToTarget(g, "report wear") }),
+			To("wear it", ReflectToTarget("report wear")),
 		)
 
 		s.The("props",

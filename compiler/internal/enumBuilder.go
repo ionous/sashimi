@@ -58,7 +58,7 @@ func (enum EnumBuilder) SetProperty(ctx PropertyContext) (err error) {
 			}
 		default:
 			var nilVal int = 0
-			err = SetValueMismatch(ctx.inst, enum.id, nilVal, ctx.value)
+			err = SetValueMismatch("enum", ctx.inst, enum.id, nilVal, ctx.value)
 		}
 	}
 	return err

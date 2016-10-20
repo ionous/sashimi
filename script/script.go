@@ -35,7 +35,7 @@ func (s *Script) CompileCalls(writer io.Writer, calls call.Compiler) (res *M.Mod
 	return res, err
 }
 
-// The main script function used to asset the existence of a class, instance, property, etc.
+// The main script function used to assist the existence of a class, instance, property, etc.
 // Returns a placeholder variable, and an error -- both of which are intended to help distinguish it from The() used in callbacks.
 // ex. The("example", s.Has("...") )
 func (s *Script) The(key string, fragments ...IFragment) (int, error) {

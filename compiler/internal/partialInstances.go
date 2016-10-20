@@ -22,9 +22,7 @@ func newPartialInstances(log *log.Logger, relations M.RelationMap) PartialInstan
 	return PartialInstances{log, tables, partials}
 }
 
-//
-// Add a new set of references for the passed id'd reference.
-//
+// newInstance: add a new set of references for the passed id'd reference.
 func (part *PartialInstances) newInstance(pending *PendingInstance, class *M.ClassInfo, props PropertyBuilders) {
 	id, name, long := pending.id, pending.name, pending.longName
 	values := make(PendingValues)
@@ -32,10 +30,7 @@ func (part *PartialInstances) newInstance(pending *PendingInstance, class *M.Cla
 	part.partials[id] = partial
 }
 
-//
-// makeData sets all pending data to the known instances.
-// returns thos instance and the tables
-//
+// makeData sets all pending data to the known instances; returns those instance and the tables.
 func (part *PartialInstances) makeData(choices []S.ChoiceStatement, kvs []S.KeyValueStatement,
 ) (instances M.InstanceMap, tables TableRelations, err error) {
 	if e := part._addChoices(choices); e != nil {
@@ -53,9 +48,7 @@ func (part *PartialInstances) makeData(choices []S.ChoiceStatement, kvs []S.KeyV
 	return instances, tables, err
 }
 
-//
-// via makeData(): Add key value data to the targeted instances
-//
+// _addChoices, via makeData(): adds key value data to the targeted instances
 func (part *PartialInstances) _addChoices(choices []S.ChoiceStatement) (err error) {
 	part.log.Println("adding instance choices")
 	for _, choice := range choices {
@@ -75,9 +68,7 @@ func (part *PartialInstances) _addChoices(choices []S.ChoiceStatement) (err erro
 	return err
 }
 
-//
-// via makeData(): Add key value data to the targeted instances
-//
+// _addKeyValues, via makeData(): adds key value data to the targeted instances
 func (part *PartialInstances) _addKeyValues(kvs []S.KeyValueStatement) (err error) {
 	part.log.Println("adding instance key values")
 	for _, kv := range kvs {

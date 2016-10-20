@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"fmt"
 	"github.com/ionous/sashimi/compiler/call"
 	M "github.com/ionous/sashimi/compiler/xmodel"
 	E "github.com/ionous/sashimi/event"
@@ -47,7 +46,7 @@ func (ctx *Compiler) processAssertions(asserts []S.AssertionStatement) (err erro
 		if !didSomething {
 			for _, pending := range asserts {
 				fields, source := pending.Fields(), pending.Source()
-				e := fmt.Errorf("didn't understand how to make a `%s` called `%s`", fields.Owner, fields.Called)
+				e := errutil.New("didn't understand how to make a", fields.Owner, "called", fields.Called)
 				err = errutil.Append(err, SourceError(source, e))
 			}
 		}
@@ -102,7 +101,7 @@ func (ctx *Compiler) compileActions(classes M.ClassMap,
 	for _, act := range ctx.Source.Actions {
 		fields := act.Fields()
 		if actionId, source, target, context, e := ctx.resolveAction(classes, fields); e != nil {
-			err = errutil.Append(err, fmt.Errorf("couldnt compile action %v, %s", fields, e))
+			err = errutil.Append(err, errutil.New("couldnt compile action", fields, e))
 		} else {
 			// and the name of event...
 			eventId, e := ctx.Names.addName(fields.Event, actionId.String())
@@ -132,19 +131,16 @@ func (ctx *Compiler) resolveAction(classes M.ClassMap, fields S.ActionAssertionF
 ) (actionId ident.Id, owner, target, context *M.ClassInfo, err error) {
 	// find the primary class
 	if cls, ok := classes.FindClass(fields.Source); !ok {
-		e := fmt.Errorf("couldn't find class %+v", fields)
-		err = errutil.Append(err, e)
+		err = errutil.Append(err, errutil.New("couldn't find class", fields.Source))
 	} else {
 		// and the other two optional ones
 		target, ok = classes[ctx.Classes.singleToPlural[fields.Target]]
 		if !ok && fields.Target != "" {
-			e := fmt.Errorf("unknown target class '%s'", fields.Target)
-			err = errutil.Append(err, e)
+			err = errutil.Append(err, errutil.New("unknown target class", fields.Target))
 		}
 		context, ok = classes[ctx.Classes.singleToPlural[fields.Context]]
 		if !ok && fields.Context != "" {
-			e := fmt.Errorf("unknown context class '%s'", fields.Context)
-			err = errutil.Append(err, e)
+			err = errutil.Append(err, errutil.New("unknown context class", fields.Context))
 		}
 		if err == nil {
 			// make sure these names are unique
@@ -167,15 +163,15 @@ func (ctx *Compiler) newCallback(
 	ret M.ListenerCallback, err error,
 ) {
 	if cb, e := ctx.Calls.CompileCallback(callback); e != nil {
-		err = errutil.Append(e, fmt.Errorf("couldn't compile callback for `%s`", owner))
+		err = errutil.Append(e, errutil.New("couldn't compile callback for", owner))
 	} else if cls, _ := classes.FindClass(owner); cls != nil {
 		ret = M.NewClassCallback(cls, cb, options)
 	} else if inst, ok := instances.FindInstance(owner); ok {
 		ret = M.NewInstanceCallback(inst, cb, options)
 	} else {
-		err = fmt.Errorf("unknown listener requested `%s`", owner)
+		err = errutil.New("unknown listener requested", owner)
 	}
-	return ret, err
+	return
 }
 
 //
@@ -190,6 +186,7 @@ func (ctx *Compiler) makeActionHandlers(classes M.ClassMap, instances M.Instance
 			err = errutil.Append(err, SourceError(statement.Source(), e))
 			continue
 		}
+
 		var options M.ListenerOptions
 		if f.Phase == E.CapturingPhase {
 			options |= M.EventCapture
@@ -278,7 +275,7 @@ func (ctx *Compiler) compileAliases(instances M.InstanceMap, actions M.ActionMap
 				parserAction := M.ParserAction{id, phrases}
 				parserActions = append(parserActions, parserAction)
 			} else {
-				e := fmt.Errorf("unknown alias requested %s", key)
+				e := errutil.New("unknown alias requested", key)
 				err = errutil.Append(err, SourceError(alias.Source(), e))
 			}
 		}
@@ -302,7 +299,7 @@ func (ctx *Compiler) compileAliases(instances M.InstanceMap, actions M.ActionMap
 //
 func (ctx *Compiler) Compile() (*M.Model, error) {
 	// create empty classes,instances,tables,actions from their assertions
-	ctx.Log.Println("reading assertions")
+	ctx.Log.Println("reading assertions", len(ctx.Source.Asserts))
 	err := ctx.processAssertions(ctx.Source.Asserts)
 	if err != nil {
 		return nil, err
@@ -310,7 +307,7 @@ func (ctx *Compiler) Compile() (*M.Model, error) {
 
 	// add class primitive values;
 	// queuing any we types we cant immediately resolve.
-	ctx.Log.Println("adding class properties")
+	ctx.Log.Println("adding class properties", len(ctx.Source.Properties))
 	for _, prop := range ctx.Source.Properties {
 		fields := prop.Fields()
 		if class, ok := ctx.Classes.findByPluralName(fields.Class); !ok {
@@ -328,7 +325,7 @@ func (ctx *Compiler) Compile() (*M.Model, error) {
 	}
 
 	// add class enumerations
-	ctx.Log.Println("adding enums")
+	ctx.Log.Println("adding enums", len(ctx.Source.Enums))
 	for _, enum := range ctx.Source.Enums {
 		fields := enum.Fields()
 		if class, ok := ctx.Classes.findByPluralName(fields.Class); !ok {

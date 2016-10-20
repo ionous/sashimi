@@ -109,9 +109,9 @@ func Describe_Quips(s *Script) {
 
 	s.The("actors",
 		Can("comment").And("commenting").RequiresOne("quip"),
-		To("comment", func(g G.Play) { ReflectToTarget(g, "report comment") }),
+		To("comment", ReflectToTarget("report comment")),
 		Can("discuss").And("discussing").RequiresOne("quip"),
-		To("discuss", func(g G.Play) { ReflectToTarget(g, "be discussed") }),
+		To("discuss", ReflectToTarget("be discussed")),
 	)
 
 	s.The("quips",

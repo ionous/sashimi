@@ -47,7 +47,7 @@ func init() {
 		//
 		s.The("actors",
 			Can("switch it on").And("switching it on").RequiresOne("object"),
-			To("switch it on", func(g G.Play) { ReflectToTarget(g, "report switched on") }))
+			To("switch it on", ReflectToTarget("report switched on")))
 
 		s.The("objects",
 			Can("report switched on").And("reporting switched on").RequiresOne("actor"),
@@ -79,7 +79,7 @@ func init() {
 		//
 		s.The("actors",
 			Can("switch it off").And("switching it off").RequiresOne("prop"),
-			To("switch it off", func(g G.Play) { ReflectToTarget(g, "report switch off") }))
+			To("switch it off", ReflectToTarget("report switch off")))
 
 		s.The("devices",
 			Can("report switch off").And("reporting switch off").RequiresNothing(),

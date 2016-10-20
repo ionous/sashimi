@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"github.com/ionous/mars/rtm"
 	E "github.com/ionous/sashimi/event"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
@@ -69,8 +70,11 @@ func (cb GameCallback) HandleEvent(evt E.IEvent) (err error) {
 			act.runAfterDefaults(call) // FIX: switch to adding to adapter? i just dont like that the action changes...
 		} else {
 			play := cb.game.newPlay(act, cb.GetClass())
-			fn(play)
-			if act.cancelled {
+			//-----------------------------------
+			rt := &Mars{rtm.NewRtm(cb.game.Model, nil), play}
+			if e := rt.Execute(fn).Execute(rt); e != nil {
+				err = e
+			} else if act.cancelled {
 				evt.StopImmediatePropagation()
 				evt.PreventDefault()
 			}

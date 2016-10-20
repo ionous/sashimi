@@ -9,7 +9,7 @@ import (
 
 // returned by object/relation array b/c we cant mutate individual values
 type objectReadValue struct {
-	panicValue
+	PanicValue
 	currentVal ident.Id
 }
 
@@ -19,7 +19,7 @@ func (p objectReadValue) GetObject() (ret ident.Id) {
 
 // the one side of a many-to-one, one-to-one, or one-to-many relation.
 func newRelatedValue(p *propBase, rel *M.RelationModel) meta.Value {
-	return objectWriteValue{panicValue{p}, rel.GetOther(p.prop.Id)}
+	return objectWriteValue{PanicValue{p}, rel.GetOther(p.prop.Id)}
 }
 
 // returned by newRelatedValue
@@ -27,7 +27,7 @@ func newRelatedValue(p *propBase, rel *M.RelationModel) meta.Value {
 // it could live on a whole other layer, and the relation could drive the watch,
 // and the Relation value in the PropertyModel wouldnt be needed.
 type objectWriteValue struct {
-	panicValue
+	PanicValue
 	targetProp ident.Id
 }
 
@@ -38,10 +38,10 @@ func (p objectWriteValue) GetObject() ident.Id {
 func (p objectWriteValue) SetRelation(id ident.Id) (err error) {
 	if was := p.GetObject(); was != id {
 		if id.Empty() {
-			err = p.set(id)
+			err = p.SetGeneric(id)
 		} else if e := p.mdl.match(id, p.prop.Relates); e != nil {
 			err = e
-		} else if e := p.set(id); e != nil {
+		} else if e := p.SetGeneric(id); e != nil {
 			err = e
 		}
 	}
@@ -53,14 +53,14 @@ func (p objectWriteValue) SetObject(id ident.Id) (err error) {
 		// 1. set this side of the relation
 		if id.Empty() {
 			// empty? clear it.
-			err = p.set(id)
+			err = p.SetGeneric(id)
 		} else {
 			// check that the target object is allowed
 			if e := p.mdl.match(id, p.prop.Relates); e != nil {
 				err = e
 			} else {
 				// set this; then set the reverse.
-				if e := p.set(id); e != nil {
+				if e := p.SetGeneric(id); e != nil {
 					err = e
 				} else {
 					// set the reverse, if the reverse is also a one-to-one.

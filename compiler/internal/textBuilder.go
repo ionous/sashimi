@@ -1,13 +1,13 @@
 package internal
 
 import (
+	"github.com/ionous/mars/rt"
 	M "github.com/ionous/sashimi/compiler/xmodel"
+	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 )
 
-//
-// NewTextBuilder returns an interface which can generate a text property
-//
+// NewTextBuilder returns an interface which can generate a text property.
 func NewTextBuilder(id ident.Id, name string, isMany bool) (IBuildProperty, error) {
 	prop := M.TextProperty{id, name, isMany}
 	return TextBuilder{prop}, nil
@@ -22,6 +22,14 @@ func (txt TextBuilder) BuildProperty() (M.IProperty, error) {
 }
 
 func (txt TextBuilder) SetProperty(ctx PropertyContext) (err error) {
-	nilVal := ""
-	return ctx.values.lockSet(ctx.inst, txt.Id, nilVal, ctx.value)
+	nilVal := (*rt.TextEval)(nil)
+	switch val := ctx.value.(type) {
+	case string:
+		err = ctx.values.lockSet(ctx.inst, txt.Id, nilVal, rt.Text(val))
+	case rt.TextEval:
+		err = ctx.values.lockSet(ctx.inst, txt.Id, nilVal, val)
+	default:
+		err = errutil.New("TextBuilder", "unexpected number type", ctx.inst, txt.Id, val)
+	}
+	return
 }

@@ -1,8 +1,8 @@
 package source
 
 import (
+	"github.com/ionous/mars/rt"
 	E "github.com/ionous/sashimi/event"
-	G "github.com/ionous/sashimi/game"
 )
 
 // holds event callbacks
@@ -14,7 +14,7 @@ type RunStatement struct {
 type RunFields struct {
 	Owner    string
 	Action   string
-	Callback G.Callback
+	Callback rt.Execute
 	Phase    E.Phase
 }
 

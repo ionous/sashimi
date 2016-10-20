@@ -3,6 +3,7 @@ package xmodel
 import (
 	"fmt"
 	"github.com/ionous/sashimi/util/ident"
+	"strconv"
 )
 
 // List of event listeners and their callbacks.
@@ -36,6 +37,10 @@ type ListenerCallback struct {
 }
 
 type ListenerOptions int
+
+func (l ListenerOptions) String() string {
+	return strconv.FormatInt(int64(l), 16)
+}
 
 const (
 	EventCapture ListenerOptions = 1 << iota

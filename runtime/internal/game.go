@@ -1,10 +1,10 @@
 package internal
 
 import (
-	"fmt"
 	E "github.com/ionous/sashimi/event"
-	G "github.com/ionous/sashimi/game"
+	//	G "github.com/ionous/sashimi/game"
 	"github.com/ionous/sashimi/meta"
+	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 )
 
@@ -24,7 +24,7 @@ func NewGame(core RuntimeCore, m meta.Model) *Game {
 	return g
 }
 
-func (g *Game) newPlay(data *RuntimeAction, hint ident.Id) G.Play {
+func (g *Game) newPlay(data *RuntimeAction, hint ident.Id) *GameEventAdapter {
 	return &GameEventAdapter{Game: g, data: data, hint: hint}
 }
 
@@ -73,9 +73,9 @@ func (g *Game) NewRuntimeAction(action meta.Action, nouns ...ident.Id,
 	types := action.GetNouns()
 	switch diff := len(nouns) - len(types); {
 	case diff < 0:
-		err = fmt.Errorf("too few nouns specified for '%s', %d", action, diff)
+		err = errutil.New("too few nouns specified for", action)
 	case diff > 0:
-		err = fmt.Errorf("too many nouns specified for '%s', +%d", action, diff)
+		err = errutil.New("too many nouns specified for", action)
 	default:
 		objs := make([]meta.Instance, len(types))
 		for i, class := range types {
@@ -84,7 +84,7 @@ func (g *Game) NewRuntimeAction(action meta.Action, nouns ...ident.Id,
 				err = InstanceNotFound(noun.String())
 				break
 			} else if !g.Model.AreCompatible(gobj.GetParentClass(), class) {
-				err = fmt.Errorf("type mismatch %v is %v expected %v", noun, gobj.GetParentClass(), class)
+				err = errutil.New("type mismatch", noun, "is", gobj.GetParentClass(), "; but, expected", class)
 				break
 			} else {
 				objs[i] = gobj

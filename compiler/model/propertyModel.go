@@ -9,6 +9,7 @@ const (
 	TextProperty                 = "TextProperty"
 	PointerProperty              = "PointerProperty"
 	EnumProperty                 = "EnumProperty"
+	// ActionProperty               = "ActionProperty"
 )
 
 type PropertyModel struct {

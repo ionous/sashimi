@@ -1,11 +1,10 @@
 package source
 
 import (
-	G "github.com/ionous/sashimi/game"
+	"github.com/ionous/mars/rt"
 )
 
-//
-// holds event callbacks
+// ListenStatement holds event callbacks.
 type ListenStatement struct {
 	fields ListenFields
 	source Code
@@ -23,7 +22,7 @@ const (
 type ListenFields struct {
 	Owner    string
 	Event    string
-	Callback G.Callback
+	Callback rt.Execute
 	Options  ListenOptions
 }
 

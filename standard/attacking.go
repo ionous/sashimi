@@ -1,23 +1,21 @@
 package standard
 
 import (
-	G "github.com/ionous/sashimi/game"
+	"github.com/ionous/mars/g"
 	. "github.com/ionous/sashimi/script"
-	. "github.com/ionous/sashimi/standard/live"
 )
 
 func init() {
 	AddScript(func(s *Script) {
 		s.The("actors",
 			Can("attack it").And("attacking it").RequiresOne("object"),
-			To("attack it", func(g G.Play) { ReflectToTarget(g, "report attack") }))
+			To("attack it", g.ReflectToTarget("report attack")))
 
 		s.The("objects",
 			Can("report attack").And("reporting attack").RequiresOne("actor"),
-			To("report attack", func(g G.Play) {
-				if g.The("player").Equals(g.The("actor")) {
-					g.Say("Violence isn't the answer.")
-				}
+			To("report attack", g.Choose{
+				If:   g.Equals{g.Our("player"), g.Our("actor")},
+				True: g.Say("Violence isn't the answer."),
 			}))
 
 		s.Execute("attack it", Matching("attack|break|smash|hit|fight|torture {{something}}").

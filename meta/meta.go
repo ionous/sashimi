@@ -138,10 +138,15 @@ const (
 	ArrayProperty   = 1 << 16
 )
 
+type Generic interface{}
+
 type Property interface {
 	GetId() ident.Id
 	GetName() string
 	GetType() PropertyType
+
+	GetGeneric() Generic
+	SetGeneric(Generic) error
 	//GetObjectType()?
 	// or maybe IsCompatible(inst) bool
 	GetValue() Value

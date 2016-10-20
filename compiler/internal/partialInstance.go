@@ -5,10 +5,8 @@ import (
 	"github.com/ionous/sashimi/util/ident"
 )
 
-//
 // PartialInstance binds an instance to one particular class,
 // and begins to fill out the values for the future object.
-//
 type PartialInstance struct {
 	id               ident.Id // unique id for the instance
 	name             string
@@ -20,7 +18,7 @@ type PartialInstance struct {
 	tables           TableRelations   // access to relation data
 }
 
-// Helper to set instance property values
+// setKeyValue, helper to set instance property choices.
 func (inst *PartialInstance) setKeyValue(id ident.Id, value interface{}) (err error) {
 	if builder, ok := inst.propertyBuilders.propertyById(id); !ok {
 		err = PropertyNotFound(inst.class.Id, id.String())
@@ -29,6 +27,8 @@ func (inst *PartialInstance) setKeyValue(id ident.Id, value interface{}) (err er
 	}
 	return err
 }
+
+// setNameValue, helper to set instance property values.
 func (inst *PartialInstance) setNameValue(name string, value interface{}) (err error) {
 	if builder, ok := inst.propertyBuilders.findProperty(name); !ok {
 		err = PropertyNotFound(inst.class.Id, name)

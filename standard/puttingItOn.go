@@ -12,7 +12,7 @@ func init() {
 		s.The("actors",
 			// FIX? word-wise this is wrong ( see tickle-it-with, though it is "correct" )
 			Can("put it onto").And("putting it onto").RequiresOne("supporter").AndOne("prop"),
-			To("put it onto", func(g G.Play) { ReflectWithContext(g, "report put") }),
+			To("put it onto", ReflectWithContext("report put")),
 			//  can't put clothes being worn
 			Before("putting it onto").Always(func(g G.Play) {
 				prop := g.The("action.Context")
@@ -50,7 +50,7 @@ func init() {
 		// 2. supporters
 		s.The("supporters",
 			Can("report put").And("reporting put").RequiresOne("prop").AndOne("actor"),
-			To("report put", func(g G.Play) { ReflectWithContext(g, "report placed") }))
+			To("report put", ReflectWithContext("report placed")))
 		// 3. context
 		s.The("props",
 			Can("report placed").And("reporting placed").RequiresOne("actor").AndOne("supporter"),

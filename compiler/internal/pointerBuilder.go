@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"github.com/ionous/mars/rt"
 	M "github.com/ionous/sashimi/compiler/xmodel"
 	"github.com/ionous/sashimi/util/ident"
 )
@@ -23,16 +24,16 @@ func (ptr PointerBuilder) BuildProperty() (M.IProperty, error) {
 }
 
 func (ptr PointerBuilder) SetProperty(ctx PropertyContext) (err error) {
-	var nilVal ident.Id
+	nilVal := (*rt.RefEval)(nil)
 	if otherName, okay := ctx.value.(string); !okay {
-		err = SetValueMismatch(ctx.inst, ptr.Id, nilVal, ctx.value)
+		err = SetValueMismatch("pointer", ctx.inst, ptr.Id, nilVal, ctx.value)
 	} else {
 		otherId := M.MakeStringId(otherName)
 		if _, ok := ctx.refs[otherId]; !ok {
 			err = M.InstanceNotFound(otherName)
 		} else {
-			err = ctx.values.lockSet(ctx.inst, ptr.Id, nilVal, otherId)
+			err = ctx.values.lockSet(ctx.inst, ptr.Id, nilVal, rt.Reference(otherId))
 		}
 	}
-	return err
+	return
 }

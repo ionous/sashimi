@@ -1,3 +1,6 @@
 package game
 
-type Callback func(Play)
+import "github.com/ionous/mars/rt"
+
+type Callback rt.Execute
+type OldCallback func(Play)

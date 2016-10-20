@@ -129,7 +129,7 @@ func (c *classInfo) makeProperty(p *M.PropertyModel) meta.Property {
 		setValue: c.setValue}
 }
 
-func (c *classInfo) getValue(p *M.PropertyModel) (ret GenericValue) {
+func (c *classInfo) getValue(p *M.PropertyModel) (ret meta.Generic) {
 	switch p.Id {
 	case pluralId:
 		ret = c.Plural
@@ -141,7 +141,7 @@ func (c *classInfo) getValue(p *M.PropertyModel) (ret GenericValue) {
 	return ret
 }
 
-func (c *classInfo) setValue(p *M.PropertyModel, v GenericValue) error {
+func (c *classInfo) setValue(p *M.PropertyModel, v meta.Generic) error {
 	// test current expect full on panic, even through we return an error... hmmm...
 	panic("classes dont support set property")
 }

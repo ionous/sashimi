@@ -1,7 +1,7 @@
 package metal
 
 import (
-	"fmt"
+	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 )
 
@@ -9,43 +9,43 @@ import (
 // panicing on every get() and set(), and then
 // specific property types override the specific methods they need:
 // .text for text, num for num, etc.
-type panicValue struct {
+type PanicValue struct {
 	*propBase
 }
 
-func (p panicValue) GetNum() float64 {
-	panic(fmt.Errorf("get num not supported for property %s", p.prop))
+func (p PanicValue) GetNum() float64 {
+	panic(errutil.New("get num not supported for property", p.prop))
 }
-func (p panicValue) SetNum(float64) error {
-	panic(fmt.Errorf("set num not supported for property %s", p.prop))
+func (p PanicValue) SetNum(float64) error {
+	panic(errutil.New("set num not supported for property", p.prop))
 }
-func (p panicValue) AppendNum(float64) error {
-	panic(fmt.Errorf("append num not supported for property %s", p.prop))
+func (p PanicValue) AppendNum(float64) error {
+	panic(errutil.New("append num not supported for property", p.prop))
 }
-func (p panicValue) GetText() string {
-	panic(fmt.Errorf("get text not supported for property %s", p.prop))
+func (p PanicValue) GetText() string {
+	panic(errutil.New("get text not supported for property", p.prop))
 }
-func (p panicValue) SetText(string) error {
-	panic(fmt.Errorf("set text not supported for property %s", p.prop))
+func (p PanicValue) SetText(string) error {
+	panic(errutil.New("set text not supported for property", p.prop))
 }
-func (p panicValue) AppendText(string) error {
-	panic(fmt.Errorf("append text not supported for property %s", p.prop))
+func (p PanicValue) AppendText(string) error {
+	panic(errutil.New("append text not supported for property", p.prop))
 }
-func (p panicValue) GetObject() ident.Id {
-	panic(fmt.Errorf("get object not supported for property %s", p.prop))
+func (p PanicValue) GetObject() ident.Id {
+	panic(errutil.New("get object not supported for property", p.prop))
 }
-func (p panicValue) SetObject(ident.Id) error {
-	panic(fmt.Errorf("set object not supported for property %s", p.prop))
+func (p PanicValue) SetObject(ident.Id) error {
+	panic(errutil.New("set object not supported for property", p.prop))
 }
-func (p panicValue) SetRelation(ident.Id) error {
-	panic(fmt.Errorf("set relation not supported for property %s", p.prop))
+func (p PanicValue) SetRelation(ident.Id) error {
+	panic(errutil.New("set relation not supported for property", p.prop))
 }
-func (p panicValue) AppendObject(ident.Id) error {
-	panic(fmt.Errorf("append object not supported for property %s", p.prop))
+func (p PanicValue) AppendObject(ident.Id) error {
+	panic(errutil.New("append object not supported for property", p.prop))
 }
-func (p panicValue) GetState() ident.Id {
-	panic(fmt.Errorf("get state not supported for property %s", p.prop))
+func (p PanicValue) GetState() ident.Id {
+	panic(errutil.New("get state not supported for property", p.prop))
 }
-func (p panicValue) SetState(ident.Id) error {
-	panic(fmt.Errorf("set state not supported for property %s", p.prop))
+func (p PanicValue) SetState(ident.Id) error {
+	panic(errutil.New("set state not supported for property", p.prop))
 }

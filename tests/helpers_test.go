@@ -2,6 +2,7 @@ package tests
 
 import (
 	"fmt"
+	"github.com/ionous/mars/script"
 	"github.com/ionous/sashimi/compiler"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/metal"
@@ -10,7 +11,6 @@ import (
 	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/runtime/parse"
-	. "github.com/ionous/sashimi/script"
 	"github.com/ionous/sashimi/util"
 	"github.com/ionous/sashimi/util/ident"
 	"log"
@@ -65,33 +65,37 @@ func (out TestOutput) Log(s string) {
 
 type ParentCreator func(meta.Model) api.LookupParents
 
-func NewTestGameSource(t *testing.T, s *Script, source string, pc ParentCreator) (ret TestGame, err error) {
-	if model, e := s.Compile(Log(t)); e != nil {
+func NewTestGameSource(t *testing.T, s *script.Script, src string, pc ParentCreator) (ret TestGame, err error) {
+	if statements, e := s.BuildStatements(); e != nil {
 		err = e
 	} else {
-		storage := make(metal.ObjectValueMap)
-		saver := &TestSaver{}
-		cons := TestOutput{t, &util.BufferedOutput{}}
-		values := TestValueMap{storage}
-		modelApi := metal.NewMetal(model.Model, values)
-		var parents api.LookupParents
-		if pc != nil {
-			parents = pc(modelApi)
-		}
-		cfg := R.NewConfig().SetCalls(model.Calls).SetOutput(cons).SetSaveLoad(mem.NewSaveHelper("testing", storage, saver)).SetParentLookup(parents)
-		//
-		game := cfg.MakeGame(modelApi)
-		if parser, e := parse.NewObjectParser(game, ident.MakeId(source)); e != nil {
+		if model, e := compiler.Compile(Log(t), statements); e != nil {
 			err = e
 		} else {
-			ret = TestGame{t, game, model, cons, parser, saver, storage}
+			storage := make(metal.ObjectValueMap)
+			saver := &TestSaver{}
+			cons := TestOutput{t, &util.BufferedOutput{}}
+			values := TestValueMap{storage}
+			modelApi := metal.NewMetal(model.Model, values)
+			var parents api.LookupParents
+			if pc != nil {
+				parents = pc(modelApi)
+			}
+			cfg := R.NewConfig().SetCalls(model.Calls).SetOutput(cons).SetSaveLoad(mem.NewSaveHelper("testing", storage, saver)).SetParentLookup(parents)
+			//
+			game := cfg.MakeGame(modelApi)
+			if parser, e := parse.NewObjectParser(game, ident.MakeId(src)); e != nil {
+				err = e
+			} else {
+				ret = TestGame{t, game, model, cons, parser, saver, storage}
+			}
 		}
 	}
-	return ret, err
+	return
 }
 
 //
-func NewTestGame(t *testing.T, s *Script) (ret TestGame, err error) {
+func NewTestGame(t *testing.T, s *script.Script) (ret TestGame, err error) {
 	return NewTestGameSource(t, s, "player", nil)
 }
 

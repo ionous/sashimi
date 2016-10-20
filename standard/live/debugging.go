@@ -4,7 +4,7 @@ package live
 // and that might be needed for this, where we really dont want *shared* globals
 // you would want this tied to session, if at all possible.
 //
-const VersionString = "Sashimi Interactive Fiction Engine - 0.1"
+const VersionString = "Sashimi Interactive Fiction Engine - 0.2"
 
 var Debugging bool
 

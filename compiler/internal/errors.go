@@ -1,50 +1,35 @@
 package internal
 
 import (
-	"fmt"
 	"github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 )
 
-func SourceError(src source.Code, e error) error {
-	return errutil.Func(func() string {
-		return fmt.Sprintf("%s @ %s", e.Error(), src)
-	})
+func SourceError(src source.Code, err error) error {
+	return errutil.New("source code error", src, err)
 }
 
 func ClassNotFound(class string) error {
-	return errutil.Func(func() string {
-		return fmt.Sprintf("class '%s' not found", class)
-	})
+	return errutil.New("class", class, "not found")
 }
 
 func EnumMultiplySpecified(class ident.Id, enum ident.Id) error {
-	return errutil.Func(func() string {
-		return fmt.Sprintf("enum %s.%s specified more than once", class, enum)
-	})
+	return errutil.New("class enum", class, enum, "specified more than once")
 }
 
 func PropertyNotFound(class ident.Id, prop string) error {
-	return errutil.Func(func() string {
-		return fmt.Sprintf("property '%s.%s' not found", class, prop)
-	})
+	return errutil.New("class property", class, prop, "property not found")
 }
 
 func SetValueChanged(inst, prop ident.Id, curr, want interface{}) error {
-	return errutil.Func(func() string {
-		return fmt.Sprintf("%s.%s value change '%v' to '%v'", inst, prop, curr, want)
-	})
+	return errutil.New("instance propeperty", inst, prop, "value change", curr, "to", want)
 }
 
-func SetValueMismatch(inst, prop ident.Id, want, got interface{}) error {
-	return errutil.Func(func() string {
-		return fmt.Sprintf("%s.%s expected value of %T got %T", inst, prop, want, got)
-	})
+func SetValueMismatch(name, inst, prop ident.Id, want, got interface{}) error {
+	return errutil.New("instance property", inst, prop, name, "expected value of", want, "got", got)
 }
 
-func UnknownPropertyError(cls ident.Id, name string) error {
-	return errutil.Func(func() string {
-		return fmt.Sprintf("unhandled property %s.%s.", cls, name)
-	})
+func UnknownPropertyError(class ident.Id, name string) error {
+	return errutil.New("class property", class, name, "unknown error")
 }

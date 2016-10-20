@@ -15,7 +15,7 @@ type arrayValues struct {
 }
 
 func (ar arrayValues) NumValue() int {
-	slice := reflect.ValueOf(ar.getGeneric())
+	slice := reflect.ValueOf(ar.GetGeneric())
 	return slice.Len()
 }
 
@@ -25,20 +25,20 @@ func (ar arrayValues) ValueNum(i int) meta.Value {
 
 func (ar arrayValues) ClearValues() error {
 	empty := ar.mdl.getZero(ar.prop)
-	return ar.set(empty)
+	return ar.SetGeneric(empty)
 }
 
 func (ar arrayValues) AppendNum(v float64) error {
-	slice := ar.getGeneric().([]float64)
-	return ar.set(append(slice, v))
+	slice := ar.GetGeneric().([]float64)
+	return ar.SetGeneric(append(slice, v))
 }
 
 func (ar arrayValues) AppendText(v string) error {
-	slice := ar.getGeneric().([]string)
-	return ar.set(append(slice, v))
+	slice := ar.GetGeneric().([]string)
+	return ar.SetGeneric(append(slice, v))
 }
 
 func (ar arrayValues) AppendObject(v ident.Id) error {
-	slice := ar.getGeneric().([]ident.Id)
-	return ar.set(append(slice, v))
+	slice := ar.GetGeneric().([]ident.Id)
+	return ar.SetGeneric(append(slice, v))
 }

@@ -1,20 +1,18 @@
 package source
 
-//
 // Code records the origin of statements.
-//
 type Code string
 
-//
+func (c Code) String() string {
+	return string(c)
+}
+
 // IStatement provides a uniform way of locating user script code.
-//
 type IStatement interface {
 	Source() Code
 }
 
-//
 // Statements contains all possible user script code.
-//
 type Statements struct {
 	ActionHandlers []RunStatement
 	Aliases        []AliasStatement
@@ -29,9 +27,7 @@ type Statements struct {
 	Relatives      []RelativeStatement
 }
 
-//
-// BuildingBlocks enables public, one-time-only creation of Statements.
-//
+// BuildingBlocks provides functions to create new Statements.
 type BuildingBlocks struct {
 	statements Statements
 }

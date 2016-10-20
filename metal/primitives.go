@@ -6,28 +6,28 @@ import (
 )
 
 // uses pointers re: gopherjs
-type numValue struct{ panicValue }
+type numValue struct{ PanicValue }
 
 func (p *numValue) SetNum(f float64) error {
-	return p.set(f)
+	return p.SetGeneric(f)
 }
 func (p *numValue) GetNum() float64 {
 	return p.getNum()
 }
 
 // uses pointers re: gopherjs
-type textValue struct{ panicValue }
+type textValue struct{ PanicValue }
 
 func (p *textValue) GetText() string {
 	return p.getString()
 }
 func (p *textValue) SetText(t string) error {
-	return p.set(t)
+	return p.SetGeneric(t)
 }
 
 // uses pointers re: gopherjs
 type pointerValue struct {
-	panicValue
+	PanicValue
 }
 
 func (p *pointerValue) GetObject() ident.Id {
@@ -37,11 +37,11 @@ func (p *pointerValue) GetObject() ident.Id {
 func (p *pointerValue) SetObject(id ident.Id) (err error) {
 	if !id.Equals(p.GetObject()) {
 		if id.Empty() {
-			err = p.set(id)
+			err = p.SetGeneric(id)
 		} else {
 			if e := p.mdl.match(id, p.prop.Relates); e != nil {
 				err = e
-			} else if e := p.set(id); e != nil {
+			} else if e := p.SetGeneric(id); e != nil {
 				err = e
 			}
 		}

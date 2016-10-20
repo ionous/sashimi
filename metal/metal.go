@@ -9,8 +9,6 @@ import (
 	"strings"
 )
 
-type GenericValue interface{}
-
 type Metal struct {
 	*M.Model
 	// objects ordered by index for linear travseral

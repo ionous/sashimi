@@ -3,7 +3,7 @@ package metal
 import "github.com/ionous/sashimi/util/ident"
 
 // uses pointers re: gopherjs
-type enumValue struct{ panicValue }
+type enumValue struct{ PanicValue }
 
 func (p *enumValue) GetState() (ret ident.Id) {
 	return p.getId()
@@ -11,5 +11,5 @@ func (p *enumValue) GetState() (ret ident.Id) {
 
 // FIX: constraints
 func (p *enumValue) SetState(c ident.Id) (err error) {
-	return p.set(c)
+	return p.SetGeneric(c)
 }

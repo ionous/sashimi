@@ -58,7 +58,7 @@ func (n *instInfo) makeProperty(p *M.PropertyModel) meta.Property {
 		setValue: n.setValue}
 }
 
-func (n *instInfo) getValue(p *M.PropertyModel) (ret GenericValue) {
+func (n *instInfo) getValue(p *M.PropertyModel) (ret meta.Generic) {
 	// try the object-value interface first
 	if v, ok := n.mdl.objectValues.GetValue(n.Id, p.Id); ok {
 		ret = v
@@ -72,7 +72,7 @@ func (n *instInfo) getValue(p *M.PropertyModel) (ret GenericValue) {
 	return
 }
 
-func (n *instInfo) setValue(p *M.PropertyModel, v GenericValue) error {
+func (n *instInfo) setValue(p *M.PropertyModel, v meta.Generic) error {
 	// STORE FIX: TEST CONSTRAINTS
 	return n.mdl.objectValues.SetValue(n.Id, p.Id, v)
 }

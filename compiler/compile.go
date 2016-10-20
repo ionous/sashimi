@@ -1,15 +1,16 @@
 package compiler
 
 import (
-	"fmt"
 	"github.com/ionous/sashimi/compiler/call"
 	i "github.com/ionous/sashimi/compiler/internal"
 	M "github.com/ionous/sashimi/compiler/model"
 	X "github.com/ionous/sashimi/compiler/xmodel"
 	S "github.com/ionous/sashimi/source"
+	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 	"io"
 	"log"
+	"reflect"
 )
 
 type Config struct {
@@ -57,7 +58,7 @@ func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 
 		// actionId -> callbackId
 		actions := make(map[ident.Id][]ident.Id)
-
+		log.Println("converting handlers", len(x.ActionHandlers))
 		for _, handler := range x.ActionHandlers {
 			act, callback, useCapture := handler.Action, handler.Callback, handler.UseCapture()
 			arr := actions[act]
@@ -71,7 +72,7 @@ func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 			}
 			actions[act] = arr
 		}
-
+		log.Println("converting actions", len(x.Actions))
 		for id, a := range x.Actions {
 			c.m.Actions[id] = &M.ActionModel{
 				Id:      a.Id,
@@ -86,7 +87,7 @@ func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 				DefaultActions: actions[a.Id],
 			}
 		}
-
+		log.Println("converting classes", len(x.Classes))
 		for id, srcClass := range x.Classes {
 			// if srcClass.Constraints.Len() > 0 {
 			// 	panic("constraints not implemented")
@@ -140,7 +141,7 @@ func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 			})
 			callbacks[e] = arr
 		}
-
+		log.Println("converting events", len(x.Events))
 		for id, evt := range x.Events {
 			c.m.Events[id] = &M.EventModel{
 				Id:   evt.Id,
@@ -153,7 +154,7 @@ func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 				Bubble:  bubble[id],
 			}
 		}
-
+		log.Println("converting instances", len(x.Instances))
 		for id, inst := range x.Instances {
 			c.m.Instances[id] = &M.InstanceModel{
 				Id:    inst.Id,
@@ -198,7 +199,7 @@ func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 		}
 		for id, rel := range x.Relations {
 			if rel.Source.Property.Empty() || rel.Dest.Property.Empty() {
-				panic(fmt.Sprintf("unsupported relation %s %s %s %s", id, rel.Style, rel.Source.Property, rel.Dest.Property))
+				panic(errutil.New("unsupported relation", id, rel.Style, rel.Source.Property, rel.Dest.Property))
 			}
 			c.m.Relations[id] = &M.RelationModel{
 				Id:     rel.Id,
@@ -210,7 +211,7 @@ func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 
 			switch rel.Style {
 			case X.ManyToMany:
-				panic(fmt.Sprintf("unsupported relation %s %s %s %s", id, rel.Style, rel.Source.Property, rel.Dest.Property))
+				panic(errutil.New("unsupported relation", id, rel.Style, rel.Source.Property, rel.Dest.Property))
 			case X.OneToOne:
 				c.flattenTable(rel.Dest.Property)
 				c.flattenTable(rel.Source.Property)
@@ -237,16 +238,16 @@ func (c converter) flattenTable(srcProp ident.Id) (err error) {
 			// 	find the one item they point to
 			// 		via the table and their relative property is rev
 			if rel, ok := p.(X.RelativeProperty); !ok {
-				err = fmt.Errorf("not a relative property? %s.%s(%T)", k, srcProp, p)
+				err = errutil.New("not a relative property?", k, srcProp, reflect.TypeOf(p))
 				break
 			} else if rel.IsMany {
-				err = fmt.Errorf("relative property is many; want one %s.%s(%T)", k, srcProp)
+				err = errutil.New("relative property is many; want one", k, srcProp)
 				break
 			} else if table, ok := c.x.Tables[rel.Relation]; !ok {
-				err = fmt.Errorf("missing table? %s", rel.Relation)
+				err = errutil.New("missing table?", rel.Relation)
 				break
 			} else if lst := table.List(k, rel.IsRev); len(lst) > 1 {
-				err = fmt.Errorf("expected at most one item %s.%s: %v", k, srcProp, lst)
+				err = errutil.New("expected at most one item", k, srcProp, "got", lst)
 				break
 			} else {
 				// note: we always set a value, even if its empty.
@@ -257,10 +258,10 @@ func (c converter) flattenTable(srcProp ident.Id) (err error) {
 					other = lst[0]
 				}
 				if dst, ok := c.m.Instances[k]; !ok {
-					err = fmt.Errorf("couldnt find target instance %s", k)
+					err = errutil.New("couldnt find target instance", k)
 					break
 				} else if old, ok := dst.Values[srcProp]; ok {
-					err = fmt.Errorf("value being set twice %s.%s (was:%v; now:%v", k, srcProp, old, other)
+					err = errutil.New("value being set twice", k, srcProp, "was", old, "now", other)
 					break
 				} else {
 					dst.Values[srcProp] = other
@@ -287,7 +288,7 @@ func eventOptions(opts X.ListenerOptions) (ret M.ListenerOptions) {
 		}
 	}
 	if opts != 0 {
-		panic(fmt.Sprintf("uncopied event options remain %x", opts))
+		panic(errutil.New("uncopied event options remain", opts))
 	}
 	return
 }
@@ -331,7 +332,7 @@ func propertyIsMany(prop X.IProperty) (ret bool) {
 	default:
 		panic("unknown x-model property type")
 	}
-	return ret
+	return
 }
 
 func parents(cls *X.ClassInfo, list []ident.Id) (ret []ident.Id) {
