@@ -1,20 +1,16 @@
 package runtime
 
 import (
-	"fmt"
 	G "github.com/ionous/sashimi/game"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/runtime/internal"
+	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 )
 
 type Game struct {
 	meta.Model
 	game *internal.Game
-}
-
-func (g *Game) NewAdapter() *internal.GameEventAdapter {
-	return internal.NewGameAdapter(g.game)
 }
 
 func NullObject(name string) G.IObject {
@@ -32,7 +28,7 @@ func (g *Game) QueueActionInstances(act meta.Action, objects []meta.Instance) *i
 func (g *Game) QueueAction(action string, nouns ...ident.Id) (ret *internal.RuntimeAction, err error) {
 	actionId := internal.MakeStringId(action)
 	if act, ok := g.GetAction(actionId); !ok {
-		err = fmt.Errorf("couldnt find action %s", action)
+		err = errutil.New("couldnt find action", action)
 	} else if data, e := g.game.NewRuntimeAction(act, nouns...); e != nil {
 		err = e
 	} else {

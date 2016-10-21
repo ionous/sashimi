@@ -1,21 +1,17 @@
 package internal
 
 import (
-	"fmt"
-	G "github.com/ionous/sashimi/game"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/ionous/sashimi/util/lang"
 	"strings"
 )
 
-var _ = fmt.Println
-
 // RuntimeAction contains data for event handlers and actions.
 type RuntimeAction struct {
 	action    meta.Action
 	objs      []meta.Instance
-	after     []QueuedCallback // FIX: WHY DO WE COPY THIS!?!
+	after     []meta.Callback // FIX: WHY DO WE COPY THIS!?!
 	cancelled bool
 }
 
@@ -37,23 +33,12 @@ func (act *RuntimeAction) GetContext() (ret meta.Instance) {
 	return
 }
 
-// each action can have a chain of default actions
-type QueuedCallback struct {
-	src  ident.Id
-	call G.Callback
-}
-
-// FIX: change callbacks to include a source file/line location
-func (q QueuedCallback) String() string {
-	return fmt.Sprint(q.call)
-}
-
 func (act *RuntimeAction) Cancelled() bool {
 	return act.cancelled
 }
 
 // queue for running after the default actions
-func (act *RuntimeAction) runAfterDefaults(cb QueuedCallback) {
+func (act *RuntimeAction) runAfterDefaults(cb meta.Callback) {
 	act.after = append(act.after, cb)
 }
 

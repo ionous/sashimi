@@ -1,11 +1,11 @@
 package internal
 
 import (
-	"fmt"
-	"github.com/ionous/mars/rtm"
 	E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game"
 	"github.com/ionous/sashimi/util/ident"
+	"github.com/ionous/sashimi/util/sbuf"
+	"log"
 )
 
 // QueuedAction implements Future for named actions.
@@ -24,7 +24,7 @@ type QueuedPhrase struct {
 }
 
 func (c *QueuedPhrase) String() string {
-	return fmt.Sprint("QueuedPhrase", c.run)
+	return sbuf.New("QueuedPhrase:", c.run).String()
 }
 
 // QueuedPhrases implements Future for a set of phrases.
@@ -37,7 +37,7 @@ type QueuedPhrases struct {
 }
 
 func (c *QueuedPhrases) String() string {
-	return fmt.Sprint("QueuedPhrases", c.run)
+	return sbuf.New("QueuedPhrases:", c.run).String()
 }
 
 // ChainedCallbacks implements Future for nested callbacks; created by PendingChain.
@@ -48,11 +48,12 @@ type ChainedCallback struct {
 }
 
 func (c *ChainedCallback) String() string {
-	return fmt.Sprint("ChainedCallback", c.cb)
+	return sbuf.New("QueuedPhrases", c.cb).String()
 }
 
 // g.The("player").Go("hack", "the nice code").Then(trailing actions...)
 func (a *QueuedAction) Run(g *Game) (err error) {
+	log.Println("running queued action")
 	// we've looped back now; end the event.
 	act := a.data
 	// start a new event frame:
@@ -68,19 +69,15 @@ func (a *QueuedAction) Run(g *Game) (err error) {
 		if !runDefault {
 			frame.EndEvent()
 		} else {
-			play := g.newPlay(act, ident.Empty())
 			if callbacks, ok := act.action.GetCallbacks(); ok {
-				for i := 0; i < callbacks.NumCallback(); i++ {
-					cb := callbacks.CallbackNum(i)
-					if found, ok := g.LookupCallback(cb); ok {
-						rt := &Mars{rtm.NewRtm(g.Model, nil), play}
-						if e := rt.Execute(found).Execute(rt); e != nil {
+				if cnt := callbacks.NumCallback(); cnt > 0 {
+					rt := NewMars(g, g.newPlay(act, ident.Empty()))
+					for i := 0; i < cnt; i++ {
+						cb := callbacks.CallbackNum(i)
+						if e := rt.Execute(cb); e != nil {
 							err = e
 							break
 						}
-					} else {
-						err = fmt.Errorf("internal error, couldnt find callback %s", cb)
-						break
 					}
 				}
 			}
@@ -89,22 +86,19 @@ func (a *QueuedAction) Run(g *Game) (err error) {
 			// run "after" actions, which are queued dynamically ( though who knows why. )
 			if after := a.data.after; len(after) > 0 {
 				// fmt.Println(len(after), "after actions")
-				play := g.newPlay(a.data, ident.Empty())
-				rt := &Mars{rtm.NewRtm(g.Model, nil), play}
-				//
+				rt := NewMars(g, g.newPlay(a.data, ident.Empty()))
 				for _, after := range after {
-					if e := rt.Execute(after.call).Execute(rt); e != nil {
+					if e := rt.Execute(after); e != nil {
 						err = e
 						break
 					}
-					//after.call(play)
 				}
 			}
 			// finally, run any trailing actions the caller may have specified.
 			// this is done outside of the event frame, we will see these later...
 			if a.next != nil {
 				// fmt.Println("queuing then")
-				a.next.Run(g)
+				err = a.next.Run(g)
 			}
 		}
 	}
@@ -112,6 +106,7 @@ func (a *QueuedAction) Run(g *Game) (err error) {
 }
 
 func (c *QueuedPhrase) Run(g *Game) (err error) {
+	log.Println("running queued phrase")
 	if e := RunPhrases(g, c.data, c.run); e != nil {
 		err = e
 	} else if c.next != nil {
@@ -122,6 +117,7 @@ func (c *QueuedPhrase) Run(g *Game) (err error) {
 
 //
 func (c *QueuedPhrases) Run(g *Game) (err error) {
+	log.Println("running queued phrases")
 	if e := RunPhrases(g, c.data, c.run...); e != nil {
 		err = e
 	} else if c.next != nil {
@@ -133,24 +129,16 @@ func (c *QueuedPhrases) Run(g *Game) (err error) {
 // during execute, whatever event we are in -- we want to stay in, until the end of execute.
 // basically we want to subvert the queue -- so all queued futures come into us
 func RunPhrases(g *Game, d *RuntimeAction, phrases ...G.RuntimePhrase) (err error) {
-	// oldQueue := g.Queue
-	// defer func() {
-	// 	g.Queue = oldQueue
-	// }()
-	// myQueue := NewActionQueue()
-	// // FIX: maybe we should get the queue from the event adapter...?
-	// g.Queue = myQueue
 	play := &GameEventAdapter{Game: g, data: d}
 	for _, run := range phrases {
 		run.Execute(play)
 	}
-	// return myQueue.ProcessActions(g)
 	return
 }
 
 //
 func (c *ChainedCallback) Run(g *Game) (err error) {
-	play := &GameEventAdapter{Game: g, data: c.data}
-	rt := &Mars{rtm.NewRtm(g.Model, nil), play}
-	return rt.Execute(c.cb).Execute(rt)
+	log.Println("running chained callback")
+	rt := NewMars(g, &GameEventAdapter{Game: g, data: c.data})
+	return rt.Execute(c.cb)
 }

@@ -1,11 +1,11 @@
 package internal
 
 import (
-	"fmt"
-	"github.com/ionous/mars/rtm"
 	E "github.com/ionous/sashimi/event"
 	"github.com/ionous/sashimi/meta"
+	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
+	"github.com/ionous/sashimi/util/sbuf"
 )
 
 // filter listeners to the events appropriate for this target
@@ -61,18 +61,14 @@ type GameCallback struct {
 // HandleEvent implements E.IListen.
 func (cb GameCallback) HandleEvent(evt E.IEvent) (err error) {
 	if act, ok := evt.Data().(*RuntimeAction); !ok {
-		err = fmt.Errorf("unexpected game event data type %T", act)
-	} else if fn, ok := cb.game.LookupCallback(cb.GetCallback()); !ok {
-		err = fmt.Errorf("couldn't find callback for listener %s", cb.Listener)
+		err = errutil.New("unexpected game event data type", sbuf.Type{act})
 	} else {
+		call := cb.GetCallback()
 		if cb.GetOptions().UseAfterQueue() {
-			call := QueuedCallback{cb.GetCallback(), fn}
 			act.runAfterDefaults(call) // FIX: switch to adding to adapter? i just dont like that the action changes...
 		} else {
-			play := cb.game.newPlay(act, cb.GetClass())
-			//-----------------------------------
-			rt := &Mars{rtm.NewRtm(cb.game.Model, nil), play}
-			if e := rt.Execute(fn).Execute(rt); e != nil {
+			rt := NewMars(cb.game, cb.game.newPlay(act, cb.GetClass()))
+			if e := rt.Execute(call); e != nil {
 				err = e
 			} else if act.cancelled {
 				evt.StopImmediatePropagation()

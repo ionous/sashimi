@@ -1,8 +1,9 @@
 package xmodel
 
 import (
-	"fmt"
+	"github.com/ionous/mars/rt"
 	"github.com/ionous/sashimi/util/ident"
+	"github.com/ionous/sashimi/util/sbuf"
 	"strconv"
 )
 
@@ -31,9 +32,9 @@ type ActionCallback struct {
 // For the sake of sharing: Even though we listen to events, we point to the action.
 type ListenerCallback struct {
 	Instance,
-	Class,
-	Callback ident.Id // Game callback triggered by cb listener.
-	Options ListenerOptions
+	Class ident.Id // Game callback triggered by cb listener.
+	Callback rt.Execute
+	Options  ListenerOptions
 }
 
 type ListenerOptions int
@@ -52,7 +53,7 @@ const (
 // Create a new class listener: triggers for all instances of the passed class.
 func NewClassCallback(
 	cls *ClassInfo,
-	callback ident.Id,
+	callback rt.Execute,
 	options ListenerOptions,
 ) ListenerCallback {
 	return ListenerCallback{ident.Empty(), cls.Id, callback, options}
@@ -61,7 +62,7 @@ func NewClassCallback(
 // Create a new instance listener: triggers for the passed instance.
 func NewInstanceCallback(
 	inst *InstanceInfo,
-	callback ident.Id,
+	callback rt.Execute,
 	options ListenerOptions,
 ) ListenerCallback {
 	return ListenerCallback{inst.Id, inst.Class.Id, callback, options}
@@ -78,11 +79,11 @@ func (cb ListenerCallback) GetId() (ret ident.Id) {
 }
 
 func (cb ActionCallback) String() string {
-	return fmt.Sprintf("'%s' -> '%s'", cb.GetId(), cb.Action)
+	return sbuf.New(cb.GetId(), "->", cb.Action).String()
 }
 
 func (cb EventCallback) String() string {
-	return fmt.Sprintf("'%s' -> '%s'", cb.GetId(), cb.Event)
+	return sbuf.New(cb.GetId(), "->", cb.Event).String()
 }
 
 // UseCapture if the listener wants to participate in the capture cycle ( default is bubble. )

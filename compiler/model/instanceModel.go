@@ -21,7 +21,7 @@ type Values map[ident.Id]Value
 type Value interface{}
 
 func (n *InstanceModel) String() string {
-	return sbuf.New().S(string(n.Id)).R('(').S(string(n.Class)).R(')').String()
+	return sbuf.New(n.Id, "(", n.Class, ")").String()
 }
 func (n *InstanceModel) GetId() ident.Id {
 	return n.Id

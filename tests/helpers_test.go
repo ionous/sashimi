@@ -6,7 +6,6 @@ import (
 	"github.com/ionous/sashimi/compiler"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/metal"
-	"github.com/ionous/sashimi/net/mem"
 	"github.com/ionous/sashimi/parser"
 	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/runtime/api"
@@ -73,7 +72,7 @@ func NewTestGameSource(t *testing.T, s *script.Script, src string, pc ParentCrea
 			err = e
 		} else {
 			storage := make(metal.ObjectValueMap)
-			saver := &TestSaver{}
+			//saver := &TestSaver{}
 			cons := TestOutput{t, &util.BufferedOutput{}}
 			values := TestValueMap{storage}
 			modelApi := metal.NewMetal(model.Model, values)
@@ -81,13 +80,14 @@ func NewTestGameSource(t *testing.T, s *script.Script, src string, pc ParentCrea
 			if pc != nil {
 				parents = pc(modelApi)
 			}
-			cfg := R.NewConfig().SetCalls(model.Calls).SetOutput(cons).SetSaveLoad(mem.NewSaveHelper("testing", storage, saver)).SetParentLookup(parents)
+			cfg := R.NewConfig().SetOutput(cons).SetParentLookup(parents)
+			//.SetSaveLoad(mem.NewSaveHelper("testing", storage, saver))
 			//
 			game := cfg.MakeGame(modelApi)
 			if parser, e := parse.NewObjectParser(game, ident.MakeId(src)); e != nil {
 				err = e
 			} else {
-				ret = TestGame{t, game, model, cons, parser, saver, storage}
+				ret = TestGame{t, game, model, cons, parser, storage}
 			}
 		}
 	}
@@ -105,7 +105,7 @@ type TestGame struct {
 	compiler.MemoryResult
 	out    TestOutput
 	Parser parser.P
-	saver  *TestSaver
+	//saver  *TestSaver
 	values metal.ObjectValueMap
 }
 
@@ -146,7 +146,6 @@ func (test *TestGame) RunInput(s string) (ret []string, err error) {
 
 func (test *TestGame) FlushOutput() (ret []string, err error) {
 	if e := test.Game.ProcessActions(); e != nil {
-		test.out.Println(e)
 		err = e
 	} else {
 		ret = test.out.Flush()
@@ -154,18 +153,19 @@ func (test *TestGame) FlushOutput() (ret []string, err error) {
 	return
 }
 
-// TestSaver implements mem.MemSaver
-type TestSaver struct {
-	blob mem.SaveGameBlob
-}
+// FIX: diabled for mars testing
+// // TestSaver implements mem.MemSaver
+// type TestSaver struct {
+// 	blob mem.SaveGameBlob
+// }
 
-func (t *TestSaver) SaveBlob(slot string, blob mem.SaveGameBlob) (string, error) {
-	t.blob = blob
-	return slot, nil
-}
-func (t *TestSaver) LoadBlob(slot string) (mem.SaveGameBlob, error) {
-	return t.blob, nil
-}
+// func (t *TestSaver) SaveBlob(slot string, blob mem.SaveGameBlob) (string, error) {
+// 	t.blob = blob
+// 	return slot, nil
+// }
+// func (t *TestSaver) LoadBlob(slot string) (mem.SaveGameBlob, error) {
+// 	return t.blob, nil
+// }
 
 // TestValueMap implements metal.ObjectValue
 type TestValueMap struct {

@@ -1,20 +1,21 @@
 package model
 
 import (
-	"fmt"
+	"github.com/ionous/mars/rt"
+	"github.com/ionous/sashimi/util/sbuf"
 )
 
 type CallbackModel struct {
-	File      string
-	Line      int
-	Iteration int
+	File         string
+	Line         int
+	Iteration    int
+	ExecuteBlock rt.Execute
 }
 
 func (m CallbackModel) String() (ret string) {
+	b := sbuf.New(m.File, ":", m.Line)
 	if m.Iteration > 0 {
-		ret = fmt.Sprintf("%s:%d#%d", m.File, m.Line, m.Iteration)
-	} else {
-		ret = fmt.Sprintf("%s:%d", m.File, m.Line)
+		b = b.Append(m.Iteration)
 	}
-	return ret
+	return b.String()
 }

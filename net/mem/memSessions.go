@@ -2,7 +2,7 @@ package mem
 
 import (
 	"fmt"
-	"github.com/ionous/sashimi/compiler/call"
+
 	M "github.com/ionous/sashimi/compiler/model"
 	"github.com/ionous/sashimi/metal"
 	"github.com/ionous/sashimi/net/app"
@@ -23,7 +23,6 @@ type essMap map[string]MemSession
 type MemSessions struct {
 	sessions essMap
 	model    *M.Model
-	calls    call.MarkerStorage
 	saver    MemSaver
 	*sync.Mutex
 }
@@ -101,11 +100,10 @@ func (ess MemSessions) GetSession(id string) (ret ess.Session, okay bool) {
 
 func (ess *MemSessions) compile() (err error) {
 	if ess.model == nil {
-		calls := call.MakeMarkerStorage()
-		if m, e := script.InitScripts().CompileCalls(ioutil.Discard, calls); e != nil {
+		if m, e := script.InitScripts().CompileCalls(ioutil.Discard); e != nil {
 			err = e
 		} else {
-			ess.model, ess.calls = m, calls
+			ess.model = m
 		}
 	}
 	return

@@ -1,7 +1,7 @@
 package metal
 
 import (
-	"fmt"
+	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 )
 
@@ -51,9 +51,9 @@ func (p *pointerValue) SetObject(id ident.Id) (err error) {
 
 func (mdl *Metal) match(id ident.Id, relates ident.Id) (err error) {
 	if target, ok := mdl.GetInstance(id); !ok {
-		err = fmt.Errorf("no such instance '%s'", id)
+		err = errutil.New("match, no such instance", id)
 	} else if ok := mdl.AreCompatible(target.GetParentClass(), relates); !ok {
-		err = fmt.Errorf("%s not compatible with %v", target, relates)
+		err = errutil.New("match", target, "not compatible with", relates)
 	}
 	return
 }

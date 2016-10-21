@@ -2,7 +2,7 @@ package extract
 
 import (
 	"fmt"
-	"github.com/ionous/sashimi/compiler/call"
+
 	G "github.com/ionous/sashimi/game"
 	"github.com/ionous/sashimi/util/ident"
 	"io"
@@ -13,7 +13,6 @@ import (
 type CallExtractor struct {
 	pkgname string
 	trace   io.Writer
-	cfg     call.Config
 	files   map[string]bool
 	// fix, keep or make an array of structures for sorting?
 	snippets map[string]Snippet
@@ -34,7 +33,6 @@ func NewCallExtractor(pkgname string, path string, trace io.Writer) *CallExtract
 	return &CallExtractor{
 		pkgname:  pkgname,
 		trace:    trace,
-		cfg:      call.Config{path},
 		files:    make(map[string]bool),
 		snippets: make(map[string]Snippet),
 	}

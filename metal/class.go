@@ -138,7 +138,7 @@ func (c *classInfo) getValue(p *M.PropertyModel) (ret meta.Generic) {
 	default:
 		ret = c.mdl.getZero(p)
 	}
-	return ret
+	return
 }
 
 func (c *classInfo) setValue(p *M.PropertyModel, v meta.Generic) error {

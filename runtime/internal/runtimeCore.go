@@ -2,11 +2,11 @@ package internal
 
 import (
 	"github.com/ionous/sashimi/runtime/api"
+	"io"
 	"math/rand"
 )
 
 type RuntimeCore struct {
-	api.LookupCallbacks
 	api.LookupParents
 	api.Log
 	api.SaveLoad
@@ -14,4 +14,5 @@ type RuntimeCore struct {
 	Frame  api.EventFrame
 	Output api.Output
 	Rand   *rand.Rand // FIX: an interface part of config
+	Writer io.Writer
 }

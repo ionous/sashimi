@@ -1,74 +1,67 @@
 package sbuf
 
 import (
-	"bytes"
-	"strconv"
+	"strings"
 )
 
 type StringBuffer struct {
-	// alt could be an array of object and format
-	// dont print till actually needed
-	// as long as things are ideompotent all is well.
-	b bytes.Buffer
+	parts []Stringer
 }
+
 type Stringer interface {
 	String() string
 }
 
-func New() *StringBuffer {
-	return &StringBuffer{}
-}
-
-func NewString(s string) *StringBuffer {
-	return (&StringBuffer{}).S(s)
+// S adds a string
+func (sbuf *StringBuffer) B(b bool) *StringBuffer {
+	sbuf.parts = append(sbuf.parts, Bool{b})
+	return sbuf
 }
 
 // S adds a string
 func (sbuf *StringBuffer) S(s string) *StringBuffer {
-	sbuf.b.WriteString(s)
+	sbuf.parts = append(sbuf.parts, String{s})
 	return sbuf
 }
 
 // V adds the default string representation via Stringer
-func (sbuf *StringBuffer) V(v Stringer) *StringBuffer {
-	return sbuf.S(v.String())
+func (sbuf *StringBuffer) V(v interface{}) *StringBuffer {
+	sbuf.parts = append(sbuf.parts, Str{v})
+	return sbuf
 }
 
 // R adds a single rune
 func (sbuf *StringBuffer) R(r rune) *StringBuffer {
-	sbuf.b.WriteRune(r)
+	sbuf.parts = append(sbuf.parts, Rune{r})
 	return sbuf
 }
 
 // D adds a decimal
 func (sbuf *StringBuffer) D(i int64) *StringBuffer {
-	return sbuf.S(strconv.FormatInt(i, 10))
+	sbuf.parts = append(sbuf.parts, Int64{i})
+	return sbuf
 }
 
 // E adds an error
 func (sbuf *StringBuffer) E(e error) *StringBuffer {
-	return sbuf.S(e.Error())
+	sbuf.parts = append(sbuf.parts, Error{e})
+	return sbuf
 }
 
-func (sbuf *StringBuffer) Itoa(i int) *StringBuffer {
-	return sbuf.S(strconv.FormatInt(int64(i), 10))
+func (sbuf *StringBuffer) I(i int) *StringBuffer {
+	sbuf.parts = append(sbuf.parts, Int{i})
+	return sbuf
 }
 
 func (sbuf *StringBuffer) String() string {
-	return sbuf.b.String()
+	return sbuf.Join("")
 }
 
-func (sbuf *StringBuffer) Error() error {
-	return errorBuf(sbuf.b)
+func (sbuf *StringBuffer) Join(sep string) string {
+	// FIX? speed isnt really important, but should probably use buffer directly
+	strs := make([]string, len(sbuf.parts))
+	for i, p := range sbuf.parts {
+		strs[i] = p.String()
+	}
+	return strings.Join(strs, sep)
 }
-
-type errorBuf bytes.Buffer
-
-func (ebuf errorBuf) Error() string {
-	b := bytes.Buffer(ebuf)
-	return b.String()
-}
-
-// sbuf.NewString("bad nouns for").S(action).R(',').S(event).R(':').V(end).V(classes).Error()
-
-//fmt.Errorf("bad nouns for %s,%s: %d, %s?", action, event, end, classes)

@@ -10,9 +10,9 @@ import (
 // For the sake of sharing: Even though we listen to events, we point to the action.
 type ListenerModel struct {
 	Instance,
-	Class,
-	Callback ident.Id // Game callback triggered by cb listener.
-	Options ListenerOptions
+	Class ident.Id
+	Callback CallbackModel // Game callback triggered by cb listener.
+	Options  ListenerOptions
 }
 
 type ListenerOptions int

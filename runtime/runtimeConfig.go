@@ -70,7 +70,6 @@ func (log logAdapter) Write(p []byte) (n int, err error) {
 }
 
 func (cfg *RuntimeConfig) SetCalls(calls api.LookupCallbacks) *RuntimeConfig {
-	cfg.core.LookupCallbacks = calls
 	return cfg
 }
 
@@ -87,8 +86,19 @@ func (cfg *RuntimeConfig) SetFrame(e api.EventFrame) *RuntimeConfig {
 }
 func (cfg *RuntimeConfig) SetOutput(o api.Output) *RuntimeConfig {
 	cfg.core.Output = o
+	cfg.core.Writer = TEMPTEMPTEMP{o}
 	return cfg
 }
+
+type TEMPTEMPTEMP struct {
+	api.Output
+}
+
+func (f TEMPTEMPTEMP) Write(p []byte) (n int, err error) {
+	f.Output.ScriptSays(strings.Split(string(p), "\n"))
+	return
+}
+
 func (cfg *RuntimeConfig) SetParentLookup(l api.LookupParents) *RuntimeConfig {
 	cfg.core.LookupParents = l
 	return cfg

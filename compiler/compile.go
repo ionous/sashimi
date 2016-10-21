@@ -1,7 +1,6 @@
 package compiler
 
 import (
-	"github.com/ionous/sashimi/compiler/call"
 	i "github.com/ionous/sashimi/compiler/internal"
 	M "github.com/ionous/sashimi/compiler/model"
 	X "github.com/ionous/sashimi/compiler/xmodel"
@@ -14,7 +13,6 @@ import (
 )
 
 type Config struct {
-	Calls  call.Compiler
 	Output io.Writer
 }
 
@@ -49,7 +47,6 @@ func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 		i.NewInstanceFactory(names, log),
 		rel,
 		log,
-		cfg.Calls,
 	}
 	if x, e := ctx.Compile(); e != nil {
 		err = e
@@ -57,18 +54,21 @@ func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 		c := newConverter(x)
 
 		// actionId -> callbackId
-		actions := make(map[ident.Id][]ident.Id)
+		actions := make(map[ident.Id][]M.CallbackModel)
 		log.Println("converting handlers", len(x.ActionHandlers))
 		for _, handler := range x.ActionHandlers {
 			act, callback, useCapture := handler.Action, handler.Callback, handler.UseCapture()
 			arr := actions[act]
 			// FIX: for now treating target as bubble,
 			// really the compiler should hand off a sorted flat list based on three separate groups; target growing in the same direction as after, but distinctly in the middle of things.
+			cm := M.CallbackModel{
+				ExecuteBlock: callback,
+			}
 			if !useCapture {
-				arr = append(arr, callback)
+				arr = append(arr, cm)
 			} else {
 				// prepend:
-				arr = append([]ident.Id{callback}, arr...)
+				arr = append([]M.CallbackModel{cm}, arr...)
 			}
 			actions[act] = arr
 		}
@@ -131,12 +131,15 @@ func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 			} else {
 				callbacks = bubble
 			}
+			cm := M.CallbackModel{
+				ExecuteBlock: cb.Callback,
+			}
 			// append
 			var arr = callbacks[e]
 			arr = append(arr, M.ListenerModel{
 				Instance: cb.Instance,
 				Class:    cb.Class,
-				Callback: cb.Callback,
+				Callback: cm,
 				Options:  eventOptions(cb.Options),
 			})
 			callbacks[e] = arr
@@ -387,16 +390,14 @@ func (c converter) makeEnum(src *X.EnumProperty) ident.Id {
 
 type MemoryResult struct {
 	Model *M.Model
-	Calls call.MarkerStorage
 }
 
 func Compile(out io.Writer, src S.Statements) (res MemoryResult, err error) {
-	calls := call.MakeMarkerStorage()
-	cfg := Config{calls, out}
+	cfg := Config{out}
 	if m, e := cfg.Compile(src); e != nil {
 		err = e
 	} else {
-		res = MemoryResult{m, calls}
+		res = MemoryResult{m}
 	}
 	return
 }

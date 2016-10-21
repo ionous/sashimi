@@ -2,7 +2,7 @@ package script
 
 import (
 	"github.com/ionous/sashimi/compiler"
-	"github.com/ionous/sashimi/compiler/call"
+
 	M "github.com/ionous/sashimi/compiler/model"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
@@ -25,11 +25,11 @@ func (s *Script) Compile(writer io.Writer) (res compiler.MemoryResult, err error
 
 // Compile the current script into a model which can be used by the runtime.
 // writer used for logging.
-func (s *Script) CompileCalls(writer io.Writer, calls call.Compiler) (res *M.Model, err error) {
+func (s *Script) CompileCalls(writer io.Writer) (res *M.Model, err error) {
 	if s.err != nil {
 		err = s.err
 	} else {
-		cfg := compiler.Config{Calls: calls, Output: writer}
+		cfg := compiler.Config{Output: writer}
 		res, err = cfg.Compile(s.blocks.Statements())
 	}
 	return res, err

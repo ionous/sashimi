@@ -36,8 +36,8 @@ func (l *listenerInfo) GetClass() ident.Id {
 }
 
 // GetCallback() returns a valid callback id.
-func (l *listenerInfo) GetCallback() ident.Id {
-	return l.Callback
+func (l *listenerInfo) GetCallback() meta.Callback {
+	return l.Callback.ExecuteBlock
 }
 
 //

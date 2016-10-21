@@ -3,7 +3,7 @@ package metal
 import (
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
-	"reflect"
+	//	"reflect"
 )
 
 // implements meta.Values
@@ -15,8 +15,9 @@ type arrayValues struct {
 }
 
 func (ar arrayValues) NumValue() int {
-	slice := reflect.ValueOf(ar.GetGeneric())
-	return slice.Len()
+	// slice := reflect.ValueOf(ar.GetGeneric())
+	// return slice.Len()
+	panic("use list eval")
 }
 
 func (ar arrayValues) ValueNum(i int) meta.Value {
@@ -24,21 +25,25 @@ func (ar arrayValues) ValueNum(i int) meta.Value {
 }
 
 func (ar arrayValues) ClearValues() error {
-	empty := ar.mdl.getZero(ar.prop)
-	return ar.SetGeneric(empty)
+	panic("use list eval")
+	// empty := ar.mdl.getZero(ar.prop)
+	// return ar.SetGeneric(empty)
 }
 
 func (ar arrayValues) AppendNum(v float64) error {
-	slice := ar.GetGeneric().([]float64)
-	return ar.SetGeneric(append(slice, v))
+	// slice := ar.GetGeneric().([]float64)
+	// return ar.SetGeneric(append(slice, v))
+	panic("use list eval")
 }
 
 func (ar arrayValues) AppendText(v string) error {
-	slice := ar.GetGeneric().([]string)
-	return ar.SetGeneric(append(slice, v))
+	// slice := ar.GetGeneric().([]string)
+	// return ar.SetGeneric(append(slice, v))
+	panic("use list eval")
 }
 
 func (ar arrayValues) AppendObject(v ident.Id) error {
-	slice := ar.GetGeneric().([]ident.Id)
-	return ar.SetGeneric(append(slice, v))
+	// slice := ar.GetGeneric().([]ident.Id)
+	// return ar.SetGeneric(append(slice, v))
+	panic("use list eval")
 }

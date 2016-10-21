@@ -17,12 +17,6 @@ type GameEventAdapter struct {
 	hint ident.Id
 }
 
-// NewGameAdapter gives the passed game the IPlay interface
-// Public for testing.
-func NewGameAdapter(game *Game) *GameEventAdapter {
-	return &GameEventAdapter{Game: game}
-}
-
 // NewGameObject gives the passed game object the IObject interface.
 // Public for testing.
 func (ga *GameEventAdapter) NewGameObjectFromId(id ident.Id) (ret G.IObject) {

@@ -1,7 +1,6 @@
 package simple
 
 import (
-	"github.com/ionous/sashimi/compiler/call"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/metal"
 	"github.com/ionous/sashimi/script"
@@ -16,7 +15,6 @@ type essMap map[string]*SimpleSession
 type Sessions struct {
 	sessions essMap
 	model    meta.Model
-	calls    call.MarkerStorage
 	*sync.Mutex
 }
 
@@ -52,8 +50,7 @@ func (ess *Sessions) getModel() (ret meta.Model, err error) {
 	if ess.model != nil {
 		ret = ess.model
 	} else {
-		calls := call.MakeMarkerStorage()
-		if m, e := script.InitScripts().CompileCalls(ioutil.Discard, calls); e != nil {
+		if m, e := script.InitScripts().CompileCalls(ioutil.Discard); e != nil {
 			err = e
 		} else {
 			ess.model = metal.NewMetal(m, make(metal.ObjectValueMap))

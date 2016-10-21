@@ -77,7 +77,6 @@ func RunScript(script *script.Script, opt Options) (err error) {
 		vals := make(metal.ObjectValueMap)
 		modelApi := metal.NewMetal(model.Model, vals)
 		cfg := R.NewConfig().
-			SetCalls(model.Calls).
 			SetOutput(NewStandardOutput(cons, writer)).
 			SetParentLookup(framework.NewParentLookup(modelApi))
 		g := cfg.MakeGame(modelApi)

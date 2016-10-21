@@ -50,7 +50,10 @@ func (q ActionQueue) Pop() (ret Future) {
 func (q *ActionQueue) ProcessActions(g *Game) (err error) {
 	for !q.Empty() {
 		r := q.Pop()
-		r.Run(g)
+		if e := r.Run(g); e != nil {
+			err = e
+			break
+		}
 	}
 	return err
 }

@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"github.com/ionous/sashimi/compiler/call"
 	M "github.com/ionous/sashimi/compiler/xmodel"
 	E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game"
@@ -20,7 +19,6 @@ type Compiler struct {
 	Instances *InstanceFactory
 	Relatives *RelativeFactory
 	Log       *log.Logger
-	Calls     call.Compiler
 }
 
 // processAssertions generates classes and instances from the assertions.
@@ -162,12 +160,10 @@ func (ctx *Compiler) newCallback(
 ) (
 	ret M.ListenerCallback, err error,
 ) {
-	if cb, e := ctx.Calls.CompileCallback(callback); e != nil {
-		err = errutil.Append(e, errutil.New("couldn't compile callback for", owner))
-	} else if cls, _ := classes.FindClass(owner); cls != nil {
-		ret = M.NewClassCallback(cls, cb, options)
+	if cls, _ := classes.FindClass(owner); cls != nil {
+		ret = M.NewClassCallback(cls, callback, options)
 	} else if inst, ok := instances.FindInstance(owner); ok {
-		ret = M.NewInstanceCallback(inst, cb, options)
+		ret = M.NewInstanceCallback(inst, callback, options)
 	} else {
 		err = errutil.New("unknown listener requested", owner)
 	}

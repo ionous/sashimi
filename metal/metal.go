@@ -1,9 +1,10 @@
 package metal
 
 import (
-	"fmt"
+	"github.com/ionous/mars/rt"
 	M "github.com/ionous/sashimi/compiler/model"
 	"github.com/ionous/sashimi/meta"
+	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/ionous/sashimi/util/lang"
 	"strings"
@@ -23,7 +24,7 @@ type Metal struct {
 }
 
 // actionId -> callbackId
-type DefaultActions map[ident.Id][]ident.Id
+type DefaultActions map[ident.Id][]meta.Callback
 
 // indexed by eventId
 type EventCallbacks map[ident.Id][]M.ListenerModel
@@ -278,27 +279,29 @@ func (mdl *Metal) getZero(prop *M.PropertyModel) (ret interface{}) {
 	switch prop.Type {
 	case M.NumProperty:
 		if !prop.IsMany {
-			ret = float64(0)
+			ret = rt.Number(0)
 		} else {
-			ret = []float64{}
+			ret = []rt.Number{}
 		}
 	case M.TextProperty:
 		if !prop.IsMany {
-			ret = ""
+			var zero rt.Text
+			ret = zero
 		} else {
-			ret = []string{}
+			ret = []rt.Text{}
 		}
 	case M.EnumProperty:
 		enum := mdl.Enumerations[prop.Id]
 		ret = enum.Best()
 	case M.PointerProperty:
 		if !prop.IsMany {
-			ret = ident.Empty()
+			var zero rt.Reference
+			ret = zero
 		} else {
-			ret = []ident.Id{}
+			ret = []rt.Reference{}
 		}
 	default:
-		panic(fmt.Errorf("GetZero not supported for property %s type %v", prop.Id, prop.Type))
+		panic(errutil.New("property doesn't support get zero", prop.Id, prop.Type))
 	}
-	return ret
+	return
 }

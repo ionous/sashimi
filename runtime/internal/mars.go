@@ -1,9 +1,7 @@
 package internal
 
 import (
-	"github.com/ionous/mars/rt"
 	"github.com/ionous/mars/rtm"
-	"github.com/ionous/sashimi/game"
 	"github.com/ionous/sashimi/meta"
 )
 
@@ -20,6 +18,8 @@ func (rt *Mars) StopHere() {
 	rt.ga.data.cancelled = true
 }
 
-func (rt *Mars) Execute(found game.Callback) rt.Execute {
-	panic("not implemented")
+func NewMars(g *Game, play *GameEventAdapter) *Mars {
+	m := &Mars{rtm.NewRtm(g.Model), play}
+	m.PushOutput(g.Writer)
+	return m
 }

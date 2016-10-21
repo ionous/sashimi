@@ -1,8 +1,8 @@
 package xmodel
 
 import (
+	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
-	"github.com/ionous/sashimi/util/sbuf"
 )
 
 type ActionInfo struct {
@@ -34,7 +34,7 @@ func NewAction(id ident.Id, action string, event ident.Id, classes ...*ClassInfo
 		}
 	}
 	if end < 1 || end > 3 {
-		err = sbuf.NewString("bad nouns for").S(action).R(',').V(event).Error()
+		err = errutil.New("bad nouns for", action, event)
 		// err = fmt.Errorf("bad nouns for %s,%s: %d, %s?", action, event, end, classes)
 	} else {
 		ret = &ActionInfo{id, action, event, classes[0:end]}

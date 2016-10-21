@@ -26,8 +26,6 @@ func (p *propBase) SetGeneric(v meta.Generic) error {
 	return p.setValue(p.prop, v)
 }
 
-// mainly for arrays, but arrays dont have instance data storage
-// if we need them, we probably will want to write a decoder on the instance json data.
 func (p *propBase) GetGeneric() meta.Generic {
 	return p.getValue(p.prop)
 }

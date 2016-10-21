@@ -94,5 +94,5 @@ func (g *Game) NewRuntimeAction(action meta.Action, nouns ...ident.Id,
 			ret = NewRuntimeAction(action, objs)
 		}
 	}
-	return ret, err
+	return
 }

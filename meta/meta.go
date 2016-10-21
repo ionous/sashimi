@@ -46,9 +46,10 @@ type Action interface {
 	GetCallbacks() (Callbacks, bool)
 }
 
+// FIX: this should be by id even if, in the serialized model, the action statements are in the object directly. also: callback should have its own interface i think for file and line
 type Callbacks interface {
 	NumCallback() int
-	CallbackNum(int) ident.Id
+	CallbackNum(int) Callback
 }
 
 type Event interface {
@@ -81,7 +82,7 @@ type Listener interface {
 	// GetClass always returns a valid class id.
 	GetClass() ident.Id
 	// GetCallback() returns a valid callback id.
-	GetCallback() ident.Id
+	GetCallback() Callback
 	//
 	GetOptions() CallbackOptions
 }
@@ -139,6 +140,7 @@ const (
 )
 
 type Generic interface{}
+type Callback interface{}
 
 type Property interface {
 	GetId() ident.Id
