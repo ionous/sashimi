@@ -1,7 +1,6 @@
 package xmodel
 
 import (
-	"fmt"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 )
@@ -18,7 +17,5 @@ func (m InstanceMap) FindInstance(name string) (*InstanceInfo, bool) {
 }
 
 func InstanceNotFound(name string) error {
-	return errutil.Func(func() string {
-		return fmt.Sprintf("instance not found `%s`", name)
-	})
+	return errutil.New("instance not found", name)
 }

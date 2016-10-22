@@ -24,7 +24,7 @@ func (ptr PointerBuilder) BuildProperty() (M.IProperty, error) {
 }
 
 func (ptr PointerBuilder) SetProperty(ctx PropertyContext) (err error) {
-	nilVal := (*rt.RefEval)(nil)
+	nilVal := (*rt.ObjEval)(nil)
 	if otherName, okay := ctx.value.(string); !okay {
 		err = SetValueMismatch("pointer", ctx.inst, ptr.Id, nilVal, ctx.value)
 	} else {

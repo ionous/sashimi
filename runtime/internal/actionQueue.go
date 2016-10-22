@@ -46,7 +46,7 @@ func (q ActionQueue) Pop() (ret Future) {
 	return ret
 }
 
-// this craziness exists to help unwind the very deep callstacks the events create
+// ProcessActions helps unwind the very deep callstacks the events create
 func (q *ActionQueue) ProcessActions(g *Game) (err error) {
 	for !q.Empty() {
 		r := q.Pop()

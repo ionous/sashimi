@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"github.com/ionous/mars/rt"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/ionous/sashimi/util/lang"
@@ -43,6 +44,15 @@ func (act *RuntimeAction) runAfterDefaults(cb meta.Callback) {
 }
 
 // findByName:
+func (act *RuntimeAction) getGeneric() []meta.Generic {
+	l := make([]meta.Generic, len(act.objs))
+	for i, o := range act.objs {
+		l[i] = rt.Object{o}
+	}
+	return l
+}
+
+// MARS: remove me.
 func (act *RuntimeAction) findByName(m meta.Model, name string, hint ident.Id) (ret meta.Instance, okay bool) {
 	if obj, ok := act.findByParamName(name); ok {
 		okay, ret = true, obj
@@ -52,7 +62,7 @@ func (act *RuntimeAction) findByName(m meta.Model, name string, hint ident.Id) (
 	return
 }
 
-// findByParamName: source, target, or context
+// MARS: remove me.
 func (act *RuntimeAction) findByParamName(name string) (ret meta.Instance, okay bool) {
 	for index, src := range []string{"action.Source", "action.Target", "action.Context"} {
 		if strings.EqualFold(name, src) {
@@ -63,7 +73,7 @@ func (act *RuntimeAction) findByParamName(name string) (ret meta.Instance, okay 
 	return
 }
 
-// findByClassName:
+// MARS: remove me.
 func (act *RuntimeAction) findByClassName(m meta.Model, name string, hint ident.Id) (ret meta.Instance, okay bool) {
 	clsid := MakeStringId(m.Pluralize(lang.StripArticle(name)))
 	if clsid == hint {
@@ -74,7 +84,7 @@ func (act *RuntimeAction) findByClassName(m meta.Model, name string, hint ident.
 	return
 }
 
-// findByExactClass; true if found
+// MARS: remove me.
 func (act *RuntimeAction) findByClass(m meta.Model, id ident.Id) (ret meta.Instance, okay bool) {
 	// these are the classes originally named in the action declaration; not the sub-classes of the event target. ie. s.The("actors", Can("crawl"), not s.The("babies", When("crawling")
 	if obj, ok := act.findByExactClass(m, id); ok {
@@ -86,7 +96,7 @@ func (act *RuntimeAction) findByClass(m meta.Model, id ident.Id) (ret meta.Insta
 	return ret, okay
 }
 
-// findByExactClass; true if found
+// MARS: remove me.
 func (act *RuntimeAction) findByExactClass(_ meta.Model, id ident.Id) (ret meta.Instance, okay bool) {
 	for i, nounClass := range act.action.GetNouns() {
 		if same := id == nounClass; same {
@@ -97,7 +107,7 @@ func (act *RuntimeAction) findByExactClass(_ meta.Model, id ident.Id) (ret meta.
 	return
 }
 
-// findBySimilarClass; true if found
+// MARS: remove me.
 func (act *RuntimeAction) findBySimilarClass(m meta.Model, id ident.Id) (ret meta.Instance, okay bool) {
 	for i, nounClass := range act.action.GetNouns() {
 		if similar := m.AreCompatible(id, nounClass); similar {

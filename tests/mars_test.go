@@ -77,25 +77,37 @@ func TestOldStyleAction(t *testing.T) {
 				g.Say(g.The("player").Text("greeting")),
 			)),
 	}
+	//running queued action
+	//got changed value hello
 	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {
-		t.Log("greeting the world")
 		if _, err := test.Game.QueueAction("greet the world", "player"); assert.NoError(t, err, "queue") {
-			t.Log("flushing the out")
 			if v, err := test.FlushOutput(); assert.NoError(t, err, "process") {
-				t.Log("testing the val", v)
 				if !assert.EqualValues(t, "hello world", v[0]) {
 					t.FailNow()
 				}
 			}
 		}
-		//	if here, ok := test.Game.GetInstance("here"); assert.True(t, ok) {
-		// here := test.Game.NewAdapter().NewGameObject(here)
-		// 	here.Go("report the view")
-		// 	if r, e := test.FlushOutput(); assert.NoError(t, e) {
-		// 		t.Log(r)
-		// 		assert.True(t, visited)
-		// 	}
-
 	}
+}
 
+func TestOldStyleTarget(t *testing.T) {
+	script := &script.Script{
+		The("kinds", Called("actors"), Have("greeting", "text")),
+		The("actor", Called("player"), Has("greeting", "hello")),
+		The("actor", Called("npc"), Exists()),
+		The("kinds", Called("actors"),
+			Can("greet actor").And("greeting actor").RequiresOne("actor"),
+			To("greet actor",
+				g.Say(g.The("player").Text("greeting"), g.The("action.target").Text("name")),
+			)),
+	}
+	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {
+		if _, err := test.Game.QueueAction("greet actor", "player", "npc"); assert.NoError(t, err, "queue") {
+			if v, err := test.FlushOutput(); assert.NoError(t, err, "process") {
+				if !assert.EqualValues(t, "hello npc", v[0]) {
+					t.FailNow()
+				}
+			}
+		}
+	}
 }

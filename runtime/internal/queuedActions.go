@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"github.com/ionous/mars/rtm"
 	E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game"
 	"github.com/ionous/sashimi/util/ident"
@@ -72,8 +73,16 @@ func (a *QueuedAction) Run(g *Game) (err error) {
 			if callbacks, ok := act.action.GetCallbacks(); ok {
 				if cnt := callbacks.NumCallback(); cnt > 0 {
 					rt := NewMars(g, g.newPlay(act, ident.Empty()))
+					rt.PushScope(rtm.NewActionScope(
+						g.Model,
+						act.action.GetNouns(),
+						act.getGeneric(),
+						ident.Empty(),
+					), nil)
+
 					for i := 0; i < cnt; i++ {
 						cb := callbacks.CallbackNum(i)
+
 						if e := rt.Execute(cb); e != nil {
 							err = e
 							break
@@ -83,22 +92,32 @@ func (a *QueuedAction) Run(g *Game) (err error) {
 			}
 			frame.EndEvent()
 
-			// run "after" actions, which are queued dynamically ( though who knows why. )
-			if after := a.data.after; len(after) > 0 {
-				// fmt.Println(len(after), "after actions")
-				rt := NewMars(g, g.newPlay(a.data, ident.Empty()))
-				for _, after := range after {
-					if e := rt.Execute(after); e != nil {
-						err = e
-						break
+			if err == nil {
+				// run "after" actions, which are queued dynamically
+				// FIX: it seems the script should be able to know what runs after
+				// and the dynamic queuing should be static queuing
+				if after := a.data.after; len(after) > 0 {
+					rt := NewMars(g, g.newPlay(a.data, ident.Empty()))
+					rt.PushScope(rtm.NewActionScope(
+						g.Model,
+						a.data.action.GetNouns(),
+						a.data.getGeneric(),
+						ident.Empty(),
+					), nil)
+					//
+					for _, after := range after {
+						if e := rt.Execute(after); e != nil {
+							err = e
+							break
+						}
 					}
 				}
-			}
-			// finally, run any trailing actions the caller may have specified.
-			// this is done outside of the event frame, we will see these later...
-			if a.next != nil {
-				// fmt.Println("queuing then")
-				err = a.next.Run(g)
+				// finally, run any trailing actions the caller may have specified.
+				// this is done outside of the event frame, we will see these later...
+				if err == nil && a.next != nil {
+					// fmt.Println("queuing then")
+					err = a.next.Run(g)
+				}
 			}
 		}
 	}

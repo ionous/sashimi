@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"github.com/ionous/mars/rt"
 	M "github.com/ionous/sashimi/compiler/xmodel"
 	E "github.com/ionous/sashimi/event"
 	G "github.com/ionous/sashimi/game"
@@ -459,7 +460,7 @@ func (ctx *Compiler) Compile() (*M.Model, error) {
 				name = printed.(string)
 			}
 		}
-		i.Values[directName] = name
+		i.Values[directName] = rt.Text(name)
 	}
 
 	// return the results with no error

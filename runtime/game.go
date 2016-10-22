@@ -28,14 +28,14 @@ func (g *Game) QueueActionInstances(act meta.Action, objects []meta.Instance) *i
 func (g *Game) QueueAction(action string, nouns ...ident.Id) (ret *internal.RuntimeAction, err error) {
 	actionId := internal.MakeStringId(action)
 	if act, ok := g.GetAction(actionId); !ok {
-		err = errutil.New("couldnt find action", action)
+		err = errutil.New("Game.QueueAction, couldnt find action", action)
 	} else if data, e := g.game.NewRuntimeAction(act, nouns...); e != nil {
-		err = e
+		err = errutil.New("Game.QueueAction", e)
 	} else {
 		g.game.QueueAction(data)
 		ret = data
 	}
-	return ret, err
+	return
 }
 
 // Update game until the event queue till empty, or errored.

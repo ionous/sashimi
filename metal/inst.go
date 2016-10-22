@@ -4,7 +4,6 @@ import (
 	M "github.com/ionous/sashimi/compiler/model"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
-	"log"
 )
 
 // FIX? move to internal so that this can show up in documentation.
@@ -62,17 +61,13 @@ func (n *instInfo) makeProperty(p *M.PropertyModel) meta.Property {
 func (n *instInfo) getValue(p *M.PropertyModel) (ret meta.Generic) {
 	// try the object-value interface first
 	if v, ok := n.mdl.objectValues.GetValue(n.Id, p.Id); ok {
-		log.Println("got value", v)
 		ret = v
 		// fall back to the instance
 	} else if v, ok := n.Values[p.Id]; ok {
-		log.Println("got changed value", v)
 		ret = v
 	} else {
 		// future: and from there to class defaults ( chain ), currently: zero.
 		ret = n.mdl.getZero(p)
-		log.Println("got zero value", ret)
-
 	}
 	return
 }
