@@ -1,7 +1,7 @@
 package xmodel
 
 import (
-	"fmt"
+	"github.com/ionous/sashimi/util/sbuf"
 )
 
 type Callback struct {
@@ -11,10 +11,9 @@ type Callback struct {
 }
 
 func (m Callback) String() (ret string) {
+	buf := sbuf.New(m.File, ":", m.Line)
 	if m.Iteration > 0 {
-		ret = fmt.Sprintf("%s:%d#%d", m.File, m.Line, m.Iteration)
-	} else {
-		ret = fmt.Sprintf("%s:%d", m.File, m.Line)
+		buf = buf.Append("#").Append(m.Iteration)
 	}
-	return ret
+	return buf.String()
 }

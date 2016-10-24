@@ -1,6 +1,9 @@
 package event
 
-import "fmt"
+import (
+	"github.com/ionous/sashimi/util/errutil"
+	"github.com/ionous/sashimi/util/sbuf"
+)
 
 // EventListeners provides the helper code a way to traverse listeners.
 type EventListeners interface {
@@ -10,7 +13,7 @@ type EventListeners interface {
 
 func Capture(e IEvent, ls EventListeners) (err error) {
 	if evt, ok := e.(*Proc); !ok {
-		err = fmt.Errorf("unknown event type %T", evt)
+		err = errutil.New("unknown event type", sbuf.Type{evt})
 	} else {
 		// capturing or targeting? trigger capture listeners
 		if evt.Phase() != BubblingPhase && !evt.stopMore {
@@ -28,7 +31,7 @@ func Capture(e IEvent, ls EventListeners) (err error) {
 
 func Bubble(e IEvent, ls EventListeners) (err error) {
 	if evt, ok := e.(*Proc); !ok {
-		err = fmt.Errorf("unknown event type %T", evt)
+		err = errutil.New("unknown event type", sbuf.Type{evt})
 	} else {
 		// bubbling or targeting? trigger bubble listeners
 		if evt.Phase() != CapturingPhase && !evt.stopMore {

@@ -61,7 +61,10 @@ func (sbuf *StringBuffer) Join(sep string) string {
 	// FIX? speed isnt really important, but should probably use buffer directly
 	strs := make([]string, len(sbuf.parts))
 	for i, p := range sbuf.parts {
-		strs[i] = p.String()
+		// filter empty strings to avoid multiple spaces.
+		if s := p.String(); s != "" {
+			strs[i] = s
+		}
 	}
 	return strings.Join(strs, sep)
 }

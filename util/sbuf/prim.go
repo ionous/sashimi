@@ -11,6 +11,9 @@ type Bool struct {
 type Type struct {
 	Value interface{}
 }
+type Value struct {
+	Value interface{}
+}
 type String struct {
 	S string
 }
@@ -34,6 +37,9 @@ type Error struct {
 }
 type Hex64 struct {
 	Uint uint64
+}
+type Quote struct {
+	Value string
 }
 
 func (op Bool) String() string {
@@ -75,6 +81,17 @@ func (op Type) String() (ret string) {
 		ret = reflect.TypeOf(op.Value).String()
 	}
 	return
+}
+func (op Value) String() (ret string) {
+	if op.Value == nil {
+		ret = "<nil>"
+	} else {
+		ret = reflect.ValueOf(op.Value).String()
+	}
+	return
+}
+func (op Quote) String() (ret string) {
+	return "'" + op.Value + "'"
 }
 
 func formatFloat(v float64) string {

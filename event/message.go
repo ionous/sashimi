@@ -1,11 +1,8 @@
 package event
 
 import (
-	"fmt"
 	"github.com/ionous/sashimi/util/ident"
 )
-
-var _ = fmt.Sprintf
 
 type Message struct {
 	Id          ident.Id

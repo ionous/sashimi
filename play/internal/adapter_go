@@ -1,0 +1,25 @@
+package internal
+
+func (g *Game) newPlay(data *RuntimeAction, hint ident.Id) *GameEventAdapter {
+	return &GameEventAdapter{Game: g, data: data, hint: hint}
+}
+
+
+// type GameEventAdapter struct {
+// when we handle events from callbacks, we set this to the target's class to help resolve names specified by user code.
+//	hint ident.Id
+
+//
+// func (ga *GameEventAdapter) StopHere() {
+// 	ga.data.cancelled = true
+// }
+
+// func (ga *GameEventAdapter) GetObject(idg) (ret G.IObject) {
+// 		if obj, ok := ga.Model.GetInstance(id); ok {
+// 			ret = obj
+// 		} else if ga.data != nil {
+// 			// testing against ga.data b/c sometimes the adapter isnt invoked via an event.
+// 			// to fix use different interfaces perhaps?
+// 			if obj, ok := ga.data.findByName(ga.Model, name, ga.hint); ok {
+// 				ret = obj
+// }

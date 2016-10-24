@@ -1,65 +1,47 @@
 package tests
 
 import (
-	"fmt"
+	"bytes"
 	"github.com/ionous/mars/script"
 	"github.com/ionous/sashimi/compiler"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/metal"
 	"github.com/ionous/sashimi/parser"
-	R "github.com/ionous/sashimi/runtime"
-	"github.com/ionous/sashimi/runtime/api"
-	"github.com/ionous/sashimi/runtime/parse"
-	"github.com/ionous/sashimi/util"
+	"github.com/ionous/sashimi/play"
+	"github.com/ionous/sashimi/play/api"
+	"github.com/ionous/sashimi/play/parse"
+	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
-	"log"
+	"github.com/ionous/sashimi/util/sbuf"
 	"strings"
 	"testing"
 )
 
-var _ = fmt.Print
-
-type LogOutput struct {
+type TestLogger struct {
 	t *testing.T
 }
 
-func Log(t *testing.T) LogOutput {
-	return LogOutput{t}
-}
-
-func (out LogOutput) Write(bytes []byte) (int, error) {
-	out.t.Log(strings.TrimSpace(string(bytes)))
-	return len(bytes), nil
+func (out TestLogger) Write(p []byte) (int, error) {
+	out.t.Log(string(p))
+	return len(p), nil
 }
 
 //
-type TestOutput struct {
-	t *testing.T
-	*util.BufferedOutput
+type TestWriter struct {
+	t   *testing.T
+	buf *bytes.Buffer
 }
 
-//
 // Standard output.
-//
-func (out TestOutput) ScriptSays(lines []string) {
-	for _, l := range lines {
-		out.Println(l)
-	}
+func (out TestWriter) Write(p []byte) (n int, err error) {
+	out.t.Log(string(p))
+	return out.buf.Write(p)
 }
 
-func (out TestOutput) ActorSays(whose meta.Instance, lines []string) {
-	var name string
-	if prop, ok := whose.FindProperty("name"); ok {
-		name = prop.GetValue().GetText()
-	}
-
-	for _, l := range lines {
-		out.Println(name, ": ", l)
-	}
-}
-
-func (out TestOutput) Log(s string) {
-	out.t.Log(strings.TrimSpace(s))
+func (out TestWriter) Flush() string {
+	ret := out.buf.String()
+	out.buf.Reset()
+	return ret
 }
 
 type ParentCreator func(meta.Model) api.LookupParents
@@ -68,51 +50,56 @@ func NewTestGameSource(t *testing.T, s *script.Script, src string, pc ParentCrea
 	if statements, e := s.BuildStatements(); e != nil {
 		err = e
 	} else {
-		if model, e := compiler.Compile(Log(t), statements); e != nil {
+		logger := TestLogger{t}
+		if model, e := compiler.Compile(logger, statements); e != nil {
 			err = e
 		} else {
 			storage := make(metal.ObjectValueMap)
 			//saver := &TestSaver{}
-			cons := TestOutput{t, &util.BufferedOutput{}}
+			writer := TestWriter{t, bytes.NewBuffer(nil)}
 			values := TestValueMap{storage}
 			modelApi := metal.NewMetal(model.Model, values)
 			var parents api.LookupParents
 			if pc != nil {
 				parents = pc(modelApi)
 			}
-			cfg := R.NewConfig().SetOutput(cons).SetParentLookup(parents)
+			cfg := play.NewConfig().SetWriter(writer).SetLogger(logger).SetParentLookup(parents)
 			//.SetSaveLoad(mem.NewSaveHelper("testing", storage, saver))
 			//
 			game := cfg.MakeGame(modelApi)
-			if parser, e := parse.NewObjectParser(game, ident.MakeId(src)); e != nil {
+			if parser, e := parse.NewObjectParser(modelApi, ident.MakeId(src)); e != nil {
 				err = e
 			} else {
-				ret = TestGame{t, game, model, cons, parser, storage}
+				ret = TestGame{t, game, modelApi, writer, parser, storage}
 			}
 		}
 	}
 	return
 }
 
-//
+// MARS - FIX the test game -- any game -- shouldnt require a parser.
+// that should be on the front end, wrapping the game.
+// ditto the "player"
+// the understandings used by the parser can just sit there
+// in the future, maybe we could put the understanding in an outer layer
 func NewTestGame(t *testing.T, s *script.Script) (ret TestGame, err error) {
 	return NewTestGameSource(t, s, "player", nil)
 }
 
 type TestGame struct {
-	t    *testing.T
-	Game R.Game
-	compiler.MemoryResult
-	out    TestOutput
+	t      *testing.T
+	Game   play.Game
+	Model  meta.Model
+	out    TestWriter
 	Parser parser.P
 	//saver  *TestSaver
 	values metal.ObjectValueMap
 }
 
 func (test *TestGame) Commence() (ret []string, err error) {
-	if story, ok := meta.FindFirstOf(test.Game, ident.MakeId("stories")); !ok {
-		err = fmt.Errorf("should have test story")
-	} else if _, e := test.Game.QueueAction("commence", story.GetId()); e != nil {
+	if story, ok := meta.FindFirstOf(test.Model, ident.MakeId("stories")); !ok {
+		err = errutil.New("should have test story")
+	} else if e := test.Game.RunAction("commence", story); e != nil {
 		err = e
 	} else {
 		ret, err = test.FlushOutput()
@@ -121,36 +108,28 @@ func (test *TestGame) Commence() (ret []string, err error) {
 }
 
 func (test *TestGame) RunInput(s string) (ret []string, err error) {
-	if e := test.Game.ProcessActions(); e != nil {
+	in := parser.NormalizeInput(s)
+	if p, m, e := test.Parser.ParseInput(in); e != nil {
+		test.out.buf.WriteString(sbuf.New("RunInput: failed parse:", sbuf.Value{p}, "orig:", s, "in:", in, "e:", e).Line())
+		err = e
+	} else if act, objs, e := m.(*parse.ObjectMatcher).GetMatch(); e != nil {
+		test.out.buf.WriteString(sbuf.New("RunInput: no match:", s, e).Line())
 		err = e
 	} else {
-		in := parser.NormalizeInput(s)
-		if p, m, e := test.Parser.ParseInput(in); e != nil {
-			test.out.Log(fmt.Sprintf("RunInput: failed parse: %v orig: '%s' in: '%s' e: '%s'", p, s, in, e))
-			err = e
-		} else if act, objs, e := m.(*parse.ObjectMatcher).GetMatch(); e != nil {
-			test.out.Log(fmt.Sprint("RunInput: no match: ", s, e))
+		test.Game.RunAction(act.GetId(), objs)
+		// the standard rules send an "ending the turn", we do not have to.
+		if r, e := test.FlushOutput(); e != nil {
 			err = e
 		} else {
-			test.Game.QueueActionInstances(act, objs)
-			// the standard rules send an "ending the turn", we do not have to.
-			if r, e := test.FlushOutput(); e != nil {
-				err = e
-			} else {
-				ret = r
-			}
+			ret = r
 		}
 	}
 	return
 }
 
-func (test *TestGame) FlushOutput() (ret []string, err error) {
-	if e := test.Game.ProcessActions(); e != nil {
-		err = e
-	} else {
-		ret = test.out.Flush()
-	}
-	return
+func (test *TestGame) FlushOutput() ([]string, error) {
+	s := test.out.Flush()
+	return strings.Split(s, "\n"), nil
 }
 
 // FIX: diabled for mars testing
@@ -179,6 +158,5 @@ func (m TestValueMap) GetValue(obj, field ident.Id) (ret interface{}, okay bool)
 
 // SetValue always succeeds, storing the passed value to the map at obj.field.
 func (m TestValueMap) SetValue(obj, field ident.Id, value interface{}) (err error) {
-	log.Println("SetValue:", obj, field, value)
 	return m.values.SetValue(obj, field, value)
 }

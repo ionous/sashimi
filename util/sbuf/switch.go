@@ -18,6 +18,9 @@ func (j Switch) Append(i interface{}) Switch {
 func (j Switch) String() string {
 	return j.Join("")
 }
+func (j Switch) Line() string {
+	return j.Join(" ") + "\n"
+}
 func (j Switch) Join(sep string) string {
 	// ugly slow. fix.
 	parts := make([]Stringer, len(j))

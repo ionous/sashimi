@@ -4,12 +4,16 @@ import (
 	"github.com/ionous/mars/core"
 	"github.com/ionous/mars/g"
 	"github.com/ionous/mars/rt"
-	"github.com/ionous/mars/rtm"
 	"github.com/ionous/mars/script"
 	. "github.com/ionous/mars/script/s"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
+
+func lines(v ...string) []string {
+	// TBD, not sure where this trailing blank line is  coming from...
+	return append(v, "")
+}
 
 func TestRawTextProperty(t *testing.T) {
 	script := &script.Script{
@@ -23,11 +27,11 @@ func TestRawTextProperty(t *testing.T) {
 	// the understandings used by the parser can just sit there
 	// in the future, maybe we could put the understanding in an outer layer
 	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {
-		if player, ok := test.Game.GetInstance("player"); assert.True(t, ok, "found world") {
+		if player, ok := test.Model.GetInstance("player"); assert.True(t, ok, "found world") {
 			if greeting, ok := player.FindProperty("greeting"); assert.True(t, ok, "has greeting") {
 				g := greeting.GetGeneric()
 				if v, ok := g.(rt.TextEval); assert.True(t, ok, "text eval") {
-					run := rtm.NewRtm(test.Game.Model)
+					run := test.Game.Rtm
 					if text, e := v.GetText(run); assert.NoError(t, e, "got text") {
 						if !assert.Equal(t, "hello world", text.String()) {
 							t.FailNow()
@@ -44,18 +48,12 @@ func TestNumEvalProperty(t *testing.T) {
 		The("kinds", Called("actors"), Have("counter", "num")),
 		The("actor", Called("player"), Has("counter", core.AddNum{core.N(2), core.N(3)})),
 	}
-
-	// FIX FIX FIX FIX FIX -- the test game -- any game -- shouldnt require a parser.
-	// that should be on the front end, wrapping the game.
-	// ditto the "player"
-	// the understandings used by the parser can just sit there
-	// in the future, maybe we could put the understanding in an outer layer
 	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {
-		if player, ok := test.Game.GetInstance("player"); assert.True(t, ok, "found player") {
+		if player, ok := test.Model.GetInstance("player"); assert.True(t, ok, "found player") {
 			if counter, ok := player.FindProperty("counter"); assert.True(t, ok, "has greeting") {
 				g := counter.GetGeneric()
 				if v, ok := g.(rt.NumEval); assert.True(t, ok, "num eval") {
-					run := rtm.NewRtm(test.Game.Model)
+					run := test.Game.Rtm
 					if num, e := v.GetNumber(run); assert.NoError(t, e, "got num") {
 						if !assert.EqualValues(t, 5, num.Float()) {
 							t.FailNow()
@@ -67,7 +65,7 @@ func TestNumEvalProperty(t *testing.T) {
 	}
 }
 
-func TestOldStyleAction(t *testing.T) {
+func TestActionNames(t *testing.T) {
 	script := &script.Script{
 		The("kinds", Called("actors"), Have("greeting", "text")),
 		The("actor", Called("player"), Has("greeting", "hello world")),
@@ -75,14 +73,19 @@ func TestOldStyleAction(t *testing.T) {
 			Can("greet the world").And("greeting the world").RequiresNothing(),
 			To("greet the world",
 				g.Say(g.The("player").Text("greeting")),
+				g.Say(g.The("action.source").Text("greeting")),
+				g.Say(g.The("actor").Text("greeting")),
 			)),
 	}
 	//running queued action
 	//got changed value hello
 	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {
-		if _, err := test.Game.QueueAction("greet the world", "player"); assert.NoError(t, err, "queue") {
+		if err := test.Game.RunAction(core.MakeStringId("greet the world"), g.The("player")); assert.NoError(t, err, "run action") {
 			if v, err := test.FlushOutput(); assert.NoError(t, err, "process") {
-				if !assert.EqualValues(t, "hello world", v[0]) {
+				if !assert.EqualValues(t,
+					lines("hello world",
+						"hello world",
+						"hello world"), v) {
 					t.FailNow()
 				}
 			}
@@ -90,7 +93,7 @@ func TestOldStyleAction(t *testing.T) {
 	}
 }
 
-func TestOldStyleTarget(t *testing.T) {
+func TestTarget(t *testing.T) {
 	script := &script.Script{
 		The("kinds", Called("actors"), Have("greeting", "text")),
 		The("actor", Called("player"), Has("greeting", "hello")),
@@ -102,9 +105,63 @@ func TestOldStyleTarget(t *testing.T) {
 			)),
 	}
 	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {
-		if _, err := test.Game.QueueAction("greet actor", "player", "npc"); assert.NoError(t, err, "queue") {
+		if err := test.Game.RunAction(core.MakeStringId("greet actor"), g.The("player"), g.The("npc")); assert.NoError(t, err, "run action") {
 			if v, err := test.FlushOutput(); assert.NoError(t, err, "process") {
-				if !assert.EqualValues(t, "hello npc", v[0]) {
+				if !assert.EqualValues(t, lines("hello npc"), v) {
+					t.FailNow()
+				}
+			}
+		}
+	}
+}
+
+// TestRun calls an action from an action
+func TestRun(t *testing.T) {
+	script := &script.Script{
+		The("kinds", Called("actors"), Have("greeting", "text")),
+		The("actor", Called("player"), Has("greeting", "hello")),
+		The("actor", Called("npc"), Exists()),
+		The("kinds", Called("actors"),
+			Can("test nothing").And("testing nothing").RequiresNothing(),
+			To("test nothing",
+				g.Say("absolutely nothing")),
+			Can("greet actor").And("greeting actor").RequiresOne("actor"),
+			To("greet actor",
+				g.The("player").Go("test nothing"),
+			)),
+	}
+	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {
+		if err := test.Game.RunAction(core.MakeStringId("greet actor"), g.The("player"), g.The("npc")); assert.NoError(t, err, "run action") {
+			if v, err := test.FlushOutput(); assert.NoError(t, err, "process") {
+				if !assert.EqualValues(t, lines("absolutely nothing"), v) {
+					t.FailNow()
+				}
+			}
+		}
+	}
+}
+
+func TestStopHere(t *testing.T) {
+	script := &script.Script{
+		The("kinds", Called("actors"), Have("greeting", "text")),
+		The("actor", Called("player"), Has("greeting", "hello world")),
+		The("kinds", Called("actors"),
+			Can("greet the world").And("greeting the world").RequiresNothing(),
+			When("greeting the world").Always(
+				g.Say(g.The("player").Text("greeting")),
+				g.StopHere(),
+				g.Say(g.The("action.source").Text("greeting")),
+				g.Say(g.The("actor").Text("greeting")),
+			),
+		),
+	}
+	//running queued action
+	//got changed value hello
+	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {
+		if err := test.Game.RunAction(core.MakeStringId("greet the world"), g.The("player")); assert.NoError(t, err, "run action") {
+			if v, err := test.FlushOutput(); assert.NoError(t, err, "process") {
+				if !assert.EqualValues(t,
+					lines("hello world"), v) {
 					t.FailNow()
 				}
 			}
