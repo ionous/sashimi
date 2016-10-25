@@ -4,7 +4,6 @@ import (
 	"github.com/ionous/mars/rt"
 	M "github.com/ionous/sashimi/compiler/xmodel"
 	E "github.com/ionous/sashimi/event"
-	G "github.com/ionous/sashimi/game"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
@@ -130,7 +129,7 @@ func (ctx *Compiler) resolveAction(classes M.ClassMap, fields S.ActionAssertionF
 ) (actionId ident.Id, owner, target, context *M.ClassInfo, err error) {
 	// find the primary class
 	if cls, ok := classes.FindClass(fields.Source); !ok {
-		err = errutil.Append(err, errutil.New("couldn't find class", fields.Source))
+		err = errutil.New("couldn't find class", fields.Source)
 	} else {
 		// and the other two optional ones
 		target, ok = classes[ctx.Classes.singleToPlural[fields.Target]]
@@ -156,7 +155,7 @@ func (ctx *Compiler) newCallback(
 	owner string,
 	classes M.ClassMap,
 	instances M.InstanceMap,
-	callback G.Callback,
+	callback rt.Execute,
 	options M.ListenerOptions,
 ) (
 	ret M.ListenerCallback, err error,

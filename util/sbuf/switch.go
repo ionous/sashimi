@@ -55,7 +55,7 @@ func (j Switch) Join(sep string) string {
 		case string:
 			str = String{v}
 		default:
-			str = String{"###"}
+			str = Value{v}
 		}
 		parts[i] = str
 	}

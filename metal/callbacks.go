@@ -14,5 +14,5 @@ func (cl CallbackList) NumCallback() int {
 }
 
 func (cl CallbackList) CallbackNum(i int) meta.Callback {
-	return cl.callbacks[i].ExecuteBlock
+	return cl.callbacks[i].Executes
 }

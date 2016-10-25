@@ -1,5 +1,7 @@
 package source
 
+import "github.com/ionous/sashimi/util/sbuf"
+
 type ActionStatement struct {
 	fields ActionAssertionFields
 	source Code
@@ -19,4 +21,12 @@ type ActionAssertionFields struct {
 	Source  string
 	Target  string
 	Context string
+}
+
+func (f ActionAssertionFields) String() string {
+	return sbuf.New("Action:", f.Action,
+		",Event:", f.Event,
+		",Source:", f.Source,
+		",Target:", f.Target,
+		",Context:", f.Context).String()
 }

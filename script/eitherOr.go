@@ -34,7 +34,7 @@ type EitherOrPhrase struct {
 // cascades
 func (frag ClassEnumFragment) Usually(choice string) ClassEnumFragment {
 	// note: its wrong to check for choice in choices: we want to be able to split the declaration
-	//frag.expects = append(frag.expects, S.NewExpectation(S.UsuallyExpect, choice))
+	//internal.expects = append(frag.expects, S.NewExpectation(S.UsuallyExpect, choice))
 	frag.usually = choice
 	return frag
 }

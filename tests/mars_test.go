@@ -4,8 +4,7 @@ import (
 	"github.com/ionous/mars/core"
 	"github.com/ionous/mars/g"
 	"github.com/ionous/mars/rt"
-	"github.com/ionous/mars/script"
-	. "github.com/ionous/mars/script/s"
+	. "github.com/ionous/mars/script"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -16,18 +15,13 @@ func lines(v ...string) []string {
 }
 
 func TestRawTextProperty(t *testing.T) {
-	script := &script.Script{
+	script := &Script{
 		The("kinds", Called("actors"), Have("greeting", "text")),
 		The("actor", Called("player"), Has("greeting", "hello world")),
 	}
 
-	// FIX FIX FIX FIX FIX -- the test game -- any game -- shouldnt require a parser.
-	// that should be on the front end, wrapping the game.
-	// ditto the "player"
-	// the understandings used by the parser can just sit there
-	// in the future, maybe we could put the understanding in an outer layer
 	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {
-		if player, ok := test.Model.GetInstance("player"); assert.True(t, ok, "found world") {
+		if player, ok := test.Metal.GetInstance("player"); assert.True(t, ok, "found world") {
 			if greeting, ok := player.FindProperty("greeting"); assert.True(t, ok, "has greeting") {
 				g := greeting.GetGeneric()
 				if v, ok := g.(rt.TextEval); assert.True(t, ok, "text eval") {
@@ -44,12 +38,12 @@ func TestRawTextProperty(t *testing.T) {
 }
 
 func TestNumEvalProperty(t *testing.T) {
-	script := &script.Script{
+	script := &Script{
 		The("kinds", Called("actors"), Have("counter", "num")),
 		The("actor", Called("player"), Has("counter", core.AddNum{core.N(2), core.N(3)})),
 	}
 	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {
-		if player, ok := test.Model.GetInstance("player"); assert.True(t, ok, "found player") {
+		if player, ok := test.Metal.GetInstance("player"); assert.True(t, ok, "found player") {
 			if counter, ok := player.FindProperty("counter"); assert.True(t, ok, "has greeting") {
 				g := counter.GetGeneric()
 				if v, ok := g.(rt.NumEval); assert.True(t, ok, "num eval") {
@@ -66,7 +60,7 @@ func TestNumEvalProperty(t *testing.T) {
 }
 
 func TestActionNames(t *testing.T) {
-	script := &script.Script{
+	script := &Script{
 		The("kinds", Called("actors"), Have("greeting", "text")),
 		The("actor", Called("player"), Has("greeting", "hello world")),
 		The("kinds", Called("actors"),
@@ -82,10 +76,10 @@ func TestActionNames(t *testing.T) {
 	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {
 		if err := test.Game.RunAction(core.MakeStringId("greet the world"), g.The("player")); assert.NoError(t, err, "run action") {
 			if v, err := test.FlushOutput(); assert.NoError(t, err, "process") {
-				if !assert.EqualValues(t,
-					lines("hello world",
-						"hello world",
-						"hello world"), v) {
+				expected := lines("hello world",
+					"hello world",
+					"hello world")
+				if !assert.EqualValues(t, expected, v) {
 					t.FailNow()
 				}
 			}
@@ -94,7 +88,7 @@ func TestActionNames(t *testing.T) {
 }
 
 func TestTarget(t *testing.T) {
-	script := &script.Script{
+	script := &Script{
 		The("kinds", Called("actors"), Have("greeting", "text")),
 		The("actor", Called("player"), Has("greeting", "hello")),
 		The("actor", Called("npc"), Exists()),
@@ -117,7 +111,7 @@ func TestTarget(t *testing.T) {
 
 // TestRun calls an action from an action
 func TestRun(t *testing.T) {
-	script := &script.Script{
+	script := &Script{
 		The("kinds", Called("actors"), Have("greeting", "text")),
 		The("actor", Called("player"), Has("greeting", "hello")),
 		The("actor", Called("npc"), Exists()),
@@ -142,7 +136,7 @@ func TestRun(t *testing.T) {
 }
 
 func TestStopHere(t *testing.T) {
-	script := &script.Script{
+	script := &Script{
 		The("kinds", Called("actors"), Have("greeting", "text")),
 		The("actor", Called("player"), Has("greeting", "hello world")),
 		The("kinds", Called("actors"),

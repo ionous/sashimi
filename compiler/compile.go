@@ -62,7 +62,7 @@ func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 			// FIX: for now treating target as bubble,
 			// really the compiler should hand off a sorted flat list based on three separate groups; target growing in the same direction as after, but distinctly in the middle of things.
 			cm := M.CallbackModel{
-				ExecuteBlock: callback,
+				Executes: callback,
 			}
 			if !useCapture {
 				arr = append(arr, cm)
@@ -132,7 +132,7 @@ func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 				callbacks = bubble
 			}
 			cm := M.CallbackModel{
-				ExecuteBlock: cb.Callback,
+				Executes: cb.Callback,
 			}
 			// append
 			var arr = callbacks[e]

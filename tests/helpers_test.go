@@ -2,7 +2,8 @@ package tests
 
 import (
 	"bytes"
-	"github.com/ionous/mars/script"
+	"github.com/ionous/mars/rt"
+	. "github.com/ionous/mars/script"
 	"github.com/ionous/sashimi/compiler"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/metal"
@@ -46,7 +47,7 @@ func (out TestWriter) Flush() string {
 
 type ParentCreator func(meta.Model) api.LookupParents
 
-func NewTestGameSource(t *testing.T, s *script.Script, src string, pc ParentCreator) (ret TestGame, err error) {
+func NewTestGameSource(t *testing.T, s *Script, src string, pc ParentCreator) (ret TestGame, err error) {
 	if statements, e := s.BuildStatements(); e != nil {
 		err = e
 	} else {
@@ -82,14 +83,15 @@ func NewTestGameSource(t *testing.T, s *script.Script, src string, pc ParentCrea
 // ditto the "player"
 // the understandings used by the parser can just sit there
 // in the future, maybe we could put the understanding in an outer layer
-func NewTestGame(t *testing.T, s *script.Script) (ret TestGame, err error) {
-	return NewTestGameSource(t, s, "player", nil)
+func NewTestGame(t *testing.T, s *Script) (ret TestGame, err error) {
+	ad := append(*s, The("actor", Called("player"), Exists()))
+	return NewTestGameSource(t, &ad, "player", nil)
 }
 
 type TestGame struct {
 	t      *testing.T
 	Game   play.Game
-	Model  meta.Model
+	Metal  *metal.Metal
 	out    TestWriter
 	Parser parser.P
 	//saver  *TestSaver
@@ -97,7 +99,7 @@ type TestGame struct {
 }
 
 func (test *TestGame) Commence() (ret []string, err error) {
-	if story, ok := meta.FindFirstOf(test.Model, ident.MakeId("stories")); !ok {
+	if story, ok := meta.FindFirstOf(test.Metal, ident.MakeId("stories")); !ok {
 		err = errutil.New("should have test story")
 	} else if e := test.Game.RunAction("commence", story); e != nil {
 		err = e
@@ -110,15 +112,17 @@ func (test *TestGame) Commence() (ret []string, err error) {
 func (test *TestGame) RunInput(s string) (ret []string, err error) {
 	in := parser.NormalizeInput(s)
 	if p, m, e := test.Parser.ParseInput(in); e != nil {
-		test.out.buf.WriteString(sbuf.New("RunInput: failed parse:", sbuf.Value{p}, "orig:", s, "in:", in, "e:", e).Line())
-		err = e
+		err = errutil.New("RunInput: failed parse:", sbuf.Value{p}, "orig:", s, "in:", in, "e:", e)
 	} else if act, objs, e := m.(*parse.ObjectMatcher).GetMatch(); e != nil {
-		test.out.buf.WriteString(sbuf.New("RunInput: no match:", s, e).Line())
-		err = e
+		err = errutil.New("RunInput: no match:", s, e)
 	} else {
-		test.Game.RunAction(act.GetId(), objs)
-		// the standard rules send an "ending the turn", we do not have to.
-		if r, e := test.FlushOutput(); e != nil {
+		parms := make([]meta.Generic, len(objs))
+		for i, o := range objs {
+			parms[i] = rt.Object{o}
+		}
+		if e := test.Game.RunAction(act.GetId(), parms...); e != nil {
+			err = e
+		} else if r, e := test.FlushOutput(); e != nil {
 			err = e
 		} else {
 			ret = r
