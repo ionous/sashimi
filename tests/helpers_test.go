@@ -14,6 +14,7 @@ import (
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/ionous/sashimi/util/sbuf"
+	"io/ioutil"
 	"strings"
 	"testing"
 )
@@ -47,34 +48,33 @@ func (out TestWriter) Flush() string {
 
 type ParentCreator func(meta.Model) api.LookupParents
 
-func NewTestGameSource(t *testing.T, s *Script, src string, pc ParentCreator) (ret TestGame, err error) {
-	if statements, e := s.BuildStatements(); e != nil {
+func NewTestGameSource(t *testing.T, s *Script, gen string, pc ParentCreator) (ret TestGame, err error) {
+	if src, e := s.BuildStatements(); e != nil {
+		err = e
+	} else if model, e := compiler.Compile(src, ioutil.Discard); e != nil {
 		err = e
 	} else {
+		storage := make(metal.ObjectValueMap)
+		//saver := &TestSaver{}
+		writer := TestWriter{t, bytes.NewBuffer(nil)}
 		logger := TestLogger{t}
-		if model, e := compiler.Compile(logger, statements); e != nil {
+		values := TestValueMap{storage}
+		modelApi := metal.NewMetal(model.Model, values)
+		var parents api.LookupParents
+		if pc != nil {
+			parents = pc(modelApi)
+		}
+		cfg := play.NewConfig().SetWriter(writer).SetLogger(logger).SetParentLookup(parents)
+		//.SetSaveLoad(mem.NewSaveHelper("testing", storage, saver))
+		//
+		game := cfg.MakeGame(modelApi)
+		if parser, e := parse.NewObjectParser(modelApi, ident.MakeId(gen)); e != nil {
 			err = e
 		} else {
-			storage := make(metal.ObjectValueMap)
-			//saver := &TestSaver{}
-			writer := TestWriter{t, bytes.NewBuffer(nil)}
-			values := TestValueMap{storage}
-			modelApi := metal.NewMetal(model.Model, values)
-			var parents api.LookupParents
-			if pc != nil {
-				parents = pc(modelApi)
-			}
-			cfg := play.NewConfig().SetWriter(writer).SetLogger(logger).SetParentLookup(parents)
-			//.SetSaveLoad(mem.NewSaveHelper("testing", storage, saver))
-			//
-			game := cfg.MakeGame(modelApi)
-			if parser, e := parse.NewObjectParser(modelApi, ident.MakeId(src)); e != nil {
-				err = e
-			} else {
-				ret = TestGame{t, game, modelApi, writer, parser, storage}
-			}
+			ret = TestGame{t, game, modelApi, writer, parser, storage}
 		}
 	}
+
 	return
 }
 

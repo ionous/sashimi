@@ -6,6 +6,7 @@ import (
 	. "github.com/ionous/mars/script"
 	"github.com/ionous/sashimi/compiler"
 	"github.com/stretchr/testify/assert"
+	"io/ioutil"
 	"testing"
 )
 
@@ -15,7 +16,7 @@ func TestCallbackUnknown(t *testing.T) {
 		The("kinds", When("this does not exists").Always(DoNothing{})),
 	}
 	if src, err := s.BuildStatements(); assert.NoError(t, err, "build") {
-		if _, err := compiler.Compile(TestLogger{t}, src); !assert.Error(t, err, "expected failure") {
+		if _, err := compiler.Compile(src, ioutil.Discard); !assert.Error(t, err, "expected failure") {
 			t.FailNow()
 		}
 	}
@@ -30,7 +31,7 @@ func TestCallbackKnown(t *testing.T) {
 	}
 	//"couldnt compile action ### couldn't find class "
 	if src, err := s.BuildStatements(); assert.NoError(t, err, "build") {
-		if _, err := compiler.Compile(TestLogger{t}, src); !assert.NoError(t, err, "expected success") {
+		if _, err := compiler.Compile(src, ioutil.Discard); !assert.NoError(t, err, "expected success") {
 			t.FailNow()
 		}
 	}

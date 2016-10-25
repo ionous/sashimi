@@ -5,14 +5,6 @@ import (
 	"strings"
 )
 
-//
-// Have statement to add a property to all instances of a class.
-// FIX: currently, for relations, you must use HaveOne or HaveMany.
-//
-func Have(name string, kind string) ClassPropertyFragment {
-	return ClassPropertyFragment{NewOrigin(2), name, kind}
-}
-
 // HaveOne establishes a one-to-one, or one-to-many relation.
 func HaveOne(name string, kind string) ClassRelationFragment {
 	return ClassRelationFragment{src: ClassRelativeFragment{NewOrigin(2), name, kind, S.RelativeOne}}
@@ -31,11 +23,6 @@ func (frag ClassRelationFragment) Implying(kind string, dst ClassRelationFragmen
 }
 
 //
-type ClassPropertyFragment struct {
-	origin Origin
-	name   string // property,field name
-	kind   string // property kind: primitive or user class
-}
 
 type ClassRelativeFragment struct {
 	origin Origin

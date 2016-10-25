@@ -6,9 +6,7 @@ import (
 	"reflect" // for type checking
 )
 
-//
 // Property values for a partial instance.
-//
 type PendingValues map[ident.Id]M.Variant
 
 // lockSet sets the passed property to value, erroring if the there is a type mismatch or a value conflict.

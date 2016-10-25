@@ -389,10 +389,10 @@ func (c converter) makeEnum(src *X.EnumProperty) ident.Id {
 //}
 
 type MemoryResult struct {
-	Model *M.Model
+	*M.Model
 }
 
-func Compile(out io.Writer, src S.Statements) (res MemoryResult, err error) {
+func Compile(src S.Statements, out io.Writer) (res MemoryResult, err error) {
 	cfg := Config{out}
 	if m, e := cfg.Compile(src); e != nil {
 		err = e

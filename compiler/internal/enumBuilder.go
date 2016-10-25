@@ -1,8 +1,9 @@
 package internal
 
 import (
-	"fmt"
+	"github.com/ionous/mars/rt"
 	M "github.com/ionous/sashimi/compiler/xmodel"
+	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 )
 
@@ -44,18 +45,20 @@ func (enum EnumBuilder) SetProperty(ctx PropertyContext) (err error) {
 	}
 
 	if constraint, ok := constraints.(*M.EnumConstraint); !ok {
-		err = fmt.Errorf("runtime error: expected enum contraints")
+		err = errutil.New("runtime error: expected enum contraints")
 	} else {
 		switch choice := ctx.value.(type) {
 		case int:
-			err = enum._enumSet(ctx.inst, choice, ctx.values, constraint)
-		case string:
-			choiceId := M.MakeStringId(choice)
-			if idx, e := enum.choices.ChoiceToIndex(choiceId); e != nil {
+			if c, e := constraint.IndexToChoice(choice); e != nil {
 				err = e
+				break
 			} else {
-				err = enum._enumSet(ctx.inst, idx, ctx.values, constraint)
+				choiceId := rt.State(c)
+				err = enum._enumSet(ctx.inst, choiceId, ctx.values, constraint)
 			}
+		case string:
+			choiceId := rt.State(M.MakeStringId(choice))
+			err = enum._enumSet(ctx.inst, choiceId, ctx.values, constraint)
 		default:
 			var nilVal int = 0
 			err = SetValueMismatch("enum", ctx.inst, enum.id, nilVal, ctx.value)
@@ -64,11 +67,11 @@ func (enum EnumBuilder) SetProperty(ctx PropertyContext) (err error) {
 	return err
 }
 
-func (enum EnumBuilder) _enumSet(inst ident.Id, choice int, values PendingValues, constraint *M.EnumConstraint) (err error) {
-	if e := constraint.CheckIndex(choice); e != nil {
+func (enum EnumBuilder) _enumSet(inst ident.Id, choice rt.State, values PendingValues, constraint *M.EnumConstraint) (err error) {
+	if e := constraint.CheckChoice(choice.Id()); e != nil {
 		err = e
 	} else {
-		var nilVal int = 0
+		nilVal := (*rt.StateEval)(nil)
 		err = values.lockSet(inst, enum.id, nilVal, choice)
 	}
 	return err

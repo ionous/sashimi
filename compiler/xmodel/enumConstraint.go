@@ -1,7 +1,7 @@
 package xmodel
 
 import (
-	"fmt"
+	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 )
 
@@ -30,7 +30,7 @@ func (cons *EnumConstraint) Always(value interface{}) (err error) {
 	default:
 		err = OutOfRangeError(cons.Enumeration, value)
 	}
-	return err
+	return
 }
 
 //
@@ -43,7 +43,7 @@ func (cons *EnumConstraint) Usually(value interface{}) (err error) {
 	default:
 		err = OutOfRangeError(cons.Enumeration, value)
 	}
-	return err
+	return
 }
 
 //
@@ -56,7 +56,7 @@ func (cons *EnumConstraint) Seldom(value interface{}) (err error) {
 	default:
 		err = OutOfRangeError(cons.Enumeration, value)
 	}
-	return err
+	return
 }
 
 //
@@ -69,7 +69,7 @@ func (cons *EnumConstraint) Exclude(value interface{}) (err error) {
 	default:
 		err = OutOfRangeError(cons.Enumeration, value)
 	}
-	return err
+	return
 }
 
 //
@@ -81,6 +81,15 @@ func (cons *EnumConstraint) Copy() IConstrain {
 	return &EnumConstraint{cons.Enumeration, cons.Only, never, cons.Usual, false}
 }
 
+func (cons *EnumConstraint) CheckChoice(choice ident.Id) (err error) {
+	if index, e := cons.Enumeration.ChoiceToIndex(choice); e != nil {
+		err = e
+	} else if e := cons.CheckIndex(index); e != nil {
+		err = e
+	}
+	return
+}
+
 //
 func (cons *EnumConstraint) CheckIndex(index int) (err error) {
 	if choice, e := cons.Enumeration.IndexToValue(index); e != nil {
@@ -90,14 +99,10 @@ func (cons *EnumConstraint) CheckIndex(index int) (err error) {
 	} else if !cons.Only.Empty() && cons.Only != choice.Id {
 		err = InvalidChoiceError(cons.Enumeration, choice.Id)
 	}
-	return err
+	return
 }
 
-//
-
-//
 // Always is forever.
-//
 func (cons *EnumConstraint) always(choice ident.Id) (err error) {
 	if index, e := cons.Enumeration.ChoiceToIndex(choice); e != nil {
 		err = e
@@ -115,15 +120,13 @@ func (cons *EnumConstraint) always(choice ident.Id) (err error) {
 
 		// some other always assertion
 		default:
-			err = fmt.Errorf("always %v respecified as %v", cons.Only, choice)
+			err = errutil.New("always respecified", cons.Only, choice)
 		}
 	}
-	return err
+	return
 }
 
-//
 // Usually is a loose recommendation, and can be overriden for each new owner
-//
 func (cons *EnumConstraint) usually(choice ident.Id) (err error) {
 	if index, e := cons.Enumeration.ChoiceToIndex(choice); e != nil {
 		err = e
@@ -133,24 +136,22 @@ func (cons *EnumConstraint) usually(choice ident.Id) (err error) {
 		switch {
 		// when something is first always 'x' and later usually 'x', that's okay.
 		case !cons.Only.Empty() && cons.Only != choice:
-			err = fmt.Errorf("usually '%v' was always '%v'", choice, cons.Only)
+			err = errutil.New("usually was always", choice, cons.Only)
 
 		case cons.UsuallyLocal && cons.Usual != choice:
-			err = fmt.Errorf("usually `%v` was usually `%v`", choice, cons.Usual)
+			err = errutil.New("usually was usually", choice, cons.Usual)
 
 		default:
 			cons.Usual = choice
 			cons.UsuallyLocal = true
 		}
 	}
-	return err
+	return
 }
 
-//
 // Seldom would be complex; instead limiting to the "inverse" of usually
 // ( it really only makes sense if there are two choices,
 // and the other can become usually. )
-//
 func (cons *EnumConstraint) seldom(choice ident.Id) (err error) {
 	for other, _ := range cons.Enumeration.Choices {
 		if other != choice {
@@ -160,11 +161,10 @@ func (cons *EnumConstraint) seldom(choice ident.Id) (err error) {
 			}
 		}
 	}
-	return err
+	return
 }
 
 // NOTE: cant exclude the final remaining choice
-//
 func (cons *EnumConstraint) exclude(choice ident.Id) (err error) {
 	// ses raw index to allow the same choice to be excluded multiple times
 	_, err = cons.Enumeration.ChoiceToIndex(choice)
@@ -175,11 +175,11 @@ func (cons *EnumConstraint) exclude(choice ident.Id) (err error) {
 
 	// "never" cant ever cancel an "always"
 	case cons.Only == choice:
-		err = fmt.Errorf("never %v was always", cons.Only)
+		err = errutil.New("never was always", cons.Only)
 
 	// "never" cant cancel a "usually" from the same owner
 	case cons.UsuallyLocal && cons.Usual == choice:
-		err = fmt.Errorf("usually %v respecified as never", cons.Usual)
+		err = errutil.New("usually respecified as never", cons.Usual)
 
 	// okay, exclude:
 	default:
@@ -188,7 +188,7 @@ func (cons *EnumConstraint) exclude(choice ident.Id) (err error) {
 			olen := len(cons.Enumeration.Values)
 			xlen := len(cons.Never)
 			if olen-xlen-1 < 1 {
-				err = fmt.Errorf("never %s would remove all choices", choice)
+				err = errutil.New("never would remove all choices", choice)
 			} else {
 				cons.Never[choice] = true
 			}
@@ -200,6 +200,5 @@ func (cons *EnumConstraint) exclude(choice ident.Id) (err error) {
 			cons.Usual = ident.Empty()
 		}
 	}
-
-	return err
+	return
 }
