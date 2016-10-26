@@ -1,7 +1,6 @@
 package metal
 
 import (
-	"github.com/ionous/mars/rt"
 	M "github.com/ionous/sashimi/compiler/model"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/errutil"
@@ -105,12 +104,12 @@ func (mdl *Metal) NumClass() int {
 
 func (mdl *Metal) ClassNum(i int) meta.Class {
 	classes := mdl.classList()
-	return &classInfo{mdl, classes[i]}
+	return &memClass{mdl, classes[i]}
 }
 
 func (mdl *Metal) GetClass(id ident.Id) (ret meta.Class, okay bool) {
 	if c, ok := mdl.Classes[id]; ok {
-		ret, okay = &classInfo{mdl, c}, true
+		ret, okay = &memClass{mdl, c}, true
 	}
 	return
 }
@@ -127,6 +126,10 @@ func (mdl *Metal) InstanceNum(i int) meta.Instance {
 }
 
 func (mdl *Metal) GetInstance(id ident.Id) (ret meta.Instance, okay bool) {
+	return mdl.getInstance(id)
+}
+
+func (mdl *Metal) getInstance(id ident.Id) (ret *memInst, okay bool) {
 	if n, ok := mdl.Instances[id]; ok {
 		ret, okay = mdl.makeInstance(n), true
 	}
@@ -192,8 +195,17 @@ func (mdl *Metal) MatchNounName(n string, f func(ident.Id) bool) (int, bool) {
 	return mdl.Aliases.Try(n, f)
 }
 
-func (mdl *Metal) makeInstance(n *M.InstanceModel) meta.Instance {
-	return &instInfo{mdl, n}
+func (mdl *Metal) match(id ident.Id, relates ident.Id) (err error) {
+	if target, ok := mdl.GetInstance(id); !ok {
+		err = errutil.New("match, no such instance", id)
+	} else if ok := mdl.AreCompatible(target.GetParentClass(), relates); !ok {
+		err = errutil.New("match", target, "not compatible with", relates)
+	}
+	return
+}
+
+func (mdl *Metal) makeInstance(n *M.InstanceModel) *memInst {
+	return &memInst{mdl, n}
 }
 
 // FIX: these lists are NG.
@@ -271,37 +283,6 @@ func (mdl *Metal) makePropertyList(cls *M.ClassModel) (ret PropertyList) {
 		p := &cls.Properties[i]
 		e := &PropertyEntry{p, strings.ToLower(p.Name)}
 		ret = append(ret, e)
-	}
-	return
-}
-
-func (mdl *Metal) getZero(prop *M.PropertyModel) (ret interface{}) {
-	switch prop.Type {
-	case M.NumProperty:
-		if !prop.IsMany {
-			ret = rt.Number(0)
-		} else {
-			ret = []rt.Number{}
-		}
-	case M.TextProperty:
-		if !prop.IsMany {
-			var zero rt.Text
-			ret = zero
-		} else {
-			ret = []rt.Text{}
-		}
-	case M.EnumProperty:
-		enum := mdl.Enumerations[prop.Id]
-		ret = enum.Best()
-	case M.PointerProperty:
-		if !prop.IsMany {
-			var zero rt.Reference
-			ret = zero
-		} else {
-			ret = []rt.Reference{}
-		}
-	default:
-		panic(errutil.New("property doesn't support get zero", prop.Id, prop.Type))
 	}
 	return
 }

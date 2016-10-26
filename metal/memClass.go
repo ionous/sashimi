@@ -3,24 +3,25 @@ package metal
 import (
 	M "github.com/ionous/sashimi/compiler/model"
 	"github.com/ionous/sashimi/meta"
+	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 	"strings"
 )
 
-type classInfo struct {
+type memClass struct {
 	mdl *Metal
 	*M.ClassModel
 }
 
-func (c *classInfo) String() string {
+func (c *memClass) String() string {
 	return c.Id.String()
 }
 
-func (c *classInfo) GetId() ident.Id {
+func (c *memClass) GetId() ident.Id {
 	return c.Id
 }
 
-func (c *classInfo) GetParentClass() ident.Id {
+func (c *memClass) GetParentClass() ident.Id {
 	if p := c.Parent(); !p.Empty() {
 		parent := c.mdl.Classes[p]
 		return parent.Id
@@ -28,40 +29,40 @@ func (c *classInfo) GetParentClass() ident.Id {
 	return ident.Empty()
 }
 
-func (c *classInfo) GetOriginalName() string {
+func (c *memClass) GetOriginalName() string {
 	return c.Plural
 }
 
-func (c *classInfo) NumProperty() int {
+func (c *memClass) NumProperty() int {
 	props := c.mdl.propertyList(c.ClassModel)
 	return len(props)
 }
 
-func (c *classInfo) PropertyNum(i int) meta.Property {
+func (c *memClass) PropertyNum(i int) meta.Property {
 	p := c.propertyNum(i)
 	return c.makeProperty(p)
 }
 
-func (c *classInfo) propertyNum(i int) *M.PropertyModel {
+func (c *memClass) propertyNum(i int) *M.PropertyModel {
 	props := c.mdl.propertyList(c.ClassModel)
 	return props[i].PropertyModel // panics on out of range
 }
 
-func (c *classInfo) GetProperty(id ident.Id) (ret meta.Property, okay bool) {
+func (c *memClass) GetProperty(id ident.Id) (ret meta.Property, okay bool) {
 	if prop, ok := c.getPropertyById(id); ok {
 		ret, okay = c.makeProperty(prop), true
 	}
 	return
 }
 
-func (c *classInfo) FindProperty(s string) (ret meta.Property, okay bool) {
+func (c *memClass) FindProperty(s string) (ret meta.Property, okay bool) {
 	if prop, ok := c.getPropertyByName(s); ok {
 		ret, okay = c.makeProperty(prop), true
 	}
 	return
 }
 
-func (c *classInfo) getPropertyByName(name string) (ret *M.PropertyModel, okay bool) {
+func (c *memClass) getPropertyByName(name string) (ret *M.PropertyModel, okay bool) {
 	// FIX: hack for singular and plural properties, note: they wont show up in enumeration...
 	// ie. asking for FindProperty("plural"), or FindProperty("singular")
 	// these really should be generated at compile time or something
@@ -82,7 +83,7 @@ func (c *classInfo) getPropertyByName(name string) (ret *M.PropertyModel, okay b
 	return
 }
 
-func (c *classInfo) getPropertyById(id ident.Id) (ret *M.PropertyModel, okay bool) {
+func (c *memClass) getPropertyById(id ident.Id) (ret *M.PropertyModel, okay bool) {
 	// hack for singular and plural properties, note: they wont show up in enumeration...
 	if id.Equals(ident.Join(c.Id, pluralId)) {
 		ret, okay = &M.PropertyModel{Id: pluralId, Type: M.TextProperty}, true
@@ -99,14 +100,14 @@ func (c *classInfo) getPropertyById(id ident.Id) (ret *M.PropertyModel, okay boo
 	return
 }
 
-func (c *classInfo) GetPropertyByChoice(choice ident.Id) (ret meta.Property, okay bool) {
+func (c *memClass) GetPropertyByChoice(choice ident.Id) (ret meta.Property, okay bool) {
 	if p, ok := c.getPropertyByChoice(choice); ok {
 		ret, okay = c.makeProperty(p), true
 	}
 	return
 }
 
-func (c *classInfo) getPropertyByChoice(id ident.Id) (ret *M.PropertyModel, okay bool) {
+func (c *memClass) getPropertyByChoice(id ident.Id) (ret *M.PropertyModel, okay bool) {
 	for _, p := range c.mdl.propertyList(c.ClassModel) {
 		if p.Type == M.EnumProperty {
 			if enum, ok := c.mdl.Enumerations[p.Id]; ok {
@@ -120,28 +121,34 @@ func (c *classInfo) getPropertyByChoice(id ident.Id) (ret *M.PropertyModel, okay
 	return
 }
 
-func (c *classInfo) makeProperty(p *M.PropertyModel) meta.Property {
-	return &propBase{
-		mdl:      c.mdl,
-		src:      c.Id,
-		prop:     p,
-		getValue: c.getValue,
-		setValue: c.setValue}
+func (c *memClass) makeProperty(p *M.PropertyModel) meta.Property {
+	return makeProperty(c.mdl, p, c)
 }
 
-func (c *classInfo) getValue(p *M.PropertyModel) (ret meta.Generic) {
-	switch p.Id {
+// getStoreId implements valueStore
+func (c *memClass) getStoreId() ident.Id {
+	return ident.Empty()
+}
+
+// getClassId implements valueStore
+func (c *memClass) getClassId() ident.Id {
+	return c.Id
+}
+
+// getValue implements valueStore
+func (c *memClass) getValue(slot ident.Id) (ret meta.Generic, okay bool) {
+	switch slot {
 	case pluralId:
-		ret = c.Plural
+		ret, okay = c.Plural, true
 	case singularId:
-		ret = c.Singular
+		ret, okay = c.Singular, true
 	default:
-		ret = c.mdl.getZero(p)
+		// MARS: implement class defaults
 	}
 	return
 }
 
-func (c *classInfo) setValue(p *M.PropertyModel, v meta.Generic) error {
-	// test current expect full on panic, even through we return an error... hmmm...
-	panic("classes dont support set property")
+// setValue implements valueStore
+func (c *memClass) setValue(slot ident.Id, v meta.Generic) error {
+	return errutil.New("classes dont support set property")
 }

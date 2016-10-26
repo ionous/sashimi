@@ -1,9 +1,9 @@
 package metaltest
 
 import (
-	"fmt"
 	"github.com/ionous/sashimi/compiler/model/modeltest"
 	"github.com/ionous/sashimi/metal"
+	"github.com/ionous/sashimi/util/sbuf"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -16,7 +16,7 @@ func VerifyPostConditions(t *testing.T, v metal.ObjectValue) {
 
 func VerifyPostValues(t *testing.T, v metal.ObjectValue) {
 	// test that things really changed
-	if res, ok := v.GetValue(modeltest.TestInstance, modeltest.NumProp); !assert.True(t, ok, fmt.Sprintf("missing (%s.%s)", modeltest.TestInstance, modeltest.NumProp)) {
+	if res, ok := v.GetValue(modeltest.TestInstance, modeltest.NumProp); !assert.True(t, ok, sbuf.New("missing", modeltest.TestInstance, modeltest.NumProp).Join(" ")) {
 		t.Fatal()
 	} else {
 		require.EqualValues(t, float64(32), res)

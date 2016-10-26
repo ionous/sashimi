@@ -132,10 +132,10 @@ type PropertyType int
 
 const (
 	InvalidProperty PropertyType = iota
-	NumProperty                  // float64
-	TextProperty                 // string
-	StateProperty                // string.Id
-	ObjectProperty               // string.Id
+	NumProperty                  // get: rt.NumEval, set: rt.Number
+	TextProperty                 // get: rt.TextEval, set: rt.Text
+	StateProperty                // get: rt.StateEval, set: rt.State
+	ObjectProperty               // get: rt.ObjEval, set: rt.Object
 	ArrayProperty   = 1 << 16
 )
 
@@ -146,51 +146,19 @@ type Property interface {
 	GetId() ident.Id
 	GetName() string
 	GetType() PropertyType
+	GetRelative() (Relative, bool)
 
 	GetGeneric() Generic
+	// SetGeneric can return error when the value violates a property constraint,
+	// or it can panic if the value is not of the requested type, or if the targeted property holder is read-only ( for instance, a class. )
+	// Setting the value of a relation via the "many" side is considered invalid.
 	SetGeneric(Generic) error
-	//GetObjectType()?
-	// or maybe IsCompatible(inst) bool
-	GetValue() Value
-	GetValues() Values
-	// GetRelative returns false if there is no relation, for example: a pure array or object value.
-	GetRelative() (Relative, bool)
 }
 
 type Relative struct {
 	Relation ident.Id // Relation
 	Relates  ident.Id // Relates class
 	From     ident.Id // From property
-}
-
-// get and set panic if the value is not of the requested type; set can return error when the value, when of the correct type, violates a property constraint
-type Value interface {
-	GetNum() float64
-	SetNum(float64) error
-
-	GetText() string
-	SetText(string) error
-
-	GetState() ident.Id
-	SetState(ident.Id) error
-
-	GetObject() ident.Id
-	SetObject(ident.Id) error
-
-	SetRelation(ident.Id) error
-}
-
-type Values interface {
-	NumValue() int
-	ValueNum(int) Value
-
-	ClearValues() error
-	AppendNum(float64) error
-	AppendText(string) error
-	AppendObject(ident.Id) error
-
-	// RemoveValue(int)?
-	// Slice?
 }
 
 // NOTE: ParserActions aren't id'd, so they are represented as structs.

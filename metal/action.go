@@ -1,9 +1,9 @@
 package metal
 
 import (
-	"fmt"
 	M "github.com/ionous/sashimi/compiler/model"
 	"github.com/ionous/sashimi/meta"
+	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 )
 
@@ -22,7 +22,7 @@ func (a actionInfo) GetActionName() string {
 
 func (a actionInfo) GetEvent() (ret meta.Event) {
 	if e, ok := a.mdl.Events[a.EventId]; !ok {
-		panic(fmt.Sprintf("internal error, no event found for action %s", a.EventId))
+		panic(errutil.New("internal error, no event found for action", a.EventId))
 	} else {
 		ret = &eventInfo{a.mdl, e}
 	}

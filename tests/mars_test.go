@@ -23,8 +23,7 @@ func TestRawTextProperty(t *testing.T) {
 	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {
 		if player, ok := test.Metal.GetInstance("player"); assert.True(t, ok, "found world") {
 			if greeting, ok := player.FindProperty("greeting"); assert.True(t, ok, "has greeting") {
-				g := greeting.GetGeneric()
-				if v, ok := g.(rt.TextEval); assert.True(t, ok, "text eval") {
+				if v, ok := greeting.GetGeneric().(rt.TextEval); assert.True(t, ok, "text eval") {
 					run := test.Game.Rtm
 					if text, e := v.GetText(run); assert.NoError(t, e, "got text") {
 						if !assert.Equal(t, "hello world", text.String()) {
@@ -45,8 +44,7 @@ func TestNumEvalProperty(t *testing.T) {
 	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {
 		if player, ok := test.Metal.GetInstance("player"); assert.True(t, ok, "found player") {
 			if counter, ok := player.FindProperty("counter"); assert.True(t, ok, "has greeting") {
-				g := counter.GetGeneric()
-				if v, ok := g.(rt.NumEval); assert.True(t, ok, "num eval") {
+				if v, ok := counter.GetGeneric().(rt.NumEval); assert.True(t, ok, "num eval") {
 					run := test.Game.Rtm
 					if num, e := v.GetNumber(run); assert.NoError(t, e, "got num") {
 						if !assert.EqualValues(t, 5, num.Float()) {

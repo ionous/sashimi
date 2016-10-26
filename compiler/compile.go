@@ -256,6 +256,7 @@ func (c converter) flattenTable(srcProp ident.Id) (err error) {
 				// note: we always set a value, even if its empty.
 				// metal would normally panic on getZero for relation values
 				// but, because we have a blank value, not an nil value -- getZero wont get called.
+				// MARS: note that's no longer true!
 				var other ident.Id
 				if len(lst) != 0 {
 					other = lst[0]
