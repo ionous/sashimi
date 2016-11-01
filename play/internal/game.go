@@ -30,6 +30,10 @@ func (g *Game) Random(exclusiveMax int) int {
 	return n
 }
 
+func (g *Game) RunNamedAction(s string, params ...meta.Generic) error {
+	return g.RunAction(ident.MakeId(s), params...)
+}
+
 // g.The("player").Go("hack", "the nice code").Then(trailing actions...)
 func (g *Game) RunAction(id ident.Id, params ...meta.Generic) (err error) {
 	if act, e := g.Rtm.GetAction(id, params); e != nil {

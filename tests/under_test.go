@@ -7,12 +7,12 @@ import (
 	"testing"
 )
 
-// TestUnderstanding should trigger "test", which should print a description.
-func TestUUManually(t *testing.T) {
-	s := understandingTest()
+// TestUnderManually should trigger "test", which should print a description.
+func TestUnderManually(t *testing.T) {
+	s := underTest()
 	expected := lines("look it's a test!")
 	//
-	if test, err := NewTestGameSource(t, s, "looker", nil); assert.NoError(t, err) {
+	if test, err := NewTestGameSource(t, &s, "looker", nil); assert.NoError(t, err) {
 		if err := test.Game.RunAction("test", g.The("looker"), g.The("lookee")); assert.NoError(t, err, "run manually") {
 			if res, err := test.FlushOutput(); assert.NoError(t, err, "raw flush") {
 				if assert.EqualValues(t, expected, res, "raw output") {
@@ -24,11 +24,11 @@ func TestUUManually(t *testing.T) {
 	t.FailNow()
 }
 
-func TestUParserText(t *testing.T) {
-	s := understandingTest()
+func TestUnderParserText(t *testing.T) {
+	s := underTest()
 	expected := lines("look it's a test!")
 	//
-	if test, err := NewTestGameSource(t, s, "looker", nil); assert.NoError(t, err) {
+	if test, err := NewTestGameSource(t, &s, "looker", nil); assert.NoError(t, err) {
 		if assert.Len(t, test.Metal.Model.Aliases, 2, "parsed actions") {
 			str := "look at lookee"
 			if res, err := test.RunInput(str); assert.NoError(t, err, "handle input") {
@@ -41,9 +41,9 @@ func TestUParserText(t *testing.T) {
 	t.FailNow()
 }
 
-func TestUKnownAs(t *testing.T) {
+func TestUnderKnownAs(t *testing.T) {
 	expected := lines("look it's a test!")
-	s := append(*understandingTest(),
+	s := append(underTest(),
 		The("lookee", IsKnownAs("something special")))
 	//
 	if test, err := NewTestGameSource(t, &s, "looker", nil); assert.NoError(t, err) {
@@ -60,8 +60,8 @@ func TestUKnownAs(t *testing.T) {
 	t.FailNow()
 }
 
-func understandingTest() *Script {
-	return &Script{
+func underTest() Script {
+	return Script{
 		The("kinds",
 			Have("description", "text"),
 			Can("test").And("testing").RequiresOne("kind"),

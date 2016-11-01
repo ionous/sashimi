@@ -16,10 +16,11 @@ func TestCallbackUnknown(t *testing.T) {
 		The("kinds", When("this does not exists").Always(DoNothing{})),
 	}
 	if src, err := s.BuildStatements(); assert.NoError(t, err, "build") {
-		if _, err := compiler.Compile(src, ioutil.Discard); !assert.Error(t, err, "expected failure") {
-			t.FailNow()
+		if _, err := compiler.Compile(src, ioutil.Discard); assert.Error(t, err, "expected failure") {
+			return
 		}
 	}
+	t.FailNow()
 }
 
 //TestCallbackKnown tests compiler success for a simple action
@@ -31,10 +32,11 @@ func TestCallbackKnown(t *testing.T) {
 	}
 	//"couldnt compile action ### couldn't find class "
 	if src, err := s.BuildStatements(); assert.NoError(t, err, "build") {
-		if _, err := compiler.Compile(src, ioutil.Discard); !assert.NoError(t, err, "expected success") {
-			t.FailNow()
+		if _, err := compiler.Compile(src, ioutil.Discard); assert.NoError(t, err, "expected success") {
+			return
 		}
 	}
+	t.FailNow()
 }
 
 // TestCallbackClass tests the execution of a simple callback
@@ -72,12 +74,13 @@ func TestCallbackClass(t *testing.T) {
 		if err := test.Game.RunAction(MakeStringId("test"), g.The("obj")); assert.NoError(t, err) {
 			if out, err := test.FlushOutput(); assert.NoError(t, err) {
 				expected := lines("it's a trap!")
-				if !assert.EqualValues(t, expected, out) {
-					t.FailNow()
+				if assert.EqualValues(t, expected, out) {
+					return
 				}
 			}
 		}
 	}
+	t.FailNow()
 }
 
 // TestCallbackBeforeAfter: capture actions before and after an event.
@@ -94,10 +97,11 @@ func TestCallbackBeforeAfter(t *testing.T) {
 		if err := test.Game.RunAction("test", g.The("obj")); assert.NoError(t, err) {
 			if out, err := test.FlushOutput(); assert.NoError(t, err) {
 				expected := lines("Before", "After")
-				if !assert.EqualValues(t, expected, out) {
-					t.FailNow()
+				if assert.EqualValues(t, expected, out) {
+					return
 				}
 			}
 		}
 	}
+	t.FailNow()
 }

@@ -49,6 +49,10 @@ func (out TestWriter) Flush() string {
 type ParentCreator func(meta.Model) api.LookupParents
 
 func NewTestGameSource(t *testing.T, s *Script, gen string, pc ParentCreator) (ret TestGame, err error) {
+	if gen == "no parser" {
+		noParser := append(*s, The("kind", Called("no parser"), Exists()))
+		s = &noParser
+	}
 	if src, e := s.BuildStatements(); e != nil {
 		err = e
 	} else if model, e := compiler.Compile(src, ioutil.Discard); e != nil {
@@ -84,7 +88,7 @@ func NewTestGameSource(t *testing.T, s *Script, gen string, pc ParentCreator) (r
 // the understandings used by the parser can just sit there
 // in the future, maybe we could put the understanding in an outer layer
 func NewTestGame(t *testing.T, s *Script) (ret TestGame, err error) {
-	ad := append(*s, The("actor", Called("player"), Exists()))
+	ad := append(*s, The("actor", Called("player")))
 	return NewTestGameSource(t, &ad, "player", nil)
 }
 
