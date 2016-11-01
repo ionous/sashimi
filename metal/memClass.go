@@ -40,7 +40,7 @@ func (c *memClass) NumProperty() int {
 
 func (c *memClass) PropertyNum(i int) meta.Property {
 	p := c.propertyNum(i)
-	return c.makeProperty(p)
+	return makeProperty(c.mdl, p, c)
 }
 
 func (c *memClass) propertyNum(i int) *M.PropertyModel {
@@ -49,15 +49,15 @@ func (c *memClass) propertyNum(i int) *M.PropertyModel {
 }
 
 func (c *memClass) GetProperty(id ident.Id) (ret meta.Property, okay bool) {
-	if prop, ok := c.getPropertyById(id); ok {
-		ret, okay = c.makeProperty(prop), true
+	if p, ok := c.getPropertyById(id); ok {
+		ret, okay = makeProperty(c.mdl, p, c), true
 	}
 	return
 }
 
 func (c *memClass) FindProperty(s string) (ret meta.Property, okay bool) {
-	if prop, ok := c.getPropertyByName(s); ok {
-		ret, okay = c.makeProperty(prop), true
+	if p, ok := c.getPropertyByName(s); ok {
+		ret, okay = makeProperty(c.mdl, p, c), true
 	}
 	return
 }
@@ -102,7 +102,7 @@ func (c *memClass) getPropertyById(id ident.Id) (ret *M.PropertyModel, okay bool
 
 func (c *memClass) GetPropertyByChoice(choice ident.Id) (ret meta.Property, okay bool) {
 	if p, ok := c.getPropertyByChoice(choice); ok {
-		ret, okay = c.makeProperty(p), true
+		ret, okay = makeProperty(c.mdl, p, c), true
 	}
 	return
 }
@@ -119,10 +119,6 @@ func (c *memClass) getPropertyByChoice(id ident.Id) (ret *M.PropertyModel, okay 
 		}
 	}
 	return
-}
-
-func (c *memClass) makeProperty(p *M.PropertyModel) meta.Property {
-	return makeProperty(c.mdl, p, c)
 }
 
 // getStoreId implements valueStore
@@ -148,7 +144,7 @@ func (c *memClass) getValue(slot ident.Id) (ret meta.Generic, okay bool) {
 	return
 }
 
-// setValue implements valueStore
+// setValue implements valueStore by always returning error
 func (c *memClass) setValue(slot ident.Id, v meta.Generic) error {
 	return errutil.New("classes dont support set property")
 }

@@ -47,10 +47,14 @@ func makeProperty(mdl *Metal, p *M.PropertyModel, v valueStore) (ret meta.Proper
 			// since we dont support "many to many" the far side here must be either "one" or "many".
 			// "many" values are "views" -- they inspect the values of this side.
 			// "one" values are bi-connections 00 the far side needs to change when this side changes.
-			if rel, ok := mdl.Relations[p.Relation]; ok && rel.Style == M.OneToOne {
-				ret = &oneToOneProp{mem, rel.GetOther(p.Id)}
-			} else {
+			if rel, ok := mdl.Relations[p.Relation]; !ok {
 				ret = &pointerProp{mem}
+			} else {
+				if rel.Style == M.OneToOne {
+					ret = &oneToOneProp{mem, rel.GetOther(p.Id)}
+				} else {
+					ret = &oneOfManyProp{mem} //, rel.GetOther(p.Id)
+				}
 			}
 		} else {
 			if rel, ok := mdl.Relations[p.Relation]; ok {
@@ -221,12 +225,7 @@ func (p *pointerProp) GetType() meta.PropertyType {
 // we dont need to do that as well.
 func (p *pointerProp) GetGeneric() (ret meta.Generic) {
 	if v, ok := p.value.getValue(p.prop.Id); ok {
-		// MARS FIX - pointers are mostly stored as refs, but not relations.
-		if id, ok := v.(ident.Id); ok {
-			ret = rt.Reference(id)
-		} else {
-			ret = v
-		}
+		ret = v
 	} else {
 		var zero rt.Object // object implements rt.ObjEval
 		ret = zero

@@ -6,6 +6,7 @@ import (
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
+	"github.com/ionous/sashimi/util/sbuf"
 )
 
 type manyToOneProp struct {
@@ -67,19 +68,18 @@ func (it *manyIt) advance() (ret *rt.Object) {
 			it.idx--
 			target := it.p.mdl.InstanceNum(it.idx)
 			// not every instance will have the property
+			// FIX? we know what we are creating, and we have all the info to create it --
+			// it feels strange to create it generically, and then check if it worked correctly.
 			if t, ok := target.GetProperty(it.targetProp); ok {
-				// now that we have the property, get its value;
-				// i think we are storing idents for relations
-				v := t.GetGeneric()
-				if mightBeMe, ok := v.(ident.Id); !ok {
-					// FIX!!!! pointer prop now returns reference re: mars fix.
-					//panic("stored one-to-many has invalid value")
-					// haave to change to use underlying instance interface
-					panic(v)
-				} else if mightBeMe.Equals(myId) {
-					// while we've got it: wrap up a direct pointer
-					ret = &rt.Object{target}
-					break
+				if p, ok := t.(*oneOfManyProp); !ok {
+					panic(errutil.New("stored one-to-many has invalid value", sbuf.Type{t}))
+				} else {
+					mightBeMe := p.getId()
+					if mightBeMe.Equals(myId) {
+						// while we've got it: wrap the target object as direct pointer
+						ret = &rt.Object{target}
+						break
+					}
 				}
 			}
 		}

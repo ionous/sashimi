@@ -18,26 +18,33 @@ func (n *memInst) NumProperty() int {
 
 func (n *memInst) PropertyNum(i int) (ret meta.Property) {
 	p := n.getMemClass().propertyNum(i)
-	return n.makeProperty(p)
+	return makeProperty(n.mdl, p, n)
 }
 
 func (n *memInst) GetProperty(id ident.Id) (ret meta.Property, okay bool) {
 	if p, ok := n.getMemClass().getPropertyById(id); ok {
-		ret, okay = n.makeProperty(p), true
+		ret, okay = makeProperty(n.mdl, p, n), true
+	}
+	return
+}
+
+func (n *memInst) getProperty(id ident.Id) (ret meta.Property, okay bool) {
+	if p, ok := n.getMemClass().getPropertyById(id); ok {
+		ret, okay = makeProperty(n.mdl, p, n), true
 	}
 	return
 }
 
 func (n *memInst) FindProperty(s string) (ret meta.Property, okay bool) {
 	if p, ok := n.getMemClass().getPropertyByName(s); ok {
-		ret, okay = n.makeProperty(p), true
+		ret, okay = makeProperty(n.mdl, p, n), true
 	}
 	return
 }
 
 func (n *memInst) GetPropertyByChoice(id ident.Id) (ret meta.Property, okay bool) {
 	if p, ok := n.getMemClass().getPropertyByChoice(id); ok {
-		ret, okay = n.makeProperty(p), true
+		ret, okay = makeProperty(n.mdl, p, n), true
 	}
 	return
 }
@@ -45,10 +52,6 @@ func (n *memInst) GetPropertyByChoice(id ident.Id) (ret meta.Property, okay bool
 func (n *memInst) getMemClass() *memClass {
 	cls := n.mdl.Classes[n.Class]
 	return &memClass{n.mdl, cls}
-}
-
-func (n *memInst) makeProperty(p *M.PropertyModel) meta.Property {
-	return makeProperty(n.mdl, p, n)
 }
 
 // getStoreId implements valueStore
