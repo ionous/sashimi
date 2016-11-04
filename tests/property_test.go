@@ -4,6 +4,7 @@ import (
 	. "github.com/ionous/mars/script"
 	"github.com/ionous/sashimi/compiler"
 	M "github.com/ionous/sashimi/compiler/model"
+	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/stretchr/testify/assert"
@@ -14,9 +15,10 @@ import (
 
 // compile nothing succesfully
 func TestPropertyEmpty(t *testing.T) {
-	s := Script{}
-	if src, e := s.BuildStatements(); assert.NoError(t, e) {
-		if model, e := compiler.Compile(src, ioutil.Discard); assert.NoError(t, e) {
+	s := Script()
+	src := &S.Statements{}
+	if e := s.Generate(src); assert.NoError(t, e) {
+		if model, e := compiler.Compile(*src, ioutil.Discard); assert.NoError(t, e) {
 			// we expect the single built in "kinds" class
 			if assert.Len(t, model.Classes, 1, "expected one classes") {
 				return
@@ -28,11 +30,12 @@ func TestPropertyEmpty(t *testing.T) {
 
 // create a single subclass called stories
 func TestPropertySubclass(t *testing.T) {
-	s := Script{The("kinds",
+	s := The("kinds",
 		Called("stories").WithSingularName("story"),
-	)}
-	if src, e := s.BuildStatements(); assert.NoError(t, e) {
-		if model, e := compiler.Compile(src, ioutil.Discard); assert.NoError(t, e) {
+	)
+	src := &S.Statements{}
+	if e := s.Generate(src); assert.NoError(t, e) {
+		if model, e := compiler.Compile(*src, ioutil.Discard); assert.NoError(t, e) {
 			if assert.Len(t, model.Classes, 2, "expected two classes") {
 				if stories := model.Classes[ident.MakeId("stories")]; assert.NotNil(t, stories, "expected stories") {
 					if assert.EqualValues(t, stories.Singular, "story", "singular/plural problem") {
@@ -47,12 +50,13 @@ func TestPropertySubclass(t *testing.T) {
 
 // double specification of the same class causes no error
 func TestPropertyDoubledClass(t *testing.T) {
-	s := Script{
+	s := Script(
 		The("kinds", Called("stories").WithSingularName("story")),
 		The("kinds", Called("stories"), Exists()),
-	}
-	if src, e := s.BuildStatements(); assert.NoError(t, e) {
-		if _, e := compiler.Compile(src, ioutil.Discard); assert.NoError(t, e) {
+	)
+	src := &S.Statements{}
+	if e := s.Generate(src); assert.NoError(t, e) {
+		if _, e := compiler.Compile(*src, ioutil.Discard); assert.NoError(t, e) {
 			return
 		}
 	}
@@ -61,12 +65,13 @@ func TestPropertyDoubledClass(t *testing.T) {
 
 // create properties on the built in object class
 func TestPropertyKinds(t *testing.T) {
-	s := Script{The("kinds",
+	s := The("kinds",
 		Have("text", "text"),
 		Have("num", "num"),
-	)}
-	if src, e := s.BuildStatements(); assert.NoError(t, e) {
-		if model, e := compiler.Compile(src, ioutil.Discard); assert.NoError(t, e) {
+	)
+	src := &S.Statements{}
+	if e := s.Generate(src); assert.NoError(t, e) {
+		if model, e := compiler.Compile(*src, ioutil.Discard); assert.NoError(t, e) {
 			if cls := model.Classes[ident.MakeId("kinds")]; assert.NotNil(t, cls) {
 				if props := cls.Properties; assert.NotNil(t, props) {
 					require.Len(t, props, 2+1) // MOD: +1 for auto-generated "name" property
@@ -86,11 +91,10 @@ func TestPropertyKinds(t *testing.T) {
 
 // TestPropertyInst: create an instance ( with no properties )
 func TestPropertyInst(t *testing.T) {
-	s := Script{
-		The("kind", Called("test"), Exists()),
-	}
-	if src, e := s.BuildStatements(); assert.NoError(t, e) {
-		if model, err := compiler.Compile(src, ioutil.Discard); assert.NoError(t, err, "compile") {
+	s := The("kind", Called("test"), Exists())
+	src := &S.Statements{}
+	if e := s.Generate(src); assert.NoError(t, e) {
+		if model, err := compiler.Compile(*src, ioutil.Discard); assert.NoError(t, err, "compile") {
 			//	model.PrintModel(t.Log)
 			if assert.Len(t, model.Instances, 1, "expected one instance") {
 				if test, ok := model.Instances[ident.MakeId("test")]; assert.True(t, ok, "expected test instance") {
@@ -108,7 +112,7 @@ func TestPropertyInst(t *testing.T) {
 }
 
 func TestPropertyText(t *testing.T) {
-	s := Script{
+	s := Script(
 		The("kinds",
 			Called("stories").WithSingularName("story"),
 			Have("author", "text"),
@@ -116,9 +120,10 @@ func TestPropertyText(t *testing.T) {
 		The("story",
 			Called("test"),
 			Has("author", "any mouse"),
-		)}
-	if src, e := s.BuildStatements(); assert.NoError(t, e) {
-		if model, err := compiler.Compile(src, ioutil.Discard); assert.NoError(t, err, "compile") {
+		))
+	src := &S.Statements{}
+	if e := s.Generate(src); assert.NoError(t, e) {
+		if model, err := compiler.Compile(*src, ioutil.Discard); assert.NoError(t, err, "compile") {
 			if v, err := field(model, "test", "author"); assert.NoError(t, err, "test field") {
 				require.EqualValues(t, "any mouse", v, "mismatched")
 				return
@@ -129,7 +134,7 @@ func TestPropertyText(t *testing.T) {
 }
 
 func TestPropertyNum(t *testing.T) {
-	s := Script{
+	s := Script(
 		The("kinds",
 			Called("stories").WithSingularName("story"),
 			Have("int", "num"),
@@ -139,9 +144,10 @@ func TestPropertyNum(t *testing.T) {
 			Has("int", 5)),
 		The("test",
 			Has("float", 3.25)),
-	}
-	if src, e := s.BuildStatements(); assert.NoError(t, e) {
-		if model, e := compiler.Compile(src, ioutil.Discard); assert.NoError(t, e) {
+	)
+	src := &S.Statements{}
+	if e := s.Generate(src); assert.NoError(t, e) {
+		if model, e := compiler.Compile(*src, ioutil.Discard); assert.NoError(t, e) {
 			if v, e := field(model, "test", "int"); assert.NoError(t, e) {
 				require.EqualValues(t, 5, v, "int mismatch")
 				if v, e := field(model, "test", "float"); assert.NoError(t, e) {
@@ -158,7 +164,7 @@ func TestPropertyNum(t *testing.T) {
 // verify all is as expected
 // go test -run TestPropertyEitherOr
 func TestPropertyEitherOr(t *testing.T) {
-	s := Script{
+	s := Script(
 		The("kinds",
 			Called("scored-stories").WithSingularName("scored-story"),
 			AreEither("scored").Or("unscored"),
@@ -183,9 +189,10 @@ func TestPropertyEitherOr(t *testing.T) {
 			Called("unscored"),
 			Is("unscored"),
 		),
-	}
-	if src, e := s.BuildStatements(); assert.NoError(t, e) {
-		if model, e := compiler.Compile(src, ioutil.Discard); assert.NoError(t, e) {
+	)
+	src := &S.Statements{}
+	if e := s.Generate(src); assert.NoError(t, e) {
+		if model, e := compiler.Compile(*src, ioutil.Discard); assert.NoError(t, e) {
 			if v, e := field(model, "scored-default", "scored"); assert.NoError(t, e) {
 				// not default: false
 				require.EqualValues(t, "scored", v)
@@ -210,7 +217,7 @@ func TestPropertyEitherOr(t *testing.T) {
 
 // choose an unselected value and make sure it reports an error
 func TestPropertyEitherError(t *testing.T) {
-	s := Script{
+	s := Script(
 		The("kinds",
 			Called("stories").WithSingularName("story"),
 			AreEither("scored").Or("unscored").Usually("unscored"),
@@ -219,9 +226,10 @@ func TestPropertyEitherError(t *testing.T) {
 			Called("errors"),
 			Is("this is meant to report an issue"),
 		),
-	}
-	if src, e := s.BuildStatements(); assert.NoError(t, e) {
-		if _, e := compiler.Compile(src, ioutil.Discard); assert.Error(t, e, "expects compile failure") {
+	)
+	src := &S.Statements{}
+	if e := s.Generate(src); assert.NoError(t, e) {
+		if _, e := compiler.Compile(*src, ioutil.Discard); assert.Error(t, e, "expects compile failure") {
 			return
 		}
 	}

@@ -9,6 +9,7 @@ import (
 	"github.com/ionous/sashimi/minicon"
 	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/script"
+	"github.com/ionous/sashimi/script/backend"
 	"github.com/ionous/sashimi/standard/framework"
 	"github.com/ionous/sashimi/util/ident"
 	"io"
@@ -57,7 +58,7 @@ func GetConsole(opt Options) (ret C.IConsole) {
 	return
 }
 
-func RunScript(script *script.Script, opt Options) (err error) {
+func RunScript(script *backend.Script, opt Options) (err error) {
 	writer := GetWriter(opt)
 	if model, e := script.Compile(writer); e != nil {
 		err = e

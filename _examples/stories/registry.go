@@ -6,6 +6,7 @@ package stories
 import (
 	"fmt"
 	"github.com/ionous/sashimi/script"
+	"github.com/ionous/sashimi/script/backend"
 	"github.com/ionous/sashimi/standard"
 )
 
@@ -66,7 +67,7 @@ func (this *Registry) Select(name string) bool {
 func init() {
 	standard.InitStandardLibrary()
 
-	script.AddScript(func(s *script.Script) {
+	script.AddScript(func(s *backend.Script) {
 		if cb, ok := stories.reg[stories.selected]; ok {
 			cb(s)
 		}

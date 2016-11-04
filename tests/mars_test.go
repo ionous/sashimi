@@ -2,9 +2,9 @@ package tests
 
 import (
 	"github.com/ionous/mars/core"
-	"github.com/ionous/mars/g"
 	"github.com/ionous/mars/rt"
 	. "github.com/ionous/mars/script"
+	"github.com/ionous/mars/script/g"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -15,10 +15,10 @@ func lines(v ...string) []string {
 }
 
 func TestRawTextProperty(t *testing.T) {
-	script := &Script{
+	script := Script(
 		The("kinds", Called("actors"), Have("greeting", "text")),
 		The("actor", Called("player"), Has("greeting", "hello world")),
-	}
+	)
 
 	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {
 		if player, ok := test.Metal.GetInstance("player"); assert.True(t, ok, "found world") {
@@ -37,10 +37,10 @@ func TestRawTextProperty(t *testing.T) {
 }
 
 func TestNumEvalProperty(t *testing.T) {
-	script := &Script{
+	script := Script(
 		The("kinds", Called("actors"), Have("counter", "num")),
 		The("actor", Called("player"), Has("counter", core.AddNum{core.N(2), core.N(3)})),
-	}
+	)
 	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {
 		if player, ok := test.Metal.GetInstance("player"); assert.True(t, ok, "found player") {
 			if counter, ok := player.FindProperty("counter"); assert.True(t, ok, "has greeting") {
@@ -58,7 +58,7 @@ func TestNumEvalProperty(t *testing.T) {
 }
 
 func TestActionNames(t *testing.T) {
-	script := &Script{
+	script := Script(
 		The("kinds", Called("actors"), Have("greeting", "text")),
 		The("actor", Called("player"), Has("greeting", "hello world")),
 		The("kinds", Called("actors"),
@@ -68,7 +68,7 @@ func TestActionNames(t *testing.T) {
 				g.Say(g.The("action.source").Text("greeting")),
 				g.Say(g.The("actor").Text("greeting")),
 			)),
-	}
+	)
 	//running queued action
 	//got changed value hello
 	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {
@@ -86,7 +86,7 @@ func TestActionNames(t *testing.T) {
 }
 
 func TestTarget(t *testing.T) {
-	script := &Script{
+	script := Script(
 		The("kinds", Called("actors"), Have("greeting", "text")),
 		The("actor", Called("player"), Has("greeting", "hello")),
 		The("actor", Called("npc"), Exists()),
@@ -95,7 +95,7 @@ func TestTarget(t *testing.T) {
 			To("greet actor",
 				g.Say(g.The("player").Text("greeting"), g.The("action.target").Text("name")),
 			)),
-	}
+	)
 	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {
 		if err := test.Game.RunAction(core.MakeStringId("greet actor"), g.The("player"), g.The("npc")); assert.NoError(t, err, "run action") {
 			if v, err := test.FlushOutput(); assert.NoError(t, err, "process") {
@@ -109,7 +109,7 @@ func TestTarget(t *testing.T) {
 
 // TestRun calls an action from an action
 func TestRun(t *testing.T) {
-	script := &Script{
+	script := Script(
 		The("kinds", Called("actors"), Have("greeting", "text")),
 		The("actor", Called("player"), Has("greeting", "hello")),
 		The("actor", Called("npc"), Exists()),
@@ -121,7 +121,7 @@ func TestRun(t *testing.T) {
 			To("greet actor",
 				g.The("player").Go("test nothing"),
 			)),
-	}
+	)
 	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {
 		if err := test.Game.RunAction(core.MakeStringId("greet actor"), g.The("player"), g.The("npc")); assert.NoError(t, err, "run action") {
 			if v, err := test.FlushOutput(); assert.NoError(t, err, "process") {
@@ -134,7 +134,7 @@ func TestRun(t *testing.T) {
 }
 
 func TestStopHere(t *testing.T) {
-	script := &Script{
+	script := Script(
 		The("kinds", Called("actors"), Have("greeting", "text")),
 		The("actor", Called("player"), Has("greeting", "hello world")),
 		The("kinds", Called("actors"),
@@ -146,7 +146,7 @@ func TestStopHere(t *testing.T) {
 				g.Say(g.The("actor").Text("greeting")),
 			),
 		),
-	}
+	)
 	//running queued action
 	//got changed value hello
 	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {

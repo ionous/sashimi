@@ -191,10 +191,15 @@ func (p *enumProp) GetGeneric() (ret meta.Generic) {
 	// MARS: this manufactures the state (eval) from the id.
 	// would it be better to synthesize this, or even just store it as state in the first place?
 	if v, ok := p.value.getValue(p.prop.Id); ok {
-		if id, ok := v.(ident.Id); !ok {
+		// if id, ok := v.(ident.Id); !ok {
+		// 	panic(errutil.New("stored enum has invalid value", sbuf.Type{v}))
+		// } else {
+		// 	ret = rt.State(id)
+		// }
+		if id, ok := v.(rt.State); !ok {
 			panic(errutil.New("stored enum has invalid value", sbuf.Type{v}))
 		} else {
-			ret = rt.State(id)
+			ret = id
 		}
 	} else {
 		enum := p.mdl.Enumerations[p.prop.Id]

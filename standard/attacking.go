@@ -1,7 +1,7 @@
 package standard
 
 import (
-	"github.com/ionous/mars/g"
+	"github.com/ionous/mars/script/g"
 	. "github.com/ionous/sashimi/script"
 )
 

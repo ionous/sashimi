@@ -16,23 +16,10 @@ func (p *oneOfManyProp) GetType() meta.PropertyType {
 	return meta.ObjectProperty
 }
 
-// GetGeneric returns ObjectEval.
+// GetGeneric returns rt.ObjectEval.
 func (p *oneOfManyProp) GetGeneric() meta.Generic {
 	id := p.getId()
 	return rt.Reference(id)
-}
-
-// getId, oneOfManyProp stores ids
-func (p *oneOfManyProp) getId() (ret ident.Id) {
-	if v, ok := p.value.getValue(p.prop.Id); ok {
-		// relations store ids
-		if id, ok := v.(ident.Id); !ok {
-			panic(errutil.New("get oneOfMany", p, "expected id, got", sbuf.Type{v}))
-		} else {
-			ret = id
-		}
-	}
-	return
 }
 
 // SetGeneric oneOfMany expects rt.Object, noting rt.Object can be empty.
@@ -44,6 +31,19 @@ func (p *oneOfManyProp) SetGeneric(value meta.Generic) (err error) {
 	} else {
 		// relations store ids
 		err = p.setValue(obj.GetId())
+	}
+	return
+}
+
+// getId, oneOfManyProp stores ids
+func (p *oneOfManyProp) getId() (ret ident.Id) {
+	if v, ok := p.value.getValue(p.prop.Id); ok {
+		// relations store ids
+		if id, ok := v.(ident.Id); !ok {
+			panic(errutil.New("get oneOfMany", p, "expected id, got", sbuf.Type{v}))
+		} else {
+			ret = id
+		}
 	}
 	return
 }

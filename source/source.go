@@ -27,102 +27,95 @@ type Statements struct {
 	Relatives      []RelativeStatement
 }
 
-// BuildingBlocks provides functions to create new Statements.
-type BuildingBlocks struct {
-	statements Statements
-}
+// UnknownLocation is a stand-in for the file and line of the phrase used to build a statement. MARS: remove this and replace with the proper file and line!
+const UnknownLocation = Code("unknown")
 
 //
-func (blocks *BuildingBlocks) Statements() Statements {
-	return blocks.statements
-}
-
-//
-func (blocks *BuildingBlocks) NewActionAssertion(
+func (s *Statements) NewActionAssertion(
 	fields ActionAssertionFields,
 	source Code,
 ) (err error) {
 	statement := ActionStatement{fields, source}
-	blocks.statements.Actions = append(blocks.statements.Actions, statement)
+	s.Actions = append(s.Actions, statement)
 	return err
 }
 
 //
-func (blocks *BuildingBlocks) NewActionHandler(fields RunFields, source Code,
+func (s *Statements) NewActionHandler(fields RunFields, source Code,
 ) (err error) {
 	statement := RunStatement{fields, source}
-	blocks.statements.ActionHandlers = append(blocks.statements.ActionHandlers, statement)
+	s.ActionHandlers = append(s.ActionHandlers, statement)
 	return err
 }
 
 //
-func (blocks *BuildingBlocks) NewAlias(fields AliasFields, source Code,
+func (s *Statements) NewAlias(fields AliasFields, source Code,
 ) (err error) {
 	a := AliasStatement{fields, source}
-	blocks.statements.Aliases = append(blocks.statements.Aliases, a)
+	s.Aliases = append(s.Aliases, a)
 	return err
 }
 
 //
-func (blocks *BuildingBlocks) NewAssertion(fields AssertionFields, source Code,
+func (s *Statements) NewAssertion(fields AssertionFields, source Code,
 ) (err error) {
 	a := AssertionStatement{fields, source}
-	blocks.statements.Asserts = append(blocks.statements.Asserts, a)
+	s.Asserts = append(s.Asserts, a)
 	return err
 }
 
 //
-func (blocks *BuildingBlocks) NewChoice(fields ChoiceFields, source Code,
+func (s *Statements) NewChoice(fields ChoiceFields, source Code,
 ) (err error) {
 	choice := ChoiceStatement{fields, source}
-	blocks.statements.Choices = append(blocks.statements.Choices, choice)
+	s.Choices = append(s.Choices, choice)
 	return err
 }
 
 //
-func (blocks *BuildingBlocks) NewEnumeration(fields EnumFields, source Code,
+func (s *Statements) NewEnumeration(fields EnumFields, source Code,
 ) (err error) {
 	enum := EnumStatement{fields, source}
-	blocks.statements.Enums = append(blocks.statements.Enums, enum)
+	s.Enums = append(s.Enums, enum)
 	return err
 }
 
 //
-func (blocks *BuildingBlocks) NewEventHandler(fields ListenFields, source Code,
+func (s *Statements) NewEventHandler(fields ListenFields, source Code,
 ) (err error) {
 	statement := ListenStatement{fields, source}
-	blocks.statements.EventHandlers = append(blocks.statements.EventHandlers, statement)
+	s.EventHandlers = append(s.EventHandlers, statement)
 	return err
 }
 
 //
-func (blocks *BuildingBlocks) NewKeyValue(fields KeyValueFields, source Code,
+func (s *Statements) NewKeyValue(fields KeyValueFields, source Code,
 ) (err error) {
 	kv := KeyValueStatement{fields, source}
-	blocks.statements.KeyValues = append(blocks.statements.KeyValues, kv)
+	s.KeyValues = append(s.KeyValues, kv)
 	return err
 }
 
 //
-func (blocks *BuildingBlocks) NewMultiValue(fields MultiValueFields, source Code,
+func (s *Statements) NewMultiValue(fields MultiValueFields, source Code,
 ) (err error) {
 	mv := MultiValueStatement{fields, source}
-	blocks.statements.MultiValues = append(blocks.statements.MultiValues, mv)
+	s.MultiValues = append(s.MultiValues, mv)
 	return err
 }
 
 //
-func (blocks *BuildingBlocks) NewProperty(fields PropertyFields, source Code,
+func (s *Statements) NewProperty(fields PropertyFields, source Code,
 ) (err error) {
 	prop := PropertyStatement{fields, source}
-	blocks.statements.Properties = append(blocks.statements.Properties, prop)
+	s.Properties = append(s.Properties, prop)
 	return err
 }
 
 //
-func (blocks *BuildingBlocks) NewRelative(fields RelativeProperty, source Code,
+func (s *Statements) NewRelative(fields RelativeProperty, source Code,
 ) (err error) {
 	rel := RelativeStatement{fields, source}
-	blocks.statements.Relatives = append(blocks.statements.Relatives, rel)
+	s.Relatives = append(s.Relatives, rel)
 	return err
 }

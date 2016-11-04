@@ -3,8 +3,10 @@ package tests
 import (
 	. "github.com/ionous/mars/core"
 	. "github.com/ionous/mars/script"
+	"github.com/ionous/mars/script/backend"
 	"github.com/ionous/sashimi/compiler"
 	M "github.com/ionous/sashimi/compiler/model"
+	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,8 +18,9 @@ import (
 // TestRelationRules to see if the relation rules build properly.
 func TestRelationRules(t *testing.T) {
 	s := buildRelationRules()
-	if src, err := s.BuildStatements(); assert.NoError(t, err, "build") {
-		if model, err := compiler.Compile(src, ioutil.Discard); assert.NoError(t, err, "compile") {
+	src := &S.Statements{}
+	if err := s.Generate(src); assert.NoError(t, err, "build") {
+		if model, err := compiler.Compile(*src, ioutil.Discard); assert.NoError(t, err, "compile") {
 			if assert.Equal(t, 1, len(model.Relations)) {
 				for _, v := range model.Relations {
 					require.EqualValues(t, "GremlinsPets", v.Source.String())
@@ -34,8 +37,9 @@ func TestRelationRules(t *testing.T) {
 // TestRelationData to see if the relation values build properly.
 func TestRelationData(t *testing.T) {
 	s := append(buildRelationRules(), buildRelationValues())
-	if src, err := s.BuildStatements(); assert.NoError(t, err, "build") {
-		if model, err := compiler.Compile(src, ioutil.Discard); assert.NoError(t, err, "compile") {
+	src := &S.Statements{}
+	if err := s.Generate(src); assert.NoError(t, err, "build") {
+		if model, err := compiler.Compile(*src, ioutil.Discard); assert.NoError(t, err, "compile") {
 			if assert.NoError(t, err, "compile") {
 				if assert.Equal(t, 2, len(model.Instances), "two instances") {
 					claire, ok := model.Instances[ident.MakeId("claire")]
@@ -71,8 +75,7 @@ func TestRelationData(t *testing.T) {
 // TestRelationIteration to see if the relation values run properly.
 func TestRelationIteration(t *testing.T) {
 	s := append(buildRelationIteration(), buildRelationRules(), buildRelationValues())
-	if test, err := NewTestGameSource(t, &s, "no parser", nil); assert.NoError(t, err) {
-		//
+	if test, err := NewTestGameScript(t, s, "no parser", nil); assert.NoError(t, err) {
 		if err := test.Game.RunNamedAction("test", Named{"claire test"}); assert.NoError(t, err) {
 			if out, err := test.FlushOutput(); assert.NoError(t, err) {
 				sort.Strings(out)
@@ -88,8 +91,8 @@ func TestRelationIteration(t *testing.T) {
 	t.FailNow()
 }
 
-func buildRelationIteration() Script {
-	return Script{
+func buildRelationIteration() backend.Script {
+	return Script(
 		The("gremlin", Called("Claire"), Has("pets", "Boomba")),
 		The("rock", Called("Boomba"), Exists()),
 		The("kinds",
@@ -102,10 +105,10 @@ func buildRelationIteration() Script {
 						T("Claire"),
 						EqualTo,
 						PropertyText{
-							PropertyRef{
-								Named{"loofah"}, "o beneficent one",
-							},
 							"name",
+							PropertyRef{
+								"o beneficent one", Named{"loofah"},
+							},
 						},
 					},
 				),
@@ -118,10 +121,10 @@ func buildRelationIteration() Script {
 						T("Claire"),
 						EqualTo,
 						PropertyText{
-							PropertyRef{
-								Named{"boomba"}, "o beneficent one",
-							},
 							"name",
+							PropertyRef{
+								"o beneficent one", Named{"boomba"},
+							},
 						},
 					},
 				),
@@ -131,7 +134,7 @@ func buildRelationIteration() Script {
 			When("testing").Always(
 				EachObj{
 					In: PropertyRefList{
-						Named{"claire"}, "pets",
+						"pets", Named{"claire"},
 					},
 					Go: PrintLine{
 						PrintText{
@@ -140,18 +143,18 @@ func buildRelationIteration() Script {
 					},
 					Else: Error{T("should have run")},
 				})),
-	}
+	)
 }
 
-func buildRelationValues() Script {
-	return Script{
+func buildRelationValues() backend.Script {
+	return Script(
 		The("gremlin", Called("Claire"), Has("pets", "Loofah")),
 		The("rock", Called("Loofah"), Exists()),
-	}
+	)
 }
 
-func buildRelationRules() Script {
-	return Script{
+func buildRelationRules() backend.Script {
+	return Script(
 		The("kinds",
 			Called("gremlins"),
 			HaveMany("pets", "rocks").
@@ -164,5 +167,5 @@ func buildRelationRules() Script {
 				Implying("rocks", HaveOne("o beneficent one", "gremlin")),
 		),
 		The("kinds", Called("rocks"), Exist()),
-	}
+	)
 }

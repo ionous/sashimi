@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/ionous/mars/rt"
 	. "github.com/ionous/mars/script"
+	"github.com/ionous/mars/script/backend"
 	"github.com/ionous/sashimi/compiler"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/metal"
@@ -11,6 +12,7 @@ import (
 	"github.com/ionous/sashimi/play"
 	"github.com/ionous/sashimi/play/api"
 	"github.com/ionous/sashimi/play/parse"
+	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/ionous/sashimi/util/sbuf"
@@ -48,14 +50,25 @@ func (out TestWriter) Flush() string {
 
 type ParentCreator func(meta.Model) api.LookupParents
 
-func NewTestGameSource(t *testing.T, s *Script, gen string, pc ParentCreator) (ret TestGame, err error) {
+func NewTestGameScript(t *testing.T, s backend.Script, gen string, pc ParentCreator) (ret TestGame, err error) {
+	src := &S.Statements{}
 	if gen == "no parser" {
-		noParser := append(*s, The("kind", Called("no parser"), Exists()))
-		s = &noParser
+		noParser := The("kind", Called("no parser"), Exists())
+		if e := noParser.Generate(src); e != nil {
+			err = e
+			return
+		}
 	}
-	if src, e := s.BuildStatements(); e != nil {
+	if e := s.Generate(src); e != nil {
 		err = e
-	} else if model, e := compiler.Compile(src, ioutil.Discard); e != nil {
+	} else {
+		ret, err = NewTestGameSource(t, *src, gen, pc)
+	}
+	return
+}
+
+func NewTestGameSource(t *testing.T, src S.Statements, gen string, pc ParentCreator) (ret TestGame, err error) {
+	if model, e := compiler.Compile(src, ioutil.Discard); e != nil {
 		err = e
 	} else {
 		storage := make(metal.ObjectValueMap)
@@ -78,7 +91,6 @@ func NewTestGameSource(t *testing.T, s *Script, gen string, pc ParentCreator) (r
 			ret = TestGame{t, game, modelApi, writer, parser, storage}
 		}
 	}
-
 	return
 }
 
@@ -87,9 +99,9 @@ func NewTestGameSource(t *testing.T, s *Script, gen string, pc ParentCreator) (r
 // ditto the "player"
 // the understandings used by the parser can just sit there
 // in the future, maybe we could put the understanding in an outer layer
-func NewTestGame(t *testing.T, s *Script) (ret TestGame, err error) {
-	ad := append(*s, The("actor", Called("player")))
-	return NewTestGameSource(t, &ad, "player", nil)
+func NewTestGame(t *testing.T, s backend.Script) (ret TestGame, err error) {
+	ad := append(s, The("actor", Called("player")))
+	return NewTestGameScript(t, ad, "player", nil)
 }
 
 type TestGame struct {

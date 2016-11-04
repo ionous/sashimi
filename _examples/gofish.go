@@ -16,6 +16,7 @@ import (
 	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/runtime/api"
 	"github.com/ionous/sashimi/script"
+	"github.com/ionous/sashimi/script/backend"
 	"github.com/ionous/sashimi/standard"
 	"github.com/ionous/sashimi/util/ident"
 	"io"
@@ -98,7 +99,7 @@ func getModelCalls() (*M.Model, api.LookupCallbacks, error) {
 	return model, CodeCalls(fishgen.Callbacks), e
 }
 
-func extractCalls(name string, s *script.Script, trace io.Writer) (err error) {
+func extractCalls(name string, s *backend.Script, trace io.Writer) (err error) {
 	cx := extract.NewCallExtractor(name, "github.com/ionous/sashimi", trace)
 	if model, e := s.CompileCalls(trace, cx); e != nil {
 		err = e
