@@ -64,16 +64,18 @@ func libTest(t *testing.T, lib *mars.Package, base *S.Statements, parser string)
 	} else {
 		// FIX? serialize the test scripts?
 		for _, suite := range lib.Tests {
-			src := *base
-			if e := suite.Setup.Generate(&src); e != nil {
-				err = errutil.New("error generating test suite:", e)
-				break
-			} else if test, e := NewTestGameSource(t, src, parser, nil); e != nil {
-				err = errutil.New("error creating game:", e)
-				break
-			} else if e := suite.Test(&Arc{&test}); e != nil {
-				err = errutil.New("error testing lib:", e)
-				break
+			for _, unit := range suite.Units {
+				src := *base
+				if e := unit.Setup.Generate(&src); e != nil {
+					err = errutil.New("error generating test suite:", e)
+					break
+				} else if test, e := NewTestGameSource(t, src, parser, nil); e != nil {
+					err = errutil.New("error creating game:", e)
+					break
+				} else if e := unit.Test(&Arc{&test}); e != nil {
+					err = errutil.New("error testing lib:", e)
+					break
+				}
 			}
 		}
 	}
