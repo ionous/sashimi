@@ -1,24 +1,24 @@
 package tests
 
 import (
-	//	"github.com/ionous/mars"
-	"github.com/ionous/mars/lang"
+	"github.com/ionous/mars"
 	"github.com/ionous/mars/rt"
 	. "github.com/ionous/mars/script"
+	"github.com/ionous/mars/std"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
+// Arc implements the script Trytime interface
 type Arc struct {
 	test *TestGame
 }
 
 func (a *Arc) Parse(in string) (ret string, err error) {
 	if outs, e := a.test.RunInput(in); e != nil {
-		err = e
+		err = errutil.New("error running input:", e)
 	} else {
 		ret = outs[0]
 	}
@@ -26,10 +26,10 @@ func (a *Arc) Parse(in string) (ret string, err error) {
 }
 
 func (a *Arc) Execute(ex rt.Execute) (ret string, err error) {
-	if e := ex.Execute(a.test.Game.Rtm); e != nil {
-		err = e
+	if e := ex.Execute(a.test.Game); e != nil {
+		err = errutil.New("error testing execution", e)
 	} else if out, e := a.test.FlushOutput(); e != nil {
-		err = e
+		err = errutil.New("error flushing output", e)
 	} else {
 		ret = out[0]
 	}
@@ -37,38 +37,45 @@ func (a *Arc) Execute(ex rt.Execute) (ret string, err error) {
 }
 
 func (a *Arc) Test(be rt.BoolEval) (err error) {
-	if b, e := be.GetBool(a.test.Game.Rtm); e != nil {
-		err = e
+	if b, e := be.GetBool(a.test.Game); e != nil {
+		err = errutil.New("error testing boolean", e)
 	} else if !b {
 		err = errutil.New("test failed")
 	}
 	return
 }
 
-func TestLibLang(t *testing.T) {
-	base := &S.Statements{}
-	The("kind", Called("no parser")).Generate(base)
-
-	lib := &lang.Lang
-	if err := lib.Generate(base); assert.NoError(t, err, "build") {
+func libTest(t *testing.T, lib *mars.Package, base *S.Statements, parser string) (err error) {
+	if e := lib.Generate(base); e != nil {
+		err = errutil.New("error generating lib source", e)
+	} else {
 		// FIX? serialize the test scripts?
 		for _, suite := range lib.Tests {
-			// s.Setup -> contains a bunch of specs we have to compile.
-			t.Log("testing suite", suite)
 			src := *base
-			suite.Setup.Generate(&src)
-
-			// FIX FIX FIX --
-			// have to add lang scripts and all of its imports -- and can exclude dependenices
-			// an interface which wraps -- possibly tests wraps the main packaeg
-			if test, err := NewTestGameSource(t, src, "no parser", nil); assert.NoError(t, err) {
-				arc := &Arc{&test}
-
-				for _, trial := range suite.Trials {
-					err := trial.Test(arc)
-					require.NoError(t, err, trial.Name)
-				}
+			if e := suite.Setup.Generate(&src); e != nil {
+				err = errutil.New("error generating test suite:", e)
+				break
+			} else if test, e := NewTestGameSource(t, src, parser, nil); e != nil {
+				err = errutil.New("error creating game:", e)
+				break
+			} else if e := suite.Test(&Arc{&test}); e != nil {
+				err = errutil.New("error testing lib:", e)
+				break
 			}
 		}
 	}
+	return err
+}
+
+// func TestLibLang(t *testing.T) {
+// base := &S.Statements{}
+// 	The("kind", Called("no parser")).Generate(base)
+// 	require.NoError(t, libTest(t, &lang.Lang, base, "no parser"))
+// }
+
+func TestLibStd(t *testing.T) {
+	base := &S.Statements{}
+	script := The("actor", Called("player"), Exists())
+	script.Generate(base)
+	require.NoError(t, libTest(t, &std.Std, base, "player"))
 }

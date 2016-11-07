@@ -76,7 +76,7 @@ func TestRelationData(t *testing.T) {
 func TestRelationIteration(t *testing.T) {
 	s := append(buildRelationIteration(), buildRelationRules(), buildRelationValues())
 	if test, err := NewTestGameScript(t, s, "no parser", nil); assert.NoError(t, err) {
-		if err := test.Game.RunNamedAction("test", Named{"claire test"}); assert.NoError(t, err) {
+		if err := test.RunNamedAction("test", Named{"claire test"}); assert.NoError(t, err) {
 			if out, err := test.FlushOutput(); assert.NoError(t, err) {
 				sort.Strings(out)
 				expected := lines("Boomba", "Loofah")
@@ -84,8 +84,8 @@ func TestRelationIteration(t *testing.T) {
 				require.EqualValues(t, expected, out)
 			}
 		}
-		require.NoError(t, test.Game.RunNamedAction("test", Named{"loofah test"}))
-		require.NoError(t, test.Game.RunNamedAction("test", Named{"boomba test"}))
+		require.NoError(t, test.RunNamedAction("test", Named{"loofah test"}))
+		require.NoError(t, test.RunNamedAction("test", Named{"boomba test"}))
 		return
 	}
 	t.FailNow()

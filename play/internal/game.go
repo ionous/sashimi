@@ -1,10 +1,11 @@
 package internal
 
 import (
+	"github.com/ionous/mars/rt"
+	"github.com/ionous/mars/rtm"
 	E "github.com/ionous/sashimi/event"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
-	"github.com/ionous/sashimi/util/sbuf"
 )
 
 type Game struct {
@@ -16,10 +17,10 @@ func NewGame(core PlayCore) *Game {
 	return &Game{core, -1}
 }
 
-func (g *Game) Log(args ...interface{}) {
-	s := sbuf.New(args...).Line()
-	g.Logger.Write([]byte(s))
-}
+// func (g *Game) Log(args ...interface{}) {
+// 	s := sbuf.New(args...).Line()
+// 	g.Logger.Write([]byte(s))
+// }
 
 func (g *Game) Random(exclusiveMax int) int {
 	n := g.Rand.Intn(exclusiveMax)
@@ -30,22 +31,17 @@ func (g *Game) Random(exclusiveMax int) int {
 	return n
 }
 
-func (g *Game) RunNamedAction(s string, params ...meta.Generic) error {
-	return g.RunAction(ident.MakeId(s), params...)
-}
-
-// g.The("player").Go("hack", "the nice code").Then(trailing actions...)
-func (g *Game) RunAction(id ident.Id, params ...meta.Generic) (err error) {
-	if act, e := g.Rtm.GetAction(id, params); e != nil {
+//
+func (g *Game) RunAction(id ident.Id, scp rt.Scope, args ...meta.Generic) (err error) {
+	if act, e := rtm.NewActionRuntime(g, id, scp, args); e != nil {
 		err = e
 	} else {
-		tgt, ctx := act.GetTarget(), act.GetContext()
-
-		dispatch := &Dispatch{g, act.GetNouns(), params, nil}
-
 		// begin and end event
-		path := E.NewPathTo(ObjectTarget{dispatch, tgt})
-		msg := &E.Message{Id: act.GetEvent().GetId(), Data: act}
+		tgt, ctx := act.GetTarget(), act.GetContext()
+		// FIX? could this be an (object) stream? only if class was more uniform with instance
+		// ( eg. a true prototype; also needed for default values )
+		path := E.NewPathTo(ObjectTarget{act, tgt})
+		msg := &E.Message{Id: act.GetRelatedEvent().GetId(), Data: act}
 		frame := g.Frame.BeginEvent(tgt, ctx, path, msg)
 		frameEnded := false
 		endFrame := func() {
@@ -55,9 +51,10 @@ func (g *Game) RunAction(id ident.Id, params ...meta.Generic) (err error) {
 			}
 		}
 		defer endFrame()
-
 		// send the event
-		if runDefault, e := msg.Send(path); e != nil {
+		runDefault, e := msg.Send(path)
+		//
+		if e != nil {
 			err = e
 		} else if runDefault {
 			// run the defaults if desired
@@ -65,7 +62,7 @@ func (g *Game) RunAction(id ident.Id, params ...meta.Generic) (err error) {
 				err = e
 			} else {
 				endFrame()
-				err = dispatch.RunAfterActions(act)
+				err = act.RunAfterActions()
 			}
 		}
 	}

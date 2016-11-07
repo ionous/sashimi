@@ -2,6 +2,7 @@ package internal
 
 import (
 	"github.com/ionous/mars/core"
+	"github.com/ionous/mars/rtm"
 	E "github.com/ionous/sashimi/event"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/util/ident"
@@ -9,7 +10,7 @@ import (
 
 // filter listeners to the events appropriate for this target
 // MARS: make listener interface into an iterator so we can avoid the copy.
-func NewGameListeners(d *Dispatch, evt E.IEvent, target ident.Id, ls meta.Listeners) GameListeners {
+func NewGameListeners(act *rtm.ActionRuntime, evt E.IEvent, target ident.Id, ls meta.Listeners) GameListeners {
 	filtered := []meta.Listener{}
 
 	cls, isClassTarget := evt.CurrentTarget().(ClassTarget)
@@ -34,12 +35,12 @@ func NewGameListeners(d *Dispatch, evt E.IEvent, target ident.Id, ls meta.Listen
 			filtered = append(filtered, l)
 		}
 	}
-	return GameListeners{d, filtered}
+	return GameListeners{act, filtered}
 }
 
 // implements EventListeners
 type GameListeners struct {
-	d        *Dispatch
+	act      *rtm.ActionRuntime
 	filtered []meta.Listener
 }
 
@@ -49,22 +50,22 @@ func (gls GameListeners) NumListener() int {
 
 func (gls GameListeners) ListenerNum(i int) E.IListen {
 	l := gls.filtered[i]
-	return GameListener{gls.d, l}
+	return GameListener{gls.act, l}
 }
 
 // GameListener adapts model listeners to game event target E.IListener iteration
 type GameListener struct {
-	dispatch *Dispatch
-	listen   meta.Listener
+	act    *rtm.ActionRuntime
+	listen meta.Listener
 }
 
 // HandleEvent implements E.IListen.
 func (gl GameListener) HandleEvent(evt E.IEvent) (err error) {
 	call := gl.listen.GetCallback()
 	if gl.listen.GetOptions().UseAfterQueue() {
-		gl.dispatch.RunActionLater(call, gl.listen.GetClass())
+		err = gl.act.RunLater(call, gl.listen.GetClass())
 	} else {
-		if e := gl.dispatch.RunActionNow(call, gl.listen.GetClass()); e != nil {
+		if e := gl.act.RunNow(call, gl.listen.GetClass()); e != nil {
 			if _, cancelled := e.(core.StopNow); !cancelled {
 				err = e
 			} else {

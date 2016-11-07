@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"fmt"
+	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/stretchr/testify/assert"
 	"regexp"
@@ -16,7 +16,7 @@ func (np NounPool) FindNoun(name string, article string) (noun string, err error
 	if np.nouns[name] {
 		noun = name
 	} else {
-		err = fmt.Errorf("Unknown noun: %s %s.", article, name)
+		err = errutil.New("Unknown noun", article, name)
 	}
 	return noun, err
 }
@@ -47,6 +47,7 @@ func TestExp(t *testing.T) {
 	testTokens(t, "examine|x|watch|describe|check {{something}}", 2, 1)
 	testTokens(t, "look|l {{something}}", 2, 1)
 	testTokens(t, "look|l at {{something}}", 3, 1)
+	testTokens(t, "put {{something}} on", 3, 1)
 	testTokens(t, "show|present|display {{something}} {{something else}}", 3, 2)
 	testTokens(t, "show|present|display {{something else}} to {{something}}", 4, 2)
 }
@@ -63,7 +64,7 @@ type CommandPool map[ident.Id]*TestCmd
 
 func (cmds CommandPool) NewMatcher(id ident.Id) (ret IMatch, err error) {
 	if cmd, ok := cmds[id]; !ok {
-		err = fmt.Errorf("cmd %s not found", id)
+		err = errutil.New("cmd not found", id)
 	} else {
 		ret = &TestMatcher{cmd: cmd}
 	}
@@ -83,7 +84,7 @@ func (m *TestMatcher) MatchNoun(word string, article string) (err error) {
 			m.nouns = append(m.nouns, n)
 		}
 	} else {
-		err = fmt.Errorf("too many nouns")
+		err = errutil.New("too many nouns")
 	}
 	return err
 }
@@ -92,12 +93,12 @@ func (m *TestMatcher) MatchNoun(word string, article string) (err error) {
 func (m *TestMatcher) OnMatch() (err error) {
 	m.cmd.Logf("matched %s, expecting %s", m.nouns, m.cmd.expect)
 	if got, want := len(m.nouns), len(m.cmd.expect); got != want {
-		err = fmt.Errorf("noun count doesnt match %d(got)!=%d(want)", got, want)
+		err = errutil.New("noun count doesnt match got", got, "want", want)
 	} else {
 		for i := 0; i < got; i++ {
 			got, want := m.nouns[i], m.cmd.expect[i]
 			if want != got {
-				err = fmt.Errorf("nouns dont match %s(got)!=%s(want)", got, want)
+				err = errutil.New("nouns dont match got", got, "want", want)
 				break
 			}
 		}
@@ -119,6 +120,11 @@ func TestLookAt(t *testing.T) {
 }
 
 //
+func TestNormalize(t *testing.T) {
+	assert.EqualValues(t, "put cat on", NormalizeInput("Put the Cat on"))
+}
+
+//
 func TestUnderstandings(t *testing.T) {
 
 	// create a parser
@@ -134,6 +140,7 @@ func TestUnderstandings(t *testing.T) {
 		{name: "reporting shown", expect: []string{"actor", "prize"}},
 		{name: "smelling"},
 		{name: "spacing", expect: []string{"evil fish"}},
+		{name: "wearing", expect: []string{"cat"}},
 	}
 
 	// ok: add commands
@@ -157,7 +164,7 @@ func TestUnderstandings(t *testing.T) {
 	}
 
 	// ok: learn ya some learnings
-	l, x, show, smell, space := testCmds[0], testCmds[1], testCmds[2], testCmds[3], testCmds[4]
+	l, x, show, smell, space, wearing := testCmds[0], testCmds[1], testCmds[2], testCmds[3], testCmds[4], testCmds[5]
 
 	if _, e := l.comp.LearnPattern("look|l"); e != nil {
 		t.Error(e)
@@ -183,14 +190,17 @@ func TestUnderstandings(t *testing.T) {
 	if _, e := space.comp.LearnPattern("space test {{something}}"); e != nil {
 		t.Error(e)
 	}
+	if _, e := wearing.comp.LearnPattern("put {{something}} on"); e != nil {
+		t.Error(e)
+	}
 
 	// ok: parse some commands
 	testParser := func(cmd string, expect string) (err error) {
 		normalizedInput := NormalizeInput(cmd)
 		if pattern, matcher, e := p.ParseInput(normalizedInput); e != nil {
-			err = e
+			err = errutil.New("couldnt parse:", e)
 		} else if pattern != nil && pattern.Comprehension().Id() != ident.MakeId(expect) {
-			err = fmt.Errorf("Mismatched pattern: %s got %s", expect, pattern)
+			err = errutil.New("mismatched pattern", expect, "got", pattern)
 		} else if m, ok := matcher.(*TestMatcher); assert.True(t, ok) {
 			err = m.OnMatch()
 		}
@@ -219,4 +229,6 @@ func TestUnderstandings(t *testing.T) {
 	assert.NoError(t, testParser("space test evil fish", "spacing"), "spacing in nouns")
 	assert.NoError(t, testParser("space   test   an    evil   fish  ", "spacing"), "fishy spacing")
 	assert.NoError(t, testParser("show the actor some prize", "reporting shown"), "give us some nouns")
+	nf.AddNouns("cat")
+	assert.NoError(t, testParser("put cat on", "wearing"), "put it on")
 }

@@ -36,7 +36,7 @@ func (ct ClassTarget) Parent() (ret E.ITarget, okay bool) {
 		ret = ClassTarget{ct.from, cls.GetParentClass(), ct.upObject}
 		okay = true
 	} else if next := ct.upObject; next != nil {
-		ret = ObjectTarget{ct.from.Dispatch, next}
+		ret = ObjectTarget{ct.from.ActionRuntime, next}
 		okay = true
 	}
 	return

@@ -39,7 +39,7 @@ type Action interface {
 	// GetActionName returns the original name given by the scripter.
 	GetActionName() string
 	// GetEvent: raised by this action when the action occurs.
-	GetEvent() Event
+	GetRelatedEvent() Event
 	// GetNouns: the classes for required by the action.
 	GetNouns() Nouns
 	//

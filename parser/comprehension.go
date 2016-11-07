@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 )
@@ -24,7 +23,7 @@ func (c *Comprehension) LearnPattern(pattern string) (p Pattern, err error) {
 	// split the pattern into groups separated by tags
 	groups, tags := tokenize(pattern)
 	if nouns, e := newNounCheck(groups, tags); e != nil {
-		err = errutil.Append(err, fmt.Errorf("error learning pattern: %s", pattern))
+		err = errutil.New("error learning pattern:", pattern)
 	} else {
 		p = Pattern{c, nouns.exp, pattern, nouns.matchIndices()}
 		c.patterns = append(c.patterns, p)

@@ -30,7 +30,7 @@ func tokenize(text string) (groups []string, tags map[int]bool) {
 			textStart = tagEnd
 		}
 		// add any text after the last tag
-		fini := text[textStart:]
+		fini := strings.TrimSpace(text[textStart:])
 		if len(fini) > 0 {
 			groups = append(groups, fini)
 		}

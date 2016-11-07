@@ -4,9 +4,7 @@ import (
 	"regexp"
 )
 
-//
 // Pattern holds the results of Comprehension.LearnPattern().
-//
 type Pattern struct {
 	c *Comprehension
 	*regexp.Regexp
@@ -14,23 +12,17 @@ type Pattern struct {
 	wordToNoun []int // noun index => regexp match index
 }
 
-//
 // Comprehension which contains this pattern.
-//
 func (p *Pattern) Comprehension() *Comprehension {
 	return p.c
 }
 
-//
 // Pattern string used to generate this pattern.
-//
 func (p *Pattern) Pattern() string {
 	return p.pattern
 }
 
-//
 // String returns pattern.
-//
 func (p *Pattern) String() string {
 	return p.Pattern()
 }

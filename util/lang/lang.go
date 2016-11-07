@@ -9,9 +9,14 @@ import (
 var Articles = []string{"the", "a", "an", "our", "some"}
 var articleBar = strings.Join(Articles, "|")
 var articles = regexp.MustCompile(`^((?i)` + articleBar + `)\s`)
+var articleBare = regexp.MustCompile("^(" + articleBar + ")$")
 
 const NewLine = "\n"
 const Space = " "
+
+func IsArticle(s string) bool {
+	return articleBare.MatchString(s)
+}
 
 func SliceArticle(str string) (article, bare string) {
 	n := strings.TrimSpace(str)

@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"github.com/ionous/sashimi/util/lang"
 	"strings"
 )
 
@@ -9,5 +10,11 @@ import (
 func NormalizeInput(input string) string {
 	lower := strings.ToLower(input)
 	fields := strings.Fields(lower)
-	return strings.Join(fields, " ")
+	next := []string{}
+	for _, f := range fields {
+		if !lang.IsArticle(f) {
+			next = append(next, f)
+		}
+	}
+	return strings.Join(next, " ")
 }

@@ -24,8 +24,7 @@ func TestRawTextProperty(t *testing.T) {
 		if player, ok := test.Metal.GetInstance("player"); assert.True(t, ok, "found world") {
 			if greeting, ok := player.FindProperty("greeting"); assert.True(t, ok, "has greeting") {
 				if v, ok := greeting.GetGeneric().(rt.TextEval); assert.True(t, ok, "text eval") {
-					run := test.Game.Rtm
-					if text, e := v.GetText(run); assert.NoError(t, e, "got text") {
+					if text, e := v.GetText(test.Game); assert.NoError(t, e, "got text") {
 						if !assert.Equal(t, "hello world", text.String()) {
 							t.FailNow()
 						}
@@ -45,8 +44,7 @@ func TestNumEvalProperty(t *testing.T) {
 		if player, ok := test.Metal.GetInstance("player"); assert.True(t, ok, "found player") {
 			if counter, ok := player.FindProperty("counter"); assert.True(t, ok, "has greeting") {
 				if v, ok := counter.GetGeneric().(rt.NumEval); assert.True(t, ok, "num eval") {
-					run := test.Game.Rtm
-					if num, e := v.GetNumber(run); assert.NoError(t, e, "got num") {
+					if num, e := v.GetNumber(test.Game); assert.NoError(t, e, "got num") {
 						if !assert.EqualValues(t, 5, num.Float()) {
 							t.FailNow()
 						}
@@ -72,7 +70,7 @@ func TestActionNames(t *testing.T) {
 	//running queued action
 	//got changed value hello
 	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {
-		if err := test.Game.RunAction(core.MakeStringId("greet the world"), g.The("player")); assert.NoError(t, err, "run action") {
+		if err := test.RunNamedAction("greet the world", g.The("player")); assert.NoError(t, err, "run action") {
 			if v, err := test.FlushOutput(); assert.NoError(t, err, "process") {
 				expected := lines("hello world",
 					"hello world",
@@ -97,7 +95,7 @@ func TestTarget(t *testing.T) {
 			)),
 	)
 	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {
-		if err := test.Game.RunAction(core.MakeStringId("greet actor"), g.The("player"), g.The("npc")); assert.NoError(t, err, "run action") {
+		if err := test.RunNamedAction("greet actor", g.The("player"), g.The("npc")); assert.NoError(t, err, "run action") {
 			if v, err := test.FlushOutput(); assert.NoError(t, err, "process") {
 				if !assert.EqualValues(t, lines("hello npc"), v) {
 					t.FailNow()
@@ -123,7 +121,7 @@ func TestRun(t *testing.T) {
 			)),
 	)
 	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {
-		if err := test.Game.RunAction(core.MakeStringId("greet actor"), g.The("player"), g.The("npc")); assert.NoError(t, err, "run action") {
+		if err := test.RunNamedAction("greet actor", g.The("player"), g.The("npc")); assert.NoError(t, err, "run action") {
 			if v, err := test.FlushOutput(); assert.NoError(t, err, "process") {
 				if !assert.EqualValues(t, lines("absolutely nothing"), v) {
 					t.FailNow()
@@ -150,7 +148,7 @@ func TestStopHere(t *testing.T) {
 	//running queued action
 	//got changed value hello
 	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {
-		if err := test.Game.RunAction(core.MakeStringId("greet the world"), g.The("player")); assert.NoError(t, err, "run action") {
+		if err := test.RunNamedAction("greet the world", g.The("player")); assert.NoError(t, err, "run action") {
 			if v, err := test.FlushOutput(); assert.NoError(t, err, "process") {
 				if !assert.EqualValues(t,
 					lines("hello world"), v) {

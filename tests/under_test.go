@@ -14,7 +14,7 @@ func TestUnderManually(t *testing.T) {
 	expected := lines("look it's a test!")
 	//
 	if test, err := NewTestGameScript(t, s, "looker", nil); assert.NoError(t, err) {
-		if err := test.Game.RunAction("test", g.The("looker"), g.The("lookee")); assert.NoError(t, err, "run manually") {
+		if err := test.RunNamedAction("test", g.The("looker"), g.The("lookee")); assert.NoError(t, err, "run manually") {
 			if res, err := test.FlushOutput(); assert.NoError(t, err, "raw flush") {
 				if assert.EqualValues(t, expected, res, "raw output") {
 					return

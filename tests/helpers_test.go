@@ -15,6 +15,7 @@ import (
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
+	"github.com/ionous/sashimi/util/lang"
 	"github.com/ionous/sashimi/util/sbuf"
 	"io/ioutil"
 	"strings"
@@ -114,10 +115,19 @@ type TestGame struct {
 	values metal.ObjectValueMap
 }
 
+func (test *TestGame) RunNamedAction(name string, params ...meta.Generic) (err error) {
+	if id := ident.MakeId(lang.StripArticle(name)); id.Empty() {
+		err = errutil.New("unnamed action", name)
+	} else {
+		err = test.Game.RunAction(id, test.Game, params...)
+	}
+	return
+}
+
 func (test *TestGame) Commence() (ret []string, err error) {
-	if story, ok := meta.FindFirstOf(test.Metal, ident.MakeId("stories")); !ok {
+	if story, ok := meta.FindFirstOf(test.Metal, ident.MakeId("storwies")); !ok {
 		err = errutil.New("should have test story")
-	} else if e := test.Game.RunAction("commence", story); e != nil {
+	} else if e := test.RunNamedAction("commence", story); e != nil {
 		err = e
 	} else {
 		ret, err = test.FlushOutput()
@@ -127,16 +137,17 @@ func (test *TestGame) Commence() (ret []string, err error) {
 
 func (test *TestGame) RunInput(s string) (ret []string, err error) {
 	in := parser.NormalizeInput(s)
-	if p, m, e := test.Parser.ParseInput(in); e != nil {
-		err = errutil.New("RunInput: failed parse:", sbuf.Value{p}, "orig:", s, "in:", in, "e:", e)
+	if _, m, e := test.Parser.ParseInput(in); e != nil {
+		err = errutil.New("failed parse", sbuf.Q(s), "=>", sbuf.Q(in), e)
 	} else if act, objs, e := m.(*parse.ObjectMatcher).GetMatch(); e != nil {
-		err = errutil.New("RunInput: no match:", s, e)
+		err = errutil.New("no match", sbuf.Q(s), "=>", sbuf.Q(in), e)
 	} else {
 		parms := make([]meta.Generic, len(objs))
 		for i, o := range objs {
 			parms[i] = rt.Object{o}
 		}
-		if e := test.Game.RunAction(act.GetId(), parms...); e != nil {
+		if e := test.Game.RunAction(act.GetId(), test.Game, parms...); e != nil {
+			panic(e)
 			err = e
 		} else if r, e := test.FlushOutput(); e != nil {
 			err = e

@@ -74,7 +74,7 @@ func TestCallbackClass(t *testing.T) {
 			Has("description", "it's an error!")),
 	)
 	if test, err := NewTestGameScript(t, s, "obj", nil); assert.NoError(t, err) {
-		if err := test.Game.RunAction(MakeStringId("test"), g.The("obj")); assert.NoError(t, err) {
+		if err := test.RunNamedAction("test", g.The("obj")); assert.NoError(t, err) {
 			if out, err := test.FlushOutput(); assert.NoError(t, err) {
 				expected := lines("it's a trap!")
 				if assert.EqualValues(t, expected, out) {
@@ -97,7 +97,7 @@ func TestCallbackBeforeAfter(t *testing.T) {
 		The("kind", Called("obj"), Exists()),
 	)
 	if test, err := NewTestGameScript(t, s, "obj", nil); assert.NoError(t, err) {
-		if err := test.Game.RunAction("test", g.The("obj")); assert.NoError(t, err) {
+		if err := test.RunNamedAction("test", g.The("obj")); assert.NoError(t, err) {
 			if out, err := test.FlushOutput(); assert.NoError(t, err) {
 				expected := lines("Before", "After")
 				if assert.EqualValues(t, expected, out) {

@@ -7,6 +7,7 @@ import (
 	"github.com/ionous/sashimi/play/internal"
 	"io"
 	"math/rand"
+	"os"
 )
 
 type Game struct {
@@ -14,7 +15,9 @@ type Game struct {
 }
 
 type PlayConfig struct {
-	core internal.PlayCore
+	core           internal.PlayCore
+	writer, logger io.Writer
+	parents        api.LookupParents
 }
 
 func NewConfig() *PlayConfig {
@@ -24,31 +27,32 @@ func NewConfig() *PlayConfig {
 func (cfg *PlayConfig) MakeGame(model meta.Model) Game {
 	// copy
 	core := cfg.core
-	core.Model = model
+	writer := cfg.writer
+	parents := cfg.parents
+	logger := cfg.logger
 	// defaults
 	if core.Rand == nil {
 		core.Rand = rand.New(rand.NewSource(1))
 	}
-	if core.Logger == nil {
-		core.Logger = core.Writer
+	if writer == nil {
+		writer = os.Stdout
+	}
+	if logger == nil {
+		logger = writer
 	}
 	if core.Frame == nil {
-		core.Frame = &noFrame{core.Logger, nil}
+		core.Frame = &noFrame{logger, nil}
 	}
-	if core.LookupParents == nil {
-		core.LookupParents = noParents{}
+	if parents == nil {
+		parents = api.NoParents{}
 	}
 	if core.SaveLoad == nil {
 		core.SaveLoad = noSaveLoad{}
 	}
-	if core.Rtm == nil {
-		core.Rtm = rtm.NewRtm(model)
-
-		// func (run *Mars) LookupParent(inst meta.Instance) (ret meta.Instance, rel meta.Property, okay bool) {
-		// 	return run.ga.Game.LookupParent(inst)
-		// }
-
-		core.Rtm.PushOutput(core.Writer)
+	if core.Runtime == nil {
+		run := rtm.NewRtmParents(model, parents)
+		core.Runtime = run.Runtime()
+		run.PushOutput(writer)
 	}
 	return Game{internal.NewGame(core)}
 }
@@ -57,16 +61,19 @@ func (cfg *PlayConfig) SetFrame(e api.EventFrame) *PlayConfig {
 	cfg.core.Frame = e
 	return cfg
 }
+
 func (cfg *PlayConfig) SetWriter(out io.Writer) *PlayConfig {
-	cfg.core.Writer = out
+	cfg.writer = out
 	return cfg
 }
+
 func (cfg *PlayConfig) SetParentLookup(l api.LookupParents) *PlayConfig {
-	cfg.core.LookupParents = l
+	cfg.parents = l
 	return cfg
 }
+
 func (cfg *PlayConfig) SetLogger(log io.Writer) *PlayConfig {
-	cfg.core.Logger = log
+	cfg.logger = log
 	return cfg
 }
 func (cfg *PlayConfig) SetRand(rand *rand.Rand) *PlayConfig {

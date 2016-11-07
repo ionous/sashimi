@@ -20,7 +20,7 @@ func (a actionInfo) GetActionName() string {
 	return a.Name
 }
 
-func (a actionInfo) GetEvent() (ret meta.Event) {
+func (a actionInfo) GetRelatedEvent() (ret meta.Event) {
 	if e, ok := a.mdl.Events[a.EventId]; !ok {
 		panic(errutil.New("internal error, no event found for action", a.EventId))
 	} else {
