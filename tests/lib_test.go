@@ -2,9 +2,11 @@ package tests
 
 import (
 	"github.com/ionous/mars"
+	"github.com/ionous/mars/lang"
 	"github.com/ionous/mars/rt"
 	. "github.com/ionous/mars/script"
 	"github.com/ionous/mars/std"
+	"github.com/ionous/sashimi/meta"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/stretchr/testify/require"
@@ -25,11 +27,22 @@ func (a *Arc) Parse(in string) (ret string, err error) {
 	return
 }
 
+func (a *Arc) Run(in string, args []meta.Generic) (ret string, err error) {
+	if e := a.test.RunNamedAction(in, args...); e != nil {
+		err = errutil.New("run", e)
+	} else if out, e := a.test.FlushOutput(); e != nil {
+		err = errutil.New("run flush", e)
+	} else {
+		ret = out[0]
+	}
+	return
+}
+
 func (a *Arc) Execute(ex rt.Execute) (ret string, err error) {
 	if e := ex.Execute(a.test.Game); e != nil {
-		err = errutil.New("error testing execution", e)
+		err = errutil.New("execute", e)
 	} else if out, e := a.test.FlushOutput(); e != nil {
-		err = errutil.New("error flushing output", e)
+		err = errutil.New("execute flush", e)
 	} else {
 		ret = out[0]
 	}
@@ -67,11 +80,11 @@ func libTest(t *testing.T, lib *mars.Package, base *S.Statements, parser string)
 	return err
 }
 
-// func TestLibLang(t *testing.T) {
-// base := &S.Statements{}
-// 	The("kind", Called("no parser")).Generate(base)
-// 	require.NoError(t, libTest(t, &lang.Lang, base, "no parser"))
-// }
+func TestLibLang(t *testing.T) {
+	base := &S.Statements{}
+	The("kind", Called("no parser")).Generate(base)
+	require.NoError(t, libTest(t, &lang.Lang, base, "no parser"))
+}
 
 func TestLibStd(t *testing.T) {
 	base := &S.Statements{}
