@@ -21,22 +21,6 @@ func CarriedNotWorn(obj G.IObject) (carrier G.IObject) {
 	return
 }
 
-// FIX: note: this wouldnt work for something in a container
-func Carrier(obj G.IObject) (carrier G.IObject) {
-	carried := false
-	for _, wob := range []string{"wearer", "owner"} {
-		if p := obj.Object(wob); p.Exists() {
-			carrier, carried = p, true
-			break
-		}
-	}
-	// so we arent pointing to nil, which cant easily be tested for. thanks go. :(
-	if !carried {
-		carrier = R.NullObject("Carrier")
-	}
-	return
-}
-
 func IsNil(i interface{}) bool {
 	return i == nil
 }
