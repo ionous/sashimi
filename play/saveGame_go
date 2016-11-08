@@ -1,6 +1,0 @@
-package play
-
-// func SaveGame(g G.Play, autosave bool) (string, error) {
-// 	i := g.(*internal.GameEventAdapter)
-// 	return i.Game.SaveGame(autosave)
-// }

@@ -191,11 +191,6 @@ func (p *enumProp) GetGeneric() (ret meta.Generic) {
 	// MARS: this manufactures the state (eval) from the id.
 	// would it be better to synthesize this, or even just store it as state in the first place?
 	if v, ok := p.value.getValue(p.prop.Id); ok {
-		// if id, ok := v.(ident.Id); !ok {
-		// 	panic(errutil.New("stored enum has invalid value", sbuf.Type{v}))
-		// } else {
-		// 	ret = rt.State(id)
-		// }
 		if id, ok := v.(rt.State); !ok {
 			panic(errutil.New("stored enum has invalid value", sbuf.Type{v}))
 		} else {
@@ -213,9 +208,7 @@ func (p *enumProp) SetGeneric(value meta.Generic) (err error) {
 	if state, ok := value.(rt.State); !ok {
 		err = errutil.New("set property", p, "expected state, got", sbuf.Type{value})
 	} else {
-		// MARS: FIX: constraints!!!
-		strip := ident.Id(state)
-		err = p.setValue(strip)
+		err = p.setValue(state)
 	}
 	return
 }

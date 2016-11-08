@@ -18,33 +18,33 @@ type Arc struct {
 	test *TestGame
 }
 
-func (a *Arc) Parse(in string) (ret string, err error) {
-	if outs, e := a.test.RunInput(in); e != nil {
+func (a *Arc) Parse(in string) (ret []string, err error) {
+	if out, e := a.test.RunInput(in); e != nil {
 		err = errutil.New("error running input:", e)
 	} else {
-		ret = outs[0]
+		ret = out
 	}
 	return
 }
 
-func (a *Arc) Run(in string, args []meta.Generic) (ret string, err error) {
+func (a *Arc) Run(in string, args []meta.Generic) (ret []string, err error) {
 	if e := a.test.RunNamedAction(in, args...); e != nil {
 		err = errutil.New("run", e)
 	} else if out, e := a.test.FlushOutput(); e != nil {
 		err = errutil.New("run flush", e)
 	} else {
-		ret = out[0]
+		ret = out
 	}
 	return
 }
 
-func (a *Arc) Execute(ex rt.Execute) (ret string, err error) {
+func (a *Arc) Execute(ex rt.Execute) (ret []string, err error) {
 	if e := ex.Execute(a.test.Game); e != nil {
 		err = errutil.New("execute", e)
 	} else if out, e := a.test.FlushOutput(); e != nil {
 		err = errutil.New("execute flush", e)
 	} else {
-		ret = out[0]
+		ret = out
 	}
 	return
 }
@@ -59,23 +59,22 @@ func (a *Arc) Test(be rt.BoolEval) (err error) {
 }
 
 func libTest(t *testing.T, lib *mars.Package, base *S.Statements, parser string) (err error) {
-	if e := lib.Generate(base); e != nil {
-		err = errutil.New("error generating lib source", e)
-	} else {
-		// FIX? serialize the test scripts?
-		for _, suite := range lib.Tests {
-			for _, unit := range suite.Units {
-				src := *base
-				if e := unit.Setup.Generate(&src); e != nil {
-					err = errutil.New("error generating test suite:", e)
-					break
-				} else if test, e := NewTestGameSource(t, src, parser, nil); e != nil {
-					err = errutil.New("error creating game:", e)
-					break
-				} else if e := unit.Test(&Arc{&test}); e != nil {
-					err = errutil.New("error testing lib:", e)
-					break
-				}
+	// FIX? serialize the test scripts?
+	for _, suite := range lib.Tests {
+		t.Log(suite.Name)
+		for _, unit := range suite.Units {
+			src := *base
+			if e := lib.Generate(&src); e != nil {
+				err = errutil.New("error generating lib source", e)
+			} else if e := unit.Setup.Generate(&src); e != nil {
+				err = errutil.New("error generating test suite:", e)
+				break
+			} else if test, e := NewTestGameSource(t, src, parser, nil); e != nil {
+				err = errutil.New("error creating game:", e)
+				break
+			} else if e := unit.Test(&Arc{&test}); e != nil {
+				err = errutil.New("error testing lib:", e)
+				break
 			}
 		}
 	}
