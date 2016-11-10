@@ -1,6 +1,6 @@
 package resource
 
-import "fmt"
+import "github.com/ionous/sashimi/util/errutil"
 
 type ObjectsBuilder struct {
 	builder DocumentBuilder
@@ -23,6 +23,6 @@ func (o ObjectsBuilder) AddObject(obj *Object) {
 	case []*Object:
 		o.builder.doc.Data = append(data, obj)
 	default:
-		o.builder.AddError(fmt.Errorf("multiple objects added to a single object document."))
+		o.builder.AddError(errutil.New("multiple objects added to a single object document."))
 	}
 }

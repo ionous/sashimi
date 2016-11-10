@@ -13,7 +13,7 @@ import (
 
 // TestCallbackUnknown tests compiler failure when an action does not exist
 func TestCallbackUnknown(t *testing.T) {
-	s := Script(
+	s := NewScript(
 		The("kinds", When("this does not exists").Always(DoNothing{})),
 	)
 	src := &S.Statements{}
@@ -27,7 +27,7 @@ func TestCallbackUnknown(t *testing.T) {
 
 //TestCallbackKnown tests compiler success for a simple action
 func TestCallbackKnown(t *testing.T) {
-	s := Script(
+	s := NewScript(
 		The("kinds",
 			When("this exists").Always(DoNothing{}),
 			Can("exist").And("this exists").RequiresNothing()),
@@ -44,7 +44,7 @@ func TestCallbackKnown(t *testing.T) {
 
 // TestCallbackClass tests the execution of a simple callback
 func TestCallbackClass(t *testing.T) {
-	s := Script(
+	s := NewScript(
 		The("kinds",
 			Have("description", "text"),
 			Can("test").And("testing").RequiresNothing(),
@@ -88,7 +88,7 @@ func TestCallbackClass(t *testing.T) {
 
 // TestCallbackBeforeAfter: capture actions before and after an event.
 func TestCallbackBeforeAfter(t *testing.T) {
-	s := Script(
+	s := NewScript(
 		The("kinds",
 			Can("test").And("testing").RequiresNothing(),
 			When("testing").Always(g.Say("After")),

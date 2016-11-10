@@ -4,9 +4,9 @@ import (
 	E "github.com/ionous/sashimi/event"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/play/api"
-	"github.com/ionous/sashimi/util/sbuf"
+	//	"github.com/ionous/sashimi/util/sbuf"
 	"io"
-	"strings"
+	// "strings"
 )
 
 type noFrame struct {
@@ -16,8 +16,9 @@ type noFrame struct {
 
 func (d *noFrame) BeginEvent(_, _ meta.Instance, path E.PathList, msg *E.Message) api.IEndEvent {
 	d.parts = append(d.parts, msg.String())
-	fullName := strings.Join(d.parts, "/")
-	d.log.Write([]byte(sbuf.New("sending", fullName, "to", path).Join(" ")))
+	// quiet down!
+	//fullName := strings.Join(d.parts, "/")
+	// d.log.Write([]byte(sbuf.New("sending", fullName, "to", path).Join(" ")))
 	return d
 }
 

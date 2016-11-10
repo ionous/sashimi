@@ -2,7 +2,6 @@ package tests
 
 import (
 	. "github.com/ionous/mars/script"
-	"github.com/ionous/mars/script/backend"
 	"github.com/ionous/mars/script/g"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -44,8 +43,9 @@ func TestUnderParserText(t *testing.T) {
 
 func TestUnderKnownAs(t *testing.T) {
 	expected := lines("look it's a test!")
-	s := append(underTest(),
-		The("lookee", IsKnownAs("something special")))
+	s := NewScript(underTest(),
+		The("lookee", IsKnownAs("something special")),
+	)
 	//
 	if test, err := NewTestGameScript(t, s, "looker", nil); assert.NoError(t, err) {
 		ok := "look at something special"
@@ -61,25 +61,24 @@ func TestUnderKnownAs(t *testing.T) {
 	t.FailNow()
 }
 
-func underTest() backend.Script {
-	return Script(
-		The("kinds",
-			Have("description", "text"),
-			Can("test").And("testing").RequiresOne("kind"),
-		),
-		The("kinds",
-			When("testing").Always(
-				g.Say(g.The("action.Target").Text("description")),
-			),
-		),
-		The("kind",
-			Called("looker"),
-			Exists(),
-		),
-		The("kind",
-			Called("lookee"),
-			Has("description", "look it's a test!"),
-		),
-		Understand("look|l at {{something}}").As("test"),
+func underTest() (s LocalScript) {
+	s.The("kinds",
+		Have("description", "text"),
+		Can("test").And("testing").RequiresOne("kind"),
 	)
+	s.The("kinds",
+		When("testing").Always(
+			g.Say(g.The("action.Target").Text("description")),
+		),
+	)
+	s.The("kind",
+		Called("looker"),
+		Exists(),
+	)
+	s.The("kind",
+		Called("lookee"),
+		Has("description", "look it's a test!"),
+	)
+	s.Understand("look|l at {{something}}").As("test")
+	return
 }

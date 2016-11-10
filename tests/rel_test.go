@@ -3,7 +3,6 @@ package tests
 import (
 	. "github.com/ionous/mars/core"
 	. "github.com/ionous/mars/script"
-	"github.com/ionous/mars/script/backend"
 	"github.com/ionous/sashimi/compiler"
 	M "github.com/ionous/sashimi/compiler/model"
 	S "github.com/ionous/sashimi/source"
@@ -36,7 +35,7 @@ func TestRelationRules(t *testing.T) {
 
 // TestRelationData to see if the relation values build properly.
 func TestRelationData(t *testing.T) {
-	s := append(buildRelationRules(), buildRelationValues())
+	s := NewScript(buildRelationRules(), buildRelationValues())
 	src := &S.Statements{}
 	if err := s.Generate(src); assert.NoError(t, err, "build") {
 		if model, err := compiler.Compile(*src, ioutil.Discard); assert.NoError(t, err, "compile") {
@@ -74,7 +73,7 @@ func TestRelationData(t *testing.T) {
 
 // TestRelationIteration to see if the relation values run properly.
 func TestRelationIteration(t *testing.T) {
-	s := append(buildRelationIteration(), buildRelationRules(), buildRelationValues())
+	s := NewScript(buildRelationIteration(), buildRelationRules(), buildRelationValues())
 	if test, err := NewTestGameScript(t, s, "no parser", nil); assert.NoError(t, err) {
 		if err := test.RunNamedAction("test", Named{"claire test"}); assert.NoError(t, err) {
 			if out, err := test.FlushOutput(); assert.NoError(t, err) {
@@ -91,81 +90,78 @@ func TestRelationIteration(t *testing.T) {
 	t.FailNow()
 }
 
-func buildRelationIteration() backend.Script {
-	return Script(
-		The("gremlin", Called("Claire"), Has("pets", "Boomba")),
-		The("rock", Called("Boomba"), Exists()),
-		The("kinds",
-			Called("unit tests"),
-			Can("test").And("testing").RequiresNothing()),
-		The("unit test", Called("loofah test"),
-			When("testing").Always(
-				Try("from loofah get claire",
-					IsText{
-						T("Claire"),
-						EqualTo,
-						PropertyText{
-							"name",
-							PropertyRef{
-								"o beneficent one", Named{"loofah"},
-							},
+func buildRelationIteration() (s LocalScript) {
+	s.The("gremlin", Called("Claire"), Has("pets", "Boomba"))
+	s.The("rock", Called("Boomba"), Exists())
+	s.The("kinds",
+		Called("unit tests"),
+		Can("test").And("testing").RequiresNothing())
+	s.The("unit test", Called("loofah test"),
+		When("testing").Always(
+			Try("from loofah get claire",
+				IsText{
+					T("Claire"),
+					EqualTo,
+					PropertyText{
+						"name",
+						PropertyRef{
+							"o beneficent one", Named{"loofah"},
 						},
 					},
-				),
-			)),
-		//
-		The("unit test", Called("boomba test"),
-			When("testing").Always(
-				Try("from boomba get claire",
-					IsText{
-						T("Claire"),
-						EqualTo,
-						PropertyText{
-							"name",
-							PropertyRef{
-								"o beneficent one", Named{"boomba"},
-							},
+				},
+			),
+		))
+	//
+	s.The("unit test", Called("boomba test"),
+		When("testing").Always(
+			Try("from boomba get claire",
+				IsText{
+					T("Claire"),
+					EqualTo,
+					PropertyText{
+						"name",
+						PropertyRef{
+							"o beneficent one", Named{"boomba"},
 						},
 					},
-				),
-			)),
-		// from claire get a list which includes loofah and boomba
-		The("unit test", Called("claire test"),
-			When("testing").Always(
-				EachObj{
-					In: PropertyRefList{
-						"pets", Named{"claire"},
+				},
+			),
+		))
+	// from claire get a list which includes loofah and boomba
+	s.The("unit test", Called("claire test"),
+		When("testing").Always(
+			ForEachObject{
+				In: PropertyRefList{
+					"pets", Named{"claire"},
+				},
+				Go: PrintLine{
+					PrintText{
+						GetText{"name"},
 					},
-					Go: PrintLine{
-						PrintText{
-							GetText{"name"},
-						},
-					},
-					Else: Error{T("should have run")},
-				})),
-	)
+				},
+				Else: Error{T("should have run")},
+			}))
+	return
 }
 
-func buildRelationValues() backend.Script {
-	return Script(
-		The("gremlin", Called("Claire"), Has("pets", "Loofah")),
-		The("rock", Called("Loofah"), Exists()),
-	)
+func buildRelationValues() (s LocalScript) {
+	s.The("gremlin", Called("Claire"), Has("pets", "Loofah"))
+	s.The("rock", Called("Loofah"), Exists())
+	return
 }
 
-func buildRelationRules() backend.Script {
-	return Script(
-		The("kinds",
-			Called("gremlins"),
-			HaveMany("pets", "rocks").
-				Implying("rocks", HaveOne("o beneficent one", "gremlin")),
-			// alternate, non-conflicting specification of the same relation
-			HaveMany("pets", "rocks").
-				// FIX: for now the property names must match.
-				// FIX? if the names don't match, this creates two views of the same relation. validate the hierarchy to verify no duplicate property usage?
-				// i'd prefer the singular: Has("pet", "Loofah")
-				Implying("rocks", HaveOne("o beneficent one", "gremlin")),
-		),
-		The("kinds", Called("rocks"), Exist()),
+func buildRelationRules() (s LocalScript) {
+	s.The("kinds",
+		Called("gremlins"),
+		HaveMany("pets", "rocks").
+			Implying("rocks", HaveOne("o beneficent one", "gremlin")),
+		// alternate, non-conflicting specification of the same relation
+		HaveMany("pets", "rocks").
+			// FIX: for now the property names must match.
+			// FIX? if the names don't match, this creates two views of the same relation. validate the hierarchy to verify no duplicate property usage?
+			// i'd prefer the singular: Has("pet", "Loofah")
+			Implying("rocks", HaveOne("o beneficent one", "gremlin")),
 	)
+	s.The("kinds", Called("rocks"), Exist())
+	return
 }

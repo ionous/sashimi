@@ -325,7 +325,7 @@ func (p *pointerListProp) SetGeneric(value meta.Generic) (err error) {
 	} else {
 		refs := make([]rt.Reference, len(objs))
 		for i, obj := range objs {
-			if ok := obj.Empty() || p.mdl.AreCompatible(obj.GetParentClass(), p.prop.Relates); !ok {
+			if ok := !obj.Exists() || p.mdl.AreCompatible(obj.GetParentClass(), p.prop.Relates); !ok {
 				err = errutil.New("set property", p, "object", i, obj, "not compatible with", p.prop.Relates)
 				break
 			}

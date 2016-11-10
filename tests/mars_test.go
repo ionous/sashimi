@@ -15,7 +15,7 @@ func lines(v ...string) []string {
 }
 
 func TestRawTextProperty(t *testing.T) {
-	script := Script(
+	script := NewScript(
 		The("kinds", Called("actors"), Have("greeting", "text")),
 		The("actor", Called("player"), Has("greeting", "hello world")),
 	)
@@ -36,7 +36,7 @@ func TestRawTextProperty(t *testing.T) {
 }
 
 func TestNumEvalProperty(t *testing.T) {
-	script := Script(
+	script := NewScript(
 		The("kinds", Called("actors"), Have("counter", "num")),
 		The("actor", Called("player"), Has("counter", core.AddNum{core.N(2), core.N(3)})),
 	)
@@ -56,7 +56,7 @@ func TestNumEvalProperty(t *testing.T) {
 }
 
 func TestActionNames(t *testing.T) {
-	script := Script(
+	script := NewScript(
 		The("kinds", Called("actors"), Have("greeting", "text")),
 		The("actor", Called("player"), Has("greeting", "hello world")),
 		The("kinds", Called("actors"),
@@ -84,7 +84,7 @@ func TestActionNames(t *testing.T) {
 }
 
 func TestTarget(t *testing.T) {
-	script := Script(
+	script := NewScript(
 		The("kinds", Called("actors"), Have("greeting", "text")),
 		The("actor", Called("player"), Has("greeting", "hello")),
 		The("actor", Called("npc"), Exists()),
@@ -107,7 +107,7 @@ func TestTarget(t *testing.T) {
 
 // TestRun calls an action from an action
 func TestRun(t *testing.T) {
-	script := Script(
+	script := NewScript(
 		The("kinds", Called("actors"), Have("greeting", "text")),
 		The("actor", Called("player"), Has("greeting", "hello")),
 		The("actor", Called("npc"), Exists()),
@@ -132,7 +132,7 @@ func TestRun(t *testing.T) {
 }
 
 func TestStopHere(t *testing.T) {
-	script := Script(
+	script := NewScript(
 		The("kinds", Called("actors"), Have("greeting", "text")),
 		The("actor", Called("player"), Has("greeting", "hello world")),
 		The("kinds", Called("actors"),

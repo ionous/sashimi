@@ -39,7 +39,10 @@ type TestWriter struct {
 
 // Standard output.
 func (out TestWriter) Write(p []byte) (n int, err error) {
-	out.t.Log(string(p))
+	s := string(p)
+	if strings.TrimSpace(s) != "" {
+		out.t.Log(s)
+	}
 	return out.buf.Write(p)
 }
 
@@ -51,7 +54,7 @@ func (out TestWriter) Flush() string {
 
 type ParentCreator func(meta.Model) api.LookupParents
 
-func NewTestGameScript(t *testing.T, s backend.Script, gen string, pc ParentCreator) (ret TestGame, err error) {
+func NewTestGameScript(t *testing.T, s backend.Spec, gen string, pc ParentCreator) (ret TestGame, err error) {
 	src := &S.Statements{}
 	if gen == "no parser" {
 		noParser := The("kind", Called("no parser"), Exists())
@@ -100,9 +103,17 @@ func NewTestGameSource(t *testing.T, src S.Statements, gen string, pc ParentCrea
 // ditto the "player"
 // the understandings used by the parser can just sit there
 // in the future, maybe we could put the understanding in an outer layer
-func NewTestGame(t *testing.T, s backend.Script) (ret TestGame, err error) {
-	ad := append(s, The("actor", Called("player")))
-	return NewTestGameScript(t, ad, "player", nil)
+func NewTestGame(t *testing.T, s backend.Spec) (ret TestGame, err error) {
+	src := &S.Statements{}
+	player := The("actor", Called("player"), Exists())
+	if e := player.Generate(src); e != nil {
+		err = e
+	} else if e := s.Generate(src); e != nil {
+		err = e
+	} else {
+		ret, err = NewTestGameSource(t, *src, "player", nil)
+	}
+	return
 }
 
 type TestGame struct {
@@ -147,7 +158,6 @@ func (test *TestGame) RunInput(s string) (ret []string, err error) {
 			parms[i] = rt.Object{o}
 		}
 		if e := test.Game.RunAction(act.GetId(), test.Game, parms...); e != nil {
-			panic(e)
 			err = e
 		} else if r, e := test.FlushOutput(); e != nil {
 			err = e

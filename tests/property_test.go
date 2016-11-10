@@ -15,7 +15,7 @@ import (
 
 // compile nothing succesfully
 func TestPropertyEmpty(t *testing.T) {
-	s := Script()
+	s := NewScript()
 	src := &S.Statements{}
 	if e := s.Generate(src); assert.NoError(t, e) {
 		if model, e := compiler.Compile(*src, ioutil.Discard); assert.NoError(t, e) {
@@ -50,7 +50,7 @@ func TestPropertySubclass(t *testing.T) {
 
 // double specification of the same class causes no error
 func TestPropertyDoubledClass(t *testing.T) {
-	s := Script(
+	s := NewScript(
 		The("kinds", Called("stories").WithSingularName("story")),
 		The("kinds", Called("stories"), Exists()),
 	)
@@ -112,7 +112,7 @@ func TestPropertyInst(t *testing.T) {
 }
 
 func TestPropertyText(t *testing.T) {
-	s := Script(
+	s := NewScript(
 		The("kinds",
 			Called("stories").WithSingularName("story"),
 			Have("author", "text"),
@@ -134,7 +134,7 @@ func TestPropertyText(t *testing.T) {
 }
 
 func TestPropertyNum(t *testing.T) {
-	s := Script(
+	s := NewScript(
 		The("kinds",
 			Called("stories").WithSingularName("story"),
 			Have("int", "num"),
@@ -164,7 +164,7 @@ func TestPropertyNum(t *testing.T) {
 // verify all is as expected
 // go test -run TestPropertyEitherOr
 func TestPropertyEitherOr(t *testing.T) {
-	s := Script(
+	s := NewScript(
 		The("kinds",
 			Called("scored-stories").WithSingularName("scored-story"),
 			AreEither("scored").Or("unscored"),
@@ -217,7 +217,7 @@ func TestPropertyEitherOr(t *testing.T) {
 
 // choose an unselected value and make sure it reports an error
 func TestPropertyEitherError(t *testing.T) {
-	s := Script(
+	s := NewScript(
 		The("kinds",
 			Called("stories").WithSingularName("story"),
 			AreEither("scored").Or("unscored").Usually("unscored"),

@@ -38,7 +38,7 @@ func (p *oneToOneProp) SetGeneric(value meta.Generic) (err error) {
 	} else if wasId, e := p.getOther(); e != nil {
 		err = e
 	} else if newId := obj.GetId(); newId != wasId {
-		if obj.Empty() {
+		if !obj.Exists() {
 			// clearing value? this is easy
 			p.setValue(ident.Empty())
 		} else {
