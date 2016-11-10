@@ -115,3 +115,16 @@ func (v *StandardView) InView(i meta.Instance) (ret bool) {
 	}
 	return
 }
+
+// FIX: see also: Enclosure. anyway to share?
+func (v *StandardView) LookupRoot(inst meta.Instance) (ret meta.Instance) {
+	ret = inst
+	for {
+		if obj, _, ok := v.LookupParent(ret); !ok {
+			break
+		} else {
+			ret = obj
+		}
+	}
+	return
+}
