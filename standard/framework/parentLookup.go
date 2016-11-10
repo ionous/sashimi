@@ -8,6 +8,7 @@ import (
 type ParentLookup struct{ mdl meta.Model }
 
 var objects = ident.MakeId("objects")
+
 var Containment = map[ident.Id]ident.Id{
 	"objects-wearer":      "actors-clothing",
 	"objects-owner":       "actors-inventory",
@@ -30,19 +31,6 @@ func (p *ParentLookup) LookupParent(inst meta.Instance) (ret meta.Instance, rel 
 					}
 				}
 			}
-		}
-	}
-	return
-}
-
-// FIX: see also: Enclosure. anyway to share?
-func (p *ParentLookup) LookupRoot(inst meta.Instance) (ret meta.Instance) {
-	ret = inst
-	for {
-		if obj, _, ok := p.LookupParent(ret); !ok {
-			break
-		} else {
-			ret = obj
 		}
 	}
 	return
