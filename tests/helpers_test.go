@@ -136,7 +136,7 @@ func (test *TestGame) RunNamedAction(name string, params ...meta.Generic) (err e
 }
 
 func (test *TestGame) Commence() (ret []string, err error) {
-	if story, ok := meta.FindFirstOf(test.Metal, ident.MakeId("storwies")); !ok {
+	if story, ok := meta.FindFirstOf(test.Metal, ident.MakeId("stories")); !ok {
 		err = errutil.New("should have test story")
 	} else if e := test.RunNamedAction("commence", story); e != nil {
 		err = e
