@@ -155,15 +155,15 @@ func (ctx *Compiler) newCallback(
 	owner string,
 	classes M.ClassMap,
 	instances M.InstanceMap,
-	callback rt.Execute,
+	calls []rt.Execute,
 	options M.ListenerOptions,
 ) (
 	ret M.ListenerCallback, err error,
 ) {
 	if cls, _ := classes.FindClass(owner); cls != nil {
-		ret = M.NewClassCallback(cls, callback, options)
+		ret = M.NewClassCallback(cls, calls, options)
 	} else if inst, ok := instances.FindInstance(owner); ok {
-		ret = M.NewInstanceCallback(inst, callback, options)
+		ret = M.NewInstanceCallback(inst, calls, options)
 	} else {
 		err = errutil.New("unknown listener requested", owner)
 	}
@@ -190,7 +190,7 @@ func (ctx *Compiler) makeActionHandlers(classes M.ClassMap, instances M.Instance
 			options |= M.EventTargetOnly
 		}
 
-		cb, e := ctx.newCallback(f.Owner, classes, instances, f.Callback, options)
+		cb, e := ctx.newCallback(f.Owner, classes, instances, f.Calls, options)
 		if e != nil {
 			err = errutil.Append(err, SourceError(statement.Source(), e))
 			continue
@@ -222,7 +222,7 @@ func (ctx *Compiler) makeEventListeners(events M.EventMap, classes M.ClassMap, i
 		if r.RunsAfter() {
 			options |= M.EventQueueAfter
 		}
-		cb, e := ctx.newCallback(r.Owner, classes, instances, r.Callback, options)
+		cb, e := ctx.newCallback(r.Owner, classes, instances, r.Calls, options)
 		if e != nil {
 			err = errutil.Append(err, SourceError(l.Source(), e))
 			continue

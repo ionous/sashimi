@@ -52,7 +52,7 @@ func (cfg *PlayConfig) MakeGame(model meta.Model) Game {
 	if core.Runtime == nil {
 		run := rtm.NewRtmParents(model, parents)
 		core.Runtime = run.Runtime()
-		run.PushOutput(writer)
+		core.Runtime.PushOutput(writer)
 	}
 	return Game{internal.NewGame(core)}
 }

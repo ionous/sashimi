@@ -9,7 +9,7 @@ type CallbackModel struct {
 	File      string
 	Line      int
 	Iteration int
-	Executes  rt.Execute
+	Calls     []rt.Execute
 }
 
 func (m CallbackModel) String() (ret string) {

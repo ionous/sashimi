@@ -33,8 +33,8 @@ type ActionCallback struct {
 type ListenerCallback struct {
 	Instance,
 	Class ident.Id // Game callback triggered by cb listener.
-	Callback rt.Execute
-	Options  ListenerOptions
+	Calls   []rt.Execute
+	Options ListenerOptions
 }
 
 type ListenerOptions int
@@ -53,19 +53,19 @@ const (
 // Create a new class listener: triggers for all instances of the passed class.
 func NewClassCallback(
 	cls *ClassInfo,
-	callback rt.Execute,
+	calls []rt.Execute,
 	options ListenerOptions,
 ) ListenerCallback {
-	return ListenerCallback{ident.Empty(), cls.Id, callback, options}
+	return ListenerCallback{ident.Empty(), cls.Id, calls, options}
 }
 
 // Create a new instance listener: triggers for the passed instance.
 func NewInstanceCallback(
 	inst *InstanceInfo,
-	callback rt.Execute,
+	calls []rt.Execute,
 	options ListenerOptions,
 ) ListenerCallback {
-	return ListenerCallback{inst.Id, inst.Class.Id, callback, options}
+	return ListenerCallback{inst.Id, inst.Class.Id, calls, options}
 }
 
 // Return name of instance ( or class ).

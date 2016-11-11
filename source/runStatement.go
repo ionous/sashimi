@@ -12,10 +12,10 @@ type RunStatement struct {
 }
 
 type RunFields struct {
-	Owner    string
-	Action   string
-	Callback rt.Execute
-	Phase    E.Phase
+	Owner  string
+	Action string
+	Calls  []rt.Execute
+	Phase  E.Phase
 }
 
 func (ts RunStatement) Fields() RunFields {

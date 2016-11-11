@@ -20,10 +20,10 @@ const (
 )
 
 type ListenFields struct {
-	Owner    string
-	Event    string
-	Callback rt.Execute
-	Options  ListenOptions
+	Owner   string
+	Event   string
+	Calls   []rt.Execute
+	Options ListenOptions
 }
 
 func (ts ListenStatement) Fields() ListenFields {

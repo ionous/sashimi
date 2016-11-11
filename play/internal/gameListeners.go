@@ -61,11 +61,11 @@ type GameListener struct {
 
 // HandleEvent implements E.IListen.
 func (gl GameListener) HandleEvent(evt E.IEvent) (err error) {
-	call := gl.listen.GetCallback()
+	calls := gl.listen.GetCallback()
 	if gl.listen.GetOptions().UseAfterQueue() {
-		err = gl.act.RunLater(call, gl.listen.GetClass())
+		err = gl.act.RunLater(calls, gl.listen.GetClass())
 	} else {
-		if e := gl.act.RunNow(call, gl.listen.GetClass()); e != nil {
+		if e := gl.act.RunNow(calls, gl.listen.GetClass()); e != nil {
 			if _, cancelled := e.(core.StopNow); !cancelled {
 				err = e
 			} else {

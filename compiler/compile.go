@@ -57,12 +57,12 @@ func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 		actions := make(map[ident.Id][]M.CallbackModel)
 		log.Println("converting handlers", len(x.ActionHandlers))
 		for _, handler := range x.ActionHandlers {
-			act, callback, useCapture := handler.Action, handler.Callback, handler.UseCapture()
+			act, calls, useCapture := handler.Action, handler.Calls, handler.UseCapture()
 			arr := actions[act]
 			// FIX: for now treating target as bubble,
 			// really the compiler should hand off a sorted flat list based on three separate groups; target growing in the same direction as after, but distinctly in the middle of things.
 			cm := M.CallbackModel{
-				Executes: callback,
+				Calls: calls,
 			}
 			if !useCapture {
 				arr = append(arr, cm)
@@ -132,7 +132,7 @@ func (cfg Config) Compile(src S.Statements) (ret *M.Model, err error) {
 				callbacks = bubble
 			}
 			cm := M.CallbackModel{
-				Executes: cb.Callback,
+				Calls: cb.Calls,
 			}
 			// append
 			var arr = callbacks[e]
