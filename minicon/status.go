@@ -1,16 +1,12 @@
 package minicon
 
-//
 // Status text
-//
 type Status struct {
 	Left, Right string
 	Pen         Pen
 }
 
-//
 // re/draw the status line assuming a window of the passed width.
-//
 func (this *Status) drawStatus(box *TermBox, width int) {
 	oldPen := box.SetPen(this.Pen)
 	defer box.SetPen(oldPen)

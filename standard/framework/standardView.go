@@ -16,14 +16,23 @@ type StandardView struct {
 }
 
 func NewStandardView(mdl meta.Model) (ret *StandardView) {
-	if player, ok := mdl.GetInstance(ident.MakeId("player")); !ok {
-		panic("couldnt find player")
-	} else {
-		view := &StandardView{mdl: mdl, ParentLookup: NewParentLookup(mdl)}
-		view.ResetView(player.GetId(), view.LookupRoot(player).GetId())
-		ret = view
-	}
+	panic("not implemented")
+	// if player, ok := mdl.GetInstance(ident.MakeId("player")); !ok {
+	// 	panic("couldnt find player")
+	// } else {
+	// 	view := &StandardView{mdl: mdl, ParentLookup: NewParentLookup(mdl)}
+	// 	view.ResetView(player.GetId(), view.LookupRoot(player).GetId())
+	// 	ret = view
+	// }
 	return ret
+}
+
+var Containment = map[ident.Id]ident.Id{
+	"objects-wearer":      "actors-clothing",
+	"objects-owner":       "actors-inventory",
+	"objects-whereabouts": "rooms-contents",
+	"objects-support":     "supporters-contents",
+	"objects-enclosure":   "containers-contents",
 }
 
 type StandardVisibilty int
@@ -120,11 +129,12 @@ func (v *StandardView) InView(i meta.Instance) (ret bool) {
 func (v *StandardView) LookupRoot(inst meta.Instance) (ret meta.Instance) {
 	ret = inst
 	for {
-		if obj, _, ok := v.LookupParent(ret); !ok {
-			break
-		} else {
-			ret = obj
-		}
+		panic("lookup root")
+		// if obj, e := v.FindParent(ret); !obj.Instance {
+		// 	break
+		// } else {
+		// 	ret = obj
+		// }
 	}
 	return
 }

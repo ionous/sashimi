@@ -3,6 +3,7 @@ package simple
 import (
 	"fmt"
 	"github.com/ionous/sashimi/meta"
+	"github.com/ionous/sashimi/play"
 	R "github.com/ionous/sashimi/runtime"
 	"github.com/ionous/sashimi/runtime/api"
 	_ "github.com/ionous/sashimi/standard" // init
@@ -11,7 +12,7 @@ import (
 
 func NewSimpleSession(modelApi meta.Model, calls api.LookupCallbacks) (ret *SimpleSession, err error) {
 	out := &SimpleOutput{}
-	cfg := R.NewConfig().SetCalls(calls).SetOutput(out).SetParentLookup(framework.NewParentLookup(modelApi))
+	cfg := play.NewConfig().SetCalls(calls).SetOutput(out).SetParentLookup(framework.NewParentLookup(modelApi))
 	game := cfg.MakeGame(modelApi)
 
 	if game, e := framework.NewStandardGame(game); e != nil {

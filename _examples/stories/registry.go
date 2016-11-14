@@ -1,75 +1,37 @@
-//
-// Package for example stories
-//
 package stories
 
 import (
-	"fmt"
-	"github.com/ionous/sashimi/script"
-	"github.com/ionous/sashimi/script/backend"
-	"github.com/ionous/sashimi/standard"
+	"github.com/ionous/mars/script"
+	"github.com/ionous/sashimi/util/errutil"
 )
 
-func Select(name string) bool {
-	return stories.Select(name)
+func Select(name string) (*script.Script, bool) {
+	s, okay := stories[name]
+	return s, okay
 }
 
 func List() (ret []string) {
 	return stories.List()
 }
 
-//
 // The list of all known stories provided by the examples.
-//
-var stories = Registry{make(map[string]script.InitCallback), ""}
+var stories = make(Registry)
 
-//
-// see "var stories."
-//
-type Registry struct {
-	reg      map[string]script.InitCallback
-	selected string
-}
+// Registry
+type Registry map[string]*script.Script
 
-//
-// Add a story to the list of known stories.
-//
-func (this *Registry) Register(name string, cb script.InitCallback) {
-	if _, exists := this.reg[name]; exists {
-		panic(fmt.Sprintf("the story '%s' already exists", name))
+// Register  adds a story to the list of known stories.
+func (r Registry) Register(name string, s script.Script) {
+	if _, exists := r[name]; exists {
+		panic(errutil.New("the story", name, "already exists"))
 	}
-	this.reg[name] = cb
+	r[name] = &s
 }
 
-//
-// Return the list all known stories.
-//
-func (this *Registry) List() (ret []string) {
-	for key, _ := range this.reg {
+// List return the list all known stories.
+func (r Registry) List() (ret []string) {
+	for key, _ := range r {
 		ret = append(ret, key)
 	}
 	return ret
-}
-
-//
-// Add the named story to the global scripts.
-//
-func (this *Registry) Select(name string) bool {
-	_, ok := this.reg[name]
-	if ok {
-		this.selected = name
-	}
-	return ok
-}
-
-// when the call to InitializeScript happens,
-// inject the script selected via the story registry.
-func init() {
-	standard.InitStandardLibrary()
-
-	script.AddScript(func(s *backend.Script) {
-		if cb, ok := stories.reg[stories.selected]; ok {
-			cb(s)
-		}
-	})
 }

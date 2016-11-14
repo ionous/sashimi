@@ -5,6 +5,13 @@ import (
 	"github.com/ionous/sashimi/meta"
 )
 
+type EventCancelled struct {
+}
+
+func (EventCancelled) Error() string {
+	return "event cancelled"
+}
+
 // consider: StartFrame and EndFrame should be merged into Output
 // -- and they should be renamed: BeginEvent() EndEvent()
 //*maybe* Target should be mapped into prototype
@@ -14,7 +21,7 @@ import (
 // right now it seems redicoulous that the game decides that.
 type EventFrame interface {
 	// FUTURE:
-	// i just switched to an interface for watching, but i think thats wrong. what game really needs is a way to send events to targets: look at LookupParents which is likewise part of this.
+	// i just switched to an interface for watching, but i think thats wrong. what game really needs is a way to send events to targets
 	// if the event queue was given to the game as an object perhaps,
 	// if it exposed an algorithm.....
 	// the other interesting aspect this is how this is attached to LookupCallbacks, since that is how the code calls out.

@@ -99,7 +99,7 @@ func (vw *vwatch) String() string {
 
 func (vw *vwatch) SetNum(val float64) (err error) {
 	//fmt.Println("set num", val)
-	if old := vw.Value.GetNum(); old != val {
+	if old := vw.Value.GetNumber(); old != val {
 		vw.pw.iw.mw.NumChange(
 			vw.pw.iw.Instance,
 			vw.pw.GetId(),

@@ -6,6 +6,7 @@ import (
 	"github.com/ionous/sashimi/play/api"
 	"github.com/ionous/sashimi/play/internal"
 	"io"
+	"io/ioutil"
 	"math/rand"
 	"os"
 )
@@ -15,9 +16,9 @@ type Game struct {
 }
 
 type PlayConfig struct {
-	core           internal.PlayCore
-	writer, logger io.Writer
-	parents        api.LookupParents
+	core    internal.PlayCore
+	writer  io.Writer
+	parents api.LookupParents
 }
 
 func NewConfig() *PlayConfig {
@@ -28,8 +29,6 @@ func (cfg *PlayConfig) MakeGame(model meta.Model) Game {
 	// copy
 	core := cfg.core
 	writer := cfg.writer
-	parents := cfg.parents
-	logger := cfg.logger
 	// defaults
 	if core.Rand == nil {
 		core.Rand = rand.New(rand.NewSource(1))
@@ -37,20 +36,20 @@ func (cfg *PlayConfig) MakeGame(model meta.Model) Game {
 	if writer == nil {
 		writer = os.Stdout
 	}
-	if logger == nil {
-		logger = writer
+	if core.Logger == nil {
+		core.Logger = ioutil.Discard
 	}
 	if core.Frame == nil {
-		core.Frame = &noFrame{logger, nil}
+		core.Frame = &noFrame{core.Logger, nil}
 	}
-	if parents == nil {
-		parents = api.NoParents{}
+	if core.Parents == nil {
+		core.Parents = &api.ParentHolder{}
 	}
 	if core.SaveLoad == nil {
 		core.SaveLoad = noSaveLoad{}
 	}
 	if core.Runtime == nil {
-		run := rtm.NewRtmParents(model, parents)
+		run := rtm.NewRtm(model)
 		core.Runtime = run.Runtime()
 		core.Runtime.PushOutput(writer)
 	}
@@ -73,7 +72,7 @@ func (cfg *PlayConfig) SetParentLookup(l api.LookupParents) *PlayConfig {
 }
 
 func (cfg *PlayConfig) SetLogger(log io.Writer) *PlayConfig {
-	cfg.logger = log
+	cfg.core.Logger = log
 	return cfg
 }
 func (cfg *PlayConfig) SetRand(rand *rand.Rand) *PlayConfig {

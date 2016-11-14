@@ -1,3 +1,5 @@
+emebed a b64 block of the data?
+
 package main
 
 import (

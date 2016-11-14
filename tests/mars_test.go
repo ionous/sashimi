@@ -43,7 +43,7 @@ func TestNumEvalProperty(t *testing.T) {
 	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {
 		if player, ok := test.Metal.GetInstance("player"); assert.True(t, ok, "found player") {
 			if counter, ok := player.FindProperty("counter"); assert.True(t, ok, "has greeting") {
-				if v, ok := counter.GetGeneric().(rt.NumEval); assert.True(t, ok, "num eval") {
+				if v, ok := counter.GetGeneric().(rt.NumberEval); assert.True(t, ok, "num eval") {
 					if num, e := v.GetNumber(test.Game); assert.NoError(t, e, "got num") {
 						if !assert.EqualValues(t, 5, num.Float()) {
 							t.FailNow()

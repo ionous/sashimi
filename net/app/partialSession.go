@@ -23,7 +23,7 @@ type PartialSession struct {
 
 func NewPartialSession(m meta.Model, calls api.LookupCallbacks, saver api.SaveLoad, out *CommandOutput) (ret *PartialSession, err error) {
 	watched := change.NewModelWatcher(out, m)
-	cfg := R.NewConfig().
+	cfg := play.NewConfig().
 		SetCalls(calls).
 		SetOutput(out).
 		SetFrame(out).
@@ -121,7 +121,7 @@ func (s *PartialSession) _handleInput(input CommandInput) (err error) {
 					err = e
 				} else {
 					s.game.QueueActionInstances(act, objs)
-					s.game.EndTurn("end turn")
+					err = s.game.EndTurn("end turn")
 				}
 			}
 		}

@@ -1,11 +1,12 @@
 package stories
 
 import (
-	. "github.com/ionous/sashimi/script"
+	. "github.com/ionous/mars/script"
+	. "github.com/ionous/mars/std/script"
 )
 
 //
-func An_Empty_Room(s *Script) {
+func An_Empty_Room() (s Script) {
 	s.The("story",
 		Called("testing"),
 		Has("author", "me"),
@@ -14,7 +15,9 @@ func An_Empty_Room(s *Script) {
 		Called("somewhere"),
 		Has("description", "an empty room"),
 	)
+	s.The("player", Exists(), In("somewhere"))
+	return
 }
 func init() {
-	stories.Register("empty", An_Empty_Room)
+	stories.Register("empty", An_Empty_Room())
 }

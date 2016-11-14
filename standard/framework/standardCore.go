@@ -2,30 +2,32 @@ package framework
 
 import (
 	"errors"
+	"github.com/ionous/mars/rt"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/parser"
-	R "github.com/ionous/sashimi/runtime"
-	"github.com/ionous/sashimi/runtime/parse"
+	"github.com/ionous/sashimi/play"
+	"github.com/ionous/sashimi/play/api"
+	"github.com/ionous/sashimi/play/parse"
+	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
-	"log"
 )
 
 // StandardCore assists the transformation of a StandardStart into a StandardGame.
 type StandardCore struct {
-	R.Game
+	play.Game
 	parser *parser.P // P is a struct, cached via getParser()
-	story  ident.Id
+	story  rt.Object
 	playerInput,
 	complete,
-	turnCount meta.Value
+	turnCount meta.Property
 }
 
 func (sg *StandardCore) IsComplete() bool {
-	return sg.complete.GetState() == ident.MakeId("completed")
+	return sg.complete.GetGeneric().(rt.State) == rt.State("completed")
 }
 
 func (sg *StandardCore) Started() bool {
-	return sg.complete.GetState() != ident.MakeId("starting")
+	return sg.complete.GetGeneric().(rt.State) != rt.State("starting")
 }
 
 // frame is the turn count + 1 ( so that it's never zero while playing )
@@ -33,14 +35,15 @@ func (sc *StandardCore) Frame() (ret int) {
 	if sc.Started() {
 		// FIX? this is a little fragile: the frame count should be 1 for the data sent by the first frame; 0 before.
 		// commencing sets us to story(sc) to started, end turn increments the turn count, and finally the session samples the Frame() just before sending the response.
-		ret = int(sc.turnCount.GetNum()) + 1
+		i := sc.turnCount.GetGeneric().(rt.Number).Int()
+		ret = i + 1
 	}
 	return
 }
 
 // NewStandardGame creates a game which is based on the standard rules.
-func NewStandardCore(game R.Game) (ret *StandardCore, err error) {
-	if story, ok := meta.FindFirstOf(game.Model, ident.MakeId("stories")); !ok {
+func NewStandardCore(game play.Game) (ret *StandardCore, err error) {
+	if story, ok := meta.FindFirstOf(game, ident.MakeId("stories")); !ok {
 		err = errors.New("couldn't find story object")
 	} else if turnCount, ok := story.FindProperty("turn count"); !ok {
 		err = errors.New("couldn't find turn count property")
@@ -52,10 +55,10 @@ func NewStandardCore(game R.Game) (ret *StandardCore, err error) {
 		core := &StandardCore{
 			Game:        game,
 			parser:      nil,
-			story:       story.GetId(),
-			playerInput: playerInput.GetValue(),
-			complete:    completed.GetValue(),
-			turnCount:   turnCount.GetValue(),
+			story:       rt.Object{story},
+			playerInput: playerInput,
+			complete:    completed,
+			turnCount:   turnCount,
 		}
 		ret = core
 	}
@@ -65,39 +68,46 @@ func NewStandardCore(game R.Game) (ret *StandardCore, err error) {
 // NOTE: input should be normalized!
 func (sg *StandardCore) HandleInput(in string) (err error) {
 	if sg.IsComplete() {
-		log.Println("complete")
+		err = errutil.New("handle input", in, "game is finished.")
 	} else {
 		if in == "start" && !sg.Started() {
-			//log.Println("starting")
-			sg.EndTurn("commence")
+			sg.Game.Log("starting game")
+			err = sg.EndTurn("commence")
 		} else {
 			if in == "commence" {
-				in = sg.playerInput.GetText()
+				in = sg.playerInput.GetGeneric().(rt.Text).String()
 			}
-			if e := sg.playerInput.SetText(in); e != nil {
+			//
+			if e := sg.playerInput.SetGeneric(rt.Text(in)); e != nil {
 				err = e
-			} else if act, e := sg.Game.QueueAction("parse player input", sg.story); e != nil {
-				err = e
-			} else if e := sg.Game.ProcessActions(); e != nil {
-				err = e
-			} else if act.Cancelled() {
-				sg.EndTurn("end turn")
-				// NOTE: canceling is not an error
+			} else if e := sg.Game.RunAction(ident.MakeId("parse player input"), sg.Game, sg.story); e != nil {
+				if _, ok := e.(api.EventCancelled); !ok {
+					err = e
+				} else {
+					err = sg.EndTurn("end turn")
+				}
 			} else if parser, e := sg.getParser(); e != nil {
-				log.Println("error getting parser", e)
 				err = e
 			} else {
 				if _, matcher, e := parser.ParseInput(in); e != nil {
-					log.Println("error parsing input", in, e)
 					err = e
-				} else if act, objs, e := matcher.(*parse.ObjectMatcher).GetMatch(); e != nil {
+				} else if act, insts, e := matcher.(*parse.ObjectMatcher).GetMatch(); e != nil {
 					err = e
-					//log.Println("error matching input", err)
 				} else {
-					sg.Game.QueueActionInstances(act, objs)
-					sg.EndTurn("end turn")
+					objs := make([]meta.Generic, len(insts))
+					for i, inst := range insts {
+						objs[i] = rt.Object{inst}
+					}
+					sg.Game.Log("running action", act.GetId(), objs)
+					if e := sg.Game.RunAction(act.GetId(), sg.Game, objs...); e != nil {
+						err = e
+					} else {
+						sg.Game.Log("ending turn")
+						err = sg.EndTurn("end turn")
+					}
 				}
 			}
+
 		}
 	}
 	return err
@@ -112,7 +122,7 @@ func (sg *StandardCore) getParser() (ret parser.P, err error) {
 		ret = *sg.parser
 	} else {
 		// cache!
-		if parser, e := parse.NewObjectParser(sg.Model, ident.MakeId("player")); e != nil {
+		if parser, e := parse.NewObjectParser(sg, "player"); e != nil {
 			err = e
 		} else {
 			ret, sg.parser = parser, &parser
@@ -121,10 +131,6 @@ func (sg *StandardCore) getParser() (ret parser.P, err error) {
 	return
 }
 
-func (sg *StandardCore) EndTurn(action string) {
-	if _, e := sg.Game.QueueAction(action, sg.story); e != nil {
-		log.Println(e)
-	} else if e := sg.Game.ProcessActions(); e != nil {
-		log.Println(e)
-	}
+func (sg *StandardCore) EndTurn(action string) error {
+	return sg.Game.RunAction(ident.MakeId(action), sg.Game, sg.story)
 }

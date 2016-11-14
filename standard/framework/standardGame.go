@@ -2,12 +2,12 @@ package framework
 
 import (
 	"github.com/ionous/sashimi/parser"
-	R "github.com/ionous/sashimi/runtime"
+	"github.com/ionous/sashimi/play"
 )
 
 // NewStardardGame assists the creation of a standard game.
 // returns StandardStart which supports the interface Start()
-func NewStandardGame(game R.Game) (ret StandardStart, err error) {
+func NewStandardGame(game play.Game) (ret StandardStart, err error) {
 	if core, e := NewStandardCore(game); e != nil {
 		err = e
 	} else {
@@ -25,8 +25,8 @@ type StandardStart struct {
 // FIX: no longer sends commencing, that's done by input "start"
 func (sg StandardStart) Start() (ret *StandardGame, err error) {
 	ret = &StandardGame{StandardCore: sg.StandardCore}
-	ret.EndTurn("commence")
-	return ret, err
+	err = ret.EndTurn("commence")
+	return
 }
 
 // StandardGame wraps the core rules with "quit"

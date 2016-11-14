@@ -10,6 +10,7 @@ import (
 	"github.com/ionous/sashimi/meta"
 	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
+	"github.com/ionous/sashimi/util/sbuf"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -52,14 +53,14 @@ func (a *Arc) Execute(ex rt.Execute) (ret []string, err error) {
 
 func (a *Arc) Test(be rt.BoolEval) (err error) {
 	if b, e := be.GetBool(a.test.Game); e != nil {
-		err = errutil.New("error testing boolean", e)
+		err = errutil.New("testing boolean failed because", e)
 	} else if !b {
 		err = errutil.New("test failed")
 	}
 	return
 }
 
-func libTest(t *testing.T, lib *mars.Package, name string, base *S.Statements, parser string) (err error) {
+func libTest(t *testing.T, lib *mars.Package, name string, base *S.Statements, parser string, pc ParentCreator) (err error) {
 	// FIX? serialize the test scripts?
 	for _, suite := range lib.Tests {
 		if name == "*" || name == suite.Name {
@@ -67,17 +68,17 @@ func libTest(t *testing.T, lib *mars.Package, name string, base *S.Statements, p
 			for _, unit := range suite.Units {
 				src := *base
 				if e := lib.Generate(&src); e != nil {
-					err = errutil.New("error generating lib source", suite.Name, e)
+					err = errutil.New("Error generating lib source", sbuf.Q(suite.Name), e)
 				} else {
 					//pretty.Println(src)
 					if e := unit.Setup.Generate(&src); e != nil {
-						err = errutil.New("error generating test suite:", suite.Name, e)
+						err = errutil.New("Error generating test suite", sbuf.Q(suite.Name), e)
 						break
-					} else if test, e := NewTestGameSource(t, src, parser, nil); e != nil {
-						err = errutil.New("error creating game:", suite.Name, e)
+					} else if test, e := NewTestGameSource(t, src, parser, pc); e != nil {
+						err = errutil.New("Error creating game", sbuf.Q(suite.Name), e)
 						break
 					} else if e := unit.Test(&Arc{&test}); e != nil {
-						err = errutil.New("error testing lib:", suite.Name, e)
+						err = errutil.New("Error testing lib", sbuf.Q(suite.Name), e)
 						break
 					}
 				}
@@ -90,19 +91,19 @@ func libTest(t *testing.T, lib *mars.Package, name string, base *S.Statements, p
 func TestLibCore(t *testing.T) {
 	base := &S.Statements{}
 	The("kind", Called("no parser")).Generate(base)
-	assert.NoError(t, libTest(t, core.Core(), "*", base, "no parser"))
+	assert.NoError(t, libTest(t, core.Core(), "*", base, "no parser", nil))
 }
 
 func TestLibLang(t *testing.T) {
 	base := &S.Statements{}
 	The("kind", Called("no parser")).Generate(base)
-	assert.NoError(t, libTest(t, lang.Lang(), "*", base, "no parser"))
+	assert.NoError(t, libTest(t, lang.Lang(), "*", base, "no parser", nil))
 }
 
 func TestLibStd(t *testing.T) {
 	base := &S.Statements{}
 	script := The("actor", Called("player"), Exists())
 	script.Generate(base)
-	testName := "*"
-	assert.NoError(t, libTest(t, std.Std(), testName, base, "player"))
+	testName := "Stories"
+	assert.NoError(t, libTest(t, std.Std(), testName, base, "player", NewStandardParents))
 }

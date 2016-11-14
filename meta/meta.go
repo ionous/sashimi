@@ -132,7 +132,7 @@ type PropertyType int
 
 const (
 	InvalidProperty PropertyType = iota
-	NumProperty                  // get: rt.NumEval, set: rt.Number
+	NumProperty                  // get: rt.NumberEval, set: rt.Number
 	TextProperty                 // get: rt.TextEval, set: rt.Text
 	StateProperty                // get: rt.StateEval, set: rt.State
 	ObjectProperty               // get: rt.ObjEval, set: rt.Object

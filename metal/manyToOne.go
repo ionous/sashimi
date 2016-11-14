@@ -52,7 +52,7 @@ func (it *manyIt) HasNext() bool {
 
 func (it *manyIt) GetNext() (ret rt.Object, err error) {
 	if it.next == nil {
-		err = errutil.New("out of range")
+		err = rt.StreamExceeded("ManyToOne")
 	} else {
 		ret, it.next = *it.next, it.advance()
 	}

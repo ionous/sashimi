@@ -61,7 +61,7 @@ func TestUnderKnownAs(t *testing.T) {
 	t.FailNow()
 }
 
-func underTest() (s LocalScript) {
+func underTest() (s Script) {
 	s.The("kinds",
 		Have("description", "text"),
 		Can("test").And("testing").RequiresOne("kind"),

@@ -1,46 +1,27 @@
 package output
 
 import (
-	"bytes"
-	"encoding/gob"
 	"fmt"
+	"github.com/ionous/mars/script/backend"
+	"github.com/ionous/mars/std"
+	"github.com/ionous/sashimi/compiler"
 	C "github.com/ionous/sashimi/console"
 	"github.com/ionous/sashimi/metal"
-	"github.com/ionous/sashimi/minicon"
-	R "github.com/ionous/sashimi/runtime"
-	"github.com/ionous/sashimi/script"
-	"github.com/ionous/sashimi/script/backend"
+	"github.com/ionous/sashimi/play"
+	S "github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/standard/framework"
-	"github.com/ionous/sashimi/util/ident"
 	"io"
 	"io/ioutil"
-	"os"
 )
 
-// implement IConsole for MiniCon
-// FIX: rename to standard.miniconsole maybe?
-type MiniConsole struct {
-	*minicon.MiniCon
-}
-
-func (this MiniConsole) Readln() (string, bool) {
-	return this.Update(), true
-}
-
 // simplest interface:
-func Run(scriptCallback script.InitCallback) {
-	script.AddScript(scriptCallback)
-	RunGame(ParseCommandLine())
+func Run(s backend.Spec) {
+	RunGame(s, ParseCommandLine())
 }
 
-func RunGame(opt Options) (err error) {
-	script := script.InitScripts()
-	return RunScript(script, opt)
-}
-
-func GetWriter(opt Options) (ret io.Writer) {
+func GetWriter(opt Options, w io.Writer) (ret io.Writer) {
 	if opt.verbose {
-		ret = os.Stderr
+		ret = w
 	} else {
 		ret = ioutil.Discard
 	}
@@ -50,37 +31,43 @@ func GetWriter(opt Options) (ret io.Writer) {
 func GetConsole(opt Options) (ret C.IConsole) {
 	if opt.hasConsole {
 		ret = opt.cons
-	} else if opt.text {
-		ret = C.NewConsole()
 	} else {
-		ret = MiniConsole{minicon.NewMiniCon()}
+		ret = C.NewConsole()
 	}
 	return
 }
 
-func RunScript(script *backend.Script, opt Options) (err error) {
-	writer := GetWriter(opt)
-	if model, e := script.Compile(writer); e != nil {
+func RunGame(s backend.Spec, opt Options) (err error) {
+	cons := GetConsole(opt)
+	debugWriter := GetWriter(opt, cons)
+	src := S.Statements{}
+	if e := std.Std().Generate(&src); e != nil {
+		err = e
+	} else if e := s.Generate(&src); e != nil {
+		err = e
+	} else if model, e := compiler.Compile(src, debugWriter); e != nil {
 		err = e
 	} else if opt.dump {
-		var b bytes.Buffer
-		enc := gob.NewEncoder(&b)
-		gob.Register(ident.Id(""))
-		if e := enc.Encode(model.Model); e != nil {
-			panic(e)
-		}
-		fmt.Println(fmt.Sprintf("size: %d(b) %.2f(k)", b.Len(), float64(b.Len())/1024.0))
-		model.Model.PrintModel(func(args ...interface{}) { fmt.Println(args...) })
+		// var b bytes.Buffer
+		// enc := gob.NewEncoder(&b)
+		// gob.Register(ident.Id(""))
+		// if e := enc.Encode(model.Model); e != nil {
+		// 	panic(e)
+		// }
+		// fmt.Println(fmt.Sprintf("size: %d(b) %.2f(k)", b.Len(), float64(b.Len())/1024.0))
+		// model.Model.PrintModel(func(args ...interface{}) { fmt.Println(args...) })
+		panic("not implemented")
 	} else {
-		cons := GetConsole(opt)
-		defer cons.Close()
-		//
 		vals := make(metal.ObjectValueMap)
 		modelApi := metal.NewMetal(model.Model, vals)
-		cfg := R.NewConfig().
-			SetOutput(NewStandardOutput(cons, writer)).
-			SetParentLookup(framework.NewParentLookup(modelApi))
-		g := cfg.MakeGame(modelApi)
+		parents := framework.NewParentLookup()
+		g := play.
+			NewConfig().
+			SetWriter(cons).
+			SetLogger(debugWriter).
+			SetParentLookup(parents).
+			MakeGame(modelApi)
+		parents.Run = g
 		err = PlayGame(cons, g)
 	}
 	if err != nil {
@@ -89,62 +76,19 @@ func RunScript(script *backend.Script, opt Options) (err error) {
 	return
 }
 
-func PlayGame(cons C.IConsole, g R.Game) (err error) {
-	return PlayGameUpdate(cons, g, nil)
-}
-
-func PlayGameUpdate(cons C.IConsole, g R.Game, endFrame func()) (err error) {
+func PlayGame(cons C.IConsole, g play.Game) (err error) {
 	if game, e := framework.NewStandardGame(g); e != nil {
 		err = e
 	} else if game, e := game.Start(); e != nil {
 		err = e
-	} else if status, ok := g.GetInstance(ident.MakeId("status bar")); !ok {
-		err = fmt.Errorf("couldn't find status bar")
-	} else if statusLeft, ok := status.FindProperty("left"); !ok {
-		err = fmt.Errorf("couldn't find left status")
-	} else if statusRight, ok := status.FindProperty("right"); !ok {
-		err = fmt.Errorf("couldn't find right status")
 	} else {
-		var left, right string
 		for {
-			// update the status bar as needed....
-			// ( FIX: status change before the text associated with the change has been teletyped )
-			// ( control code handlers -- needed for changing color in text -- might be better )
-			newleft, newright := statusLeft.GetValue().GetText(), statusRight.GetValue().GetText()
-			if left != newleft || right != newright {
-				if mini, ok := cons.(MiniConsole); ok {
-					mini.Status.Left, mini.Status.Right = newleft, newright
-					mini.RefreshDisplay()
-				}
-			}
-
-			// read new input
 			if s, ok := cons.Readln(); !ok {
 				break
-			} else {
-				mini, useMini := cons.(MiniConsole)
-				if useMini {
-					mini.Flush() // print all remaining teletype text
-					mini.Println()
-					mini.Println(">", s)
-				}
-
-				if e := game.Input(s); e != nil {
-					cons.Println(e.Error())
-				} else {
-					// difficult question, if we end the story, do we want to end the turn?
-					// currently we dont.
-					// FIX: also we dont call "endFrame" -- should we?
-					if game.IsQuit() || game.IsComplete() {
-						if useMini && !game.IsQuit() {
-							mini.Update()
-						}
-						break
-					}
-				}
-				if endFrame != nil {
-					endFrame()
-				}
+			} else if e := game.Input(s); e != nil {
+				fmt.Fprintln(cons, e)
+			} else if game.IsQuit() || game.IsComplete() {
+				break
 			}
 		}
 	}

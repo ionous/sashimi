@@ -28,7 +28,7 @@ type Statements struct {
 }
 
 // UnknownLocation is a stand-in for the file and line of the phrase used to build a statement. MARS: remove this and replace with the proper file and line!
-const UnknownLocation = Code("unknown")
+const UnknownLocation = Code("location unknown")
 
 //
 func (s *Statements) NewActionAssertion(

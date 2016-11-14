@@ -58,7 +58,7 @@ func SerializeObject(gobj meta.Instance) *resource.Object {
 		switch t := prop.GetType(); t {
 		case meta.NumProperty:
 			v := prop.GetValue() // note, sharing this "GetValue" panics, because not all types support GetValue
-			obj.SetAttr(pid, v.GetNum())
+			obj.SetAttr(pid, v.GetNumber())
 		case meta.TextProperty:
 			v := prop.GetValue()
 			obj.SetAttr(pid, v.GetText())

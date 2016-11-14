@@ -1,7 +1,6 @@
 package xmodel
 
 import (
-	"fmt"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 )
@@ -37,7 +36,7 @@ func CheckedEnumeration(values []string) (ret Enumeration, err error) {
 	if err == nil {
 		ret = enum
 	}
-	return ret, err
+	return
 }
 
 //
@@ -48,7 +47,7 @@ func (enum Enumeration) IndexToValue(index int) (ret StringPair, err error) {
 	} else {
 		err = OutOfRangeError(enum, index)
 	}
-	return ret, err
+	return
 }
 
 //
@@ -58,7 +57,7 @@ func (enum Enumeration) IndexToChoice(index int) (ret ident.Id, err error) {
 	} else {
 		ret = value.Id
 	}
-	return ret, err
+	return
 }
 
 //
@@ -68,33 +67,25 @@ func (enum Enumeration) ChoiceToIndex(choice ident.Id) (ret int, err error) {
 	} else {
 		ret = idx
 	}
-	return ret, err
+	return
 }
 
 //
 func MultiplyDefinedError(values []string) error {
-	return errutil.Func(func() string {
-		return fmt.Sprintf("multiple values defined for enum %v", values)
-	})
+	return errutil.New("multiple values defined for enum", values)
 }
 
 //
 func EmptyValueError(values []string) error {
-	return errutil.Func(func() string {
-		return fmt.Sprintf("empty values defined for enum %v", values)
-	})
+	return errutil.New("empty values defined for enum", values)
 }
 
 //
 func OutOfRangeError(enum Enumeration, value interface{}) error {
-	return errutil.Func(func() string {
-		return fmt.Sprintf("%v out of range for %v", value, enum)
-	})
+	return errutil.New(value, "out of range for", enum)
 }
 
 //
 func InvalidChoiceError(enum Enumeration, choice ident.Id) error {
-	return errutil.Func(func() string {
-		return fmt.Sprintf("%v is an disallowed choice for %v", choice, enum)
-	})
+	return errutil.New(choice, "is an disallowed choice for", enum)
 }

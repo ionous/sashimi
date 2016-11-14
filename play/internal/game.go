@@ -5,7 +5,9 @@ import (
 	"github.com/ionous/mars/rtm"
 	E "github.com/ionous/sashimi/event"
 	"github.com/ionous/sashimi/meta"
+	"github.com/ionous/sashimi/play/api"
 	"github.com/ionous/sashimi/util/ident"
+	"github.com/ionous/sashimi/util/sbuf"
 )
 
 type Game struct {
@@ -17,10 +19,10 @@ func NewGame(core PlayCore) *Game {
 	return &Game{core, -1}
 }
 
-// func (g *Game) Log(args ...interface{}) {
-// 	s := sbuf.New(args...).Line()
-// 	g.Logger.Write([]byte(s))
-// }
+func (g *Game) Log(args ...interface{}) {
+	s := sbuf.New(args...).Line()
+	g.Logger.Write([]byte(s))
+}
 
 func (g *Game) Random(exclusiveMax int) int {
 	n := g.Rand.Intn(exclusiveMax)
@@ -31,8 +33,18 @@ func (g *Game) Random(exclusiveMax int) int {
 	return n
 }
 
+func (g *Game) FindParent(obj rt.Object) (ret rt.Object, err error) {
+	if p, e := g.Parents.LookupParent(obj.Instance); e != nil {
+		err = e
+	} else {
+		ret = rt.Object{p}
+	}
+	return
+}
+
 //
 func (g *Game) RunAction(id ident.Id, scp rt.Scope, args ...meta.Generic) (err error) {
+	g.Log("act", id)
 	if act, e := rtm.NewActionRuntime(g, id, scp, args); e != nil {
 		err = e
 	} else {
@@ -56,13 +68,16 @@ func (g *Game) RunAction(id ident.Id, scp rt.Scope, args ...meta.Generic) (err e
 		//
 		if e != nil {
 			err = e
-		} else if runDefault {
-			// run the defaults if desired
-			if e := act.RunDefault(); e != nil {
-				err = e
+		} else {
+			if !runDefault {
+				err = api.EventCancelled{}
 			} else {
-				endFrame()
-				err = act.RunAfterActions()
+				if e := act.RunDefault(); e != nil {
+					err = e
+				} else {
+					endFrame()
+					err = act.RunAfterActions()
+				}
 			}
 		}
 	}

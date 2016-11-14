@@ -4,10 +4,11 @@ import (
 	"github.com/ionous/sashimi/source"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
+	"github.com/ionous/sashimi/util/sbuf"
 )
 
 func SourceError(src source.Code, err error) error {
-	return errutil.New("source code error", src, err)
+	return errutil.New("source code error", sbuf.P(src), err)
 }
 
 func ClassNotFound(class string) error {
@@ -23,7 +24,7 @@ func PropertyNotFound(class ident.Id, prop string) error {
 }
 
 func SetValueChanged(inst, prop ident.Id, curr, want interface{}) error {
-	return errutil.New("instance propeperty", inst, prop, "value change", curr, "to", want)
+	return errutil.New("instance property", inst, prop, "value change", curr, "to", want)
 }
 
 func SetValueMismatch(name, inst, prop ident.Id, want, got interface{}) error {

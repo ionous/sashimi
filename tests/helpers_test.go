@@ -5,6 +5,7 @@ import (
 	"github.com/ionous/mars/rt"
 	. "github.com/ionous/mars/script"
 	"github.com/ionous/mars/script/backend"
+	"github.com/ionous/mars/std"
 	"github.com/ionous/sashimi/compiler"
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/metal"
@@ -52,7 +53,25 @@ func (out TestWriter) Flush() string {
 	return ret
 }
 
-type ParentCreator func(meta.Model) api.LookupParents
+type ParentCreator func(run rt.Runtime) api.LookupParents
+
+type StandardParents struct {
+	run rt.Runtime
+}
+
+func (p StandardParents) LookupParent(i meta.Instance) (ret meta.Instance, err error) {
+	if i, e := std.Parent(rt.Object{i}).GetObject(p.run); e != nil {
+		err = e
+	} else {
+		ret = i.Instance
+	}
+	return
+}
+
+// NewStandardParents satisfies ParentCreator
+func NewStandardParents(run rt.Runtime) api.LookupParents {
+	return StandardParents{run}
+}
 
 func NewTestGameScript(t *testing.T, s backend.Spec, gen string, pc ParentCreator) (ret TestGame, err error) {
 	src := &S.Statements{}
@@ -81,14 +100,15 @@ func NewTestGameSource(t *testing.T, src S.Statements, gen string, pc ParentCrea
 		logger := TestLogger{t}
 		values := TestValueMap{storage}
 		modelApi := metal.NewMetal(model.Model, values)
-		var parents api.LookupParents
-		if pc != nil {
-			parents = pc(modelApi)
-		}
+		parents := &api.ParentHolder{}
 		cfg := play.NewConfig().SetWriter(writer).SetLogger(logger).SetParentLookup(parents)
 		//.SetSaveLoad(mem.NewSaveHelper("testing", storage, saver))
 		//
 		game := cfg.MakeGame(modelApi)
+		if pc != nil {
+			parents.Parents = pc(game)
+		}
+		//
 		if parser, e := parse.NewObjectParser(modelApi, ident.MakeId(gen)); e != nil {
 			err = e
 		} else {

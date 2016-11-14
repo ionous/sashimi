@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"github.com/ionous/mars/rt"
 	"github.com/ionous/mars/rtm"
 	E "github.com/ionous/sashimi/event"
 	"github.com/ionous/sashimi/meta"
@@ -33,12 +34,16 @@ func (ot ObjectTarget) String() string {
 	return ot.obj.GetId().String()
 }
 
-// Parent walks up the the (externally defined) containment hierarchy (from event.ITarget.)
+// Parent walks up the the (externally defined) containment hierarchy first exhausting the classes of this object. (see also: event.ITarget.)
 func (ot ObjectTarget) Parent() (ret E.ITarget, ok bool) {
-	next, _, haveParent := ot.LookupParent(ot.obj)
+	// MARS: handle error
+	next, err := ot.FindParent(rt.Object{ot.obj})
+	if err != nil {
+		panic(err)
+	}
 	cls := ot.obj.GetParentClass()
-	if !cls.Empty() || haveParent {
-		ret, ok = ClassTarget{ot, cls, next}, true
+	if !cls.Empty() || (next.Instance != nil) {
+		ret, ok = ClassTarget{ot, cls, next.Instance}, true
 	}
 	return ret, ok
 }

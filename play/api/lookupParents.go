@@ -6,11 +6,16 @@ import (
 
 type LookupParents interface {
 	// parent instance, property used to find the parent, true if existed
-	LookupParent(meta.Instance) (meta.Instance, meta.Property, bool)
+	LookupParent(meta.Instance) (meta.Instance, error)
 }
 
-type NoParents struct{}
+type ParentHolder struct {
+	Parents LookupParents
+}
 
-func (NoParents) LookupParent(meta.Instance) (inst meta.Instance, rel meta.Property, okay bool) {
+func (p *ParentHolder) LookupParent(i meta.Instance) (ret meta.Instance, err error) {
+	if p.Parents != nil {
+		ret, err = p.Parents.LookupParent(i)
+	}
 	return
 }

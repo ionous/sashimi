@@ -3,18 +3,16 @@ package console
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 )
 
 //
 type IConsole interface {
-	Print(...interface{})
-	Println(...interface{})
+	io.Writer
 	Readln() (string, bool)
-	Close()
 }
 
-//
 // for a main package test: create a console, and echo all input
 func Echo() {
 	c := NewConsole()
@@ -22,34 +20,21 @@ func Echo() {
 		if s, ok := c.Readln(); !ok {
 			break
 		} else {
-			c.Println(s)
+			fmt.Fprintln(c, s)
 		}
 	}
 }
 
-//
 // Creates a SimpleConsole
 func NewConsole() IConsole {
 	scanner := bufio.NewScanner(os.Stdin)
-	return SimpleConsole{scanner}
+	return SimpleConsole{os.Stdout, scanner}
 }
 
-//
 // implements IConsole
 type SimpleConsole struct {
+	io.Writer
 	scanner *bufio.Scanner
-}
-
-//
-func (c SimpleConsole) Print(args ...interface{}) {
-	fmt.Print(args...)
-	fmt.Print(" ")
-}
-
-//
-func (c SimpleConsole) Println(args ...interface{}) {
-	fmt.Print(args...)
-	fmt.Println()
 }
 
 //
@@ -62,9 +47,5 @@ func (c SimpleConsole) Readln() (ret string, okay bool) {
 			ret = c.scanner.Text()
 		}
 	}
-	return ret, okay
-}
-
-//
-func (c SimpleConsole) Close() {
+	return
 }

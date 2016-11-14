@@ -90,7 +90,7 @@ func TestRelationIteration(t *testing.T) {
 	t.FailNow()
 }
 
-func buildRelationIteration() (s LocalScript) {
+func buildRelationIteration() (s Script) {
 	s.The("gremlin", Called("Claire"), Has("pets", "Boomba"))
 	s.The("rock", Called("Boomba"), Exists())
 	s.The("kinds",
@@ -130,7 +130,7 @@ func buildRelationIteration() (s LocalScript) {
 	// from claire get a list which includes loofah and boomba
 	s.The("unit test", Called("claire test"),
 		When("testing").Always(
-			ForEachObject{
+			ForEachObj{
 				In: PropertyRefList{
 					"pets", Named{"claire"},
 				},
@@ -144,13 +144,13 @@ func buildRelationIteration() (s LocalScript) {
 	return
 }
 
-func buildRelationValues() (s LocalScript) {
+func buildRelationValues() (s Script) {
 	s.The("gremlin", Called("Claire"), Has("pets", "Loofah"))
 	s.The("rock", Called("Loofah"), Exists())
 	return
 }
 
-func buildRelationRules() (s LocalScript) {
+func buildRelationRules() (s Script) {
 	s.The("kinds",
 		Called("gremlins"),
 		HaveMany("pets", "rocks").
