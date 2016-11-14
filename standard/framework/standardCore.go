@@ -81,11 +81,7 @@ func (sg *StandardCore) HandleInput(in string) (err error) {
 			if e := sg.playerInput.SetGeneric(rt.Text(in)); e != nil {
 				err = e
 			} else if e := sg.Game.RunAction(ident.MakeId("parse player input"), sg.Game, sg.story); e != nil {
-				if _, ok := e.(api.EventCancelled); !ok {
-					err = e
-				} else {
-					err = sg.EndTurn("end turn")
-				}
+				err = sg.EndTurn("end turn")
 			} else if parser, e := sg.getParser(); e != nil {
 				err = e
 			} else {

@@ -5,13 +5,6 @@ import (
 	"github.com/ionous/sashimi/meta"
 )
 
-type EventCancelled struct {
-}
-
-func (EventCancelled) Error() string {
-	return "event cancelled"
-}
-
 // consider: StartFrame and EndFrame should be merged into Output
 // -- and they should be renamed: BeginEvent() EndEvent()
 //*maybe* Target should be mapped into prototype

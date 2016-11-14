@@ -5,6 +5,7 @@ import (
 	"github.com/ionous/mars/rtm"
 	E "github.com/ionous/sashimi/event"
 	"github.com/ionous/sashimi/meta"
+	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 )
 
@@ -67,7 +68,7 @@ func (gl GameListener) HandleEvent(evt E.IEvent) (err error) {
 	} else {
 		if e := gl.act.RunNow(calls, gl.listen.GetClass()); e != nil {
 			if _, cancelled := e.(core.StopNow); !cancelled {
-				err = e
+				err = errutil.New("HandleEvent", gl.act.GetId(), e)
 			} else {
 				evt.StopImmediatePropagation()
 				evt.PreventDefault()

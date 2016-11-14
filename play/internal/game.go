@@ -5,7 +5,6 @@ import (
 	"github.com/ionous/mars/rtm"
 	E "github.com/ionous/sashimi/event"
 	"github.com/ionous/sashimi/meta"
-	"github.com/ionous/sashimi/play/api"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/ionous/sashimi/util/sbuf"
 )
@@ -69,9 +68,7 @@ func (g *Game) RunAction(id ident.Id, scp rt.Scope, args ...meta.Generic) (err e
 		if e != nil {
 			err = e
 		} else {
-			if !runDefault {
-				err = api.EventCancelled{}
-			} else {
+			if runDefault {
 				if e := act.RunDefault(); e != nil {
 					err = e
 				} else {
