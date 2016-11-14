@@ -48,16 +48,16 @@ func (j Switch) Join(sep string) string {
 			str = Float{float64(v)}
 		case float64:
 			str = Float{v}
-		case Stringer:
-			str = v
 		case error:
 			str = Error{v}
 		case string:
 			str = String{v}
+		case Stringer:
+			str = v
 		default:
 			str = Value{v}
 		}
 		parts[i] = str
 	}
-	return (&StringBuffer{parts}).Join(" ")
+	return (&StringBuffer{parts}).Join(sep)
 }
