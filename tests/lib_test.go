@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"flag"
 	"github.com/ionous/mars"
 	"github.com/ionous/mars/core"
 	"github.com/ionous/mars/lang"
@@ -88,22 +89,29 @@ func libTest(t *testing.T, lib *mars.Package, name string, base *S.Statements, p
 	return err
 }
 
+var testName = "*"
+
+// go test -run LibS -v -named Debugging
+func init() {
+	flag.StringVar(&testName, "named", testName, "select sub test")
+	flag.Parse()
+}
+
 func TestLibCore(t *testing.T) {
 	base := &S.Statements{}
 	The("kind", Called("no parser")).Generate(base)
-	assert.NoError(t, libTest(t, core.Core(), "*", base, "no parser", nil))
+	assert.NoError(t, libTest(t, core.Core(), testName, base, "no parser", nil))
 }
 
 func TestLibLang(t *testing.T) {
 	base := &S.Statements{}
 	The("kind", Called("no parser")).Generate(base)
-	assert.NoError(t, libTest(t, lang.Lang(), "*", base, "no parser", nil))
+	assert.NoError(t, libTest(t, lang.Lang(), testName, base, "no parser", nil))
 }
 
 func TestLibStd(t *testing.T) {
 	base := &S.Statements{}
 	script := The("actor", Called("player"), Exists())
 	script.Generate(base)
-	testName := "Stories"
 	assert.NoError(t, libTest(t, std.Std(), testName, base, "player", NewStandardParents))
 }
