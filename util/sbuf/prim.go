@@ -39,11 +39,15 @@ type Hex64 struct {
 	Uint uint64
 }
 type Quote struct {
-	Value Switch
+	Value      Switch
+	Start, End string
 }
 
 func Q(args ...interface{}) Quote {
-	return Quote{args}
+	return Quote{args, "'", "'"}
+}
+func P(args ...interface{}) Quote {
+	return Quote{args, "(", ")"}
 }
 
 func (op Bool) String() string {
@@ -95,7 +99,7 @@ func (op Value) String() (ret string) {
 	return
 }
 func (op Quote) String() (ret string) {
-	return "'" + op.Value.String() + "'"
+	return op.Start + op.Value.String() + op.End
 }
 
 func formatFloat(v float64) string {
