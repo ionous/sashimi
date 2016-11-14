@@ -3,6 +3,7 @@ package source
 import (
 	"github.com/ionous/mars/rt"
 	E "github.com/ionous/sashimi/event"
+	. "github.com/ionous/sashimi/source/types"
 )
 
 // holds event callbacks

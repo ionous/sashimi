@@ -4,6 +4,7 @@ import (
 	"fmt"
 	M "github.com/ionous/sashimi/compiler/xmodel"
 	S "github.com/ionous/sashimi/source"
+	"github.com/ionous/sashimi/source/types"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 )
@@ -42,7 +43,7 @@ func (cls *PendingClass) makePropertySet() (props M.PropertySet, err error) {
 //
 // Add a primitive ( text or number ) property to cls class.
 //
-func (cls *PendingClass) addProperty(src S.Code, fields S.PropertyFields,
+func (cls *PendingClass) addProperty(src types.Code, fields S.PropertyFields,
 ) (ret IBuildProperty, err error) {
 	name, kind, isMany := fields.Name, fields.Kind, fields.List
 	// by using name->type cls ensures that if the name existed, it is of the same type now
@@ -118,7 +119,7 @@ func (cls *PendingClass) addEnum(name string,
 //
 // Add a relative property to cls class.
 //
-func (cls *PendingClass) addRelative(fields S.RelativeProperty, src S.Code,
+func (cls *PendingClass) addRelative(fields S.RelativeProperty, src types.Code,
 ) (ret IBuildProperty,
 	err error,
 ) {

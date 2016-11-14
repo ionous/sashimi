@@ -1,11 +1,11 @@
 package source
 
-// Code records the origin of statements.
-type Code string
+import (
+	. "github.com/ionous/sashimi/source/types"
+)
 
-func (c Code) String() string {
-	return string(c)
-}
+// UnknownLocation is a stand-in for the file and line of the phrase used to build a statement. MARS: remove this and replace with the proper file and line!
+const UnknownLocation = Code("location unknown")
 
 // IStatement provides a uniform way of locating user script code.
 type IStatement interface {
@@ -26,9 +26,6 @@ type Statements struct {
 	Properties     []PropertyStatement
 	Relatives      []RelativeStatement
 }
-
-// UnknownLocation is a stand-in for the file and line of the phrase used to build a statement. MARS: remove this and replace with the proper file and line!
-const UnknownLocation = Code("location unknown")
 
 //
 func (s *Statements) NewActionAssertion(

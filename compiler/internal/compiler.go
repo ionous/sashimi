@@ -102,7 +102,7 @@ func (ctx *Compiler) compileActions(classes M.ClassMap,
 			err = errutil.Append(err, errutil.New("couldnt compile action", fields, e))
 		} else {
 			// and the name of event...
-			eventId, e := ctx.Names.addName(fields.Event, actionId.String())
+			eventId, e := ctx.Names.addName(string(fields.Event), actionId.String())
 			if e != nil {
 				err = errutil.Append(err, e)
 				continue
@@ -110,7 +110,7 @@ func (ctx *Compiler) compileActions(classes M.ClassMap,
 			// add the action; if it exists, the uniquifier should have excluded any difs, so just ignore....
 			act := actions[actionId]
 			if act == nil {
-				if act, e = M.NewAction(actionId, fields.Action, eventId, source, target, context); e != nil {
+				if act, e = M.NewAction(actionId, string(fields.Action), eventId, source, target, context); e != nil {
 					err = errutil.Append(err, e)
 				} else {
 					actions[actionId] = act
@@ -118,7 +118,7 @@ func (ctx *Compiler) compileActions(classes M.ClassMap,
 			}
 			// add the event
 			if prev := events[eventId]; prev == nil {
-				events[eventId] = &M.EventInfo{eventId, fields.Event, actionId}
+				events[eventId] = &M.EventInfo{eventId, string(fields.Event), actionId}
 			}
 		}
 	}
@@ -128,23 +128,23 @@ func (ctx *Compiler) compileActions(classes M.ClassMap,
 func (ctx *Compiler) resolveAction(classes M.ClassMap, fields S.ActionAssertionFields,
 ) (actionId ident.Id, owner, target, context *M.ClassInfo, err error) {
 	// find the primary class
-	if cls, ok := classes.FindClass(fields.Source); !ok {
+	if cls, ok := classes.FindClass(string(fields.Source)); !ok {
 		err = errutil.New("couldn't find class", fields.Source)
 	} else {
 		// and the other two optional ones
-		target, ok = classes[ctx.Classes.singleToPlural[fields.Target]]
+		target, ok = classes[ctx.Classes.singleToPlural[string(fields.Target)]]
 		if !ok && fields.Target != "" {
 			err = errutil.Append(err, errutil.New("unknown target class", fields.Target))
 		}
-		context, ok = classes[ctx.Classes.singleToPlural[fields.Context]]
+		context, ok = classes[ctx.Classes.singleToPlural[string(fields.Context)]]
 		if !ok && fields.Context != "" {
 			err = errutil.Append(err, errutil.New("unknown context class", fields.Context))
 		}
 		if err == nil {
 			// make sure these names are unique
 			owner = cls
-			uniquifer := strings.Join([]string{"action", fields.Source, fields.Target, fields.Context}, "+")
-			actionId, err = ctx.Names.addName(fields.Action, uniquifer)
+			uniquifer := strings.Join([]string{"action", string(fields.Source), string(fields.Target), string(fields.Context)}, "+")
+			actionId, err = ctx.Names.addName(string(fields.Action), uniquifer)
 		}
 	}
 	return actionId, owner, target, context, err

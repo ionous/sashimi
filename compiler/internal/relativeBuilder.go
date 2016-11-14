@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/ionous/sashimi/compiler/model/table"
 	M "github.com/ionous/sashimi/compiler/xmodel"
-	S "github.com/ionous/sashimi/source"
+	"github.com/ionous/sashimi/source/types"
 	"github.com/ionous/sashimi/util/ident"
 )
 
@@ -12,7 +12,7 @@ type RelativeBuilder struct {
 	cls       ident.Id
 	id        ident.Id
 	name      string
-	src       S.Code
+	src       types.Code
 	fields    M.RelativeProperty
 	relations PendingRelations
 }
@@ -21,7 +21,7 @@ func NewRelativeBuilder(
 	relatives *RelativeFactory,
 	cls, id ident.Id,
 	name string,
-	src S.Code,
+	src types.Code,
 	fields M.RelativeProperty,
 ) (
 	IBuildProperty,

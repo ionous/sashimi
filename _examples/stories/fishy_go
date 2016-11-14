@@ -453,7 +453,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 		}))
 	// 212
 	s.The("actors",
-		Can("feed it").And("feeding it").RequiresOne("object"),
+		Can("feed it").And("feeding it").RequiresOnly("object"),
 		To("feed it", func(g G.Play) {
 			g.Say("That doesn't make much sense.")
 		}))

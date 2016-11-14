@@ -3,7 +3,7 @@ package internal
 import (
 	"fmt"
 	M "github.com/ionous/sashimi/compiler/xmodel"
-	"github.com/ionous/sashimi/source"
+	"github.com/ionous/sashimi/source/types"
 	"github.com/ionous/sashimi/util/ident"
 )
 
@@ -34,7 +34,7 @@ func (this NameScope) addName(name string, value string) (curr ident.Id, err err
 }
 
 //
-func (this NameScope) addRef(name string, value string, src source.Code) (curr ident.Id, err error) {
+func (this NameScope) addRef(name string, value string, src types.Code) (curr ident.Id, err error) {
 	return this.names.addName(this.scope, name, value, string(src))
 }
 

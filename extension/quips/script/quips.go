@@ -43,7 +43,7 @@ func Describe_Quips(s *Script) {
 	// default greeting help determine conversation when being clicked on.
 	s.The("actors",
 		Have("greeting", "quip"),
-		Can("greet").And("greeting").RequiresOne("actor"),
+		Can("greet").And("greeting").RequiresOnly("actor"),
 		To("greet", func(g G.Play) {
 			// FIX/FUTURE - this is *very* interesting that the player actions run some reusable code
 			// and that code -- which raises events -- can be overriden
@@ -108,14 +108,14 @@ func Describe_Quips(s *Script) {
 		}))
 
 	s.The("actors",
-		Can("comment").And("commenting").RequiresOne("quip"),
-		To("comment", ReflectToTarget("report comment")),
-		Can("discuss").And("discussing").RequiresOne("quip"),
-		To("discuss", ReflectToTarget("be discussed")),
+		Can("comment").And("commenting").RequiresOnly("quip"),
+		To("comment", g.ReflectToTarget("report comment")),
+		Can("discuss").And("discussing").RequiresOnly("quip"),
+		To("discuss", g.ReflectToTarget("be discussed")),
 	)
 
 	s.The("quips",
-		Can("report comment").And("reporting comment").RequiresOne("actor"),
+		Can("report comment").And("reporting comment").RequiresOnly("actor"),
 		To("report comment", func(g G.Play) {
 			// NOTE: commenting is always the player.
 			talker, quip := g.The("actor"), g.The("quip")
@@ -124,13 +124,13 @@ func Describe_Quips(s *Script) {
 			}
 			quip.Go("follow up with", g.The("actor"))
 		}),
-		Can("follow up with").And("following up with").RequiresOne("actor"),
+		Can("follow up with").And("following up with").RequiresOnly("actor"),
 		To("follow up with", func(g G.Play) {
 			if npc := quips.Converse(g).Actor().Object(); npc.Exists() {
 				npc.Go("discuss", g.The("quip"))
 			}
 		}),
-		Can("be discussed").And("being discussed").RequiresOne("actor"),
+		Can("be discussed").And("being discussed").RequiresOnly("actor"),
 		To("be discussed", func(g G.Play) {
 			talker, quip := g.The("actor"), g.The("quip")
 			if reply := quip.Text("reply"); len(reply) > 0 {

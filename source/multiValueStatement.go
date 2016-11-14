@@ -1,5 +1,9 @@
 package source
 
+import (
+	. "github.com/ionous/sashimi/source/types"
+)
+
 // r/o container for an array of column data
 // ( not completely true because the values aren't copied.)
 type MultiValueStatement struct {

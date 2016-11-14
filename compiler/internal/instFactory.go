@@ -2,7 +2,7 @@ package internal
 
 import (
 	M "github.com/ionous/sashimi/compiler/xmodel"
-	S "github.com/ionous/sashimi/source"
+	"github.com/ionous/sashimi/source/types"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 	"log"
@@ -23,7 +23,7 @@ func NewInstanceFactory(names NameSource, log *log.Logger) *InstanceFactory {
 // Register the passed `name` as an instance of `class`
 // NOTE: there can be multiple assertions refering to the same instance.
 //
-func (fact *InstanceFactory) addInstanceRef(cls *PendingClass, name string, longName string, code S.Code,
+func (fact *InstanceFactory) addInstanceRef(cls *PendingClass, name string, longName string, code types.Code,
 ) (ret *PendingInstance, err error,
 ) {
 	id, err := fact.names.addName(nil, name, "instance", "")

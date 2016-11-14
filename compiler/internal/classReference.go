@@ -3,7 +3,7 @@ package internal
 import (
 	"fmt"
 	M "github.com/ionous/sashimi/compiler/xmodel"
-	S "github.com/ionous/sashimi/source"
+	"github.com/ionous/sashimi/source/types"
 	"github.com/ionous/sashimi/util/errutil"
 )
 
@@ -15,11 +15,11 @@ type ClassReferences struct {
 
 type ClassReference struct {
 	class  *PendingClass
-	source S.Code // location of first reference
+	source types.Code // location of first reference
 }
 
 //
-func (refs *ClassReferences) addClassReference(class *PendingClass, source S.Code) {
+func (refs *ClassReferences) addClassReference(class *PendingClass, source types.Code) {
 	ref := ClassReference{class, source}
 	refs.classes = append(refs.classes, ref)
 }
@@ -30,7 +30,7 @@ func (refs ClassReferences) resolveClass(classes M.ClassMap,
 ) (class *M.ClassInfo, props PropertyBuilders, err error,
 ) {
 	// loop over the list of class references
-	var loc S.Code
+	var loc types.Code
 	for _, ref := range refs.classes {
 		if cls, ok := classes[ref.class.id]; !ok {
 			err = errutil.Append(err, ClassNotFound(ref.class.String()))
@@ -47,7 +47,7 @@ func (refs ClassReferences) resolveClass(classes M.ClassMap,
 
 type MultipleClassesNotSupported struct {
 	one, two  *M.ClassInfo
-	where, at S.Code
+	where, at types.Code
 }
 
 func (e MultipleClassesNotSupported) Error() string {

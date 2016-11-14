@@ -1,5 +1,9 @@
 package source
 
+import (
+	. "github.com/ionous/sashimi/source/types"
+)
+
 //
 // An AssertionStatement declares the existence of a class or instance.
 //

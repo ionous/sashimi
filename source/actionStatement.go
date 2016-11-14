@@ -1,13 +1,16 @@
 package source
 
-import "github.com/ionous/sashimi/util/sbuf"
+import (
+	"github.com/ionous/sashimi/source/types"
+	"github.com/ionous/sashimi/util/sbuf"
+)
 
 type ActionStatement struct {
 	fields ActionAssertionFields
-	source Code
+	source types.Code
 }
 
-func (ts ActionStatement) Source() Code {
+func (ts ActionStatement) Source() types.Code {
 	return ts.source
 }
 
@@ -16,11 +19,11 @@ func (ts ActionStatement) Fields() ActionAssertionFields {
 }
 
 type ActionAssertionFields struct {
-	Action  string
-	Event   string
-	Source  string
-	Target  string
-	Context string
+	Action  types.ActionName
+	Event   types.EventName
+	Source  types.Subject
+	Target  types.ClassName
+	Context types.ClassName
 }
 
 func (f ActionAssertionFields) String() string {

@@ -1,13 +1,13 @@
 package internal
 
 import (
-	"github.com/ionous/sashimi/source"
+	"github.com/ionous/sashimi/source/types"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/ionous/sashimi/util/sbuf"
 )
 
-func SourceError(src source.Code, err error) error {
+func SourceError(src types.Code, err error) error {
 	return errutil.New("source code error", sbuf.P(src), err)
 }
 

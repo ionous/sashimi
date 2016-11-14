@@ -3,7 +3,7 @@ package internal
 import (
 	"fmt"
 	M "github.com/ionous/sashimi/compiler/xmodel"
-	S "github.com/ionous/sashimi/source"
+	"github.com/ionous/sashimi/source/types"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
 	"github.com/ionous/sashimi/util/uuid"
@@ -21,7 +21,7 @@ type MultiValueData struct {
 	table      *MultiValueTable
 	instanceId ident.Id
 	values     []interface{}
-	src        S.Code
+	src        types.Code
 }
 
 const userNameColumn = "name"
@@ -65,7 +65,7 @@ func makeValueTable(classes *ClassFactory, class string, columns []string) (
 	return ret, err
 }
 
-func (mvd *MultiValueTable) addRow(instanceFactory *InstanceFactory, code S.Code, values []interface{},
+func (mvd *MultiValueTable) addRow(instanceFactory *InstanceFactory, code types.Code, values []interface{},
 ) (ret MultiValueData, err error) {
 	if vcount := len(values); vcount != mvd.count {
 		err = fmt.Errorf("mismatched columns %d values, %d columns", vcount, mvd.count)

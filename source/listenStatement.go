@@ -2,6 +2,7 @@ package source
 
 import (
 	"github.com/ionous/mars/rt"
+	. "github.com/ionous/sashimi/source/types"
 )
 
 // ListenStatement holds event callbacks.

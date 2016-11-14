@@ -1,5 +1,9 @@
 package source
 
+import (
+	. "github.com/ionous/sashimi/source/types"
+)
+
 type RelativeHint int
 
 const (

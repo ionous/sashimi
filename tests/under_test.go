@@ -64,7 +64,7 @@ func TestUnderKnownAs(t *testing.T) {
 func underTest() (s Script) {
 	s.The("kinds",
 		Have("description", "text"),
-		Can("test").And("testing").RequiresOne("kind"),
+		Can("test").And("testing").RequiresOnly("kind"),
 	)
 	s.The("kinds",
 		When("testing").Always(
