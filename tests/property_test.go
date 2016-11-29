@@ -31,7 +31,7 @@ func TestPropertyEmpty(t *testing.T) {
 // create a single subclass called stories
 func TestPropertySubclass(t *testing.T) {
 	s := The("kinds",
-		Called("stories").WithSingularName("story"),
+		Called("stories"), HasSingularName("story"),
 	)
 	src := &S.Statements{}
 	if e := s.Generate(src); assert.NoError(t, e) {
@@ -51,7 +51,7 @@ func TestPropertySubclass(t *testing.T) {
 // double specification of the same class causes no error
 func TestPropertyDoubledClass(t *testing.T) {
 	s := NewScript(
-		The("kinds", Called("stories").WithSingularName("story")),
+		The("kinds", Called("stories"), HasSingularName("story")),
 		The("kinds", Called("stories"), Exists()),
 	)
 	src := &S.Statements{}
@@ -114,7 +114,7 @@ func TestPropertyInst(t *testing.T) {
 func TestPropertyText(t *testing.T) {
 	s := NewScript(
 		The("kinds",
-			Called("stories").WithSingularName("story"),
+			Called("stories"), HasSingularName("story"),
 			Have("author", "text"),
 		),
 		The("story",
@@ -136,7 +136,7 @@ func TestPropertyText(t *testing.T) {
 func TestPropertyNum(t *testing.T) {
 	s := NewScript(
 		The("kinds",
-			Called("stories").WithSingularName("story"),
+			Called("stories"), HasSingularName("story"),
 			Have("int", "num"),
 			Have("float", "num")),
 		The("story",
@@ -166,11 +166,11 @@ func TestPropertyNum(t *testing.T) {
 func TestPropertyEitherOr(t *testing.T) {
 	s := NewScript(
 		The("kinds",
-			Called("scored-stories").WithSingularName("scored-story"),
+			Called("scored-stories"), HasSingularName("scored-story"),
 			AreEither("scored").Or("unscored"),
 		),
 		The("kinds",
-			Called("unscored-stories").WithSingularName("unscored-story"),
+			Called("unscored-stories"), HasSingularName("unscored-story"),
 			AreOneOf("scored", "unscored").Usually("unscored"),
 		),
 		The("scored-story",
@@ -219,7 +219,7 @@ func TestPropertyEitherOr(t *testing.T) {
 func TestPropertyEitherError(t *testing.T) {
 	s := NewScript(
 		The("kinds",
-			Called("stories").WithSingularName("story"),
+			Called("stories"), HasSingularName("story"),
 			AreEither("scored").Or("unscored").Usually("unscored"),
 		),
 		The("story",
