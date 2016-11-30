@@ -37,8 +37,8 @@ func Describe_Quips(s *Script) {
 	)
 
 	s.The("quip", Called("default greeting"),
-		Has("comment", ""),
-		Has("reply", ""))
+		HasText("comment", T("")),
+		HasText("reply", T("")))
 
 	// default greeting help determine conversation when being clicked on.
 	s.The("actors",

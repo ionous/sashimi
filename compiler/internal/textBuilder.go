@@ -26,7 +26,7 @@ func (txt TextBuilder) SetProperty(ctx PropertyContext) (err error) {
 		nilVal := (*rt.TextEval)(nil)
 		switch val := ctx.value.(type) {
 		case string:
-			err = ctx.values.lockSet(ctx.inst, txt.Id, nilVal, rt.Text(val))
+			err = ctx.values.lockSet(ctx.inst, txt.Id, nilVal, rt.Text{val})
 		case rt.TextEval:
 			err = ctx.values.lockSet(ctx.inst, txt.Id, nilVal, val)
 		default:

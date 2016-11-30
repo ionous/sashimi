@@ -77,7 +77,7 @@ func underTest() (s Script) {
 	)
 	s.The("kind",
 		Called("lookee"),
-		Has("description", "look it's a test!"),
+		HasText("description", T("look it's a test!")),
 	)
 	s.Understand("look|l at {{something}}").As("test")
 	return

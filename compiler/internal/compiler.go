@@ -454,7 +454,7 @@ func (ctx *Compiler) Compile() (*M.Model, error) {
 	}
 	for _, i := range instances {
 		var name rt.TextEval
-		name = rt.Text(i.Name)
+		name = rt.Text{i.Name}
 		if p, ok := i.Class.FindProperty("printed name"); ok {
 			if printed, ok := i.Values[p.GetId()]; ok {
 				name = printed.(rt.TextEval)

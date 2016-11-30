@@ -91,7 +91,7 @@ func TestRelationIteration(t *testing.T) {
 }
 
 func buildRelationIteration() (s Script) {
-	s.The("gremlin", Called("Claire"), Has("pets", "Boomba"))
+	s.The("gremlin", Called("Claire"), HasRef("pets", "Boomba"))
 	s.The("rock", Called("Boomba"), Exists())
 	s.The("kinds",
 		Called("unit tests"),
@@ -145,7 +145,7 @@ func buildRelationIteration() (s Script) {
 }
 
 func buildRelationValues() (s Script) {
-	s.The("gremlin", Called("Claire"), Has("pets", "Loofah"))
+	s.The("gremlin", Called("Claire"), HasRefs("pets", "Loofah"))
 	s.The("rock", Called("Loofah"), Exists())
 	return
 }

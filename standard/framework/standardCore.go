@@ -78,7 +78,7 @@ func (sg *StandardCore) HandleInput(in string) (err error) {
 				in = sg.playerInput.GetGeneric().(rt.Text).String()
 			}
 			//
-			if e := sg.playerInput.SetGeneric(rt.Text(in)); e != nil {
+			if e := sg.playerInput.SetGeneric(rt.Text{in}); e != nil {
 				err = e
 			} else if e := sg.Game.RunAction(ident.MakeId("parse player input"), sg.Game, sg.story); e != nil {
 				err = sg.EndTurn("end turn")

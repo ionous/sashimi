@@ -17,7 +17,7 @@ func lines(v ...string) []string {
 func TestRawTextProperty(t *testing.T) {
 	script := NewScript(
 		The("kinds", Called("actors"), Have("greeting", "text")),
-		The("actor", Called("player"), Has("greeting", "hello world")),
+		The("actor", Called("player"), HasText("greeting", T("hello world"))),
 	)
 
 	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {
@@ -38,7 +38,7 @@ func TestRawTextProperty(t *testing.T) {
 func TestNumEvalProperty(t *testing.T) {
 	script := NewScript(
 		The("kinds", Called("actors"), Have("counter", "num")),
-		The("actor", Called("player"), Has("counter", core.AddNum{core.N(2), core.N(3)})),
+		The("actor", Called("player"), HasNumber("counter", core.AddNum{core.N(2), core.N(3)})),
 	)
 	if test, err := NewTestGame(t, script); assert.NoError(t, err, "new game") {
 		if player, ok := test.Metal.GetInstance("player"); assert.True(t, ok, "found player") {
@@ -58,7 +58,7 @@ func TestNumEvalProperty(t *testing.T) {
 func TestActionNames(t *testing.T) {
 	script := NewScript(
 		The("kinds", Called("actors"), Have("greeting", "text")),
-		The("actor", Called("player"), Has("greeting", "hello world")),
+		The("actor", Called("player"), HasText("greeting", T("hello world"))),
 		The("kinds", Called("actors"),
 			Can("greet the world").And("greeting the world").RequiresNothing(),
 			To("greet the world",
@@ -86,7 +86,7 @@ func TestActionNames(t *testing.T) {
 func TestTarget(t *testing.T) {
 	script := NewScript(
 		The("kinds", Called("actors"), Have("greeting", "text")),
-		The("actor", Called("player"), Has("greeting", "hello")),
+		The("actor", Called("player"), HasText("greeting", T("hello"))),
 		The("actor", Called("npc"), Exists()),
 		The("kinds", Called("actors"),
 			Can("greet actor").And("greeting actor").RequiresOnly("actor"),
@@ -109,7 +109,7 @@ func TestTarget(t *testing.T) {
 func TestRun(t *testing.T) {
 	script := NewScript(
 		The("kinds", Called("actors"), Have("greeting", "text")),
-		The("actor", Called("player"), Has("greeting", "hello")),
+		The("actor", Called("player"), HasText("greeting", T("hello"))),
 		The("actor", Called("npc"), Exists()),
 		The("kinds", Called("actors"),
 			Can("test nothing").And("testing nothing").RequiresNothing(),
@@ -134,7 +134,7 @@ func TestRun(t *testing.T) {
 func TestStopHere(t *testing.T) {
 	script := NewScript(
 		The("kinds", Called("actors"), Have("greeting", "text")),
-		The("actor", Called("player"), Has("greeting", "hello world")),
+		The("actor", Called("player"), HasText("greeting", T("hello world"))),
 		The("kinds", Called("actors"),
 			Can("greet the world").And("greeting the world").RequiresNothing(),
 			When("greeting the world").Always(

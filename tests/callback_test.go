@@ -68,10 +68,10 @@ func TestCallbackClass(t *testing.T) {
 		),
 		The("kind",
 			Called("obj"),
-			Has("description", "it's a trap!")),
+			HasText("description", T("it's a trap!"))),
 		The("kind",
 			Called("other"),
-			Has("description", "it's an error!")),
+			HasText("description", T("it's an error!"))),
 	)
 	if test, err := NewTestGameScript(t, s, "obj", nil); assert.NoError(t, err) {
 		if err := test.RunNamedAction("test", g.The("obj")); assert.NoError(t, err) {

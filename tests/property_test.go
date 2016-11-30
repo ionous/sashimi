@@ -119,7 +119,7 @@ func TestPropertyText(t *testing.T) {
 		),
 		The("story",
 			Called("test"),
-			Has("author", "any mouse"),
+			HasText("author", T("any mouse")),
 		))
 	src := &S.Statements{}
 	if e := s.Generate(src); assert.NoError(t, e) {
@@ -141,9 +141,9 @@ func TestPropertyNum(t *testing.T) {
 			Have("float", "num")),
 		The("story",
 			Called("test"),
-			Has("int", 5)),
+			HasNumber("int", 5)),
 		The("test",
-			Has("float", 3.25)),
+			HasNumber("float", 3.25)),
 	)
 	src := &S.Statements{}
 	if e := s.Generate(src); assert.NoError(t, e) {

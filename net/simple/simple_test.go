@@ -33,11 +33,11 @@ func TestSimpleGame(t *testing.T) {
 	AddScript(func(s *Script) {
 		s.The("story",
 			Called("testing"),
-			Has("author", "me"),
-			Has("headline", "extra extra"))
+			HasText("author", T("me")),
+			HasText("headline", T("extra extra")))
 		s.The("room",
 			Called("somewhere"),
-			Has("description", "an empty room"),
+			HasText("description", T("an empty room")),
 		)
 	})
 	//

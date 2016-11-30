@@ -8,7 +8,6 @@ import (
 	"github.com/ionous/sashimi/metal"
 	"github.com/ionous/sashimi/metal/metaltest"
 	"github.com/ionous/sashimi/util/ident"
-	//"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
