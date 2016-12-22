@@ -53,11 +53,11 @@ func (enum EnumBuilder) SetProperty(ctx PropertyContext) (err error) {
 				err = e
 				break
 			} else {
-				choiceId := rt.State(c)
+				choiceId := rt.State{string(c)}
 				err = enum._enumSet(ctx.inst, choiceId, ctx.values, constraint)
 			}
 		case string:
-			choiceId := rt.State(M.MakeStringId(choice))
+			choiceId := rt.State{choice}
 			err = enum._enumSet(ctx.inst, choiceId, ctx.values, constraint)
 		default:
 			var nilVal int = 0
@@ -68,7 +68,7 @@ func (enum EnumBuilder) SetProperty(ctx PropertyContext) (err error) {
 }
 
 func (enum EnumBuilder) _enumSet(inst ident.Id, choice rt.State, values PendingValues, constraint *M.EnumConstraint) (err error) {
-	if e := constraint.CheckChoice(choice.Id()); e != nil {
+	if e := constraint.CheckChoice(choice.GetId()); e != nil {
 		err = e
 	} else {
 		nilVal := (*rt.StateEval)(nil)

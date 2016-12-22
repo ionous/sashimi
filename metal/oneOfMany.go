@@ -19,7 +19,7 @@ func (p *oneOfManyProp) GetType() meta.PropertyType {
 // GetGeneric returns rt.ObjectEval.
 func (p *oneOfManyProp) GetGeneric() meta.Generic {
 	id := p.getId()
-	return rt.Reference(id)
+	return rt.Reference{id}
 }
 
 // SetGeneric oneOfMany expects rt.Object, noting rt.Object can be empty.

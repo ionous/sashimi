@@ -198,7 +198,7 @@ func (p *enumProp) GetGeneric() (ret meta.Generic) {
 		}
 	} else {
 		enum := p.mdl.Enumerations[p.prop.Id]
-		ret = rt.State(enum.Best())
+		ret = rt.State{string(enum.Best())}
 	}
 	return
 }
@@ -239,7 +239,7 @@ func (p *pointerProp) SetGeneric(value meta.Generic) (err error) {
 		err = errutil.New("set property", p, "object", obj, "not compatible with", p.prop.Relates)
 	} else {
 		// Objects cant be stored directly, but we can store references to them.
-		ref := rt.Reference(obj.GetId())
+		ref := rt.Reference{obj.GetId()}
 		err = p.setValue(ref)
 	}
 	return
@@ -329,7 +329,7 @@ func (p *pointerListProp) SetGeneric(value meta.Generic) (err error) {
 				err = errutil.New("set property", p, "object", i, obj, "not compatible with", p.prop.Relates)
 				break
 			}
-			refs[i] = rt.Reference(obj.GetId())
+			refs[i] = rt.Reference{obj.GetId()}
 		}
 		if err == nil {
 			err = p.setValue(refs)

@@ -27,7 +27,7 @@ func (p *oneToOneProp) GetGeneric() (ret meta.Generic) {
 		panic(errutil.New("stored one-to-one has invalid value", e))
 	} else {
 		// FIX: why cant we store references directly
-		ret = rt.Reference(id)
+		ret = rt.Reference{id}
 	}
 	return
 }

@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"github.com/ionous/mars/rt"
 	. "github.com/ionous/mars/script"
 	"github.com/ionous/mars/script/g"
 	"github.com/stretchr/testify/assert"
@@ -77,7 +78,7 @@ func underTest() (s Script) {
 	)
 	s.The("kind",
 		Called("lookee"),
-		HasText("description", T("look it's a test!")),
+		HasText("description", rt.Text{"look it's a test!"}),
 	)
 	s.Understand("look|l at {{something}}").As("test")
 	return

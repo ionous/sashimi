@@ -32,7 +32,7 @@ func (ptr PointerBuilder) SetProperty(ctx PropertyContext) (err error) {
 		if _, ok := ctx.refs[otherId]; !ok {
 			err = M.InstanceNotFound(otherName)
 		} else {
-			err = ctx.values.lockSet(ctx.inst, ptr.Id, nilVal, rt.Reference(otherId))
+			err = ctx.values.lockSet(ctx.inst, ptr.Id, nilVal, rt.Reference{otherId})
 		}
 	}
 	return

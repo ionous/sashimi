@@ -101,7 +101,7 @@ func buildRelationIteration() (s Script) {
 			Try("from loofah get claire",
 				IsText{
 					T("Claire"),
-					EqualTo,
+					EqualTo{},
 					PropertyText{
 						"name",
 						PropertyRef{
@@ -117,7 +117,7 @@ func buildRelationIteration() (s Script) {
 			Try("from boomba get claire",
 				IsText{
 					T("Claire"),
-					EqualTo,
+					EqualTo{},
 					PropertyText{
 						"name",
 						PropertyRef{
@@ -145,7 +145,7 @@ func buildRelationIteration() (s Script) {
 }
 
 func buildRelationValues() (s Script) {
-	s.The("gremlin", Called("Claire"), HasRefs("pets", "Loofah"))
+	s.The("gremlin", Called("Claire"), HasRef("pets", "Loofah"))
 	s.The("rock", Called("Loofah"), Exists())
 	return
 }

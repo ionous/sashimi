@@ -6,7 +6,6 @@ import (
 	"github.com/ionous/sashimi/meta"
 	"github.com/ionous/sashimi/parser"
 	"github.com/ionous/sashimi/play"
-	"github.com/ionous/sashimi/play/api"
 	"github.com/ionous/sashimi/play/parse"
 	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
@@ -23,11 +22,11 @@ type StandardCore struct {
 }
 
 func (sg *StandardCore) IsComplete() bool {
-	return sg.complete.GetGeneric().(rt.State) == rt.State("completed")
+	return sg.complete.GetGeneric().(rt.State) == rt.State{"completed"}
 }
 
 func (sg *StandardCore) Started() bool {
-	return sg.complete.GetGeneric().(rt.State) != rt.State("starting")
+	return sg.complete.GetGeneric().(rt.State) != rt.State{"starting"}
 }
 
 // frame is the turn count + 1 ( so that it's never zero while playing )

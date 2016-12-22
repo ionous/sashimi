@@ -55,7 +55,7 @@ func (a *Arc) Execute(ex rt.Execute) (ret []string, err error) {
 func (a *Arc) Test(be rt.BoolEval) (err error) {
 	if b, e := be.GetBool(a.test.Game); e != nil {
 		err = errutil.New("testing boolean failed because", e)
-	} else if !b {
+	} else if !b.Value {
 		err = errutil.New("test failed")
 	}
 	return

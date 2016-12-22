@@ -1,6 +1,8 @@
 package tests
 
 import (
+	"github.com/ionous/mars/core"
+	"github.com/ionous/mars/rt"
 	. "github.com/ionous/mars/script"
 	"github.com/ionous/sashimi/compiler"
 	M "github.com/ionous/sashimi/compiler/model"
@@ -12,6 +14,18 @@ import (
 	"io/ioutil"
 	"testing"
 )
+
+func TextValue(i interface{}) string {
+	return i.(rt.Text).Value
+}
+
+func NumValue(i interface{}) float64 {
+	return i.(rt.Number).Value
+}
+
+func StateValue(i interface{}) string {
+	return i.(rt.State).Value
+}
 
 // compile nothing succesfully
 func TestPropertyEmpty(t *testing.T) {
@@ -101,7 +115,7 @@ func TestPropertyInst(t *testing.T) {
 					// test auto-generated name.
 					nameId := ident.Join(ident.MakeId("kinds"), ident.MakeId("name"))
 					if name, ok := test.Values[nameId]; assert.True(t, ok, "have name value") {
-						require.EqualValues(t, "test", name)
+						require.EqualValues(t, "test", TextValue(name))
 					}
 					return
 				}
@@ -119,13 +133,13 @@ func TestPropertyText(t *testing.T) {
 		),
 		The("story",
 			Called("test"),
-			HasText("author", T("any mouse")),
+			HasText("author", core.T("any mouse")),
 		))
 	src := &S.Statements{}
 	if e := s.Generate(src); assert.NoError(t, e) {
 		if model, err := compiler.Compile(*src, ioutil.Discard); assert.NoError(t, err, "compile") {
 			if v, err := field(model, "test", "author"); assert.NoError(t, err, "test field") {
-				require.EqualValues(t, "any mouse", v, "mismatched")
+				require.EqualValues(t, "any mouse", TextValue(v), "mismatched")
 				return
 			}
 		}
@@ -141,17 +155,17 @@ func TestPropertyNum(t *testing.T) {
 			Have("float", "num")),
 		The("story",
 			Called("test"),
-			HasNumber("int", 5)),
+			HasNumber("int", core.N(5))),
 		The("test",
-			HasNumber("float", 3.25)),
+			HasNumber("float", core.N(3.25))),
 	)
 	src := &S.Statements{}
 	if e := s.Generate(src); assert.NoError(t, e) {
 		if model, e := compiler.Compile(*src, ioutil.Discard); assert.NoError(t, e) {
 			if v, e := field(model, "test", "int"); assert.NoError(t, e) {
-				require.EqualValues(t, 5, v, "int mismatch")
+				require.EqualValues(t, 5, NumValue(v), "int mismatch")
 				if v, e := field(model, "test", "float"); assert.NoError(t, e) {
-					require.EqualValues(t, 3.25, v, "float mismatch")
+					require.EqualValues(t, 3.25, NumValue(v), "float mismatch")
 					return
 				}
 			}
@@ -201,10 +215,10 @@ func TestPropertyEitherOr(t *testing.T) {
 					require.EqualValues(t, "unscored", v)
 					if v, e := field(model, "scored", "scored"); assert.NoError(t, e) {
 						// not default: true
-						require.EqualValues(t, "scored", v)
+						require.EqualValues(t, "scored", StateValue(v))
 						if v, e := field(model, "unscored", "scored"); assert.NoError(t, e) {
 							// not default: true
-							require.EqualValues(t, "unscored", v)
+							require.EqualValues(t, "unscored", StateValue(v))
 							return
 						}
 					}

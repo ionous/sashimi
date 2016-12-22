@@ -1,11 +1,12 @@
 package internal
 
 import (
-	"fmt"
 	"github.com/ionous/sashimi/compiler/model/table"
 	M "github.com/ionous/sashimi/compiler/xmodel"
 	"github.com/ionous/sashimi/source/types"
+	"github.com/ionous/sashimi/util/errutil"
 	"github.com/ionous/sashimi/util/ident"
+	"github.com/ionous/sashimi/util/sbuf"
 )
 
 type RelativeBuilder struct {
@@ -51,9 +52,9 @@ func (rel RelativeBuilder) BuildProperty() (ret M.IProperty, err error) {
 
 func (rel RelativeBuilder) SetProperty(ctx PropertyContext) (err error) {
 	if table, ok := ctx.tables.TableById(rel.fields.Relation); !ok {
-		err = fmt.Errorf("couldnt find table", rel.fields.Relation)
+		err = errutil.New("couldnt find table", rel.fields.Relation)
 	} else if otherName, okay := ctx.value.(string); !okay {
-		err = SetValueMismatch("relative", ctx.inst, rel.id, "", ctx.value)
+		err = errutil.New("relative builder", ctx.inst, rel.id, "invalid type", sbuf.Type{ctx.value}, ctx.value)
 	} else {
 		otherId := M.MakeStringId(otherName)
 		if other, ok := ctx.refs[otherId]; !ok {

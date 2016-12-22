@@ -27,11 +27,11 @@ func (num NumBuilder) SetProperty(ctx PropertyContext) (err error) {
 		nilVal := (*rt.NumberEval)(nil)
 		switch val := ctx.value.(type) {
 		case int:
-			err = ctx.values.lockSet(ctx.inst, num.Id, nilVal, rt.Number(float64(val)))
+			err = ctx.values.lockSet(ctx.inst, num.Id, nilVal, rt.Number{float64(val)})
 		case float32:
-			err = ctx.values.lockSet(ctx.inst, num.Id, nilVal, rt.Number(float64(val)))
+			err = ctx.values.lockSet(ctx.inst, num.Id, nilVal, rt.Number{float64(val)})
 		case float64: // note: go's own default number type is float64
-			err = ctx.values.lockSet(ctx.inst, num.Id, nilVal, rt.Number(val))
+			err = ctx.values.lockSet(ctx.inst, num.Id, nilVal, rt.Number{val})
 		case rt.NumberEval:
 			err = ctx.values.lockSet(ctx.inst, num.Id, nilVal, val)
 		default:
