@@ -35,10 +35,10 @@ func A_Day_For_Fresh_Sushi() (s Script) {
 		When("printing details").Always(
 			Choose{
 				If:   IsState{g.The("studio"), "visited"},
-				True: g.Say("Decorated with Britney's signature flair. It was her innate sense of style that first made you forgive her that ludicrous name. And here it is displayed to the fullest: deep-hued drapes on the walls, the windows flung open with their stunning view of old Vienna, the faint smell of coffee that clings to everything. Her easel stands over by the windows, where the light is brightest."),
-				False: g.Say(
+				True: g.Go(g.Say("Decorated with Britney's signature flair. It was her innate sense of style that first made you forgive her that ludicrous name. And here it is displayed to the fullest: deep-hued drapes on the walls, the windows flung open with their stunning view of old Vienna, the faint smell of coffee that clings to everything. Her easel stands over by the windows, where the light is brightest.")),
+				False: g.Go(g.Say(
 					`This is Britney's studio. You haven't been around here for a while, because of how busy you've been with work, and she's made a few changes -- the aquarium in the corner, for instance. But it still brings back a certain emotional sweetness from the days when you had just met for the first time... when you used to spend hours on the sofa...
-You shake your head. No time for fantasy. Must feed fish.`),
+You shake your head. No time for fantasy. Must feed fish.`)),
 			},
 			g.StopHere(),
 		))
@@ -260,9 +260,9 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 		Choose{
 			If: g.The("window").Is("open"),
 			True: g.Go(
-				g.Say(`Through the windows you get a lovely view of the street outside. At the moment, the glass is thrown open, and a light breeze is blowing through.`),
-			),
-			False: g.Say(`Through the windows, you get a lovely view of the street outside -- the little fountain on the corner, the slightly dilapidated but nonetheless magnificent Jugendstil architecture of the facing building. The glass itself is shut, however.`),
+				g.Say(`Through the windows you get a lovely view of the street outside. At the moment, the glass is thrown open, and a light breeze is blowing through.`)),
+			False: g.Go(
+				g.Say(`Through the windows, you get a lovely view of the street outside -- the little fountain on the corner, the slightly dilapidated but nonetheless magnificent Jugendstil architecture of the facing building. The glass itself is shut, however.`)),
 		},
 		g.StopHere(),
 	))
@@ -310,17 +310,19 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 					g.Say(`"Okay, so, what were you, raised in a barn? Normal folks like to use that for flowers. Or so I've observed."`),
 					g.StopHere(),
 				),
-				False: Choose{
-					If: facts.PlayerLearns("insertedFlowers"),
-					True: g.Go(
-						g.Say("You settle the flowers into the vase and arrange them so that they look sprightly."),
-						g.Say(`"Oooh," says the fish. "No one ever changes the plant life in HERE. It's the same seaw--"`),
-						g.Say(`"Cut me a break and cork it," you reply tartly.`),
-						// FIX: report inserted?
-						g.Go(Insert(g.The("bouquet")).Into(g.The("vase"))),
-						g.StopHere(),
-					),
-				}}))
+				False: g.Go(
+					Choose{
+						If: facts.PlayerLearns("insertedFlowers"),
+						True: g.Go(
+							g.Say("You settle the flowers into the vase and arrange them so that they look sprightly."),
+							g.Say(`"Oooh," says the fish. "No one ever changes the plant life in HERE. It's the same seaw--"`),
+							g.Say(`"Cut me a break and cork it," you reply tartly.`),
+							// FIX: report inserted?
+							Insert(g.The("bouquet")).Into(g.The("vase")),
+							g.StopHere(),
+						),
+					}),
+			}))
 	//[133-134)
 	s.The("prop", Called("telegram"), Exists())
 	s.The("prop", Called("bouquet"), Exists())
@@ -340,8 +342,8 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 		After("being examined").Always(
 			Choose{
 				If:    facts.PlayerLearns("examinedTelegraph"),
-				True:  g.Say(`"So," blubs the evil fish. "How about it? Little food over here?"`),
-				False: g.Say("RANDOM FISH COMMENT"),
+				True:  g.Go(g.Say(`"So," blubs the evil fish. "How about it? Little food over here?"`)),
+				False: g.Go(g.Say("RANDOM FISH COMMENT")),
 				// fishComments := []string{
 				// 	//Table of Insulting Fish Comments
 				// 	`"Yeah, yeah," says the fish. "You having some trouble with the message, there? Confused? Something I could clear up for you?"`,
@@ -389,15 +391,17 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 	s.The("gravel",
 		After("being examined").Always(
 			Choose{
-				If:   facts.PlayerLearns("examinedGravel"),
-				True: g.Say("The fish notices your gaze; makes a pathetic mime of trying to find little flakes of remaining food amongst the gravel."),
+				If: facts.PlayerLearns("examinedGravel"),
+				True: g.Go(
+					g.Say("The fish notices your gaze; makes a pathetic mime of trying to find little flakes of remaining food amongst the gravel.")),
 			}))
 	// [161-163)
 	s.The("seaweed",
 		After("being examined").Always(
 			Choose{
-				If:   facts.PlayerLearns("examinedSeaweed"),
-				True: g.Say(`"Nice, hunh?" blubs the fish, taking a stabbing bite out of one just by way of demonstration. "Look so good I could eat it."`),
+				If: facts.PlayerLearns("examinedSeaweed"),
+				True: g.Go(
+					g.Say(`"Nice, hunh?" blubs the fish, taking a stabbing bite out of one just by way of demonstration. "Look so good I could eat it."`)),
 			}))
 	// 164
 	s.The("animal", Called("evil fish"),
@@ -422,12 +426,15 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 	s.The("evil fish",
 		After("being examined").Always(
 			Choose{
-				If:   facts.PlayerLearns("examinedFishOnce"),
-				True: g.Say("The fish glares at you, as though to underline this point."),
-				False: Choose{
-					If:   facts.PlayerLearns("examinedFishTwice"),
-					True: g.Say(`"If you're looking for signs of malnutrition," says the fish, "LOOK NO FURTHER!!" And it sucks in its gills until you can see its ribcage.`),
-				},
+				If: facts.PlayerLearns("examinedFishOnce"),
+				True: g.Go(
+					g.Say("The fish glares at you, as though to underline this point.")),
+				False: g.Go(
+					Choose{
+						If: facts.PlayerLearns("examinedFishTwice"),
+						True: g.Go(
+							g.Say(`"If you're looking for signs of malnutrition," says the fish, "LOOK NO FURTHER!!" And it sucks in its gills until you can see its ribcage.`)),
+					}),
 			}))
 	//181
 	//An every turn rule:
@@ -486,13 +493,14 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 					g.Say(`"What's in THERE?" asks the fish. "Didja bring me take-out? I don't mind Chinese. They eat a lot of carp, but what do I care? I'm not a carp. Live and let live is what I s--"`),
 					g.Say(`"It's NOT take-out." You stare the fish down and for once he actually backstrokes a stroke or two. "It's PRIVATE."`),
 				),
-				False: Choose{
-					If: facts.PlayerLearns("examinedBagTwice"),
-					True: g.Go(
-						// 209-211
-						g.Say(`"If it's not take-out, I don't see the relevance!" ashouts the fish. "Food is what you want in this situation. Food for MEEEE."`),
-					),
-				}}))
+				False: g.Go(
+					Choose{
+						If: facts.PlayerLearns("examinedBagTwice"),
+						True: g.Go(
+							// 209-211
+							g.Say(`"If it's not take-out, I don't see the relevance!" ashouts the fish. "Food is what you want in this situation. Food for MEEEE."`)),
+					}),
+			}))
 	// 212
 	s.The("actors",
 		Can("feed it").And("feeding it").RequiresOnly("object"),
@@ -517,7 +525,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 				True: g.Go(
 					Using{
 						Object: g.Our("A Day For Fresh Sushi"),
-						Run:    Inc{"score"},
+						Run:    g.Go(Inc{"score"}),
 					},
 					// "increment the score"
 					// story trailer text

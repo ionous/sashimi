@@ -41,8 +41,8 @@ func (a *Arc) Run(in string, args []meta.Generic) (ret []string, err error) {
 	return
 }
 
-func (a *Arc) Execute(ex rt.Execute) (ret []string, err error) {
-	if e := ex.Execute(a.test.Game); e != nil {
+func (a *Arc) Execute(ex rt.Statements) (ret []string, err error) {
+	if e := ex.ExecuteList(a.test.Game); e != nil {
 		err = errutil.New("execute", e)
 	} else if out, e := a.test.FlushOutput(); e != nil {
 		err = errutil.New("execute flush", e)

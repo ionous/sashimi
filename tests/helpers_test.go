@@ -73,7 +73,7 @@ func NewStandardParents(run rt.Runtime) api.LookupParents {
 	return StandardParents{run}
 }
 
-func NewTestGameScript(t *testing.T, s backend.Spec, gen string, pc ParentCreator) (ret TestGame, err error) {
+func NewTestGameScript(t *testing.T, s backend.Declaration, gen string, pc ParentCreator) (ret TestGame, err error) {
 	src := &S.Statements{}
 	if gen == "no parser" {
 		noParser := The("kind", Called("no parser"), Exists())
@@ -123,7 +123,7 @@ func NewTestGameSource(t *testing.T, src S.Statements, gen string, pc ParentCrea
 // ditto the "player"
 // the understandings used by the parser can just sit there
 // in the future, maybe we could put the understanding in an outer layer
-func NewTestGame(t *testing.T, s backend.Spec) (ret TestGame, err error) {
+func NewTestGame(t *testing.T, s backend.Declaration) (ret TestGame, err error) {
 	src := &S.Statements{}
 	player := The("actor", Called("player"), Exists())
 	if e := player.Generate(src); e != nil {

@@ -54,14 +54,14 @@ func TestCallbackClass(t *testing.T) {
 						g.The("action.Source").Text("Name"),
 						NotEqualTo{},
 						T("obj")},
-					True: Error{T("wrong object")},
+					True: Error{"wrong object"},
 				},
 				Choose{
 					If: IsText{
 						g.The("action.Source").Text("description"),
 						NotEqualTo{},
 						T("it's a trap!")},
-					True:  Error{T("wrong description")},
+					True:  Error{"wrong description"},
 					False: g.Say(g.The("action.Source").Text("description")),
 				},
 			),

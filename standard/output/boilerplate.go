@@ -15,7 +15,7 @@ import (
 )
 
 // simplest interface:
-func Run(s backend.Spec) {
+func Run(s backend.Declaration) {
 	RunGame(s, ParseCommandLine())
 }
 
@@ -37,7 +37,7 @@ func GetConsole(opt Options) (ret C.IConsole) {
 	return
 }
 
-func RunGame(s backend.Spec, opt Options) (err error) {
+func RunGame(s backend.Declaration, opt Options) (err error) {
 	cons := GetConsole(opt)
 	debugWriter := GetWriter(opt, cons)
 	src := S.Statements{}

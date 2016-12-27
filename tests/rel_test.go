@@ -134,12 +134,11 @@ func buildRelationIteration() (s Script) {
 				In: PropertyRefList{
 					"pets", Named{"claire"},
 				},
-				Go: PrintLine{
-					PrintText{
-						GetText{"name"},
-					},
-				},
-				Else: Error{T("should have run")},
+				Go: rt.MakeStatements(
+					PrintText{GetText{"name"}},
+					PrintLine{},
+				),
+				Else: Error{"should have run"},
 			}))
 	return
 }
