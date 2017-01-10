@@ -4,13 +4,15 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/ionous/mars/encode"
+	"github.com/ionous/mars/tools/encode"
 	"github.com/ionous/sashimi/_examples/stories"
 	"github.com/ionous/sashimi/standard/output"
 	"os"
 )
 
 // Boilerplate to run the story.
+//go run play.go -export -story sushi -file /Users/ionous/Dev/makisu/app/bin/sushi.js
+//go run play.go -export -story sushi -file /Users/ionous/Dev/makisu/app/bin/sushi.js
 func main() {
 	story := flag.String("story", "", "select the story to play.")
 	export := flag.Bool("export", false, "true to export story.")

@@ -37,8 +37,7 @@ func A_Day_For_Fresh_Sushi() (s Script) {
 				If:   IsState{g.The("studio"), "visited"},
 				True: g.Go(g.Say("Decorated with Britney's signature flair. It was her innate sense of style that first made you forgive her that ludicrous name. And here it is displayed to the fullest: deep-hued drapes on the walls, the windows flung open with their stunning view of old Vienna, the faint smell of coffee that clings to everything. Her easel stands over by the windows, where the light is brightest.")),
 				False: g.Go(g.Say(
-					`This is Britney's studio. You haven't been around here for a while, because of how busy you've been with work, and she's made a few changes -- the aquarium in the corner, for instance. But it still brings back a certain emotional sweetness from the days when you had just met for the first time... when you used to spend hours on the sofa...
-You shake your head. No time for fantasy. Must feed fish.`)),
+					`This is Britney's studio. You haven't been around here for a while, because of how busy you've been with work, and she's made a few changes -- the aquarium in the corner, for instance. But it still brings back a certain emotional sweetness from the days when you had just met for the first time... when you used to spend hours on the sofa...`, `You shake your head. No time for fantasy. Must feed fish.`)),
 			},
 			g.StopHere(),
 		))
@@ -72,7 +71,7 @@ You shake your head. No time for fantasy. Must feed fish.`)),
 	s.The("cabinet",
 		When("reporting look under").Always(
 			Choose{
-				If: facts.PlayerLearns("lookedUnderCabinet"),
+				If: facts.PlayerLearns{"lookedUnderCabinet"},
 				True: g.Go(
 					g.Say(`"Dustbunnies," predicts the fish, with telling accuracy. It executes what for all the world looks like a fishy shudder. "Lemme tell you, one time I accidentally flopped outta the tank, and I was TWO HOURS on the floor with those things STARING ME IN THE NOSE. It was frightening."`),
 					g.StopHere(),
@@ -84,7 +83,7 @@ You shake your head. No time for fantasy. Must feed fish.`)),
 	s.The("cabinet",
 		When("reporting now open").Always(
 			Choose{
-				If: facts.PlayerLearns("openedCabinet"),
+				If: facts.PlayerLearns{"openedCabinet"},
 				True: g.Go(
 					g.Say(`"There ya go," says the fish. "The girl is getting WARMER."`),
 					g.StopHere(),
@@ -94,7 +93,7 @@ You shake your head. No time for fantasy. Must feed fish.`)),
 	s.The("cabinet",
 		When("reporting now closed").Always(
 			Choose{
-				If: All(facts.PlayerLearns("closedCabinet"), IsNot{g.The("fish food").Is("found")}),
+				If: All(facts.PlayerLearns{"closedCabinet"}, IsNot{g.The("fish food").Is("found")}),
 				True: g.Go(
 					g.Say(`"Ooh, what do you think, Bob? I think we're going to have to dock the girl a few points. HAVE ANOTHER LOOK, sweetcakes, there's a doll."`),
 					g.StopHere(),
@@ -113,7 +112,7 @@ You shake your head. No time for fantasy. Must feed fish.`)),
 	s.The("paints",
 		When("reporting take").Always(
 			Choose{
-				If: facts.PlayerLearns("tookPaints"),
+				If: facts.PlayerLearns{"tookPaints"},
 				True: g.Go(
 					g.Say(`"Boy," says the fish, apparently to himself, "I sure hope that's some food she's finding for me in there. You know, the yummy food in the ORANGE CAN."`),
 				),
@@ -122,7 +121,7 @@ You shake your head. No time for fantasy. Must feed fish.`)),
 	s.The("paints",
 		After("being examined").Always(
 			Choose{
-				If: facts.PlayerLearns("examinedPaints"),
+				If: facts.PlayerLearns{"examinedPaints"},
 				True: g.Go(
 					g.Say(`"Tons of useful stuff in there," hollers in the fish, in a syncopated burble.`),
 				),
@@ -165,7 +164,7 @@ You shake your head. No time for fantasy. Must feed fish.`)),
 	s.The("cloths",
 		After("being examined").Always(
 			Choose{
-				If: facts.PlayerLearns("examinedCloths"),
+				If: facts.PlayerLearns{"examinedCloths"},
 				True: g.Go(
 					g.Say("Whatcha looking at? I can't see through the doors, you know."),
 					g.StopHere(),
@@ -236,7 +235,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 	s.The("painting",
 		Before("being examined").Always(
 			Choose{
-				If: facts.PlayerLearns("examinedPainting"),
+				If: facts.PlayerLearns{"examinedPainting"},
 				True: g.Go(
 					g.Say(`A ferocious banging from the aquarium attracts your attention as you go to look at the painting. "Hey!" screams the fish. "She doesn't like strangers looking at her paintings before they're DOONNNE!"`),
 					g.Say(`"Shut up, you," you reply casually. "I'm not a stranger." But the fish puts you off a little bit, and your heart is already in your mouth before you see the painting itself...`)),
@@ -271,7 +270,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 	s.The("window",
 		When("reporting now open").Always(
 			Choose{
-				If: facts.PlayerLearns("openedWindow"),
+				If: facts.PlayerLearns{"openedWindow"},
 				True: g.Go(
 					g.Say(`"Thank god some air," says the fish. "Man, it was getting hard to breathe in here." Two beats pass. "Oh wait."`),
 					g.StopHere(),
@@ -290,7 +289,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 	s.The("table",
 		When("reporting look under").Always(
 			Choose{
-				If: facts.PlayerLearns("lookedUnderTable"),
+				If: facts.PlayerLearns{"lookedUnderTable"},
 				True: g.Go(
 					g.Say(`"You're not going to find anything down there," whines the fish. "I mean, c'mon. It's the fricking floor. Please tell me you can see that. I can see that. I'm a myopic fish in a tank ten feet away and I can tell you there is nothing there but floor."`),
 					g.StopHere(),
@@ -312,7 +311,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 				),
 				False: g.Go(
 					Choose{
-						If: facts.PlayerLearns("insertedFlowers"),
+						If: facts.PlayerLearns{"insertedFlowers"},
 						True: g.Go(
 							g.Say("You settle the flowers into the vase and arrange them so that they look sprightly."),
 							g.Say(`"Oooh," says the fish. "No one ever changes the plant life in HERE. It's the same seaw--"`),
@@ -341,7 +340,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 	s.The("telegram",
 		After("being examined").Always(
 			Choose{
-				If:    facts.PlayerLearns("examinedTelegraph"),
+				If:    facts.PlayerLearns{"examinedTelegraph"},
 				True:  g.Go(g.Say(`"So," blubs the evil fish. "How about it? Little food over here?"`)),
 				False: g.Go(g.Say("RANDOM FISH COMMENT")),
 				// fishComments := []string{
@@ -391,7 +390,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 	s.The("gravel",
 		After("being examined").Always(
 			Choose{
-				If: facts.PlayerLearns("examinedGravel"),
+				If: facts.PlayerLearns{"examinedGravel"},
 				True: g.Go(
 					g.Say("The fish notices your gaze; makes a pathetic mime of trying to find little flakes of remaining food amongst the gravel.")),
 			}))
@@ -399,7 +398,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 	s.The("seaweed",
 		After("being examined").Always(
 			Choose{
-				If: facts.PlayerLearns("examinedSeaweed"),
+				If: facts.PlayerLearns{"examinedSeaweed"},
 				True: g.Go(
 					g.Say(`"Nice, hunh?" blubs the fish, taking a stabbing bite out of one just by way of demonstration. "Look so good I could eat it."`)),
 			}))
@@ -426,12 +425,12 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 	s.The("evil fish",
 		After("being examined").Always(
 			Choose{
-				If: facts.PlayerLearns("examinedFishOnce"),
+				If: facts.PlayerLearns{"examinedFishOnce"},
 				True: g.Go(
 					g.Say("The fish glares at you, as though to underline this point.")),
 				False: g.Go(
 					Choose{
-						If: facts.PlayerLearns("examinedFishTwice"),
+						If: facts.PlayerLearns{"examinedFishTwice"},
 						True: g.Go(
 							g.Say(`"If you're looking for signs of malnutrition," says the fish, "LOOK NO FURTHER!!" And it sucks in its gills until you can see its ribcage.`)),
 					}),
@@ -466,7 +465,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 	// 195:
 	s.The("bouquet", After("being examined").Always(
 		Choose{
-			If: facts.PlayerLearns("examinedBouquet"),
+			If: facts.PlayerLearns{"examinedBouquet"},
 			True: g.Go(
 				g.Say(`"Oh, you shouldn't have," says the fish. "For me??"`),
 				g.Say("You just respond with a livid glare."),
@@ -476,7 +475,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 	s.The("bouquet",
 		When("reporting smell").Always(
 			Choose{
-				If: facts.PlayerLearns("smelledBouquet"),
+				If: facts.PlayerLearns{"smelledBouquet"},
 				True: g.Go(
 					g.Say(`"Mmm-mm," says the fish . Damn, I sure wish I had olfactory abilities. Hey, if I did, I might be even better at noticing the presence or absence of FOOD."`),
 					g.StopHere(),
@@ -487,7 +486,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 	s.The("lingerie bag",
 		After("being examined").Always(
 			Choose{
-				If: facts.PlayerLearns("examinedBagOnce"),
+				If: facts.PlayerLearns{"examinedBagOnce"},
 				True: g.Go(
 					//204-208
 					g.Say(`"What's in THERE?" asks the fish. "Didja bring me take-out? I don't mind Chinese. They eat a lot of carp, but what do I care? I'm not a carp. Live and let live is what I s--"`),
@@ -495,7 +494,7 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 				),
 				False: g.Go(
 					Choose{
-						If: facts.PlayerLearns("examinedBagTwice"),
+						If: facts.PlayerLearns{"examinedBagTwice"},
 						True: g.Go(
 							// 209-211
 							g.Say(`"If it's not take-out, I don't see the relevance!" ashouts the fish. "Food is what you want in this situation. Food for MEEEE."`)),
@@ -529,10 +528,10 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 					},
 					// "increment the score"
 					// story trailer text
-					g.Say("Triumphantly, you dump the remaining contents of the canister of fish food into the tank. It floats on the surface like scum, but the fish for once stops jawing and starts eating. Like a normal fish. Blub, blub."),
-					g.Say("*** TWO HOURS LATER ***"),
-					g.Say(`"So," Britney says, tucking a strand of hair behind your ear, "where shall we go for dinner? Since I made the big bucks on this trip, it's my treat. Anywhere you like."`),
-					g.Say(`"I've had a hankering all day," you admit, as the two of you turn from the shuttle platform and head toward the bank of taxis. "I could really go for some sashimi right now."`),
+					g.Say("Triumphantly, you dump the remaining contents of the canister of fish food into the tank. It floats on the surface like scum, but the fish for once stops jawing and starts eating. Like a normal fish. Blub, blub.",
+						"*** TWO HOURS LATER ***",
+						`"So," Britney says, tucking a strand of hair behind your ear, "where shall we go for dinner? Since I made the big bucks on this trip, it's my treat. Anywhere you like."`,
+						`"I've had a hankering all day," you admit, as the two of you turn from the shuttle platform and head toward the bank of taxis. "I could really go for some sashimi right now."`),
 					// "end the story finally"
 					g.Our("A Day For Fresh Sushi").Go("end the story"),
 					g.StopHere(),
@@ -552,9 +551,9 @@ You thought she'd finally talked this out, but evidently not. Still feels guilty
 	// 231-233
 	s.The("A Day For Fresh Sushi",
 		When("commencing").Always(
-			g.Say(`You're on the run. You've got a million errands to do -- your apartment to get cleaned up, the fish to feed, lingerie to buy, Britney's shuttle to meet--
-The fish. You almost forgot. And it's in the studio, halfway across town from anywhere else you have to do. Oh well, you'll just zip over, take care of it, and hop back on the El. This'll be over in no time.
-Don't you just hate days where you wake up the wrong color?`),
+			g.Say(`You're on the run. You've got a million errands to do -- your apartment to get cleaned up, the fish to feed, lingerie to buy, Britney's shuttle to meet--`,
+				`The fish. You almost forgot. And it's in the studio, halfway across town from anywhere else you have to do. Oh well, you'll just zip over, take care of it, and hop back on the El. This'll be over in no time.`,
+				`Don't you just hate days where you wake up the wrong color?`),
 		),
 		HasNumber("maximum score", N(1)),
 	)

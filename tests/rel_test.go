@@ -2,6 +2,7 @@ package tests
 
 import (
 	. "github.com/ionous/mars/core"
+	"github.com/ionous/mars/rt"
 	. "github.com/ionous/mars/script"
 	"github.com/ionous/sashimi/compiler"
 	M "github.com/ionous/sashimi/compiler/model"
@@ -135,10 +136,9 @@ func buildRelationIteration() (s Script) {
 					"pets", Named{"claire"},
 				},
 				Go: rt.MakeStatements(
-					PrintText{GetText{"name"}},
-					PrintLine{},
-				),
-				Else: Error{"should have run"},
+					PrintText{GetText{"name"}}),
+				Else: rt.MakeStatements(
+					Error{"should have run"}),
 			}))
 	return
 }

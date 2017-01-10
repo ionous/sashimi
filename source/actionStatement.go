@@ -21,7 +21,7 @@ func (ts ActionStatement) Fields() ActionAssertionFields {
 type ActionAssertionFields struct {
 	Action  types.NamedAction
 	Event   types.NamedEvent
-	Source  types.NamedSubject
+	Source  string
 	Target  types.NamedClass
 	Context types.NamedClass
 }
