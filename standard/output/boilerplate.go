@@ -2,7 +2,7 @@ package output
 
 import (
 	"fmt"
-	"github.com/ionous/mars/script/backend"
+	"github.com/ionous/mars/script"
 	"github.com/ionous/mars/std"
 	"github.com/ionous/sashimi/compiler"
 	C "github.com/ionous/sashimi/console"
@@ -15,7 +15,7 @@ import (
 )
 
 // simplest interface:
-func Run(s backend.Declaration) {
+func Run(s script.Script) {
 	RunGame(s, ParseCommandLine())
 }
 
@@ -37,13 +37,13 @@ func GetConsole(opt Options) (ret C.IConsole) {
 	return
 }
 
-func RunGame(s backend.Declaration, opt Options) (err error) {
+func RunGame(s script.Script, opt Options) (err error) {
 	cons := GetConsole(opt)
 	debugWriter := GetWriter(opt, cons)
 	src := S.Statements{}
 	if e := std.Std().Generate(&src); e != nil {
 		err = e
-	} else if e := s.Generate(&src); e != nil {
+	} else if e := s.GenerateScript(&src); e != nil {
 		err = e
 	} else if model, e := compiler.Compile(src, debugWriter); e != nil {
 		err = e
