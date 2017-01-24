@@ -38,8 +38,8 @@ func write(dst, m string) {
 }
 
 // Boilerplate to run the story.
-//go run play.go -export -story sushi -file /Users/ionous/Dev/makisu/app/bin/sushi.js
-//go run play.go -export -story sushi -file /Users/ionous/Dev/makisu/app/bin/sushi.js
+// go run play.go -export -story empty -file /Users/ionous/Dev/makisu/bin/empty.js
+// go run play.go -export -story sushi -file /Users/ionous/Dev/makisu/bin/sushi.js
 func main() {
 	storyName := flag.String("story", "", "select the story to play.")
 	exportFlag := flag.Bool("export", false, "true to export story.")
@@ -58,7 +58,7 @@ func main() {
 		ctx := encode.NewContext()
 		if sections, e := export.NewLibraries(ctx, export.Export(), std.Std()); e != nil {
 			fmt.Println("libraries error", e)
-		} else if chapter, e := export.NewChapter(ctx, "game", s.Declarations()); e != nil {
+		} else if chapter, e := export.NewChapter(ctx, "Chapter One", s.Declarations()); e != nil {
 			fmt.Println("chapter error", e)
 		} else {
 			story := export.Story{*storyName, append(sections, chapter)}

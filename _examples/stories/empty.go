@@ -9,7 +9,7 @@ import (
 //
 func An_Empty_Room() (s Script) {
 	s.The("story",
-		Called("testing"),
+		Called("The empty room"),
 		HasText("author", T("me")),
 		HasText("headline", T("extra extra")))
 	s.The("room",
