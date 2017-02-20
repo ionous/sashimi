@@ -6,8 +6,9 @@ import (
 	"flag"
 	"fmt"
 	"github.com/ionous/mars/export"
-	"github.com/ionous/mars/export/encode"
+	"github.com/ionous/mars/facts"
 	"github.com/ionous/mars/std"
+	"github.com/ionous/mars/tools/uniform"
 	"github.com/ionous/sashimi/_examples/stories"
 	"github.com/ionous/sashimi/standard/output"
 	"log"
@@ -55,14 +56,15 @@ func main() {
 	} else if !*exportFlag {
 		output.RunGame(*s, options)
 	} else {
-		ctx := encode.NewContext()
-		if sections, e := export.NewLibraries(ctx, export.Export(), std.Std()); e != nil {
+		ctx := uniform.NewContext()
+		if sections, e := uniform.NewLibraries(ctx, facts.Facts(), export.Export(), std.Std()); e != nil {
 			fmt.Println("libraries error", e)
-		} else if chapter, e := export.NewChapter(ctx, "Chapter One", s.Declarations()); e != nil {
+		} else if chapter, e := uniform.NewChapter("Chapter One", s.Declarations()); e != nil {
 			fmt.Println("chapter error", e)
 		} else {
 			story := export.Story{*storyName, append(sections, chapter)}
-			if data, e := encode.Compute(story); e != nil {
+			enc := uniform.NewUniformEncoder(ctx.Types)
+			if data, e := enc.Compute(story); e != nil {
 				fmt.Println("compute error", e)
 			} else if m, e := Marshall(data); e != nil {
 				fmt.Println("marshal error", e)
